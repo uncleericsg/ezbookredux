@@ -1,0 +1,20 @@
+{
+  "admin": {
+    "settings": {
+      "app": {
+        "loginScreenEnabled": true
+      },
+      "acuity": {
+        "apiKey": "mock-api-key",
+        "userId": "mock-user-id",
+        "enabled": true,
+        "defaultIntervalWeeks": 4,
+        "repairShoprApiKey": "mock-repair-shopr-key",
+        "stripePublishableKey": "mock-stripe-pub-key",
+        "stripeSecretKey": "mock-stripe-secret-key",
+        "cypressApiKey": "mock-cypress-key",
+        "cypressEnabled": true
+      }
+    }
+  }
+}

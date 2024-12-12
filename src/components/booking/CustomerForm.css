@@ -1,0 +1,114 @@
+.form-container {
+  @apply max-w-full sm:max-w-3xl mx-0 sm:mx-auto bg-gray-800 rounded-none sm:rounded-lg shadow-lg p-0 sm:p-6;
+}
+
+.form-header {
+  @apply text-xl sm:text-2xl font-bold text-white mb-2 px-3 sm:px-0;
+}
+
+.form-description {
+  @apply text-gray-400 mb-3 sm:mb-6 text-sm sm:text-base px-3 sm:px-0;
+}
+
+.form-section {
+  @apply mb-4 sm:mb-6 px-3 sm:px-0;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4;
+}
+
+.form-group {
+  @apply mb-2 sm:mb-4 relative;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-300 mb-1;
+}
+
+.form-group input {
+  @apply w-full pl-10 pr-10 py-2.5 sm:py-2 bg-gray-700 rounded-md sm:rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent;
+  min-height: 42px;
+}
+
+.form-group .absolute.left-3 {
+  @apply top-3 sm:top-2.5;
+}
+
+.form-group .absolute.right-3 {
+  @apply top-3 sm:top-2.5;
+}
+
+.form-button-container {
+  @apply mt-4 sm:mt-6 px-3 sm:px-0;
+}
+
+.validation-icon {
+  @apply pointer-events-none;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.validation-icon-success {
+  @apply text-green-500;
+}
+
+.validation-icon-error {
+  @apply text-red-500;
+}
+
+.suggestions-container {
+  @apply absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto;
+}
+
+.suggestion-item {
+  @apply px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer flex items-center gap-2;
+}
+
+.suggestion-item-active {
+  @apply bg-gray-700;
+}
+
+.form-clear-button {
+  @apply text-sm text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-1;
+}
+
+/* Error message animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-message {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Fade-in animation for validation icons */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .form-container {
+    @apply shadow-none;
+  }
+  
+  .suggestions-container {
+    @apply mx-3;
+  }
+}
+
+.text-red-500, .text-green-500, .text-yellow-400 {
+  @apply mx-0 px-0;
+}

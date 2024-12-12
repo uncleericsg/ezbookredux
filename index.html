@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json">
+    <link rel="mask-icon" href="/mask-icon.svg" color="#111827">
+    <meta name="theme-color" content="#121212">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Easy aircon servicing and maintenance booking">
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'Mulish';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: local('Mulish'), url(https://fonts.gstatic.com/s/mulish/v13/1Ptvg83HX_SGhgqk0gotcqA.woff2) format('woff2');
+      }
+    </style>
+    <script>
+      // Suppress message port errors in development
+      if (window.location.hostname === 'localhost') {
+        const originalError = console.error;
+        console.error = (...args) => {
+          const errorMessage = args[0]?.toString?.() || '';
+          if (
+            errorMessage.includes('The message port closed before a response was received') ||
+            errorMessage.includes('Unchecked runtime.lastError: The message port closed')
+          ) {
+            return;
+          }
+          originalError.apply(console, args);
+        };
+      }
+
+      window.gm_authFailure = function() {
+        console.error('Google Maps authentication failed');
+      };
+    </script>
+    <script>
+      // Load Google Maps API dynamically
+      function loadGoogleMapsScript() {
+        const script = document.createElement('script');
+        // Use the Vite replaced variable directly
+        script.src = `https://maps.googleapis.com/maps/api/js?key=%VITE_GOOGLE_MAPS_API_KEY%&libraries=places&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+
+      // Initialize map (required callback)
+      window.initMap = function() {
+        // Maps API is loaded and ready to use
+        console.log('Google Maps API loaded successfully');
+        window.isGoogleMapsLoaded = true;
+        // Dispatch an event that the CustomerForm can listen for
+        window.dispatchEvent(new Event('google-maps-loaded'));
+      };
+
+      // Load the script
+      loadGoogleMapsScript();
+    </script>
+    <script async src="https://js.stripe.com/v3/"></script>
+    <style>
+      :root {
+        /* Primary Colors */
+        --color-primary: #3B82F6;
+        --color-primary-dark: #2563EB;
+        --color-primary-light: #60A5FA;
+        
+        /* Secondary Colors */
+        --color-secondary: #1D4ED8;
+        --color-secondary-dark: #1E40AF;
+        --color-secondary-light: #3B82F6;
+        
+        /* Background Colors */
+        --color-bg-primary: #121212;
+        --color-bg-secondary: #1E1E1E;
+        --color-bg-tertiary: #2D2D2D;
+        
+        /* Text Colors */
+        --color-text-primary: #F3F4F6;
+        --color-text-secondary: #D1D5DB;
+        --color-text-tertiary: #9CA3AF;
+        
+        /* Border Colors */
+        --color-border-primary: #374151;
+        --color-border-secondary: #4B5563;
+        
+        /* Animation Durations */
+        --transition-fast: 150ms;
+        --transition-normal: 250ms;
+        --transition-slow: 350ms;
+      }
+
+      /* Base Styles */
+      body {
+        margin: 0;
+        font-family: 'Mulish', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: radial-gradient(circle at center, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+        color: var(--color-text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #root {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* PWA Install Prompt */
+      #pwa-install-prompt {
+        display: none;
+        position: fixed;
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        background-color: var(--color-bg-secondary);
+        border: 1px solid var(--color-border-primary);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 40;
+        animation: slideUp var(--transition-normal) ease-out;
+      }
+
+      @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      /* Responsive Design */
+      @media (min-width: 640px) {
+        #pwa-install-prompt {
+          max-width: 28rem;
+          margin: 0 auto;
+        }
+      }
+
+      /* High Contrast Mode */
+      @media (prefers-contrast: high) {
+        :root {
+          --color-primary: #0066CC;
+          --color-secondary: #004C99;
+        }
+      }
+
+      /* Reduced Motion */
+      @media (prefers-reduced-motion: reduce) {
+        *:not(.force-animation) {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+    <title>iAircon - Easy Aircon Booking</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="pwa-install-prompt">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <img src="/pwa-64x64.png" alt="App Icon" class="w-12 h-12 rounded-xl">
+          <div>
+            <h3 class="font-medium">Install iAircon App</h3>
+            <p class="text-sm text-gray-400">Add to your home screen for quick access</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="pwa-dismiss" class="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300">
+            Not now
+          </button>
+          <button id="pwa-install" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+            Install
+          </button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide loading screen when app is ready
+      document.addEventListener('DOMContentLoaded', () => {
+        const loadingContainer = document.querySelector('.loading-container');
+        if (loadingContainer) {
+          loadingContainer.style.opacity = '0';
+          loadingContainer.style.transition = 'opacity var(--transition-normal) ease-out';
+          setTimeout(() => {
+            loadingContainer.remove();
+          }, 250);
+        }
+      });
+    </script>
+  </body>
+</html>
