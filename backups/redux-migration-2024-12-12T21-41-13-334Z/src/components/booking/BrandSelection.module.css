@@ -1,0 +1,160 @@
+.container {
+  @apply space-y-6 max-w-3xl mx-auto p-4;
+}
+
+.notice {
+  @apply relative mb-8 -mx-2 sm:mx-0;
+}
+
+.noticeSummary {
+  @apply flex items-center gap-2 sm:gap-3 cursor-pointer list-none 
+         bg-gray-800/50 backdrop-blur-sm
+         border-l-4 border-amber-500 rounded-lg 
+         shadow-lg shadow-amber-500/10
+         transition-all duration-300 ease-in-out
+         hover:bg-gray-800/70
+         py-3 px-4 sm:p-4;
+}
+
+.noticeIcon {
+  @apply bg-amber-500/20 rounded-full p-1.5 sm:p-2
+         ring-2 ring-amber-500/40 ring-offset-1 ring-offset-gray-800;
+}
+
+.noticeIconInner {
+  @apply w-4 h-4 text-amber-500;
+}
+
+.noticeContent {
+  @apply flex-1 flex items-center justify-between gap-3;
+}
+
+.noticeHeader {
+  @apply flex items-center gap-2 sm:gap-3;
+}
+
+.noticeTitle {
+  @apply text-sm sm:text-base font-semibold text-amber-500;
+}
+
+.noticeBadge {
+  @apply hidden sm:inline px-3 py-1 rounded-full 
+         bg-amber-500/10 text-amber-500 
+         text-xs font-medium border border-amber-500/20
+         backdrop-blur-sm;
+}
+
+.noticeChevron {
+  @apply w-5 h-5 text-amber-500/70 transition-all duration-300
+         group-open:rotate-180 group-hover:text-amber-500;
+}
+
+.noticeDetails {
+  @apply mt-3 sm:mt-4 px-4 pb-3 -mx-2 sm:mx-0;
+}
+
+.noticeList {
+  @apply space-y-4 sm:space-y-6 flex flex-col items-center w-full;
+}
+
+.noticeListTitle {
+  @apply text-sm sm:text-base font-semibold text-gray-200 
+         pb-2 border-b-2 border-gray-700/50
+         w-full px-4 text-center;
+}
+
+.tagContainer {
+  @apply flex flex-wrap justify-center gap-2 -mx-8 sm:mx-auto my-4 max-w-4xl px-0.5 sm:px-0;
+}
+
+.acTypeTag {
+  @apply inline-flex items-center px-3 py-1.5
+         rounded-lg bg-red-950/50 
+         text-red-300 text-xs font-medium
+         border border-red-800/50
+         backdrop-blur-sm
+         transition-all duration-300
+         hover:bg-red-900/50 hover:border-red-700/50
+         hover:scale-105 hover:shadow-lg hover:shadow-red-900/20
+         relative;
+}
+
+.brandTag {
+  @apply inline-flex items-center px-3 py-1.5
+         rounded-lg bg-amber-950/50 
+         text-amber-300 text-xs font-medium
+         border border-amber-800/50
+         backdrop-blur-sm
+         transition-all duration-300
+         hover:bg-amber-900/50 hover:border-amber-700/50
+         hover:scale-105 hover:shadow-lg hover:shadow-amber-900/20
+         relative;
+}
+
+.xIcon {
+  @apply absolute inset-0 w-full h-full opacity-0 
+         transition-opacity duration-200 ease-in-out
+         text-red-500 stroke-[2.5]
+         flex items-center justify-center
+         bg-black/40 rounded-lg;
+}
+
+.xIcon svg {
+  @apply w-4 h-4 transform scale-125;
+}
+
+.acTypeTag:hover .xIcon,
+.brandTag:hover .xIcon {
+  @apply opacity-100;
+}
+
+.errorContainer {
+  @apply bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start space-x-3 mb-6;
+}
+
+.errorIcon {
+  @apply w-5 h-5 text-red-500 shrink-0 mt-0.5;
+}
+
+.errorText {
+  @apply text-sm text-red-500;
+}
+
+.brandGrid {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-2;
+  margin: -0.5rem;
+  padding: 0.5rem;
+  transition: all 0.5s ease-in-out;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.brandGridCentered {
+  @apply flex flex-col items-center;
+  gap: 1rem;
+}
+
+.buttonContainer {
+  @apply flex justify-end mt-8 px-2 sm:p-2;
+}
+
+.button {
+  @apply px-6 py-3 rounded-lg font-medium 
+         transition-all duration-300 ease-in-out
+         flex items-center gap-2 
+         transform-gpu cursor-pointer;
+}
+
+.buttonEnabled {
+  @apply bg-gradient-to-r from-[#FFD700] to-[#FFA500]
+         text-gray-900 
+         shadow-[0_0_20px_rgba(255,215,0,0.2)]
+         hover:shadow-[0_0_25px_rgba(255,215,0,0.4)]
+         transform hover:-translate-y-0.5;
+}
+
+.buttonDisabled {
+  @apply bg-gray-800 text-gray-600 cursor-not-allowed;
+}

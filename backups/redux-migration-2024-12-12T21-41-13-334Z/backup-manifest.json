@@ -1,0 +1,12 @@
+{
+  "timestamp": "2024-12-12T21-41-13-334Z",
+  "backupDate": "2024-12-12T21:41:13.890Z",
+  "directories": [
+    "src/contexts",
+    "src/components",
+    "src/hooks",
+    "src/services",
+    "src/types"
+  ],
+  "gitCommit": "ab9652735d3e3e71d693e9014280a3b2ef6256c2"
+}

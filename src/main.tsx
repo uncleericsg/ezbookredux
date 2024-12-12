@@ -1,11 +1,13 @@
 import React, { StrictMode, Suspense, startTransition } from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import RouterComponent from './router';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { UserProvider } from './contexts/UserContext';
+import { store } from './store';
 import './index.css';
 
 // Create a client
@@ -27,15 +29,17 @@ startTransition(() => {
   root.render(
     <StrictMode>
       <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <Suspense fallback={<LoadingScreen />}>
-            <RouterComponent>
-              <UserProvider>
-                <Toaster position="top-right" />
-              </UserProvider>
-            </RouterComponent>
-          </Suspense>
-        </QueryClientProvider>
+        <Provider store={store}>
+          <QueryClientProvider client={queryClient}>
+            <Suspense fallback={<LoadingScreen />}>
+              <RouterComponent>
+                <UserProvider>
+                  <Toaster position="top-right" />
+                </UserProvider>
+              </RouterComponent>
+            </Suspense>
+          </QueryClientProvider>
+        </Provider>
       </ErrorBoundary>
     </StrictMode>
   );
