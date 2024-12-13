@@ -30,12 +30,15 @@ const Navbar: React.FC = () => {
   // @ai-doc Logout handler - DO NOT modify the logout flow
   const handleLogout = async () => {
     try {
+      // First clear user data
       dispatch(clearUser());
+      // Then clear auth state
       dispatch(setAuthenticated(false));
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('authToken');
+      // Clear all stored tokens and data
+      localStorage.clear();
+      // Show success message
       toast.success('Logged out successfully');
+      // Force a page reload to clear any remaining state
       window.location.href = '/login';
     } catch (error) {
       toast.error('Failed to logout');

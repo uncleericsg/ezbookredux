@@ -25,6 +25,9 @@ import NotFound from './components/NotFound';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
 import { AdminViewProvider } from './contexts/AdminViewContext';
+import ServicePricingSelection from './components/ServicePricingSelection';
+import ServicePricingSelectionWrapper from './components/ServicePricingSelectionWrapper';
+import ReturnCustomerBooking from './components/booking/ReturnCustomerBooking';
 
 const RouterComponent: React.FC = () => {
   return (
@@ -36,6 +39,8 @@ const RouterComponent: React.FC = () => {
               <Route path="/" element={<App />}>
                 <Route element={<Layout />}>
                   <Route index element={<ServiceCategorySelection />} />
+                  <Route path="returncustomer" element={<ReturnCustomerBooking />} />
+                  <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
                   <Route
                     path="profile"
                     element={
@@ -50,14 +55,6 @@ const RouterComponent: React.FC = () => {
                       <ProtectedRoute>
                         <Notifications />
                       </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="login"
-                    element={
-                      <PublicRoute>
-                        <Login />
-                      </PublicRoute>
                     }
                   />
                   <Route path="*" element={<NotFound />} />

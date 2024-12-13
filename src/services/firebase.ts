@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, signOut as firebaseSignOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getMessaging } from 'firebase/messaging';
 import { ApiError, handleApiError } from '../utils/apiErrors';
@@ -43,5 +43,17 @@ export const withFirebaseErrorHandling = async <T>(
     const apiError = ApiError.fromFirebaseError(error, context);
     await handleApiError(apiError);
     throw apiError;
+  }
+};
+
+export const signOut = async () => {
+  try {
+    await firebaseSignOut(auth);
+    // Clear any Firebase-specific persistence
+    await setPersistence(auth, browserLocalPersistence);
+    return { success: true };
+  } catch (error) {
+    console.error('Error signing out:', error);
+    return { success: false, error };
   }
 };

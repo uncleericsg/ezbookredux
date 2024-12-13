@@ -1,81 +1,91 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface PaymentState {
-  paymentMethod: string | null;
-  paymentStatus: 'idle' | 'processing' | 'success' | 'error';
-  error: string | null;
-  transactionHistory: TransactionRecord[];
-}
+// Payment status type
+export type PaymentStatus = 'idle' | 'processing' | 'success' | 'failed';
 
-interface TransactionRecord {
-  id: string;
-  timestamp: string;
-  updatedAt: string;
-  status: string;
-  // Add other transaction record properties as needed
-}
-
-const initialState: PaymentState = {
-  paymentMethod: null,
-  paymentStatus: 'idle',
-  error: null,
-  transactionHistory: [],
+// Define the initial state
+export const initialState = {
+  paymentData: null as any,
+  loading: false,
+  error: null as string | null,
+  currentTransaction: null as any,
+  termsAccepted: false,
+  amount: 0,
+  status: 'idle' as PaymentStatus,
+  discount: {
+    code: '',
+    amount: 0
+  },
+  serviceDetails: null as any,
+  customerName: '',
+  customerEmail: '',
+  serviceId: '',
+  customerId: '',
+  bookingId: '',
+  scheduledDate: '',
+  serviceName: ''
 };
 
-export const paymentSlice = createSlice({
+export type PaymentState = typeof initialState;
+
+interface DiscountPayload {
+  code: string;
+  amount: number;
+}
+
+const paymentSlice = createSlice({
   name: 'payment',
   initialState,
   reducers: {
-    setPaymentMethod: (state, action: PayloadAction<string | null>) => {
-      state.paymentMethod = action.payload;
+    setPaymentData: (state, action: PayloadAction<any>) => {
+      state.paymentData = action.payload;
     },
-    setPaymentStatus: (state, action: PayloadAction<PaymentState['paymentStatus']>) => {
-      state.paymentStatus = action.payload;
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
-      state.paymentStatus = 'error';
+      state.loading = false;
     },
-    // Enhanced transaction history actions
-    addTransaction: (state, action: PayloadAction<TransactionRecord>) => {
-      const transaction = {
-        ...action.payload,
-        timestamp: new Date().toISOString(),
-        id: `tr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
-      state.transactionHistory.push(transaction);
-      
-      // Maintain a fixed size for transaction history
-      if (state.transactionHistory.length > 100) {
-        state.transactionHistory = state.transactionHistory.slice(-100);
-      }
+    setCurrentTransaction: (state, action: PayloadAction<any>) => {
+      state.currentTransaction = action.payload;
     },
-    updateTransactionStatus: (state, action: PayloadAction<{ id: string; status: string }>) => {
-      const transaction = state.transactionHistory.find(t => t.id === action.payload.id);
-      if (transaction) {
-        transaction.status = action.payload.status;
-        transaction.updatedAt = new Date().toISOString();
-      }
+    setTermsAccepted: (state, action: PayloadAction<boolean>) => {
+      state.termsAccepted = action.payload;
     },
-    clearTransactionHistory: (state) => {
-      state.transactionHistory = [];
+    setAmount: (state, action: PayloadAction<number>) => {
+      state.amount = action.payload;
     },
-    clearPaymentState: (state) => {
-      state.paymentMethod = null;
-      state.paymentStatus = 'idle';
-      state.error = null;
+    applyDiscount: (state, action: PayloadAction<DiscountPayload>) => {
+      state.discount = action.payload;
+    },
+    setServiceDetails: (state, action: PayloadAction<any>) => {
+      state.serviceDetails = action.payload;
+    },
+    setPaymentStatus: (state, action: PayloadAction<PaymentStatus>) => {
+      state.status = action.payload;
+    },
+    resetPayment: (state) => {
+      // Reset to initial state
+      return initialState;
     },
   },
 });
 
-export const {
-  setPaymentMethod,
+export const { 
+  setPaymentData, 
+  setLoading, 
+  setError, 
+  setCurrentTransaction, 
+  setTermsAccepted,
+  setAmount,
+  applyDiscount,
+  setServiceDetails,
   setPaymentStatus,
-  setError,
-  addTransaction,
-  updateTransactionStatus,
-  clearTransactionHistory,
-  clearPaymentState,
+  resetPayment 
 } = paymentSlice.actions;
+
+// Alias for resetPayment for backward compatibility
+export const clearPaymentState = resetPayment;
 
 export default paymentSlice.reducer;

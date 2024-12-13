@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
-import { OTPInput } from './common/OTPInput';
-import { useAppDispatch } from '../store';
+import { useDispatch } from 'react-redux';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
 import { setUser } from '../store/slices/userSlice';
-import { setAuthenticated, setToken, setLoading } from '../store/slices/authSlice';
+import { OTPInput } from './common/OTPInput';
+import { FiX, FiPhone } from 'react-icons/fi';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -15,161 +14,166 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showOtpButton, setShowOtpButton] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
-  // Handle mobile number input
-  const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setMobileNumber(value);
-    setShowOtpButton(value === '91874498');
-  };
-
-  // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && showOtpButton && !loading) {
-      handleSendOtp();
+  useEffect(() => {
+    if (!isOpen) {
+      setShowOtpInput(false);
+      setPhoneNumber('');
+      setIsLoading(false);
     }
-  };
+  }, [isOpen]);
 
-  // Handle send OTP
-  const handleSendOtp = () => {
-    if (mobileNumber === '91874498') {
-      setOtpSent(true);
-      toast.success('OTP sent to your mobile number');
+  const handlePhoneSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phoneNumber.length >= 8) {
+      setShowOtpInput(true);
+      toast.success('OTP sent! Use code: 123456');
     } else {
-      toast.error('Invalid mobile number. For testing, use: 91874498');
+      toast.error('Please enter a valid phone number');
     }
   };
 
-  const handleOtpVerification = () => {
-    // Mock successful OTP verification
-    const mockToken = 'mock-jwt-token-' + Date.now();
-    const mockUser = {
-      id: '12345',
-      phone: mobileNumber,
-      role: 'regular',
-      firstName: 'Test',
-      lastName: 'User',
-      email: 'test@example.com',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      bookings: [],
-      notifications: [],
-      preferences: {
-        language: 'en',
-        theme: 'dark',
-        notifications: true
-      }
-    };
-
+  const handleOtpVerification = useCallback(async () => {
+    if (isLoading) return;
+    
     try {
-      // First update localStorage
-      localStorage.setItem('auth_token', mockToken);
-      localStorage.setItem('auth_user', JSON.stringify(mockUser));
+      setIsLoading(true);
+      
+      // Mock user data
+      const mockUser = {
+        id: '1',
+        name: 'Test User',
+        phone: phoneNumber,
+        role: 'user',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
-      // Then update Redux state in correct order
+      const mockToken = 'mock-jwt-token';
+
+      // Store in localStorage first
+      localStorage.setItem('auth_token', mockToken);
+      localStorage.setItem('user_data', JSON.stringify(mockUser));
+
+      // Update Redux state
       dispatch(setToken(mockToken));
       dispatch(setUser(mockUser));
       dispatch(setAuthenticated(true));
-      dispatch(setLoading(false));
 
-      toast.success('Login successful!');
+      // Close modal and navigate
       onClose();
+      toast.success('Login successful!');
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
-      dispatch(setLoading(false));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch, navigate, onClose, phoneNumber]);
+
+  const handleOtpComplete = (otp: string) => {
+    if (otp === '123456') {
+      handleOtpVerification();
+    } else {
+      toast.error('Invalid OTP code');
+      setIsLoading(false);
     }
   };
 
-  const handleOtpComplete = useCallback((otp: string) => {
-    if (otp === '123456') {
-      setLoading(true);
-      handleOtpVerification();
-    } else {
-      toast.error('Invalid OTP. For testing, use: 123456');
-    }
-  }, [mobileNumber, dispatch, onClose, navigate]);
-
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-        onClick={onClose}
-      >
+      {isOpen && (
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          onClick={e => e.stopPropagation()}
-          className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md relative"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative w-full max-w-lg p-6 bg-gray-900 rounded-xl shadow-xl"
           >
-            <X size={20} />
-          </button>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
 
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-            {otpSent ? 'Enter OTP' : 'Login'}
-          </h2>
-
-          {!otpSent ? (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  id="mobile"
-                  value={mobileNumber}
-                  onChange={handleMobileNumberChange}
-                  onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter your mobile number"
-                  disabled={loading}
-                />
-                <p className="text-xs text-gray-500 mt-1">For testing, use: 91874498</p>
-              </div>
-
-              <button
-                onClick={handleSendOtp}
-                disabled={!showOtpButton || loading}
-                className={`w-full py-2 px-4 rounded-lg font-medium transition-colors
-                  ${showOtpButton && !loading
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
-                  }`}
+            {/* Sign In Screen */}
+            {!showOtpInput && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
               >
-                {loading ? 'Sending...' : 'Send OTP'}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <OTPInput
-                length={6}
-                onComplete={handleOtpComplete}
-                disabled={loading}
-              />
-              <p className="text-xs text-gray-500 text-center">For testing, use: 123456</p>
-            </div>
-          )}
+                <h2 className="text-2xl font-semibold bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] bg-clip-text text-transparent">
+                  Sign In
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="mobile" className="block text-sm font-medium text-gray-400 mb-1">
+                      Mobile Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="mobile"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      onKeyPress={(e) => e.key === 'Enter' && handlePhoneSubmit(e)}
+                      placeholder="Enter your mobile number"
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#FFD700]"
+                      disabled={isLoading}
+                    />
+                    <div className="mt-2 text-sm text-gray-500">
+                      For testing, use: 91874498
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePhoneSubmit}
+                    disabled={phoneNumber.length < 8 || isLoading}
+                    className="w-full py-2 px-4 bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                  >
+                    {isLoading ? 'Sending...' : 'Continue'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* OTP Screen */}
+            {showOtpInput && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-semibold bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] bg-clip-text text-transparent">
+                  Enter OTP
+                </h2>
+                <p className="text-gray-400">Enter the 6-digit code sent to your mobile number</p>
+                <OTPInput
+                  length={6}
+                  onComplete={handleOtpComplete}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )}
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 };

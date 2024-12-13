@@ -19,8 +19,8 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     state: location.state
   });
 
-  // If user is authenticated and has data, redirect to home or intended path
-  if (currentUser && isAuthenticated) {
+  // Only redirect if both isAuthenticated is true AND we have a currentUser
+  if (isAuthenticated && currentUser) {
     const intendedPath = location.state?.from || '/';
     return <Navigate to={intendedPath} replace />;
   }

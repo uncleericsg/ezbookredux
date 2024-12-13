@@ -7,6 +7,7 @@ import { useServiceManager } from './hooks/useServiceManager';
 import { useInitializeAuth } from './hooks/useInitializeAuth';
 import { useAppSelector } from './store';
 import { AdminViewProvider } from './contexts/AdminViewContext';
+import { UserProvider } from './contexts/UserContext';
 
 function App() {
   // Initialize auth state
@@ -37,15 +38,17 @@ function App() {
   }
 
   return (
-    <AdminViewProvider>
-      <div className="App min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white relative overflow-hidden">
-        <div className="relative">
-          <ScrollToTop />
-          <Toaster position="top-center" />
-          <Outlet />
+    <UserProvider>
+      <AdminViewProvider>
+        <div className="App min-h-screen bg-gradient-to-[45deg] from-blue-600 via-blue-800 to-gray-900 text-white relative overflow-hidden">
+          <div className="relative">
+            <ScrollToTop />
+            <Toaster position="top-center" />
+            <Outlet />
+          </div>
         </div>
-      </div>
-    </AdminViewProvider>
+      </AdminViewProvider>
+    </UserProvider>
   );
 }
 
