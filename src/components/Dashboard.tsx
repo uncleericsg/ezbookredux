@@ -1,3 +1,9 @@
+import React from 'react';
+import { Calendar, Clock, ArrowUp, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../store';
+import ServiceHub from './admin/ServiceHub/ServiceHub';
+
 interface ServiceRequest {
   id: string;
   customerName: string;
@@ -6,26 +12,14 @@ interface ServiceRequest {
   location: string;
   contactNumber?: string;  // Added
   notes?: string;         // Added
-}interface ServiceRequest {
-  id: string;
-  customerName: string;
-  serviceType: 'maintenance' | 'repair' | 'installation'
-  scheduledTime: Date;
-  location: string;
-  contactNumber?: string;  // Added
-  notes?: string;         // Added
-}import React from 'react';
-import { Calendar, Clock, ArrowUp, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
-import ServiceHub from './admin/ServiceHub/ServiceHub';
+}
 
 const Dashboard: React.FC = () => {
-  const { user } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
   const navigate = useNavigate();
 
   // If user is admin, show ServiceHub, otherwise show customer dashboard
-  if (user?.role === 'admin') {
+  if (currentUser?.role === 'admin') {
     return <ServiceHub />;
   }
 
@@ -36,11 +30,11 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">AMC Status</h2>
           <span className={`px-3 py-1 rounded-full text-sm ${
-            user?.amcStatus === 'active'
+            currentUser?.amcStatus === 'active'
               ? 'bg-green-500 text-white'
               : 'bg-gray-600 text-gray-300'
           }`}>
-            {user?.amcStatus === 'active' ? 'Active' : 'Non-AMC'}
+            {currentUser?.amcStatus === 'active' ? 'Active' : 'Non-AMC'}
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -48,14 +42,14 @@ const Dashboard: React.FC = () => {
             <Calendar className="h-5 w-5 text-blue-400" />
             <div>
               <p className="text-sm text-gray-400">Next Service Due</p>
-              <p className="font-medium">{user?.nextServiceDate ? new Date(user.nextServiceDate).toLocaleDateString() : 'Not scheduled'}</p>
+              <p className="font-medium">{currentUser?.nextServiceDate ? new Date(currentUser.nextServiceDate).toLocaleDateString() : 'Not scheduled'}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <Clock className="h-5 w-5 text-blue-400" />
             <div>
-              <p className="text-sm text-gray-400">{user?.amcStatus === 'active' ? 'Contract Expires' : 'Last Service'}</p>
-              <p className="font-medium">{user?.lastServiceDate ? new Date(user.lastServiceDate).toLocaleDateString() : 'No history'}</p>
+              <p className="text-sm text-gray-400">{currentUser?.amcStatus === 'active' ? 'Contract Expires' : 'Last Service'}</p>
+              <p className="font-medium">{currentUser?.lastServiceDate ? new Date(currentUser.lastServiceDate).toLocaleDateString() : 'No history'}</p>
             </div>
           </div>
         </div>

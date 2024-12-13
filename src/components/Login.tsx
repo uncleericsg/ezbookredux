@@ -47,7 +47,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAppDispatch, useAppSelector } from '../store';
+import { setUser, setError } from '../store/slices/userSlice';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
@@ -56,18 +58,20 @@ import { LoadingScreen } from './LoadingScreen';
 const Login: React.FC = () => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLocalLoading] = useState(false);
   const [showOtpButton, setShowOtpButton] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const { userDispatch } = useUser();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, loading: authLoading } = useAppSelector(state => state.auth);
 
+  // Remove the initial navigation effect since we always want to go to home
   useEffect(() => {
-    if (location.state?.from) {
-      navigate(location.state.from, { replace: true });
+    if (!authLoading && isAuthenticated) {
+      navigate('/', { replace: true });
     }
-  }, [location.state, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   // Handle mobile number input
   const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,46 +111,60 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Verify OTP
-    if (otp === '123456') {
-      try {
-        // Create a user object with the mobile number
-        const userData = {
-          id: mobileNumber,
+    setLocalLoading(true);
+
+    try {
+      // Mock verification - using test number and OTP
+      if (mobileNumber === '91874498' && otp === '123456') {
+        // Generate mock token
+        const mockToken = `mock-jwt-token-${Date.now()}`;
+
+        // Mock user data - without token
+        const mockUserData = {
+          id: '12345',
           phone: mobileNumber,
           role: 'regular' as const,
           firstName: 'Test',
           lastName: 'User',
-          email: '',
+          email: 'test@example.com',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           bookings: [],
+          notifications: [],
+          preferences: {
+            language: 'en',
+            theme: 'dark',
+            notifications: true
+          }
         };
 
-        // Update user context
-        userDispatch({
-          type: 'SET_USER',
-          payload: userData
-        });
+        // Store in localStorage
+        localStorage.setItem('auth_token', mockToken);
+        localStorage.setItem('user_data', JSON.stringify(mockUserData));
 
-        // Store in localStorage for persistence
-        localStorage.setItem('userData', JSON.stringify(userData));
+        // Update Redux store - token only in auth slice
+        dispatch(setToken(mockToken));
+        dispatch(setUser(mockUserData));
+        dispatch(setAuthenticated(true));
+        dispatch(setError(null));
 
         toast.success('Login successful!');
-
-        // Redirect to home page or intended path
-        const intendedPath = location.state?.from || '/';
-        navigate(intendedPath);
-      } catch (error) {
-        console.error('Login error:', error);
-        toast.error('Login failed. Please try again.');
+        navigate('/', { replace: true });
+      } else {
+        dispatch(setError('Invalid credentials'));
+        toast.error('Invalid OTP. For testing, use mobile: 91874498 and OTP: 123456');
       }
-    } else {
-      toast.error('Invalid OTP. For testing, use: 123456');
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
+      dispatch(setError(errorMessage));
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return <LoadingScreen />;
   }
 

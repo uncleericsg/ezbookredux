@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { useUser } from '../contexts/UserContext';
+import { useUserRedux } from './useUserRedux';
 import { toast } from 'sonner';
 import type { User } from '../types';
 
 export const useProfile = () => {
-  const { user } = useUser();
+  const { user, updateProfile: updateReduxProfile } = useUserRedux();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,8 +15,8 @@ export const useProfile = () => {
       setLoading(true);
       setError(null);
 
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update Redux store
+      await updateReduxProfile(updates);
       
       toast.success('Profile updated successfully');
     } catch (err) {
@@ -27,7 +27,7 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, updateReduxProfile]);
 
   const uploadProfilePicture = useCallback(async (file: File) => {
     if (!user) return;

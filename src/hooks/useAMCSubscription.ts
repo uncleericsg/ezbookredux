@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { useUser } from '../contexts/UserContext';
+import { useUserRedux } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export const useAMCSubscription = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user, updateUser } = useUser();
+  const { user, updateProfile } = useUserRedux();
   const navigate = useNavigate();
 
   const activateAMC = useCallback(async () => {
@@ -21,7 +21,7 @@ export const useAMCSubscription = () => {
       setError(null);
 
       // Update user status
-      await updateUser({
+      await updateProfile({
         ...user,
         amcStatus: 'active'
       });
@@ -43,7 +43,7 @@ export const useAMCSubscription = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, updateUser, navigate]);
+  }, [user, updateProfile, navigate]);
 
   const handlePaymentSuccess = useCallback(async () => {
     try {

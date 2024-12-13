@@ -5,7 +5,15 @@ import { Elements } from '@stripe/react-stripe-js';
 import PaymentForm from './PaymentForm';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { usePayment } from '../contexts/PaymentContext';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { 
+  setAmount, 
+  setServiceDetails, 
+  setPaymentStatus, 
+  setError, 
+  applyDiscount, 
+  clearPaymentState 
+} from '../store/slices/paymentSlice';
 import { initializeStripe } from '../services/paymentService';
 import TermsAndConditions from './payment/TermsAndConditions';
 
@@ -27,7 +35,8 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
   onSuccess,
   onCancel
 }) => {
-  const { state, dispatch } = usePayment();
+  const dispatch = useAppDispatch();
+  const paymentState = useAppSelector(state => state.payment);
   const [stripePromise, setStripePromise] = React.useState<any>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
   const navigate = useNavigate();
@@ -50,28 +59,67 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
   }, []);
 
   useEffect(() => {
-    dispatch({ type: 'SET_AMOUNT', payload: amount });
-    dispatch({ type: 'SET_SERVICE_DETAILS', payload: serviceDetails });
+    dispatch(setAmount(amount));
+    dispatch(setServiceDetails(serviceDetails));
   }, [amount, serviceDetails, dispatch]);
 
+  useEffect(() => {
+    // Initialize payment flow
+    const initializePayment = async () => {
+      try {
+        dispatch(setPaymentStatus('processing'));
+        const stripe = await initializeStripe();
+        if (!stripe) throw new Error('Failed to initialize Stripe');
+        
+        // Reset any previous errors
+        dispatch(setError(null));
+      } catch (error) {
+        console.error('Payment initialization error:', error);
+        dispatch(setError('Failed to initialize payment system'));
+      }
+    };
+
+    initializePayment();
+
+    // Cleanup on unmount
+    return () => {
+      dispatch(clearPaymentState());
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refresh payment state when tab becomes visible
+        dispatch(setPaymentStatus('idle'));
+        dispatch(setError(null));
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [dispatch]);
+
   const handleApplyDiscount = async () => {
-    if (!state.discount.code) return;
+    if (!paymentState.discount.code) return;
     
-    dispatch({ type: 'SET_PAYMENT_STATUS', payload: 'processing' });
+    dispatch(setPaymentStatus('processing'));
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       const discountAmount = amount * 0.1; // Example 10% discount
-      dispatch({
-        type: 'APPLY_DISCOUNT',
-        payload: { code: state.discount.code, amount: discountAmount }
-      });
+      dispatch(applyDiscount({ 
+        code: paymentState.discount.code, 
+        amount: discountAmount 
+      }));
       toast.success('Discount code applied successfully');
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Invalid discount code' });
+      dispatch(setError('Invalid discount code'));
       toast.error('Invalid discount code');
     } finally {
-      dispatch({ type: 'SET_PAYMENT_STATUS', payload: 'idle' });
+      dispatch(setPaymentStatus('idle'));
     }
   };
 
@@ -83,7 +131,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
     );
   }
 
-  const finalAmount = amount - state.discount.amount;
+  const finalAmount = amount - paymentState.discount.amount;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -126,20 +174,20 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
             <div className="flex space-x-2">
               <input
                 type="text"
-                value={state.discount.code}
-                onChange={(e) => dispatch({
-                  type: 'APPLY_DISCOUNT',
-                  payload: { code: e.target.value, amount: 0 }
-                })}
+                value={paymentState.discount.code}
+                onChange={(e) => dispatch(applyDiscount({
+                  code: e.target.value, 
+                  amount: 0 
+                }))}
                 placeholder="Enter discount code"
                 className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
               />
               <button
                 onClick={handleApplyDiscount}
-                disabled={!state.discount.code || state.paymentStatus === 'processing'}
+                disabled={!paymentState.discount.code || paymentState.paymentStatus === 'processing'}
                 className="btn btn-primary"
               >
-                {state.paymentStatus === 'processing' ? (
+                {paymentState.paymentStatus === 'processing' ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   'Apply'
@@ -167,7 +215,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
 
           {/* Error Display */}
           <AnimatePresence>
-            {state.error && (
+            {paymentState.error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -176,7 +224,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
               >
                 <div className="flex items-center space-x-2 text-red-400">
                   <AlertTriangle className="h-5 w-5" />
-                  <span>{state.error}</span>
+                  <span>{paymentState.error}</span>
                 </div>
               </motion.div>
             )}

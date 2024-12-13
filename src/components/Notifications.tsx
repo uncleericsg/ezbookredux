@@ -1,14 +1,14 @@
 import React from 'react';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '../store';
 import { useNotifications } from '../hooks/useNotifications';
 import NotificationList from './NotificationList';
 import { Loader2 } from 'lucide-react';
 
 const Notifications: React.FC = () => {
-  const { user } = useUser();
-  const { notifications, loading, markAsRead, markAllAsRead, deleteAllNotifications } = useNotifications(user?.id ?? '');
+  const { currentUser } = useAppSelector((state) => state.user);
+  const { notifications, isLoading, markAsRead, markAllRead, deleteAll } = useNotifications();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-center py-8">
@@ -24,8 +24,9 @@ const Notifications: React.FC = () => {
         <NotificationList
           notifications={notifications}
           onMarkAsRead={markAsRead}
-          onMarkAllRead={markAllAsRead}
-          onDeleteAll={deleteAllNotifications}
+          onMarkAllRead={markAllRead}
+          onDeleteAll={deleteAll}
+          isLoading={isLoading}
         />
       ) : (
         <div className="text-center py-8 text-gray-400">

@@ -1,24 +1,47 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, LogOut, AlertTriangle } from 'lucide-react';
-import { useUser } from '../contexts/UserContext';
+import { useAppDispatch, useAppSelector } from '../store';
+import { clearUser } from '../store/slices/userSlice';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import ServiceHistory from './ServiceHistory';
 import AddressManager from './profile/AddressManager';
 import ProfileForm from './profile/ProfileForm';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { LoadingScreen } from './LoadingScreen';
 
 const UserProfile: React.FC = () => {
-  const { user, logout } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
+  const { loading: authLoading } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
   const [isEditing, setIsEditing] = useState(false);
 
-  if (!user) return null;
+  // Show loading screen while auth is being initialized
+  if (authLoading) {
+    return <LoadingScreen />;
+  }
 
-  const handleLogout = async () => {
-    await logout();
+  // Redirect to login if no user
+  if (!currentUser) {
     navigate('/login');
+    return null;
+  }
+
+  const handleLogout = () => {
+    try {
+      dispatch(clearUser());
+      dispatch(setAuthenticated(false));
+      dispatch(setToken(null));
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
   };
 
   const handleSave = async (formData: any) => {
@@ -40,9 +63,9 @@ const UserProfile: React.FC = () => {
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold">
-                {user.firstName} {user.lastName}
+                {currentUser.firstName} {currentUser.lastName}
               </h1>
-              {user.amcStatus === 'active' && (
+              {currentUser.amcStatus === 'active' && (
                 <span className="px-3 py-1 rounded-full text-sm bg-green-500/10 text-green-400">
                   AMC Active
                 </span>
@@ -60,7 +83,7 @@ const UserProfile: React.FC = () => {
         </div>
 
         {isEditing ? (
-          <ProfileForm user={user} onSave={handleSave} onCancel={() => setIsEditing(false)} />
+          <ProfileForm user={currentUser} onSave={handleSave} onCancel={() => setIsEditing(false)} />
         ) : (
           <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-8 sm:gap-y-6 max-w-3xl">
@@ -68,7 +91,7 @@ const UserProfile: React.FC = () => {
                 <Mail className="h-5 w-5 text-blue-400 mt-1" />
                 <div>
                   <p className="text-sm text-gray-400">Email</p>
-                  <p className="font-medium mt-1">{user.email}</p>
+                  <p className="font-medium mt-1">{currentUser.email}</p>
                 </div>
               </div>
               
@@ -76,21 +99,21 @@ const UserProfile: React.FC = () => {
                 <Phone className="h-5 w-5 text-blue-400 mt-1" />
                 <div>
                   <p className="text-sm text-gray-400">Mobile Number</p>
-                  <p className="font-medium mt-1">{user.phone}</p>
+                  <p className="font-medium mt-1">{currentUser.phone}</p>
                   <span className="text-xs text-gray-500">(This is your password)</span>
                 </div>
               </div>
               
-              {(user.unitNumber || user.address || user.condoName || user.lobbyTower) && (
+              {(currentUser.unitNumber || currentUser.address || currentUser.condoName || currentUser.lobbyTower) && (
                 <div className="flex items-start space-x-3 col-span-1 sm:col-span-2">
                   <MapPin className="h-5 w-5 text-blue-400 mt-1 flex-shrink-0" />
                   <div>
                     <p className="text-sm text-gray-400">Address</p>
                     <div className="mt-1 space-y-1 break-words">
-                      {user.unitNumber && <p className="font-medium">{user.unitNumber}</p>}
-                      {user.address && <p className="font-medium">{user.address}</p>}
-                      {user.condoName && <p className="font-medium">{user.condoName}</p>}
-                      {user.lobbyTower && <p className="font-medium">{user.lobbyTower}</p>}
+                      {currentUser.unitNumber && <p className="font-medium">{currentUser.unitNumber}</p>}
+                      {currentUser.address && <p className="font-medium">{currentUser.address}</p>}
+                      {currentUser.condoName && <p className="font-medium">{currentUser.condoName}</p>}
+                      {currentUser.lobbyTower && <p className="font-medium">{currentUser.lobbyTower}</p>}
                     </div>
                   </div>
                 </div>
@@ -151,22 +174,22 @@ const UserProfile: React.FC = () => {
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
               <h2 className="text-lg font-semibold mb-4">Service Status</h2>
               <div className="space-y-4">
-                {user.lastServiceDate && (
+                {currentUser.lastServiceDate && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-5 w-5 text-blue-400" />
                       <span>Last Service</span>
                     </div>
-                    <span>{new Date(user.lastServiceDate).toLocaleDateString()}</span>
+                    <span>{new Date(currentUser.lastServiceDate).toLocaleDateString()}</span>
                   </div>
                 )}
-                {user.nextServiceDate && (
+                {currentUser.nextServiceDate && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-5 w-5 text-blue-400" />
                       <span>Next Service</span>
                     </div>
-                    <span>{new Date(user.nextServiceDate).toLocaleDateString()}</span>
+                    <span>{new Date(currentUser.nextServiceDate).toLocaleDateString()}</span>
                   </div>
                 )}
               </div>
@@ -189,7 +212,7 @@ const UserProfile: React.FC = () => {
           </div>
         ) : (
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <ServiceHistory userId={user.id} limit={10} />
+            <ServiceHistory userId={currentUser.id} limit={10} />
           </div>
         )}
       </motion.div>

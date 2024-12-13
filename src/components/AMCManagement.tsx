@@ -4,12 +4,12 @@ import AMCStatusCard from './AMCStatusCard';
 import ServiceVisitTimeline from './ServiceVisitTimeline';
 import AMCRenewalModal from './AMCRenewalModal';
 import { useAMCStatus } from '../hooks/useAMCStatus';
-import { useUser } from '../contexts/UserContext';
+import { useUserRedux } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 
 const AMCManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useUserRedux();
   const {
     visits,
     loading,

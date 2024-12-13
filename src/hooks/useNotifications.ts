@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMemo } from 'react';
-import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fetchNotifications, markNotificationAsRead } from '../services/notifications';
 import type { Notification } from '../services/notifications';
-import { useUser } from '../contexts';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAppSelector } from '../store';
 
 // Mock notifications data with actionUrls
 const MOCK_NOTIFICATIONS = [
@@ -43,77 +41,52 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 export const useNotifications = () => {
-  const { user } = useUser();
+  const { currentUser: user } = useAppSelector(state => state.user);
   const queryClient = useQueryClient();
 
   // For now, always return mock notifications
   const { data: notifications = MOCK_NOTIFICATIONS, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
-    queryFn: async () => {
-      // Return mock notifications instead of fetching from server
-      return MOCK_NOTIFICATIONS;
-    },
-    staleTime: 1000 * 60, // 1 minute
+    queryFn: () => fetchNotifications(user?.id),
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // Mock marking as read by updating local state
-      queryClient.setQueryData(['notifications', user?.id], (old: any) => {
-        if (!old) return old;
-        return old.map((n: any) => n.id === id ? { ...n, read: true } : n);
-      });
-    },
+    mutationFn: markNotificationAsRead,
     onSuccess: () => {
-      // Don't show toast when marking as read since we're navigating away
-      // toast.success('Notification marked as read');
-    },
-    onError: () => {
-      toast.error('Failed to mark notification as read');
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 
-  const markAllReadMutation = useMutation({
-    mutationFn: async () => {
-      // Mock marking all as read by updating local state
-      queryClient.setQueryData(['notifications', user?.id], (old: any) => {
-        if (!old) return old;
-        return old.map((n: any) => ({ ...n, read: true }));
-      });
-    },
-    onSuccess: () => {
-      toast.success('All notifications marked as read');
-    },
-    onError: () => {
-      toast.error('Failed to mark all notifications as read');
-    },
-  });
+  const handleMarkAsRead = useCallback((notificationId: string) => {
+    if (!user?.id) return;
+    markAsReadMutation.mutate({ userId: user.id, notificationId });
+  }, [user?.id, markAsReadMutation]);
 
-  const deleteAllMutation = useMutation({
-    mutationFn: async () => {
-      // Mock deleting all by updating local state
-      queryClient.setQueryData(['notifications', user?.id], []);
-    },
-    onSuccess: () => {
-      toast.success('All notifications deleted');
-    },
-    onError: () => {
-      toast.error('Failed to delete notifications');
-    },
-  });
+  const unreadCount = useMemo(() => {
+    return notifications.filter(n => !n.read).length;
+  }, [notifications]);
 
-  // Compute unread count from notifications
-  const unreadCount = useMemo(() => 
-    notifications.filter(n => !n.read).length,
-    [notifications]
-  );
+  const sortedNotifications = useMemo(() => {
+    return [...notifications].sort((a, b) => {
+      // First sort by priority
+      if (a.priority === 'high' && b.priority !== 'high') return -1;
+      if (a.priority !== 'high' && b.priority === 'high') return 1;
+      
+      // Then sort by read status
+      if (!a.read && b.read) return -1;
+      if (a.read && !b.read) return 1;
+      
+      // Finally sort by date
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [notifications]);
 
   return {
-    notifications,
-    isLoading,
-    markAsRead: markAsReadMutation.mutate,
-    markAllRead: markAllReadMutation.mutate,
-    deleteAll: deleteAllMutation.mutate,
+    notifications: sortedNotifications,
     unreadCount,
+    isLoading,
+    markAsRead: handleMarkAsRead,
   };
 };

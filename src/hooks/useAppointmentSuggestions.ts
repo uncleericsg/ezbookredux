@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addDays, startOfDay, format, isSameDay } from 'date-fns';
-import { useUser } from '../contexts/UserContext';
+import { useUserRedux } from './useUserRedux';
 import { usePublicHolidays } from './usePublicHolidays';
 import { fetchServiceReports } from '../services/repairShopr';
 import { fetchNearbyBookings, determineRegion } from '../services/locations';
@@ -8,7 +8,7 @@ import { fetchAvailableSlots, fetchBlockedTimes } from '../services/acuity';
 import { useToast } from './useToast';
 
 export const useAppointmentSuggestions = () => {
-  const { user } = useUser();
+  const { user } = useUserRedux();
   const { holidays } = usePublicHolidays();
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
   const [suggestedTimeSlots, setSuggestedTimeSlots] = useState<string[]>([]);

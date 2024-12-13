@@ -47,9 +47,7 @@ import { motion } from 'framer-motion';
 import { Elements } from '@stripe/react-stripe-js';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
-import { usePayment } from '../../contexts/PaymentContext';
-import { BookingData } from './FirstTimeBookingFlow';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { initializeStripe, createPaymentIntent, addToServiceQueue } from '../../services/paymentService';
 import PaymentForm from '../PaymentForm';
 import PaymentSummary from '../PaymentSummary';
@@ -60,9 +58,10 @@ import TermsAndConditions from '../payment/TermsAndConditions';
 import BookingConfirmation from './BookingConfirmation';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { login as loginAction, setUser, setPaymentStatus, setError } from '../../store/slices/userSlice';
 
 interface PaymentStepProps {
-  readonly bookingData: BookingData;
+  readonly bookingData: any;
   readonly onComplete: () => void;
   readonly onBack: () => void;
   readonly onSuccess?: () => void;
@@ -79,8 +78,9 @@ const PAYMENT_STATES = Object.freeze({
 
 const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBack, onSuccess, onError }) => {
   const navigate = useNavigate();
-  const { login, userDispatch } = useUser();
-  const { state, dispatch } = usePayment();
+  const dispatch = useAppDispatch();
+  const { currentUser } = useAppSelector((state) => state.user);
+  const paymentState = useAppSelector((state) => state.payment);
   const [stripePromise, setStripePromise] = React.useState(() => initializeStripe());
   const [loading, setLoading] = useState(true);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -100,268 +100,180 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
   useEffect(() => {
     const initializePayment = async () => {
       try {
-        const stripeInstance = await initializeStripe();
-        if (!stripeInstance) {
-          throw new Error('Failed to initialize Stripe');
-        }
-        setStripePromise(Promise.resolve(stripeInstance));
-
-        const { clientSecret: secret } = await createPaymentIntent(
-          (bookingData.selectedService?.price || 0) + tipAmount
-        );
-        
-        if (!secret) {
-          throw new Error('Failed to create payment intent');
-        }
-        
-        setClientSecret(secret);
-        setLoading(false);
+        setLoading(true);
+        const { clientSecret } = await createPaymentIntent({
+          amount: initialState.amount,
+          currency: 'sgd',
+          description: `${bookingData.selectedService?.name} - ${format(bookingData.selectedDate, 'PPP')}`,
+          metadata: {
+            serviceId: bookingData.selectedService?.id,
+            appointmentDate: bookingData.selectedDate.toISOString(),
+            userEmail: bookingData.email
+          }
+        });
+        setClientSecret(clientSecret);
       } catch (error) {
         console.error('Error initializing payment:', error);
-        onError?.(error instanceof Error ? error.message : 'Payment initialization failed');
+        onError?.(error);
+      } finally {
         setLoading(false);
       }
     };
 
-    if (state.termsAccepted) {
-      initializePayment();
-    }
-  }, [bookingData.selectedService?.price, tipAmount, state.termsAccepted]);
+    initializePayment();
+  }, [bookingData, initialState.amount]);
 
-  useEffect(() => {
-    dispatch({ type: 'RESET_STATE' });
-    
-    if (bookingData.selectedService) {
-      dispatch({
-        type: 'SET_SERVICE_DETAILS',
-        payload: {
-          type: bookingData.selectedService.title,
-          date: bookingData.scheduledDateTime?.toISOString() || '',
-          time: bookingData.scheduledTimeSlot || '',
-          duration: parseInt(bookingData.selectedService.duration),
-        },
-      });
-      
-      const totalAmount = bookingData.selectedService.price + tipAmount;
-      dispatch({ type: 'SET_AMOUNT', payload: totalAmount });
-    }
-
-    if (bookingData.customerInfo) {
-      dispatch({
-        type: 'SET_CUSTOMER_INFO',
-        payload: {
-          email: bookingData.customerInfo.email,
-          name: bookingData.customerInfo.name,
-          phone: bookingData.customerInfo.phone
-        }
-      });
-    }
-  }, [bookingData, dispatch, tipAmount]);
-
-  useEffect(() => {
-    console.log('Payment state updated:', state);
-  }, [state]);
-
-  useEffect(() => {
-    if (!bookingData.selectedService) {
-      console.error('No service selected');
-      onError?.('Invalid booking data: No service selected');
-      return;
-    }
-  }, [bookingData]);
-
-  const handlePaymentSuccess = async () => {
-    const newBookingRef = `BK${Date.now()}`;
-    setBookingReference(newBookingRef);
-    
-    const serviceRequest: ServiceRequest = {
-      id: `SR${Date.now()}`,
-      customerName: `${bookingData.customerInfo?.firstName} ${bookingData.customerInfo?.lastName}`,
-      serviceType: bookingData.selectedService?.title || '',
-      scheduledTime: bookingData.scheduledDateTime || new Date(),
-      location: `${bookingData.customerInfo?.blockStreet || ''}, #${bookingData.customerInfo?.floorUnit || ''}, Singapore ${bookingData.customerInfo?.postalCode || ''}`,
-      contactNumber: bookingData.customerInfo?.mobile || bookingData.customerInfo?.phone || '',
-      email: bookingData.customerInfo?.email || '',
-      notes: '',
-      status: 'pending',
-      bookingReference: newBookingRef,
-      specialInstructions: bookingData.customerInfo?.specialInstructions || '',
-      address: {
-        blockStreet: bookingData.customerInfo?.blockStreet || '',
-        floorUnit: bookingData.customerInfo?.floorUnit || '',
-        postalCode: bookingData.customerInfo?.postalCode || '',
-        condoName: bookingData.customerInfo?.condoName,
-        lobbyTower: bookingData.customerInfo?.lobbyTower
-      }
-    };
-
+  const handlePaymentComplete = async (paymentIntent: any) => {
     try {
-      await addToServiceQueue(serviceRequest);
-    } catch (error) {
-      toast.error('Service queue update failed. Support has been notified.');
-    }
-    
-    setBooking({
-      ...bookingData,
-      status: 'confirmed',
-      paymentStatus: 'paid',
-      reference: newBookingRef,
-    });
+      setIsPaymentComplete(true);
+      
+      // Generate booking reference
+      const reference = `BK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      setBookingReference(reference);
 
-    setShowPasswordModal(true);
+      // Create booking record
+      const newBooking = {
+        id: reference,
+        serviceType: bookingData.selectedService?.name,
+        date: format(bookingData.selectedDate, 'yyyy-MM-dd'),
+        time: format(bookingData.selectedDate, 'HH:mm'),
+        status: 'Upcoming',
+        amount: initialState.amount,
+        paymentMethod: 'card',
+        address: bookingData.address
+      };
+      setBooking(newBooking);
+
+      // Add to service queue
+      await addToServiceQueue({
+        bookingReference: reference,
+        serviceType: bookingData.selectedService?.id,
+        scheduledDate: bookingData.selectedDate,
+        customerEmail: bookingData.email,
+        address: bookingData.address,
+        paymentIntentId: paymentIntent.id
+      });
+
+      // Update payment state
+      dispatch(setPaymentStatus('success'));
+      
+      // Show success message
+      toast.success('Payment successful! Your booking is confirmed.');
+      
+      // Trigger success callback
+      onSuccess?.();
+      
+      // Show password creation modal for new users
+      if (!currentUser) {
+        setShowPasswordModal(true);
+      }
+      
+    } catch (error) {
+      console.error('Error completing payment:', error);
+      dispatch(setError(error.message));
+      onError?.(error);
+    }
   };
 
-  const handlePasswordCreation = async (password: string) => {
+  const handlePasswordSubmit = async (password: string): Promise<boolean> => {
     try {
-      const phone = bookingData.customerInfo?.mobile || bookingData.customerInfo?.phone || '';
-      
-      const userData: User = {
-        id: `user_${Date.now()}`,
-        email: bookingData.customerInfo?.email || '',
-        firstName: bookingData.customerInfo?.firstName || '',
-        lastName: bookingData.customerInfo?.lastName || '',
-        phone: phone,
-        bookings: [{
-          id: bookingReference,
-          serviceType: bookingData.selectedService?.title || '',
-          date: format(bookingData.scheduledDateTime || new Date(), 'yyyy-MM-dd'),
-          time: bookingData.scheduledTimeSlot || '',
-          status: 'Upcoming',
-          amount: state.amount,
-          paymentMethod: 'card',
-          address: `${bookingData.customerInfo?.blockStreet || ''}, #${bookingData.customerInfo?.floorUnit || ''}, Singapore ${bookingData.customerInfo?.postalCode || ''}`
-        }]
+      // Create user account
+      const userData: Partial<User> = {
+        email: bookingData.email,
+        firstName: bookingData.firstName,
+        lastName: bookingData.lastName,
+        phone: bookingData.phone,
+        bookings: [booking]
       };
 
-      const missingFields = [];
-      if (!userData.email) missingFields.push('email');
-      if (!userData.firstName) missingFields.push('first name');
-      if (!userData.lastName) missingFields.push('last name');
-      if (!phone) missingFields.push('phone number');
-
-      if (missingFields.length > 0) {
-        toast.error(`Missing required fields: ${missingFields.join(', ')}`);
-        return false;
-      }
-
-      login(userData);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Dispatch login action
+      await dispatch(loginAction({ email: bookingData.email, password })).unwrap();
       
-      setIsPaymentComplete(true);
-      setShowPasswordModal(false);
-      navigate('/profile');
+      // Update user data
+      dispatch(setUser(userData));
+
+      // Navigate to confirmation
+      navigate('/booking/confirmation', { 
+        state: { 
+          booking,
+          email: bookingData.email
+        }
+      });
+
       return true;
     } catch (error) {
-      toast.error('Account creation failed. Please contact support.');
+      console.error('Error creating account:', error);
+      toast.error('Failed to create account. Please try again.');
       return false;
     }
   };
 
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
-    onError?.(error);
-  };
-
-  const handleTermsAcceptance = () => {
-    dispatch({ type: 'SET_TERMS_ACCEPTED', payload: true });
-  };
-
-  if (!bookingData.selectedService || !bookingData.scheduledDateTime) {
+  if (loading || !clientSecret) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-400">Missing booking information. Please go back and complete all steps.</p>
-        <button
-          onClick={onBack}
-          className="mt-4 px-6 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
-        >
-          Go Back
-        </button>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#FFD700]" />
       </div>
     );
   }
 
   return (
     <PaymentErrorBoundary>
-      <div className="space-y-8">
-        {bookingData.selectedService && (
-          <PaymentSummary
-            serviceDetails={bookingData.selectedService}
-            scheduledDateTime={bookingData.scheduledDateTime}
-            scheduledTimeSlot={bookingData.scheduledTimeSlot}
-            onTipChange={(amount) => setTipAmount(amount)}
-            tipAmount={tipAmount}
-            customerInfo={bookingData.customerInfo}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Payment Form */}
+          <div className="space-y-6">
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <PaymentForm
+                clientSecret={clientSecret}
+                onComplete={handlePaymentComplete}
+                amount={initialState.amount}
+                onError={(error) => {
+                  dispatch(setError(error.message));
+                  onError?.(error);
+                }}
+              />
+            </Elements>
+          </div>
+
+          {/* Order Summary */}
+          <div>
+            <PaymentSummary
+              service={bookingData.selectedService}
+              date={bookingData.selectedDate}
+              tipAmount={tipAmount}
+              onTipChange={setTipAmount}
+            />
+            <TermsAndConditions
+              accepted={paymentState.termsAccepted}
+              onAccept={() => dispatch(setPaymentStatus('termsAccepted'))}
+            />
+          </div>
+        </div>
+
+        {/* Password Creation Modal */}
+        {showPasswordModal && (
+          <PasswordCreationModal
+            isOpen={showPasswordModal}
+            onClose={() => setShowPasswordModal(false)}
+            onSubmit={handlePasswordSubmit}
           />
         )}
 
-        <TermsAndConditions onAccept={handleTermsAcceptance} />
-
-        <div className="space-y-6">
-          {state.termsAccepted ? (
-            clientSecret && stripePromise ? (
-              <div className="bg-gray-200/90 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-gray-300/20">
-                <h3 className="text-gray-800 font-semibold text-lg mb-4">Payment Details</h3>
-                <Elements stripe={stripePromise} options={{ 
-                  clientSecret,
-                  appearance: {
-                    theme: 'stripe',
-                    variables: {
-                      colorPrimary: '#FFD700',
-                      colorBackground: '#F3F4F6',
-                      colorText: '#1F2937',
-                      colorDanger: '#EF4444',
-                      fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-                      spacingUnit: '4px',
-                      borderRadius: '8px',
-                    },
-                    rules: {
-                      '.Input': {
-                        backgroundColor: '#E5E7EB',
-                        border: '1px solid #D1D5DB',
-                      },
-                      '.Label': {
-                        color: '#374151',
-                      }
-                    }
-                  }
-                }}>
-                  <PaymentForm
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                  />
-                </Elements>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <span className="ml-3 text-gray-400">Loading payment form...</span>
-              </div>
-            )
-          ) : (
-            <div className="text-center p-4">
-              <p className="text-gray-400">Please accept the terms and conditions to proceed with payment</p>
-            </div>
-          )}
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-8">
+          <button
+            onClick={onBack}
+            className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
+            disabled={isPaymentComplete}
+          >
+            Back
+          </button>
         </div>
-
-        {!isPaymentComplete && (
-          <div className="flex justify-between pt-4">
-            <button
-              onClick={onBack}
-              className="px-4 py-2 text-gray-400 hover:text-gray-300 transition-colors"
-            >
-              Back
-            </button>
-          </div>
-        )}
-
-        <PasswordCreationModal
-          isOpen={showPasswordModal}
-          onClose={() => setShowPasswordModal(false)}
-          onSubmit={handlePasswordCreation}
-          email={bookingData.customerInfo?.email || ''}
-        />
-      </div>
+      </motion.div>
     </PaymentErrorBoundary>
   );
 };

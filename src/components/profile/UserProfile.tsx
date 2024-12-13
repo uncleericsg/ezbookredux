@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, CreditCard, User, Edit2, X, Mail, Phone, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { useUser } from '../../contexts/UserContext';
+import { useUserRedux } from '../../hooks/useUserRedux';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
 import AddressManager from './AddressManager';
@@ -12,24 +12,66 @@ import ProfileStats from './ProfileStats';
 import Breadcrumbs from '../common/Breadcrumbs';
 import QuickActions from './QuickActions';
 import ServiceHistory from './ServiceHistory';
+import type { User } from '../../types';
+import { toast } from 'sonner';
 
 const UserProfile: React.FC = () => {
-  const { user, loading } = useUser();
+  const { user, loading, updateProfile } = useUserRedux();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const membershipTier = user?.lastName?.toUpperCase().includes('AMC') ? 'AMC' : 'REGULAR';
 
+  // Debug initial mount and state
+  useEffect(() => {
+    console.group('🔄 UserProfile Mount');
+    console.log('Initial State:', {
+      user,
+      loading,
+      isEditing,
+      activeTab,
+      membershipTier
+    });
+    console.groupEnd();
+
+    // Cleanup logging
+    return () => {
+      console.log('🔚 UserProfile Unmounted');
+    };
+  }, []);
+
+  // Debug user state changes
+  useEffect(() => {
+    if (user) {
+      console.group('👤 User State Updated');
+      console.log('User Data:', user);
+      console.log('Membership:', membershipTier);
+      console.log('Bookings:', user.bookings?.length || 0);
+      console.groupEnd();
+    }
+  }, [user, membershipTier]);
+
   // Wait for user data to load and check
-  React.useEffect(() => {
+  useEffect(() => {
+    console.group('🔍 Auth Check');
+    console.log('Loading:', loading);
+    console.log('User Present:', !!user);
+    
     if (!loading && !user) {
-      console.log('No user data found, redirecting to login');
+      console.warn('No user data found, redirecting to login');
       navigate('/login', { replace: true });
     }
+    console.groupEnd();
   }, [user, loading, navigate]);
+
+  // Debug tab changes
+  useEffect(() => {
+    console.log('📑 Active Tab Changed:', activeTab);
+  }, [activeTab]);
 
   // Show loading state while checking user
   if (loading) {
+    console.log('⌛ Loading Profile...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center">
@@ -41,28 +83,57 @@ const UserProfile: React.FC = () => {
   }
 
   // Return null if no user (will redirect in useEffect)
-  if (!user) return null;
+  if (!user) {
+    console.warn('⚠️ No user data available');
+    return null;
+  }
 
-  const handleSaveProfile = async (data: any) => {
+  const handleSaveProfile = async (data: Partial<User>) => {
+    console.group('💾 Profile Update Attempt');
+    console.log('Update Data:', data);
+    
     try {
-      if (userDispatch) {
-        userDispatch({ type: 'UPDATE_USER', payload: { ...user, ...data } });
-      }
+      console.time('profileUpdate');
+      await updateProfile(data);
+      console.timeEnd('profileUpdate');
+      
       setIsEditing(false);
+      toast.success('Profile updated successfully');
+      console.log('✅ Profile update successful');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('❌ Profile Update Error:', error);
+      console.trace('Error Stack:');
+      toast.error('Failed to update profile');
+    } finally {
+      console.groupEnd();
     }
   };
 
-  // Calculate stats
+  // Calculate stats with debugging
+  console.group('📊 Profile Statistics');
   const totalBookings = user.bookings?.length || 0;
   const completedServices = user.bookings?.filter(b => b.status === 'Completed').length || 0;
   const memberSince = format(new Date(user.createdAt || new Date()), 'MMMM yyyy');
+  
+  console.log({
+    totalBookings,
+    completedServices,
+    memberSince,
+    nextServiceDate: user.nextServiceDate,
+    contractExpiryDate: user.contractExpiryDate
+  });
+  console.groupEnd();
 
   const renderTabContent = () => {
+    console.group('🎯 Tab Content Render');
+    console.log('Active Tab:', activeTab);
+    console.log('Editing Mode:', isEditing);
+    
+    let content;
     switch (activeTab) {
       case 'overview':
-        return (
+        console.log('Rendering Overview Tab');
+        content = (
           <>
             <div className="space-y-6">
               <ProfileStats
@@ -82,8 +153,11 @@ const UserProfile: React.FC = () => {
             </div>
           </>
         );
+        break;
+
       case 'profile':
-        return (
+        console.log('Rendering Profile Tab');
+        content = (
           <div className="space-y-8">
             <div className="bg-gray-800 rounded-lg shadow-lg p-6">
               {isEditing ? (
@@ -91,7 +165,10 @@ const UserProfile: React.FC = () => {
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-white">Edit Profile</h2>
                     <button
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        console.log('🔄 Canceling Edit Mode');
+                        setIsEditing(false);
+                      }}
                       className="p-2 hover:bg-gray-700 rounded-full transition-colors"
                     >
                       <X className="w-5 h-5 text-gray-400" />
@@ -100,7 +177,10 @@ const UserProfile: React.FC = () => {
                   <ProfileForm
                     user={user}
                     onSave={handleSaveProfile}
-                    onCancel={() => setIsEditing(false)}
+                    onCancel={() => {
+                      console.log('🔄 Canceling Profile Edit');
+                      setIsEditing(false);
+                    }}
                   />
                 </>
               ) : (
@@ -108,7 +188,10 @@ const UserProfile: React.FC = () => {
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-white">Personal Information</h2>
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => {
+                        console.log('✏️ Entering Edit Mode');
+                        setIsEditing(true);
+                      }}
                       className="p-2 hover:bg-gray-700 rounded-full transition-colors"
                     >
                       <Edit2 className="w-5 h-5 text-gray-400" />
@@ -149,8 +232,11 @@ const UserProfile: React.FC = () => {
             </div>
           </div>
         );
+        break;
+
       case 'bookings':
-        return (
+        console.log('Rendering Bookings Tab');
+        content = (
           <div className="bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-white mb-6">Booking History</h2>
             <div className="space-y-6">
@@ -203,16 +289,26 @@ const UserProfile: React.FC = () => {
             </div>
           </div>
         );
+        break;
+
       case 'addresses':
-        return (
+        console.log('Rendering Addresses Tab');
+        content = (
           <div className="bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-white mb-6">Manage Addresses</h2>
             <AddressManager />
           </div>
         );
+        break;
+
       default:
-        return null;
+        content = null;
+        break;
     }
+
+    console.log('📊 Tab Content Rendered');
+    console.groupEnd();
+    return content;
   };
 
   return (

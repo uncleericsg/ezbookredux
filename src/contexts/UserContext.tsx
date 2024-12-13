@@ -5,9 +5,11 @@
 // @ai-doc 3. Authentication state persistence
 // @ai-doc 4. Context provider structure
 
-import React, { createContext, useContext, useReducer, useState, useMemo, useCallback, useEffect } from 'react';
-import { authenticateUser } from '../services/auth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../store';
+import { setUser as setReduxUser, clearUser } from '../store/slices/userSlice';
 
 interface Booking {
   id: string;
@@ -44,119 +46,71 @@ export interface User {
     status: 'available' | 'busy' | 'offline';
     lastUpdated: string;
   };
-  // @ai-doc Firebase specific fields will be added here
-  // uid?: string;
-  // emailVerified?: boolean;
-  // photoURL?: string;
 }
 
-// @ai-doc Auth Actions - extend this when adding new auth methods
-type AuthAction = 
-  | { type: 'SET_USER'; payload: User }
-  | { type: 'CLEAR_USER' }
-  | { type: 'UPDATE_USER'; payload: Partial<User> }
-  | { type: 'UPDATE_TECH_STATUS'; payload: { status: 'available' | 'busy' | 'offline' } }
-  | { type: 'ADD_BOOKING'; payload: Booking };
-
-// @ai-doc Core user reducer - DO NOT remove existing cases
-const userReducer = (state: User | null, action: AuthAction): User | null => {
-  switch (action.type) {
-    case 'SET_USER':
-      return action.payload;
-    case 'CLEAR_USER':
-      return null;
-    case 'UPDATE_USER':
-      return state ? { ...state, ...action.payload } : null;
-    case 'UPDATE_TECH_STATUS':
-      if (!state || state.role !== 'tech') return state;
-      return {
-        ...state,
-        availability: {
-          status: action.payload.status,
-          lastUpdated: new Date().toISOString()
-        }
-      };
-    case 'ADD_BOOKING':
-      if (!state) return null;
-      return {
-        ...state,
-        bookings: [...(state.bookings || []), action.payload]
-      };
-    default:
-      return state;
-  }
-};
-
-// @ai-doc Auth Provider Interface - extend this when adding new auth methods
-export interface UserContextType {
+interface UserContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  userDispatch: React.Dispatch<AuthAction>;
-  // @ai-doc Auth methods - these will be adapted for Firebase
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (userData: User) => Promise<boolean>;
   logout: () => void;
 }
 
-// @ai-doc Core context - DO NOT modify the basic structure
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// @ai-doc Main provider component - authentication logic will be updated for Firebase
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dispatch = useDispatch();
+  const reduxUser = useSelector((state: RootState) => state.user.currentUser);
   const [loading, setLoading] = useState(true);
-  const [user, dispatch] = useReducer(userReducer, null);
 
-  // @ai-doc Initialize user data - this will be updated for Firebase auth state
   useEffect(() => {
-    setLoading(true);
-    const storedData = localStorage.getItem('userData');
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    if (storedData && isAuthenticated === 'true') {
+    // Load user data from localStorage and sync with Redux
+    const loadUser = () => {
       try {
-        const userData = JSON.parse(storedData);
-        dispatch({ type: 'SET_USER', payload: userData });
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          dispatch(setReduxUser(parsedUser));
+        }
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('userData');
-        localStorage.removeItem('isAuthenticated');
+        console.error('Error loading user data:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
+    };
 
-  // @ai-doc Auth methods - these will be replaced with Firebase implementations
-  const login = useCallback(async (email: string, password: string) => {
+    if (!reduxUser) {
+      loadUser();
+    } else {
+      setLoading(false);
+    }
+  }, [dispatch, reduxUser]);
+
+  const login = async (userData: User) => {
     try {
-      const userData = await authenticateUser(email, password);
-      if (userData) {
-        dispatch({ type: 'SET_USER', payload: userData });
-        localStorage.setItem('userData', JSON.stringify(userData));
-        localStorage.setItem('isAuthenticated', 'true');
-        return true;
-      }
-      return false;
+      dispatch(setReduxUser(userData));
+      localStorage.setItem('userData', JSON.stringify(userData));
+      return true;
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Login failed');
+      console.error('Error during login:', error);
+      toast.error('Failed to login');
       return false;
     }
-  }, []);
+  };
 
-  const logout = useCallback(() => {
-    dispatch({ type: 'CLEAR_USER' });
+  const logout = () => {
+    dispatch(clearUser());
     localStorage.removeItem('userData');
-    localStorage.removeItem('isAuthenticated');
-  }, []);
+    toast.success('Logged out successfully');
+  };
 
-  const value = useMemo(() => ({
-    user,
+  const value = {
+    user: reduxUser || null,
     loading,
-    isAuthenticated: !!user,
-    userDispatch: dispatch,
+    isAuthenticated: !!reduxUser,
     login,
     logout
-  }), [user, loading, login, logout]);
+  };
 
   return (
     <UserContext.Provider value={value}>

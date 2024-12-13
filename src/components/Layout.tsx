@@ -37,58 +37,57 @@ import AppInstallPrompt from './AppInstallPrompt';
 import ServiceDueBanner from './ServiceDueBanner';
 import FloatingButtons from './FloatingButtons';
 import { useAnnouncements } from '../hooks/useAnnouncements';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '../store';
 import { LoadingScreen } from './LoadingScreen';
-import { PROTECTED_ROUTES, ROUTES_WITHOUT_NAVBAR } from '../config/routes';
+import { PROTECTED_ROUTES, ROUTES_WITHOUT_NAVBAR, ROUTES } from '../config/routes';
 
 const Layout: React.FC = () => {
   const { announcements, dismissAnnouncement } = useAnnouncements();
   const currentAnnouncement = announcements[0];
-  const { user, loading } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
+  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check if current route requires authentication
-  const requiresAuth = PROTECTED_ROUTES.some(route => location.pathname.startsWith(route));
-  const hideNavbar = ROUTES_WITHOUT_NAVBAR.some(route => location.pathname.startsWith(route));
+  const pathname = location.pathname;
+  const isLoginPage = pathname === ROUTES.LOGIN;
+  const shouldShowNavbar = !ROUTES_WITHOUT_NAVBAR.includes(pathname);
 
   useEffect(() => {
-    // Redirect to login if trying to access protected route without authentication
-    if (requiresAuth && !loading && !user) {
-      navigate('/login', { state: { from: location.pathname } });
-    }
-  }, [requiresAuth, user, loading, navigate, location]);
+    // Check if we're on a protected route
+    const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
 
-  // Show loading state while checking authentication
-  if (loading && requiresAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[linear-gradient(45deg,rgba(27,24,113,1)_30%,rgba(7,7,9,1)_70%)]">
-        <LoadingScreen />
-      </div>
-    );
+    if (isProtectedRoute && !isAuthenticated && !loading) {
+      navigate(ROUTES.LOGIN, { state: { from: location }, replace: true });
+    }
+
+    // Redirect from login page if already authenticated
+    if (isLoginPage && isAuthenticated) {
+      const intendedPath = location.state?.from?.pathname || ROUTES.HOME;
+      navigate(intendedPath, { replace: true });
+    }
+  }, [isAuthenticated, loading, pathname, navigate, location, isLoginPage]);
+
+  if (loading) {
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(45deg,rgba(27,24,113,1)_30%,rgba(7,7,9,1)_70%)] text-gray-100 flex flex-col">
-      {user && <AppInstallPrompt />}
-      {!hideNavbar && <Navbar />}
-      {user && (
-        <div className="relative">
-          <ServiceDueBanner />
-        </div>
-      )}
-      <main className={`flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${requiresAuth ? 'pb-0' : ''}`}>
-        <Outlet />
-      </main>
+    <div className="min-h-screen flex flex-col">
+      {shouldShowNavbar && <Navbar />}
       {currentAnnouncement && (
         <Announcement
-          message={currentAnnouncement.message}
-          type={currentAnnouncement.type}
+          {...currentAnnouncement}
           onDismiss={() => dismissAnnouncement(currentAnnouncement.id)}
         />
       )}
-      {!hideNavbar && <Footer />}
-      {!hideNavbar && <FloatingButtons />}
+      {isAuthenticated && <ServiceDueBanner />}
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+      {shouldShowNavbar && <Footer />}
+      {isAuthenticated && <FloatingButtons />}
+      <AppInstallPrompt />
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import React from 'react';
-import { CreditCard, QrCode, Check } from 'lucide-react';
-import { usePayment } from '../../contexts/PaymentContext';
 import { motion } from 'framer-motion';
+import { Check, CreditCard, QrCode, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setPaymentMethod } from '../../store/slices/paymentSlice';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: 'card' | 'paynow';
@@ -13,12 +14,13 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   selectedMethod,
   onSelect,
 }) => {
-  const { state, dispatch } = usePayment();
+  const dispatch = useAppDispatch();
+  const paymentState = useAppSelector(state => state.payment);
 
   const handleMethodSelect = (method: 'card' | 'paynow') => {
     console.log('Selecting payment method:', method);
     onSelect(method);
-    dispatch({ type: 'SET_PAYMENT_METHOD', payload: method });
+    dispatch(setPaymentMethod(method));
     toast.success(`Payment method set to ${method === 'card' ? 'Credit Card' : 'PayNow'}`);
   };
 

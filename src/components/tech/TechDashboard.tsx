@@ -1,8 +1,8 @@
 import React from 'react';
-import { useUser } from '../../contexts/UserContext';
+import { useAppSelector } from '../../store';
 
 const TechDashboard: React.FC = () => {
-  const { user } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -14,19 +14,19 @@ const TechDashboard: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-gray-400">Name</p>
-            <p>{user?.firstName} {user?.lastName}</p>
+            <p>{currentUser?.firstName} {currentUser?.lastName}</p>
           </div>
           <div>
             <p className="text-gray-400">Team ID</p>
-            <p>{user?.teamId || 'Not Assigned'}</p>
+            <p>{currentUser?.teamId || 'Not Assigned'}</p>
           </div>
           <div>
             <p className="text-gray-400">Specializations</p>
-            <p>{user?.specializations?.join(', ') || 'None specified'}</p>
+            <p>{currentUser?.specializations?.join(', ') || 'None specified'}</p>
           </div>
           <div>
             <p className="text-gray-400">Status</p>
-            <p>{user?.availability || 'Available'}</p>
+            <p>{currentUser?.availability || 'Available'}</p>
           </div>
         </div>
       </div>

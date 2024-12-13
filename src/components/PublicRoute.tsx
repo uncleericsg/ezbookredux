@@ -1,26 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '../store';
 
 interface PublicRouteProps {
   children: React.ReactNode;
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useUser();
   const location = useLocation();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { currentUser } = useAppSelector((state) => state.user);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  // Debug logging
+  console.log('PublicRoute render:', {
+    isAuthenticated,
+    currentUser: !!currentUser,
+    pathname: location.pathname,
+    state: location.state
+  });
 
-  if (isAuthenticated) {
-    // If user is logged in, redirect to the home page or the page they came from
-    return <Navigate to={location.state?.from || '/'} replace />;
+  // If user is authenticated and has data, redirect to home or intended path
+  if (currentUser && isAuthenticated) {
+    const intendedPath = location.state?.from || '/';
+    return <Navigate to={intendedPath} replace />;
   }
 
   return <>{children}</>;

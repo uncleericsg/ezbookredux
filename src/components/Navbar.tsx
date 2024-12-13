@@ -8,8 +8,9 @@ import { Bell, User, Shield, Settings, LogOut, LogIn } from 'lucide-react';
 import NotificationBadge from './NotificationBadge';
 import GuestNotificationModal from './GuestNotificationModal';
 import LoginModal from './LoginModal';
-import { useUser } from '../contexts/UserContext';
-import { useLogout } from '../hooks/useLogout';
+import { useAppDispatch, useAppSelector } from '../store';
+import { clearUser } from '../store/slices/userSlice';
+import { setAuthenticated } from '../store/slices/authSlice';
 import { useNotifications } from '../hooks/useNotifications';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -17,20 +18,25 @@ import { toast } from 'sonner';
 // @ai-doc Main navigation component
 // @ai-doc Handles user navigation and authentication state
 const Navbar: React.FC = () => {
-  const { user } = useUser();
-  const logout = useLogout();
+  const { currentUser } = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
-  const isAmcCustomer = user?.lastName?.toLowerCase().includes('amc');
-  const isAdmin = user?.role === 'admin';
+  const isAmcCustomer = currentUser?.lastName?.toLowerCase().includes('amc');
+  const isAdmin = currentUser?.role === 'admin';
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // @ai-doc Logout handler - DO NOT modify the logout flow
   const handleLogout = async () => {
     try {
-      logout();
+      dispatch(clearUser());
+      dispatch(setAuthenticated(false));
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
       toast.success('Logged out successfully');
+      window.location.href = '/login';
     } catch (error) {
       toast.error('Failed to logout');
     }
@@ -55,7 +61,7 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            {!user && (
+            {!currentUser && (
               <button
                 onClick={() => setShowLoginModal(true)}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium
@@ -72,17 +78,17 @@ const Navbar: React.FC = () => {
             )}
             
             <button
-              onClick={() => user ? navigate('/notifications') : setShowGuestModal(true)}
+              onClick={() => currentUser ? navigate('/notifications') : setShowGuestModal(true)}
               className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors relative"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
-              {user && unreadCount > 0 && (
+              {currentUser && unreadCount > 0 && (
                 <NotificationBadge count={unreadCount} />
               )}
             </button>
 
-            {user && (
+            {currentUser && (
               <div className="relative">
                 <button
                   onClick={() => navigate('/profile')}
@@ -104,38 +110,42 @@ const Navbar: React.FC = () => {
               </Link>
             )}
 
-            {user && (
-              <>
-                <Link
-                  to="/settings"
-                  className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
-                  aria-label="Settings"
-                >
-                  <Settings className="h-5 w-5" />
-                </Link>
+            {isAmcCustomer && (
+              <Link
+                to="/settings"
+                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                aria-label="Settings"
+              >
+                <Settings className="h-5 w-5" />
+              </Link>
+            )}
 
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </>
+            {currentUser && (
+              <button
+                onClick={handleLogout}
+                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                aria-label="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             )}
           </div>
         </div>
       </div>
 
-      <GuestNotificationModal
-        isOpen={showGuestModal}
-        onClose={() => setShowGuestModal(false)}
-      />
+      {showGuestModal && (
+        <GuestNotificationModal
+          isOpen={showGuestModal}
+          onClose={() => setShowGuestModal(false)}
+        />
+      )}
 
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
+      {showLoginModal && (
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
     </nav>
   );
 };

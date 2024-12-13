@@ -1,6 +1,7 @@
 import React from 'react';
 import { Shield, Check } from 'lucide-react';
-import { usePayment } from '../../contexts/PaymentContext';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setTermsAccepted } from '../../store/slices/paymentSlice';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -9,11 +10,12 @@ interface TermsAndConditionsProps {
 }
 
 const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onAccept }) => {
-  const { state, dispatch } = usePayment();
+  const dispatch = useAppDispatch();
+  const paymentState = useAppSelector(state => state.payment);
 
   const handleTermsAcceptance = () => {
-    const newValue = !state.termsAccepted;
-    dispatch({ type: 'SET_TERMS_ACCEPTED', payload: newValue });
+    const newValue = !paymentState.termsAccepted;
+    dispatch(setTermsAccepted(newValue));
     console.log('Terms acceptance toggled:', newValue); // Debug log
     
     if (newValue) {
@@ -27,18 +29,18 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onAccept }) => 
       <motion.div
         onClick={handleTermsAcceptance}
         animate={{
-          boxShadow: !state.termsAccepted
+          boxShadow: !paymentState.termsAccepted
             ? ['0 0 0 0 rgba(236, 72, 153, 0)', '0 0 30px 3px rgba(236, 72, 153, 0.5)', '0 0 0 0 rgba(236, 72, 153, 0)']
             : '0 0 0 0 rgba(236, 72, 153, 0)',
         }}
         transition={{
           duration: 1.5,
-          repeat: !state.termsAccepted ? Infinity : 0,
+          repeat: !paymentState.termsAccepted ? Infinity : 0,
           repeatType: "reverse",
           ease: "easeInOut"
         }}
         className={`relative cursor-pointer rounded-lg p-6
-          ${state.termsAccepted 
+          ${paymentState.termsAccepted 
             ? 'bg-green-500/10 border-2 border-green-500/30' 
             : 'bg-blue-500/10 border border-blue-300/20'} 
           backdrop-blur-sm transition-all duration-300 
@@ -47,7 +49,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onAccept }) => 
         whileTap={{ scale: 0.98 }}
       >
         <div className="flex flex-col items-center justify-center space-y-4">
-          {state.termsAccepted ? (
+          {paymentState.termsAccepted ? (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}

@@ -1,30 +1,42 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { useUser } from '../contexts/UserContext';
-import { setUser, setLoading, setError } from '../store/slices/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { setUser, setLoading } from '../store/slices/userSlice';
 import { setAuthenticated, setToken } from '../store/slices/authSlice';
 
 /**
- * Hook to help migrate from UserContext to Redux
- * This hook synchronizes the UserContext state with Redux state
- * Use this during the transition period while migrating components
+ * Hook to handle user authentication state
+ * This hook manages the synchronization between localStorage and Redux state
  */
 export const useUserMigration = () => {
   const dispatch = useDispatch();
-  const { user, loading, isAuthenticated } = useUser();
+  const { user } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // Sync user data
-    dispatch(setUser(user));
-    dispatch(setLoading(loading));
-    dispatch(setAuthenticated(isAuthenticated));
-
-    // If you have a token in localStorage, sync it
-    const token = localStorage.getItem('authToken');
+    // Get token from localStorage
+    const token = localStorage.getItem('auth_token');
+    
     if (token) {
       dispatch(setToken(token));
+      dispatch(setAuthenticated(true));
+    } else {
+      dispatch(setToken(null));
+      dispatch(setAuthenticated(false));
+      dispatch(setUser(null));
     }
-  }, [user, loading, isAuthenticated, dispatch]);
+    
+    dispatch(setLoading(false));
+  }, []); // Only run once on mount
 
-  return null; // This hook is used for its side effects only
+  // Log auth state
+  useEffect(() => {
+    console.log('Auth State:', {
+      hasUser: !!user,
+      isAuthenticated,
+      hasToken: !!localStorage.getItem('auth_token')
+    });
+  }, [user, isAuthenticated]);
+
+  return null;
 };

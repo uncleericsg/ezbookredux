@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getMessaging } from 'firebase/messaging';
 import { ApiError, handleApiError } from '../utils/apiErrors';
@@ -21,6 +21,12 @@ try {
 }
 
 export const auth = getAuth(app);
+// Configure auth persistence
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error('Error setting auth persistence:', error);
+  });
+
 export const db = getFirestore(app);
 export const messaging = typeof window !== 'undefined' && 'serviceWorker' in navigator 
   ? getMessaging(app) 

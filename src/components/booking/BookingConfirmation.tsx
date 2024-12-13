@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, CreditCard } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
+import { useAppSelector } from '../../store';
 import PasswordCreationModal from '../auth/PasswordCreationModal';
 
 interface Booking {
@@ -33,14 +33,14 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 }) => {
   const { bookingId } = useParams();
   const location = useLocation();
-  const { user } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(true);
 
   // Get booking details either from props, location state, or user's bookings
-  const booking = propBooking || location.state?.booking || user?.bookings?.find(b => b.id === bookingId);
+  const booking = propBooking || location.state?.booking || currentUser?.bookings?.find(b => b.id === bookingId);
   const bookingReference = propBookingReference || booking?.id;
-  const email = propEmail || user?.email;
+  const email = propEmail || currentUser?.email;
 
   if (!booking) {
     return (
@@ -103,52 +103,69 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
           {/* Booking Details */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <Calendar className="h-5 w-5 text-[#FFD700]" />
-              <span>Booking Reference: {bookingReference}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-[#FFD700]" />
+                <span className="text-gray-400">Service Date</span>
+              </div>
+              <span className="text-white">{booking.date} at {booking.time}</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-300">
-              <CreditCard className="h-5 w-5 text-[#FFD700]" />
-              <span>Amount Paid: ${booking.amount}</span>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="h-5 w-5 text-[#FFD700]" />
+                <span className="text-gray-400">Payment Method</span>
+              </div>
+              <span className="text-white">{booking.paymentMethod}</span>
             </div>
-            <div className="text-gray-300">
-              <p>Service Type: {booking.serviceType}</p>
-              <p>Date: {new Date(booking.date).toLocaleDateString()}</p>
-              {booking.time && <p>Time: {booking.time}</p>}
-              <p>Address: {booking.address}</p>
+
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Total Amount</span>
+              <span className="text-white">${booking.amount.toFixed(2)}</span>
             </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Service Address</span>
+              <span className="text-white">{booking.address}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Booking Reference</span>
+              <span className="text-white">{bookingReference}</span>
+            </div>
+
+            {email && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Email</span>
+                <span className="text-white">{email}</span>
+              </div>
+            )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col space-y-3">
+          {/* Actions */}
+          <div className="space-y-4">
             <button
               onClick={handleDownload}
-              className="w-full py-2 px-4 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
+              className="w-full py-2 px-4 bg-[#FFD700] text-gray-900 rounded-md hover:bg-[#FFD700]/90 transition-colors"
             >
               Download Receipt
             </button>
-            {booking.status === 'Upcoming' && (
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-full py-2 px-4 bg-[#FFD700] text-gray-900 rounded-md hover:bg-[#FFD700]/90 transition-colors"
-              >
-                View All Bookings
-              </button>
-            )}
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-full py-2 px-4 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+              View All Bookings
+            </button>
           </div>
         </div>
       </motion.div>
 
-      {/* Password Creation Modal - Only show for new bookings when account creation is needed */}
-      {onCreateAccount && (
+      {/* Password Creation Modal */}
+      {!currentUser && onCreateAccount && (
         <PasswordCreationModal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            navigate('/', { replace: true });
-          }}
+          onClose={() => setIsModalOpen(false)}
           onSubmit={handlePasswordSubmit}
-          email={email}
         />
       )}
     </>

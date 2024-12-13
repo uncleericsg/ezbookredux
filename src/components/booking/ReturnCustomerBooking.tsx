@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '../../contexts/UserContext';
+import { useUserRedux } from '../../hooks/useUserRedux';
 import ServicePricingSelection from '../ServicePricingSelection';
 import ReturnCustomerSchedule from './ReturnCustomerSchedule';
 import PaymentStep from './PaymentStep';
@@ -72,7 +72,7 @@ interface ServicePricing {
 const ReturnCustomerBooking: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const { user } = useUserRedux();
   const [step, setStep] = useState<'pricing' | 'schedule' | 'payment'>('pricing');
   const [selectedService, setSelectedService] = useState<PricingOption | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null);

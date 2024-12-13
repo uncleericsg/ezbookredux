@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { usePayment } from '../contexts/PaymentContext';
-import { createPaymentIntent, handlePaymentSuccess } from '../services/paymentService';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useStripe, useElements, PaymentElement, Elements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Box, Button, Typography } from '@mui/material';
+import { Loader2 } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setError } from '../store/slices/paymentSlice';
+import axios from 'axios';
 import PasswordCreationModal from './auth/PasswordCreationModal';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getStripe } from '../services/stripe';
-import { Button, Box, Typography } from '@mui/material';
-import axios from 'axios'; // Import axios
 
 interface PaymentFormProps {
   onSuccess?: () => void;
@@ -16,13 +16,13 @@ interface PaymentFormProps {
 }
 
 const PaymentFormContent: React.FC<PaymentFormProps> = ({ onSuccess, onError }) => {
-  const { state } = usePayment();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const navigate = useNavigate();
   const stripe = useStripe();
   const elements = useElements();
+  const paymentState = useAppSelector(state => state.payment);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +38,11 @@ const PaymentFormContent: React.FC<PaymentFormProps> = ({ onSuccess, onError }) 
     try {
       // Create a PaymentIntent with metadata
       const response = await axios.post('/api/payments/create-payment-intent', {
-        amount: state.totalAmount,
+        amount: paymentState.amount,
         currency: 'sgd',
-        serviceId: state.serviceId,
-        customerId: state.customerId,
-        bookingId: state.bookingId
+        serviceId: paymentState.serviceId,
+        customerId: paymentState.customerId,
+        bookingId: paymentState.bookingId
       });
 
       const { clientSecret } = response.data;
@@ -53,16 +53,16 @@ const PaymentFormContent: React.FC<PaymentFormProps> = ({ onSuccess, onError }) 
           return_url: `${window.location.origin}/payment/success`,
           payment_method_data: {
             billing_details: {
-              name: state.customerName,
-              email: state.customerEmail,
+              name: paymentState.customerName,
+              email: paymentState.customerEmail,
             },
           },
           metadata: {
-            serviceId: state.serviceId,
-            customerId: state.customerId,
-            bookingId: state.bookingId,
-            scheduledDate: state.scheduledDate,
-            serviceName: state.serviceName
+            serviceId: paymentState.serviceId,
+            customerId: paymentState.customerId,
+            bookingId: paymentState.bookingId,
+            scheduledDate: paymentState.scheduledDate,
+            serviceName: paymentState.serviceName
           }
         },
       });
@@ -191,22 +191,23 @@ const PaymentFormContent: React.FC<PaymentFormProps> = ({ onSuccess, onError }) 
 
 const PaymentForm: React.FC<PaymentFormProps> = (props) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const { state } = usePayment();
+  const paymentState = useAppSelector(state => state.payment);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const initializePayment = async () => {
       try {
-        if (!state.totalAmount || state.totalAmount <= 0) {
+        if (!paymentState.amount || paymentState.amount <= 0) {
           return; // Silently return if amount is not set yet
         }
 
         // Create a PaymentIntent with metadata
         const response = await axios.post('/api/payments/create-payment-intent', {
-          amount: state.totalAmount,
+          amount: paymentState.amount,
           currency: 'sgd',
-          serviceId: state.serviceId,
-          customerId: state.customerId,
-          bookingId: state.bookingId
+          serviceId: paymentState.serviceId,
+          customerId: paymentState.customerId,
+          bookingId: paymentState.bookingId
         });
 
         const { clientSecret: secret } = response.data;
@@ -221,6 +222,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props) => {
         const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
         console.error('Failed to initialize payment:', err);
         toast.error(errorMessage);
+        dispatch(setError(errorMessage));
         if (props.onError) {
           props.onError(errorMessage);
         }
@@ -228,7 +230,7 @@ const PaymentForm: React.FC<PaymentFormProps> = (props) => {
     };
 
     initializePayment();
-  }, [state.totalAmount, props.onError]);
+  }, [paymentState.amount, props.onError]);
 
   if (!clientSecret) {
     return <Loader2 className="w-6 h-6 mx-auto animate-spin" />;

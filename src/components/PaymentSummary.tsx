@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Heart, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { usePayment } from '../contexts/PaymentContext';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setAmount } from '../store/slices/paymentSlice';
 import PaymentFlow from './PaymentFlow';
 
 interface ServiceDetails {
@@ -35,14 +36,15 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
 }) => {
   const [localTipAmount, setLocalTipAmount] = useState(externalTipAmount);
   const [showPaymentFlow, setShowPaymentFlow] = useState(false);
-  const { dispatch } = usePayment();
+  const dispatch = useAppDispatch();
+  const paymentState = useAppSelector(state => state.payment);
   const tipAmount = typeof externalTipAmount === 'number' ? externalTipAmount : localTipAmount;
   const serviceAmount = serviceDetails?.price || 0;
   const total = serviceAmount + (tipAmount || 0);
 
   // Update payment context when total changes
   useEffect(() => {
-    dispatch({ type: 'SET_AMOUNT', payload: total });
+    dispatch(setAmount(total));
   }, [total, dispatch]);
 
   const handleTipChange = (value: number) => {

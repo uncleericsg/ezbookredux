@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePayment } from '../../contexts/PaymentContext';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { setPaymentStatus, addTransaction, clearPaymentState, setError } from '../../features/payment/paymentSlice';
 import { Box, Typography, Button, Container, Alert, CircularProgress } from '@mui/material';
 import { CheckCircle } from 'lucide-react';
 import { getStripe } from '../../services/stripe';
-import { handlePaymentSuccess } from '../../services/paymentService';
 import { toast } from 'sonner';
 
 const PaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
-  const { state } = usePayment();
+  const dispatch = useAppDispatch();
+  const paymentState = useAppSelector(state => state.payment);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -90,6 +91,32 @@ const PaymentSuccess: React.FC = () => {
 
   const handleReturn = () => {
     navigate('/');
+  };
+
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    try {
+      dispatch(setPaymentStatus('success'));
+      
+      // Record the successful transaction
+      dispatch(addTransaction({
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        paymentMethod: paymentIntent.payment_method_types[0],
+        status: 'completed',
+        metadata: paymentIntent.metadata,
+        customerEmail: paymentIntent.receipt_email,
+        timestamp: new Date().toISOString()
+      }));
+
+      // Clear sensitive payment data
+      setTimeout(() => {
+        dispatch(clearPaymentState());
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error processing payment success:', error);
+      dispatch(setError('Failed to process payment confirmation'));
+    }
   };
 
   if (isLoading) {

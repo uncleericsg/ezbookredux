@@ -1,13 +1,11 @@
-import React, { StrictMode, Suspense, startTransition } from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import { Toaster } from 'react-hot-toast';
-import RouterComponent from './router';
-import ErrorBoundary from './components/ErrorBoundary';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
-import { UserProvider } from './contexts/UserContext';
 import { store } from './store';
+import RouterComponent from './router';
 import './index.css';
 
 // Create a client
@@ -25,22 +23,16 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 const root = ReactDOM.createRoot(rootElement);
 
-startTransition(() => {
-  root.render(
-    <StrictMode>
-      <ErrorBoundary>
-        <Provider store={store}>
-          <QueryClientProvider client={queryClient}>
-            <Suspense fallback={<LoadingScreen />}>
-              <RouterComponent>
-                <UserProvider>
-                  <Toaster position="top-right" />
-                </UserProvider>
-              </RouterComponent>
-            </Suspense>
-          </QueryClientProvider>
-        </Provider>
-      </ErrorBoundary>
-    </StrictMode>
-  );
-});
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <Suspense fallback={<LoadingScreen />}>
+            <RouterComponent />
+          </Suspense>
+        </QueryClientProvider>
+      </Provider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

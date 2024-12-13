@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useSelector } from 'react-redux';
 import type { UserViewType } from '../components/admin/AdminViewToggle';
+import { RootState } from '../store';
 
 interface AdminViewContextType {
   currentView: UserViewType;
@@ -24,7 +25,7 @@ interface AdminViewProviderProps {
 }
 
 export const AdminViewProvider: React.FC<AdminViewProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [currentView, setCurrentView] = useState<UserViewType>('non-user');
 
   // Reset view based on authenticated user's role
@@ -52,122 +53,32 @@ export const AdminViewProvider: React.FC<AdminViewProviderProps> = ({ children }
     if (user) {
       if (user.role === 'admin') {
         setCurrentView('admin');
-        localStorage.setItem('currentView', 'admin');
       } else if (user.role === 'amc') {
         setCurrentView('amc');
-        localStorage.setItem('currentView', 'amc');
       } else {
         setCurrentView('regular');
-        localStorage.setItem('currentView', 'regular');
       }
     } else {
       setCurrentView('non-user');
-      localStorage.removeItem('currentView');
     }
   };
 
   const isFeatureVisible = (feature: string): boolean => {
-    // Define feature visibility based on current view
-    const featureMap: Record<string, Record<UserViewType, boolean>> = {
-      // Navigation Features
-      'nav-dashboard': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': false
-      },
-      'nav-bookings': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': false
-      },
-      'nav-admin': {
-        'admin': true,
-        'amc': false,
-        'regular': false,
-        'non-user': false
-      },
-      // Booking Features
-      'booking-quick': {
-        'admin': true,
-        'amc': true,
-        'regular': false,
-        'non-user': false
-      },
-      'booking-payment': {
-        'admin': false,
-        'amc': false,
-        'regular': true,
-        'non-user': true
-      },
-      'booking-history': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': false
-      },
-      // Admin Features
-      'admin-panel': {
-        'admin': true,
-        'amc': false,
-        'regular': false,
-        'non-user': false
-      },
-      'admin-users': {
-        'admin': true,
-        'amc': false,
-        'regular': false,
-        'non-user': false
-      },
-      'admin-settings': {
-        'admin': true,
-        'amc': false,
-        'regular': false,
-        'non-user': false
-      },
-      // AMC Features
-      'amc-features': {
-        'admin': true,
-        'amc': true,
-        'regular': false,
-        'non-user': false
-      },
-      'amc-priority': {
-        'admin': true,
-        'amc': true,
-        'regular': false,
-        'non-user': false
-      },
-      // User Profile Features
-      'profile-edit': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': false
-      },
-      'profile-addresses': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': false
-      },
-      // Basic Features
-      'basic-features': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': true
-      },
-      'contact-support': {
-        'admin': true,
-        'amc': true,
-        'regular': true,
-        'non-user': true
-      }
-    };
-
-    return featureMap[feature]?.[currentView] ?? false;
+    switch (currentView) {
+      case 'admin':
+        return true; // Admins can see everything
+      case 'amc':
+        // AMC users can see most features except admin-specific ones
+        return !['user-management', 'system-settings'].includes(feature);
+      case 'regular':
+        // Regular users can only see basic features
+        return ['booking', 'profile', 'history'].includes(feature);
+      case 'non-user':
+        // Non-users can only see public features
+        return ['login', 'register', 'about'].includes(feature);
+      default:
+        return false;
+    }
   };
 
   const value = {

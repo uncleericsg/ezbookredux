@@ -128,15 +128,18 @@ export const usePublicHolidays = () => {
 
 export interface User {
   id: string;
+  phone: string;
+  role: 'admin' | 'regular' | 'tech';
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
-  address?: string;
-  condoName?: string;
-  lobbyTower?: string;
-  role: 'user' | 'admin';
-  amcStatus: AMCStatus;
-  lastServiceDate?: string;
-  nextServiceDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  bookings: any[];
+  notifications: any[];
+  preferences: {
+    language: string;
+    theme: string;
+    notifications: boolean;
+  };
 }

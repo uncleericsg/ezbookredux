@@ -1,21 +1,21 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '../store';
 import { differenceInDays, isValid } from 'date-fns';
 
 const ServiceDueBanner: React.FC = () => {
   const location = useLocation();
-  const { user } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
   
   // Only show on homepage for non-admin users with a next service date
-  if (!user || 
-      !user.nextServiceDate || 
-      user.role === 'admin' || 
+  if (!currentUser || 
+      !currentUser.nextServiceDate || 
+      currentUser.role === 'admin' || 
       location.pathname !== '/') {
     return null;
   }
 
-  const nextServiceDate = user.nextServiceDate ? new Date(user.nextServiceDate) : null;
+  const nextServiceDate = currentUser.nextServiceDate ? new Date(currentUser.nextServiceDate) : null;
   const today = new Date();
 
   if (!nextServiceDate || !isValid(nextServiceDate)) {
@@ -23,7 +23,7 @@ const ServiceDueBanner: React.FC = () => {
   }
 
   const daysUntilService = differenceInDays(nextServiceDate, today);
-  const isAMC = user.amcStatus === 'active';
+  const isAMC = currentUser.amcStatus === 'active';
   const threshold = isAMC ? 75 : 7; // Show 75 days for AMC, 7 days for regular
 
   if (daysUntilService > threshold || daysUntilService <= 0) {

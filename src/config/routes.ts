@@ -52,6 +52,7 @@ export const PROTECTED_ROUTES = [
 
 // Routes that should not show the main navigation
 export const ROUTES_WITHOUT_NAVBAR = [
+  ROUTES.LOGIN,
   ROUTES.ADMIN.ROOT,
   ROUTES.ADMIN.DASHBOARD,
   ROUTES.ADMIN.USERS,

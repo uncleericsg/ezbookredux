@@ -3,7 +3,7 @@ import {
   AirVent, Wrench, ShieldCheck, Star, Calendar, CheckCircle, 
   Shield, Clock, Timer, ThumbsUp, Users, BadgeCheck
 } from 'lucide-react';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '../store';
 import { useServiceHistory } from '../hooks/useServiceHistory';
 import { differenceInDays } from 'date-fns';
 import { categoryMapper } from '../lib/categoryMapper';
@@ -39,18 +39,18 @@ interface ServiceCategory {
 
 const ServiceCategorySelection: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { currentUser } = useAppSelector((state) => state.user);
   const { submitRating } = useServiceRating();
-  const { visits } = useServiceHistory(user?.id || '');
-  const isAmcCustomer = user?.amcStatus === 'active';
+  const { visits } = useServiceHistory(currentUser?.id || '');
+  const isAmcCustomer = currentUser?.amcStatus === 'active';
   const completedVisits = visits.filter(v => v.status === 'completed').length;
   const [showRating, setShowRating] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const counterRef = useRef<HTMLDivElement>(null);
 
   const getDaysUntilService = () => {
-    if (!user?.nextServiceDate) return null;
-    const nextService = new Date(user.nextServiceDate);
+    if (!currentUser?.nextServiceDate) return null;
+    const nextService = new Date(currentUser.nextServiceDate);
     const today = new Date();
     const days = differenceInDays(nextService, today);
     return days > 0 ? days : null;
@@ -109,38 +109,6 @@ const ServiceCategorySelection: React.FC = () => {
     });
   }
 
-  const handleCategoryClick = (category: ServiceCategory) => {
-    if (category.id === 'regular') {
-      navigate('/booking/return-customer');
-    } else {
-      navigate('/booking/first-time/service-type', {
-        state: { selectedCategory: category }
-      });
-    }
-  };
-
-  const handleRatingClick = () => {
-    if (!user) {
-      toast.error('Please log in to rate our service');
-      return;
-    }
-    setShowRating(true);
-  };
-
-  const handleRatingSubmit = async (rating: number, feedback?: string) => {
-    await submitRating('latest-service', rating, feedback);
-    setShowRating(false);
-    
-    if (rating >= 4) {
-      const shouldReview = window.confirm(
-        'Thank you for your positive feedback! Would you like to share your experience on Google?'
-      );
-      if (shouldReview) {
-        window.open('https://rate.place/iaircon', '_blank');
-      }
-    }
-  };
-
   const features = [
     { icon: CheckCircle, text: 'Professional Service' },
     { icon: Users, text: 'Expert Technicians' },
@@ -179,6 +147,52 @@ const ServiceCategorySelection: React.FC = () => {
     }
   ];
 
+  // Event handlers and business logic
+  const handleCategorySelect = (categoryId: string, price: number | null) => {
+    if (currentUser) {
+      const appointmentType = categoryMapper.getAppointmentTypeDetails(categoryId);
+      if (!appointmentType) {
+        toast.error('Invalid service type');
+        return;
+      }
+
+      navigate('/schedule', { 
+        state: { 
+          categoryId, 
+          price: appointmentType.price,
+          duration: appointmentType.duration,
+          isAmcService: categoryId === 'amc'
+        }
+      });
+    } else {
+      navigate('/booking', {
+        state: { categoryId, price }
+      });
+    }
+  };
+
+  const handleRatingClick = () => {
+    if (!currentUser) {
+      toast.error('Please log in to rate our service');
+      return;
+    }
+    setShowRating(true);
+  };
+
+  const handleRatingSubmit = async (rating: number, feedback?: string) => {
+    await submitRating('latest-service', rating, feedback);
+    setShowRating(false);
+    
+    if (rating >= 4) {
+      const shouldReview = window.confirm(
+        'Thank you for your positive feedback! Would you like to share your experience on Google?'
+      );
+      if (shouldReview) {
+        window.open('https://rate.place/iaircon', '_blank');
+      }
+    }
+  };
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -203,10 +217,10 @@ const ServiceCategorySelection: React.FC = () => {
         <div className="mb-36">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700]">
-              Welcome to iAircon
+              Welcome to iAircon.sg
             </h2>
             <p className="mt-3 text-lg text-gray-300">
-              We are Singapore's No.1 PowerJet Wash Specialist
+              Singapore's No.1 PowerJet Experts
             </p>
           </div>
           
@@ -230,7 +244,7 @@ const ServiceCategorySelection: React.FC = () => {
                 )}
                 
                 <motion.button
-                  onClick={() => handleCategoryClick(category)}
+                  onClick={() => handleCategorySelect(category.id, category.price)}
                   className="w-full h-full bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 hover:border-[#FFD700]/30 transition-all duration-300 shadow-lg hover:shadow-[#FFD700]/5 flex flex-col"
                   whileTap={{ scale: 0.98 }}
                 >
@@ -322,25 +336,25 @@ const ServiceCategorySelection: React.FC = () => {
                       <span className="font-medium">{completedVisits}/4</span>
                     </div>
                   </div>
-                  {user?.lastServiceDate && (
+                  {currentUser?.lastServiceDate && (
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         <Clock className="h-5 w-5 text-blue-400" />
                         <span>Last Service</span>
                       </div>
                       <span className="font-medium">
-                        {new Date(user.lastServiceDate).toLocaleDateString()}
+                        {new Date(currentUser.lastServiceDate).toLocaleDateString()}
                       </span>
                     </div>
                   )}
-                  {user?.nextServiceDate && (
+                  {currentUser?.nextServiceDate && (
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-5 w-5 text-blue-400" />
                         <span>Next Service</span>
                       </div>
                       <span className="font-medium">
-                        {new Date(user.nextServiceDate).toLocaleDateString()}
+                        {new Date(currentUser.nextServiceDate).toLocaleDateString()}
                       </span>
                     </div>
                   )}

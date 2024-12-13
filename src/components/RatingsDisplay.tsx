@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceRating from './ServiceRating';
-import { useUser } from '../contexts/UserContext';
 import { useServiceRating } from '../hooks/useServiceRating';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 interface Rating {
   id: string;
@@ -33,7 +34,7 @@ const RatingsDisplay: React.FC = () => {
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
-  const { user } = useUser();
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
   const { submitRating } = useServiceRating();
 
   useEffect(() => {
@@ -93,7 +94,7 @@ const RatingsDisplay: React.FC = () => {
   const message = messages[currentIndex % messages.length];
 
   const handleRatingClick = () => {
-    if (!user) {
+    if (!currentUser) {
       toast.error('Please log in to rate our service');
       return;
     }

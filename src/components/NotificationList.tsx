@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Shield, AlertTriangle, ChevronRight } from 'lucide-react';
 import { LoadingScreen } from './LoadingScreen';
 import NotificationActions from './NotificationActions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotifications } from '../hooks/useNotifications';
 import type { Notification } from '../types';
 
-const NotificationList: React.FC = () => {
+interface NotificationListProps {
+  notifications: Notification[];
+  onMarkAsRead: (id: string) => void;
+  onMarkAllRead: () => void;
+  onDeleteAll: () => void;
+  isLoading: boolean;
+}
+
+const NotificationList: React.FC<NotificationListProps> = ({
+  notifications,
+  onMarkAsRead,
+  onMarkAllRead,
+  onDeleteAll,
+  isLoading,
+}) => {
   const navigate = useNavigate();
-  const { 
-    notifications = [], 
-    isLoading,
-    markAsRead,
-    markAllRead,
-    deleteAll
-  } = useNotifications();
 
   const getIcon = (type: Notification['type']) => {
     switch (type) {
@@ -33,7 +39,7 @@ const NotificationList: React.FC = () => {
 
   const handleClick = async (notification: Notification) => {
     if (!notification.read) {
-      await markAsRead(notification.id);
+      await onMarkAsRead(notification.id);
     }
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
@@ -47,8 +53,8 @@ const NotificationList: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-4 p-4">
       <NotificationActions
-        onMarkAllRead={markAllRead}
-        onDeleteAll={deleteAll}
+        onMarkAllRead={onMarkAllRead}
+        onDeleteAll={onDeleteAll}
         hasUnread={notifications.some(n => !n.read)}
         hasNotifications={notifications.length > 0}
       />

@@ -14,15 +14,16 @@ export const store = configureStore({
     payment: paymentReducer,
     admin: adminReducer,
   },
+  devTools: process.env.NODE_ENV !== 'production',
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['payment/setStripeInstance'],
+        ignoredActions: ['persist/PERSIST'],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ['payload.timestamp', 'meta.arg'],
+        ignoredActionPaths: ['payload.createdAt', 'payload.updatedAt'],
         // Ignore these paths in the state
-        ignoredPaths: ['items.dates'],
+        ignoredPaths: ['user.currentUser.createdAt', 'user.currentUser.updatedAt'],
       },
     }),
 });

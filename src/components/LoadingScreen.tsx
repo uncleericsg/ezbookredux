@@ -1,6 +1,5 @@
 import React from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { useUser } from '../contexts/UserContext';
 
 interface LoadingScreenProps {
   message?: string;

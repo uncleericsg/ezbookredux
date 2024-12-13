@@ -4,7 +4,15 @@ interface PaymentState {
   paymentMethod: string | null;
   paymentStatus: 'idle' | 'processing' | 'success' | 'error';
   error: string | null;
-  transactionHistory: any[];
+  transactionHistory: TransactionRecord[];
+}
+
+interface TransactionRecord {
+  id: string;
+  timestamp: string;
+  updatedAt: string;
+  status: string;
+  // Add other transaction record properties as needed
 }
 
 const initialState: PaymentState = {
@@ -28,8 +36,29 @@ export const paymentSlice = createSlice({
       state.error = action.payload;
       state.paymentStatus = 'error';
     },
-    addTransaction: (state, action: PayloadAction<any>) => {
-      state.transactionHistory.push(action.payload);
+    // Enhanced transaction history actions
+    addTransaction: (state, action: PayloadAction<TransactionRecord>) => {
+      const transaction = {
+        ...action.payload,
+        timestamp: new Date().toISOString(),
+        id: `tr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      state.transactionHistory.push(transaction);
+      
+      // Maintain a fixed size for transaction history
+      if (state.transactionHistory.length > 100) {
+        state.transactionHistory = state.transactionHistory.slice(-100);
+      }
+    },
+    updateTransactionStatus: (state, action: PayloadAction<{ id: string; status: string }>) => {
+      const transaction = state.transactionHistory.find(t => t.id === action.payload.id);
+      if (transaction) {
+        transaction.status = action.payload.status;
+        transaction.updatedAt = new Date().toISOString();
+      }
+    },
+    clearTransactionHistory: (state) => {
+      state.transactionHistory = [];
     },
     clearPaymentState: (state) => {
       state.paymentMethod = null;
@@ -44,6 +73,8 @@ export const {
   setPaymentStatus,
   setError,
   addTransaction,
+  updateTransactionStatus,
+  clearTransactionHistory,
   clearPaymentState,
 } = paymentSlice.actions;
 

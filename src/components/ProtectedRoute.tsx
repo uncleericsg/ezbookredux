@@ -2,8 +2,8 @@
 // @ai-doc This component handles role-based access control
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
-import { LoadingScreen } from './LoadingScreen';
+import { useAppSelector } from '../store';
+import { useUserMigration } from '../hooks/useUserMigration';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,22 +16,36 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiresAdmin = false,
   requiresTech = false 
 }) => {
-  const { user, loading } = useUser();
   const location = useLocation();
+  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
+  const { currentUser } = useAppSelector((state) => state.user);
 
+  // Use migration hook during transition
+  useUserMigration();
+
+  // Show nothing while loading
   if (loading) {
-    return <LoadingScreen />;
+    return null;
   }
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // Debug auth state
+  console.log('ProtectedRoute State:', {
+    isAuthenticated,
+    hasUser: !!currentUser,
+    path: location.pathname
+  });
+
+  // Check auth state
+  if (!isAuthenticated || !currentUser) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  if (requiresAdmin && user.role !== 'admin') {
+  // Check role requirements
+  if (requiresAdmin && currentUser.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
-  if (requiresTech && user.role !== 'tech') {
+  if (requiresTech && currentUser.role !== 'tech') {
     return <Navigate to="/" replace />;
   }
 

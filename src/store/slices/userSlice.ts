@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '../../types/user';
+import type { User } from '../../types';
 
 interface UserState {
   currentUser: User | null;
@@ -13,12 +13,13 @@ const initialState: UserState = {
   error: null,
 };
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<User | null>) => {
       state.currentUser = action.payload;
+      state.loading = false;
       state.error = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -28,11 +29,6 @@ export const userSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.currentUser) {
-        state.currentUser = { ...state.currentUser, ...action.payload };
-      }
-    },
     clearUser: (state) => {
       state.currentUser = null;
       state.error = null;
@@ -41,12 +37,5 @@ export const userSlice = createSlice({
   },
 });
 
-export const {
-  setUser,
-  setLoading,
-  setError,
-  updateUserProfile,
-  clearUser,
-} = userSlice.actions;
-
+export const { setUser, setLoading, setError, clearUser } = userSlice.actions;
 export default userSlice.reducer;

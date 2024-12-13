@@ -50,10 +50,20 @@ export const useUserRedux = () => {
 
   // Logout handler
   const logout = useCallback(() => {
-    dispatch(clearUser());
-    dispatch(logoutAuth());
+    // First clear localStorage
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('authToken');
-    toast.success('Successfully logged out');
+
+    // Then clear Redux state
+    Promise.resolve().then(() => {
+      dispatch(setToken(null));
+      dispatch(setUser(null));
+      dispatch(setAuthenticated(false));
+    });
+
+    // Finally redirect
+    window.location.href = '/login';
   }, [dispatch]);
 
   // Update user profile
