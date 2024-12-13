@@ -159,7 +159,7 @@ const ServiceCategorySelection: React.FC = () => {
       return;
     }
     
-    navigate('/returncustomer', { 
+    navigate('/service-pricing', { 
       state: { 
         categoryId, 
         price: price || 0, // Use 0 for AMC service
@@ -209,19 +209,20 @@ const ServiceCategorySelection: React.FC = () => {
   }, [hasAnimated]);
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.serviceCategoryContainer} min-h-screen bg-gray-900 text-white relative`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Service Categories Design */}
         <div className="mb-24">
           <div className="text-center mb-20">
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700]">
-              Welcome to iAircon.sg
+              iAircon
             </h2>
             <p className="mt-4 text-lg text-gray-300">
               Singapore's No.1 PowerJet Experts
             </p>
           </div>
           
+          {/* Service Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
             {categories.map((category) => (
               <motion.div

@@ -62,7 +62,7 @@ const TrustIndicators: React.FC = () => {
     <div className="mb-16">
       <div 
         ref={counterRef} 
-        className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 backdrop-blur-sm rounded-2xl border border-purple-500/20 shadow-lg shadow-purple-500/5"
+        className="bg-gradient-to-br from-cyan-500/20 to-blue-900/20 backdrop-blur-sm rounded-2xl border border-cyan-500/20 shadow-lg shadow-cyan-500/5"
       >
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 md:p-6 lg:p-8">
           {trustIndicators.map((indicator, index) => (
@@ -70,9 +70,9 @@ const TrustIndicators: React.FC = () => {
               key={index}
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-xl p-4 md:p-6 backdrop-blur-sm hover:shadow-lg hover:border-purple-400/40 group"
+              className="bg-gradient-to-br from-cyan-500/30 to-blue-800/20 border border-cyan-500/30 rounded-xl p-4 md:p-6 backdrop-blur-sm hover:shadow-lg hover:border-cyan-400/40 group"
             >
-              <div className="text-2xl md:text-3xl font-bold text-purple-300 group-hover:text-purple-200 transition-colors">
+              <div className="text-2xl md:text-3xl font-bold text-cyan-300 group-hover:text-cyan-200 transition-colors">
                 {hasAnimated ? (
                   <CountUp
                     start={indicator.startValue}
@@ -83,7 +83,7 @@ const TrustIndicators: React.FC = () => {
                   />
                 ) : `${indicator.value.toLocaleString()}${indicator.suffix}`}
               </div>
-              <div className="text-sm md:text-base font-medium text-purple-100/90 mt-2 group-hover:text-white transition-colors">{indicator.label}</div>
+              <div className="text-sm md:text-base font-medium text-[#F7F7F7] mt-2 group-hover:text-white transition-colors">{indicator.label}</div>
             </motion.div>
           ))}
         </div>
