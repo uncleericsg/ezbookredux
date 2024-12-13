@@ -4,7 +4,6 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // Import reducers
 import userReducer from './slices/userSlice';
 import authReducer from './slices/authSlice';
-import paymentReducer from './slices/paymentSlice';
 import adminReducer from './slices/adminSlice';
 
 // Action type for resetting the entire store
@@ -23,12 +22,6 @@ const initialState = {
     loading: false,
     error: null,
   },
-  payment: {
-    paymentData: null,
-    loading: false,
-    error: null,
-    currentTransaction: null,
-  },
   admin: {
     isAdmin: false,
     adminData: null,
@@ -41,7 +34,6 @@ const initialState = {
 export interface AppState {
   user: ReturnType<typeof userReducer>;
   auth: ReturnType<typeof authReducer>;
-  payment: ReturnType<typeof paymentReducer>;
   admin: ReturnType<typeof adminReducer>;
 }
 
@@ -49,7 +41,6 @@ export interface AppState {
 const reducers = {
   user: userReducer,
   auth: authReducer,
-  payment: paymentReducer,
   admin: adminReducer,
 };
 
