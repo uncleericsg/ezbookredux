@@ -1,0 +1,259 @@
+'use client';
+
+import {
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Close as CancelIcon,
+  PersonOff as DeactivateIcon
+} from '@mui/icons-material';
+import { Chip } from '@mui/material';
+import {
+  GridColDef,
+  GridRenderCellParams,
+  GridRowModes,
+  GridRowModesModel,
+  GridActionsCellItem,
+  GridRowId
+} from '@mui/x-data-grid';
+import { format } from 'date-fns';
+import React, { useState, useMemo, useCallback } from 'react';
+
+import type { User } from '../../types';
+import { BaseDataGrid } from '../material-ui/data-grid/BaseDataGrid';
+import { useDataGridState } from '../material-ui/data-grid/hooks';
+
+import UserStatusToggle from './UserStatusToggle';
+
+export interface UserTableProps;
+
+export interface UserTableProps;
+
+export interface UserTableProps;
+
+export interface UserTableProps;
+
+export interface UserTableProps extends React.HTMLAttributes<HTMLDivElement> {
+  users: User[];
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  onEdit: (userId: string) => void;
+  onDeactivate: (userId: string) => Promise<void>;
+  onSave: (userId: string, data: Partial<User>) => Promise<void>;
+  loading?: boolean;
+}
+
+export const UserTable = React.memo(({ 
+  users,
+  totalItems,
+  onPageChange,
+  onPageSizeChange,
+  onEdit,
+  onDeactivate,
+  onSave,
+  loading = false,
+  className,
+  ...props
+}: UserTableProps) => {
+  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+  const { state, setPage, setPageSize } = useDataGridState();
+
+  const handleEditClick = useCallback(
+    (id: GridRowId) => () => {
+      setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+    },
+    [rowModesModel]
+  );
+
+  const handleSaveClick = useCallback(
+    (id: GridRowId) => () => {
+      setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+    },
+    [rowModesModel]
+  );
+
+  const handleCancelClick = useCallback(
+    (id: GridRowId) => () => {
+      setRowModesModel({
+        ...rowModesModel,
+        [id]: { mode: GridRowModes.View, ignoreModifications: true }
+      });
+    },
+    [rowModesModel]
+  );
+
+  const handleDeactivate = useCallback(
+    async (id: GridRowId) => {
+      await onDeactivate(id.toString());
+    },
+    [onDeactivate]
+  );
+
+  const processRowUpdate = async (newRow: User) => {
+    try {
+      await onSave(newRow.id, {
+        firstName: newRow.firstName,
+        lastName: newRow.lastName,
+        email: newRow.email
+      });
+      return newRow;
+    } catch (error) {
+      console.error('Failed to save user:', error);
+      throw error;
+    }
+  };
+
+  const columns = useMemo<GridColDef[]>(
+    () => [
+      {
+        field: 'name',
+        headerName: 'Name',
+        flex: 1,
+        valueGetter: (params: GridRenderCellParams) =>
+          `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+        editable: true
+      },
+      {
+        field: 'email',
+        headerName: 'Email',
+        flex: 1,
+        editable: true
+      },
+      {
+        field: 'isActive',
+        headerName: 'Status',
+        flex: 0.5,
+        renderCell: (params: GridRenderCellParams) => (
+          <UserStatusToggle
+            userId={params.row.id}
+            isActive={params.row.isActive}
+            onToggle={onDeactivate}
+          />
+        )
+      },
+      {
+        field: 'registrationDate',
+        headerName: 'Registration Date',
+        flex: 1,
+        valueGetter: (params: GridRenderCellParams) =>
+          params.row.registrationDate
+            ? format(new Date(params.row.registrationDate), 'PPP')
+            : ''
+      },
+      {
+        field: 'lastLogin',
+        headerName: 'Last Login',
+        flex: 1,
+        valueGetter: (params: GridRenderCellParams) =>
+          params.row.lastLogin
+            ? format(new Date(params.row.lastLogin), 'PPP')
+            : ''
+      },
+      {
+        field: 'role',
+        headerName: 'Role',
+        flex: 0.5,
+        renderCell: (params: GridRenderCellParams) => (
+          <Chip
+            label={params.row.role}
+            color={params.row.role === 'admin' ? 'primary' : 'default'}
+            size="small"
+          />
+        )
+      },
+      {
+        field: 'actions',
+        type: 'actions',
+        headerName: 'Actions',
+        flex: 0.5,
+        getActions: ({ id }) => {
+          const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+
+          if (isInEditMode) {
+            return [
+              <GridActionsCellItem
+                key="save"
+                icon={<SaveIcon />}
+                label="Save"
+                onClick={handleSaveClick(id)}
+                color="primary"
+              />,
+              <GridActionsCellItem
+                key="cancel"
+                icon={<CancelIcon />}
+                label="Cancel"
+                onClick={handleCancelClick(id)}
+                color="error"
+              />
+            ];
+          }
+
+          return [
+            <GridActionsCellItem
+              key="edit"
+              icon={<EditIcon />}
+              label="Edit"
+              onClick={handleEditClick(id)}
+              color="primary"
+            />,
+            <GridActionsCellItem
+              key="deactivate"
+              icon={<DeactivateIcon />}
+              label="Deactivate"
+              onClick={() => handleDeactivate(id)}
+              color="error"
+            />
+          ];
+        }
+      }
+    ],
+    [rowModesModel, onDeactivate, handleCancelClick, handleDeactivate, handleEditClick, handleSaveClick]
+  );
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setPage(newPage);
+      onPageChange(newPage + 1);
+    },
+    [onPageChange, setPage]
+  );
+
+  const handlePageSizeChange = useCallback(
+    (newPageSize: number) => {
+      setPageSize(newPageSize);
+      onPageSizeChange(newPageSize);
+    },
+    [onPageSizeChange, setPageSize]
+  );
+
+  return (
+    <BaseDataGrid
+      rows={users}
+      columns={columns}
+      pagination
+      pageSize={state.pageSize}
+      rowCount={totalItems}
+      page={state.page}
+      loading={loading}
+      editMode="row"
+      rowModesModel={rowModesModel}
+      processRowUpdate={processRowUpdate}
+      onProcessRowUpdateError={(error) => {
+        console.error('Failed to save user:', error);
+      }}
+      onPageChange={handlePageChange}
+      onPageSizeChange={handlePageSizeChange}
+      paginationMode="server"
+      className={className}
+      {...props}
+    />
+  );
+});
+
+UserTable.displayName = 'UserTable';
+
+
+
+export type { UserTableProps };
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,103 @@
+import React from 'react';
+
+import { toast } from 'sonner';
+;
+  maxRetries?: number;
+  baseDelay?: number;
+  maxDelay?: number;
+;
+  maxRetries;
+async function withRetry<T>(;
+  fn;
+  config: any;,
+): Promise<T> {;
+  let lastError: any;,
+  for (let attempt: any;,
+    try {;
+      return await fn()
+    } catch (error) {;
+      lastError = error as Error;
+      const delay: any;,
+        (config.baseDelay || 1000) * Math.pow(2, attempt),
+        config.maxDelay || 5000;
+      );
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  };
+  throw lastError!
+};
+// Rate limiting using token bucket algorithm;
+class RateLimiter {;
+  tokens: any;,
+  lastRefill: any;,
+  readonly maxTokens: any;,
+  readonly refillRate: any;,
+  constructor(maxTokens: number, refillRate: any;,
+    this.tokens = maxTokens;
+    this.lastRefill = Date.now();
+    this.maxTokens = maxTokens;
+    this.refillRate = refillRate
+  };
+  async tryAcquire(): Promise<boolean> {;
+    this.refill();
+    if (this.tokens > 0) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      this.tokens--;
+      return true
+    };
+    return false
+  };
+  refill() {;
+    const now: any;,
+    const timePassed: any;,
+    const newTokens: any;,
+    this.tokens = Math.min(this.maxTokens, this.tokens + newTokens);
+    this.lastRefill = now
+  }
+};
+ // 5 messages per second;
+  const hours: any;,
+  const day: any;,
+  // Assuming business hours are 9 AM to 6 PM, Monday to Saturday;
+  const isBusinessHour: any;,
+  const isBusinessDay: any;,
+  return isBusinessHour && isBusinessDay;
+;
+  const now: any;,
+  return date > now;
+;
+  try {;
+    new URL(url);
+    return true
+  } catch {;
+    return false
+  };
+
+const apiUtils.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const apiUtils: any;,
+  return null
+};
+;
+// Additional exports;
+{ withRetry, lastError, attempt, delay, now, timePassed, newTokens, hours, day, isBusinessHour, isBusinessDay, apiUtils, RateLimiter };
+;
+{ apiUtils };
+{ withRetry, lastError, attempt, delay, now, timePassed, newTokens, hours, day, isBusinessHour, isBusinessDay, RateLimiter };
+;
+export { withRetry, lastError, attempt, delay, now, timePassed, newTokens, hours, day, isBusinessHour, isBusinessDay, apiUtils };
+;
+
+export default delay;
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,153 @@
+import { motion } from 'framer-motion';
+import { Phone, MessageCircle, User, LayoutDashboard, ArrowUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAppSelector } from '../store';
+
+/**
+ * Props for the FloatingButtons component
+ */
+interface FloatingButtonsProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** Phone number for the call button */
+  phoneNumber?: string;
+  /** WhatsApp number for the message button */
+  whatsappNumber?: string;
+  /** Whether to show authentication-related buttons */
+  showAuthButtons?: boolean;
+}
+
+/**
+ * FloatingButtons component for the iAircon Easy Booking system
+ * Provides quick access to contact options and navigation controls
+ * 
+ * @example
+ * ```tsx
+ * <FloatingButtons 
+ *   phoneNumber="+1234567890"
+ *   whatsappNumber="+1234567890"
+ *   showAuthButtons={true}
+ * />
+ * ```
+ */
+const FloatingButtons: React.FC<FloatingButtonsProps> = ({
+  phoneNumber = '+6591234567',
+  whatsappNumber = '+6591234567',
+  showAuthButtons = true,
+  ...props
+}) => {
+  const navigate = useNavigate();
+  const { currentUser } = useAppSelector(state => state.user);
+  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+  // Only show auth buttons if both showAuthButtons is true AND user is authenticated
+  const shouldShowAuthButtons = showAuthButtons && isAuthenticated;
+  const isAdmin = currentUser?.role === 'admin';
+
+  useEffect(() => {
+    const handleScroll = (): void => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = (): void => {
+    const scrollStep = -window.scrollY / 15;
+    const scrollInterval = window.setInterval(() => {
+      if (window.scrollY !== 0) {
+        window.scrollBy(0, scrollStep);
+      } else {
+        window.clearInterval(scrollInterval);
+      }
+    }, 15);
+  };
+
+  const handleProfileClick = (): void => {
+    if (!isAuthenticated) {
+      return;
+    }
+    navigate('/profile');
+  };
+
+  return (
+    <div 
+      className="fixed bottom-4 right-4 flex flex-col gap-2 z-50"
+      {...props}
+    >
+      {/* WhatsApp */}
+      <motion.a
+        href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        aria-label="Contact via WhatsApp"
+      >
+        <MessageCircle className="h-6 w-6" aria-hidden="true" />
+      </motion.a>
+
+      {/* Phone */}
+      <motion.a
+        href={`tel:${phoneNumber}`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+        aria-label="Call us"
+      >
+        <Phone className="h-6 w-6" aria-hidden="true" />
+      </motion.a>
+
+      {/* Auth buttons */}
+      {shouldShowAuthButtons && (
+        <>
+          <motion.button
+            onClick={handleProfileClick}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-[#FFD700] hover:bg-[#FFE44D] text-black p-3 rounded-full shadow-lg flex items-center justify-center"
+            aria-label="View profile"
+            type="button"
+          >
+            <User className="h-6 w-6" aria-hidden="true" />
+          </motion.button>
+
+          {/* Admin Dashboard Button - Only show for admin users */}
+          {isAdmin && (
+            <motion.button
+              onClick={() => navigate('/admin')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+              aria-label="Admin dashboard"
+              type="button"
+            >
+              <LayoutDashboard className="h-6 w-6" aria-hidden="true" />
+            </motion.button>
+          )}
+        </>
+      )}
+
+      {/* Scroll to top button */}
+      {showScrollTop && (
+        <motion.button
+          onClick={scrollToTop}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="bg-gray-700 hover:bg-gray-800 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+          aria-label="Scroll to top"
+          type="button"
+        >
+          <ArrowUp className="h-6 w-6" aria-hidden="true" />
+        </motion.button>
+      )}
+    </div>
+  );
+};
+
+// Set display name for debugging
+FloatingButtons.displayName = 'FloatingButtons';
+export { FloatingButtonsProps, FloatingButtons };

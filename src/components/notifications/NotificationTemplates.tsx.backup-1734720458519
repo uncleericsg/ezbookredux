@@ -1,0 +1,48 @@
+import React from 'react';
+
+"use client";
+import CustomMessageScheduler from './CustomMessageScheduler';
+import { Card, CardContent, CardHeader, CardTitle } from '@components/molecules/card';
+import { cn } from '@/lib/utils';
+
+export interface NotificationTemplatesProps;
+
+export interface NotificationTemplatesProps;
+
+export interface NotificationTemplatesProps;
+
+export interface NotificationTemplatesProps;
+export interface NotificationTemplatesProps extends React.HTMLAttributes<HTMLDivElement> { {;
+  className?: string
+};
+const NotificationTemplates: any;,
+  className
+}): (any): (any): (any): (any) => {;
+  return (;
+    <div className={cn("space-y-6", className)}>;
+      <Card>;
+        <CardHeader>;
+          <CardTitle>Custom Message Scheduler</CardTitle>;
+        </CardHeader>;
+        <CardContent>;
+          <CustomMessageScheduler />;
+        </CardContent>;
+      </Card>;
+    </div>;
+  )
+};
+;
+// Additional exports;
+;
+// Additional exports;
+{ NotificationTemplates, NotificationTemplatesProps };
+;
+NotificationTemplates;
+;
+;
+export type { NotificationTemplatesProps };
+;
+export { NotificationTemplates };
+
+
+undefined.displayName = 'undefined';

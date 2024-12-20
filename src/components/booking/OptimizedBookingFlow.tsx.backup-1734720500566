@@ -1,0 +1,92 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import React, { Suspense } from 'react';
+
+export type StepData;
+export type BookingFlowProps;
+
+
+
+
+
+
+
+
+
+// Lazy load components
+const BrandSelection = React.lazy(() => import('./components/BrandCard'));
+const IssueSelection = React.lazy(() => import('./components/IssueCard'));
+const CustomerFormSupabase = React.lazy(() => import('./CustomerFormSupabase'));
+
+// Export types at the top
+
+  issues?: string[];
+  otherIssue?: string;
+  customerData?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    mobile: string;
+    address: string;
+    [key: string]: string;
+  };
+};
+
+
+  onStepComplete: (step: number, data: StepData) => void;
+};
+
+const pageTransition = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+// Component declaration as const
+const OptimizedBookingFlow = ({
+  currentStep,
+  onStepComplete,
+}: BookingFlowProps) => {
+  return (
+    <AnimatePresence mode="wait">
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          </div>
+        }
+      >
+        <motion.div
+          key={currentStep}
+          variants={pageTransition}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="transform-gpu"
+          style={{ willChange: 'transform, opacity' }}
+        >
+          {currentStep === 0 && (
+            <BrandSelection onContinue={(brands) => onStepComplete(0, { brands })} />
+          )}
+          {currentStep === 1 && (
+            <IssueSelection
+              onContinue={(issues, otherIssue) => onStepComplete(1, { issues, otherIssue })}
+            />
+          )}
+          {currentStep === 2 && (
+            <CustomerFormSupabase onSave={(customerData) => onStepComplete(2, { customerData })} />
+          )}
+        </motion.div>
+      </Suspense>
+    </AnimatePresence>
+  );
+};
+
+// Add displayName
+OptimizedBookingFlow.displayName = 'OptimizedBookingFlow';
+
+// Both named and default exports at the bottom
+export { OptimizedBookingFlow };
+
+
+undefined.displayName = 'undefined';

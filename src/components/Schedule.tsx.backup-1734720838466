@@ -1,0 +1,52 @@
+import React from 'react';
+
+/**
+ * Schedule component for the iAircon Easy Booking system
+ *
+ * @component Schedule
+ * @description A React component for the iAircon Easy Booking system
+ *
+ * @example
+ * ```tsx
+ * import { Schedule } from './components';
+ * <Schedule />;
+ * ```
+ */
+
+import { useUser } from '../contexts/UserContext';
+
+import ServiceReminder from './ServiceReminder';
+import ServiceScheduling from './ServiceScheduling';
+
+export interface ScheduleProps;
+
+
+interface ScheduleProps extends React.HTMLAttributes<HTMLDivElement> {
+  // Add component-specific props here
+}
+
+const Schedule: React.FC<ScheduleProps> = (_props) => {
+  const { user } = useUser();
+
+  const handleSchedule = () => {
+    // Implement schedule handling logic
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {user?.nextServiceDate && (
+        <ServiceReminder
+          nextServiceDate={user.nextServiceDate}
+          onSchedule={handleSchedule}
+          isAMC={user.lastName.toLowerCase().includes('amc')}
+        />
+      )}
+      <div id="scheduling-form">
+        <ServiceScheduling />
+      </div>
+    </div>
+  );
+};
+export { ScheduleProps, Schedule };
+
+undefined.displayName = 'undefined';

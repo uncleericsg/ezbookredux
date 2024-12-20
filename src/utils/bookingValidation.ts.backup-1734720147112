@@ -1,0 +1,285 @@
+import { addDays, isBefore, isAfter, startOfDay, addMinutes } from 'date-fns';
+
+import { BUSINESS_RULES } from '../constants/businessRules';
+
+
+import { validateTimeSlot } from './validation';
+import { ValidationResult, ValidationState } from './validationTypes';
+
+import type { TimeSlot } from '../types';
+
+/**
+ * Context for time validation
+ */
+export interface TimeValidationContext {
+  /** Hour of the day (0-23) */
+  hour: number;
+  /** Whether the day is Friday */
+  isFriday: boolean;
+  /** Whether the booking is for AMC service */
+  isAMC?: boolean;
+  /** Number of existing bookings */
+  existingBookings?: number;
+}
+
+/**
+ * Options for booking validation
+ */
+export interface BookingValidationOptions {
+  /** Whether to allow same-day bookings */
+  allowSameDay?: boolean;
+  /** Whether to check for overlapping bookings */
+  checkOverlap?: boolean;
+  /** Buffer time in minutes between bookings */
+  bufferMinutes?: number;
+  /** Maximum number of bookings per day */
+  maxBookingsPerDay?: number;
+  /** Minimum advance notice in hours */
+  minAdvanceHours?: number;
+  /** Maximum advance days for booking */
+  maxAdvanceDays?: number;
+}
+
+/**
+ * Validates a booking time slot
+ * @param slot Time slot to validate
+ * @param context Validation context
+ * @param options Validation options
+ * @returns Validation result
+ */
+export function validateBookingTimeSlot(
+  slot: TimeSlot,
+  context: TimeValidationContext,
+  options: BookingValidationOptions = {}
+): ValidationResult {
+  const {
+    allowSameDay = false,
+    checkOverlap = true,
+    bufferMinutes = 30,
+    maxBookingsPerDay = BUSINESS_RULES.MAX_BOOKINGS_PER_DAY,
+    minAdvanceHours = BUSINESS_RULES.MIN_ADVANCE_HOURS,
+    maxAdvanceDays = BUSINESS_RULES.MAX_ADVANCE_DAYS
+  } = options;
+
+  const validationState: ValidationState = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  // Check if slot is in the past
+  if (isBefore(slot.startTime, new Date())) {
+    validationState.isValid = false;
+    validationState.errors.push('Cannot book time slots in the past');
+    return validationState;
+  }
+
+  // Check if slot is too soon
+  const minTime = addDays(startOfDay(new Date()), allowSameDay ? 0 : 1);
+  if (isBefore(slot.startTime, minTime)) {
+    validationState.isValid = false;
+    validationState.errors.push(
+      allowSameDay
+        ? `Bookings must be at least ${minAdvanceHours} hours in advance`
+        : 'Cannot book same-day appointments'
+    );
+    return validationState;
+  }
+
+  // Check if slot is too far in the future
+  const maxTime = addDays(startOfDay(new Date()), maxAdvanceDays);
+  if (isAfter(slot.startTime, maxTime)) {
+    validationState.isValid = false;
+    validationState.errors.push(
+      `Cannot book appointments more than ${maxAdvanceDays} days in advance`
+    );
+    return validationState;
+  }
+
+  // Check business hours
+  const { hour } = context;
+  if (hour < BUSINESS_RULES.BUSINESS_HOURS_START || hour >= BUSINESS_RULES.BUSINESS_HOURS_END) {
+    validationState.isValid = false;
+    validationState.errors.push(
+      `Bookings are only available between ${BUSINESS_RULES.BUSINESS_HOURS_START}:00 and ${
+        BUSINESS_RULES.BUSINESS_HOURS_END
+      }:00`
+    );
+    return validationState;
+  }
+
+  // Check booking limits
+  if (context.existingBookings && context.existingBookings >= maxBookingsPerDay) {
+    validationState.isValid = false;
+    validationState.errors.push(`Maximum ${maxBookingsPerDay} bookings per day allowed`);
+    return validationState;
+  }
+
+  // Check Friday restrictions
+  if (context.isFriday && hour >= 15) {
+    validationState.warnings.push('Friday afternoon bookings may have limited availability');
+  }
+
+  // Check peak hours
+  if (hour >= 11 && hour <= 14) {
+    validationState.warnings.push('This is a peak hour time slot and may have higher demand');
+  }
+
+  // Check AMC restrictions
+  if (context.isAMC) {
+    if (hour < 10 || hour >= 16) {
+      validationState.isValid = false;
+      validationState.errors.push('AMC service is only available between 10:00 and 16:00');
+      return validationState;
+    }
+  }
+
+  // Check overlap if required
+  if (checkOverlap && slot.overlapping) {
+    const bufferStart = addMinutes(slot.startTime, -bufferMinutes);
+    const bufferEnd = addMinutes(slot.endTime, bufferMinutes);
+
+    if (slot.overlapping.some(booking => 
+      (isAfter(booking.startTime, bufferStart) && isBefore(booking.startTime, bufferEnd)) ||
+      (isAfter(booking.endTime, bufferStart) && isBefore(booking.endTime, bufferEnd))
+    )) {
+      validationState.isValid = false;
+      validationState.errors.push(
+        `Time slot overlaps with existing booking (including ${bufferMinutes} minute buffer)`
+      );
+      return validationState;
+    }
+  }
+
+  return validationState;
+}
+
+/**
+ * Validates a booking date
+ * @param date Date to validate
+ * @param options Validation options
+ * @returns Validation result
+ */
+export function validateBookingDate(
+  date: Date,
+  options: BookingValidationOptions = {}
+): ValidationResult {
+  const {
+    allowSameDay = false,
+    maxAdvanceDays = BUSINESS_RULES.MAX_ADVANCE_DAYS
+  } = options;
+
+  const validationState: ValidationState = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  const today = startOfDay(new Date());
+  const bookingDate = startOfDay(date);
+
+  // Check if date is in the past
+  if (isBefore(bookingDate, today)) {
+    validationState.isValid = false;
+    validationState.errors.push('Cannot book dates in the past');
+    return validationState;
+  }
+
+  // Check same-day booking
+  if (!allowSameDay && bookingDate.getTime() === today.getTime()) {
+    validationState.isValid = false;
+    validationState.errors.push('Same-day bookings are not allowed');
+    return validationState;
+  }
+
+  // Check if date is too far in the future
+  const maxDate = addDays(today, maxAdvanceDays);
+  if (isAfter(bookingDate, maxDate)) {
+    validationState.isValid = false;
+    validationState.errors.push(
+      `Cannot book dates more than ${maxAdvanceDays} days in advance`
+    );
+    return validationState;
+  }
+
+  return validationState;
+}
+
+/**
+ * Validates a booking
+ * @param userId User ID
+ * @param datetime Date and time of booking
+ * @param categoryId Category ID
+ * @param isAMC Whether the booking is for AMC service
+ * @param existingBookings Number of existing bookings
+ * @param options Validation options
+ * @returns Validation result
+ */
+export function validateBooking(
+  userId: string,
+  datetime: Date,
+  categoryId: string,
+  isAMC: boolean,
+  existingBookings: number,
+  options: BookingValidationOptions = {}
+): ValidationResult {
+  const validationState: ValidationState = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  if (!userId) {
+    validationState.isValid = false;
+    validationState.errors.push('You must be logged in to book appointments');
+    return validationState;
+  }
+
+  if (!datetime) {
+    validationState.isValid = false;
+    validationState.errors.push('Please select an appointment time');
+    return validationState;
+  }
+
+  if (!categoryId) {
+    validationState.isValid = false;
+    validationState.errors.push('Invalid service category');
+    return validationState;
+  }
+
+  const timeValidation = validateTimeSlot(datetime);
+  if (!timeValidation.isValid) {
+    return timeValidation;
+  }
+
+  if (timeValidation.warnings) {
+    validationState.warnings.push(...timeValidation.warnings);
+  }
+
+  const timeContext: TimeValidationContext = {
+    hour: datetime.getHours(),
+    isFriday: datetime.getDay() === 5,
+    isAMC,
+    existingBookings
+  };
+
+  const timeSlotValidation = validateBookingTimeSlot({ startTime: datetime, endTime: addMinutes(datetime, 30) }, timeContext, options);
+  if (!timeSlotValidation.isValid) {
+    return timeSlotValidation;
+  }
+
+  if (timeSlotValidation.warnings) {
+    validationState.warnings.push(...timeSlotValidation.warnings);
+  }
+
+  const dateValidation = validateBookingDate(datetime, options);
+  if (!dateValidation.isValid) {
+    return dateValidation;
+  }
+
+  if (dateValidation.warnings) {
+    validationState.warnings.push(...dateValidation.warnings);
+  }
+
+  return validationState;
+}

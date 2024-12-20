@@ -1,0 +1,115 @@
+/* global window, setTimeout, console */
+
+'use client';
+
+import { useStripe } from '@stripe/react-stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
+import React, { useEffect, memo } from 'react';
+import { toast } from 'react-hot-toast';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import { useAppDispatch } from '../../store';
+import { setPaymentStatus } from '../../store/slices/userSlice';
+import { LoadingScreen } from '../LoadingScreen';
+
+export interface PaymentSuccessProps;
+export interface BookingDetails;
+export interface PaymentState;
+
+export interface PaymentSuccessProps;
+export interface BookingDetails;
+export interface PaymentState;
+
+export interface PaymentSuccessProps;
+export interface BookingDetails;
+export interface PaymentState;
+
+export interface PaymentSuccessProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+interface BookingDetails {
+  id: string;
+  service: string;
+  date: string;
+  time: string;
+  status: string;
+}
+
+export interface PaymentState {
+  payment: {
+    id: string;
+    amount: number;
+    status: string;
+    created: number;
+  };
+  booking: BookingDetails;
+}
+
+export const PaymentSuccess: React.FC<PaymentSuccessProps> = memo(({ className, ...props }) => {
+  const stripe = useStripe() as Stripe;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!stripe) {
+      return;
+    }
+
+    const clientSecret = new URLSearchParams(location.search).get('payment_intent_client_secret');
+
+    if (!clientSecret) {
+      toast.error('Payment verification failed. Missing client secret.');
+      navigate('/dashboard');
+      return;
+    }
+
+    const verifyPayment = async () => {
+      try {
+        const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+
+        if (!paymentIntent) {
+          throw new Error('Payment intent not found');
+        }
+
+        switch (paymentIntent.status) {
+          case 'succeeded':
+            toast.success('Payment successful!');
+            dispatch(setPaymentStatus('success'));
+            // Handle successful payment (e.g., update booking status)
+            break;
+          case 'processing':
+            toast.loading('Payment processing...');
+            dispatch(setPaymentStatus('processing'));
+            break;
+          case 'requires_payment_method':
+            toast.error('Payment failed. Please try another payment method.');
+            dispatch(setPaymentStatus('error'));
+            break;
+          default:
+            toast.error('Something went wrong.');
+            dispatch(setPaymentStatus('error'));
+            break;
+        }
+
+        // Redirect after processing
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Payment verification error:', error);
+        toast.error('Failed to verify payment.');
+        dispatch(setPaymentStatus('error'));
+        navigate('/dashboard');
+      }
+    };
+
+    verifyPayment();
+  }, [stripe, location.search, navigate, dispatch]);
+
+  return <LoadingScreen message="Verifying payment..." className={className} {...props} />;
+});
+
+PaymentSuccess.displayName = 'PaymentSuccess';

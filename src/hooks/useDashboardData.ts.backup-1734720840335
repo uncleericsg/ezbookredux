@@ -1,0 +1,125 @@
+import { format, formatDistanceToNow } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
+
+import { dashboardApi } from '@/api/dashboard';
+import { WebSocketService } from '@/services/websocket';
+import { DashboardStats, Activity } from '@/types/dashboard';
+
+export interface DashboardFilters;
+
+export interface ReportParams;
+
+export interface UseDashboardDataReturn;
+
+
+export function useDashboardData(filters: DashboardFilters = {}): UseDashboardDataReturn {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 10;
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await dashboardApi.getStats();
+      setStats(data);
+    } catch (err) {
+      setError('Failed to fetch dashboard statistics');
+    }
+  }, []);
+
+  const fetchActivities = useCallback(async (isLoadMore = false) => {
+    try {
+      const { activities: newActivities, total } = await dashboardApi.getActivities({
+        page,
+        limit,
+        ...filters
+      });
+      setActivities(prev => isLoadMore ? [...prev, ...newActivities] : newActivities);
+      setHasMore(page * limit < total);
+    } catch (err) {
+      setError('Failed to fetch activities');
+    }
+  }, [filters, page, limit]);
+
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      setPage(prev => prev + 1);
+    }
+  }, [loading, hasMore]);
+
+  const generateReport = useCallback(async (params: ReportParams) => {
+    try {
+      const blob = await dashboardApi.generateReport(params);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dashboard-report-${format(new Date(), 'yyyy-MM-dd')}.${params.type}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to generate report');
+      throw err;
+    }
+  }, []);
+
+  const formatTimestamp = useCallback((date: Date): string => {
+    return formatDistanceToNow(date, { addSuffix: true });
+  }, []);
+
+  const refreshData = useCallback(() => {
+    setPage(1);
+    return Promise.all([fetchStats(), fetchActivities()]);
+  }, [fetchStats, fetchActivities]);
+
+  useEffect(() => {
+    const ws = WebSocketService.getInstance();
+    ws.connect();
+
+    const unsubscribeStats = ws.subscribe('stats', (data) => {
+      setStats(prev => ({ ...prev, ...data }));
+    });
+
+    const unsubscribeActivities = ws.subscribe('activity', (data) => {
+      setActivities(prev => [data, ...prev]);
+    });
+
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchStats(), fetchActivities()]);
+      setLoading(false);
+    };
+
+    fetchData();
+
+    return () => {
+      unsubscribeStats();
+      unsubscribeActivities();
+    };
+  }, [fetchStats, fetchActivities]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchActivities(true);
+    } else {
+      fetchActivities(false);
+    }
+  }, [filters, page, fetchActivities]);
+
+  return {
+    stats,
+    activities,
+    loading,
+    error,
+    hasMore,
+    formatTimestamp,
+    loadMore,
+    generateReport,
+    refreshData
+  };
+}
+undefined.displayName = 'undefined';

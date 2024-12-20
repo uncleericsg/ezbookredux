@@ -1,0 +1,55 @@
+Always read the .cascade-config.json file first and ensure all changes follow the project conventions.
+
+Always follow the .cascade-config.json from: c:\Users\djxpi\OneDrive\Documents\2024_iAircon_EasyBooking_WINDSURF\CascadeProjects\windsurf-project\project
+
+Do not damage any of the UI features and components while working at all times
+
+always read the @ai protection policy on page if available and do not break any visual, remove any current UI features or create any new ones without consent.
+
+All Component files, always verify:
+1. Types/interfaces are exported at the top
+2. Component is declared as a const
+3. displayName is added
+4. Both named and default exports are included at the bottom
+5. All files align with .cascade-config.json requirements
+
+Do not edit the eslint.config.js file without my consent.
+
+Before any major changes like UI library migrations, must provide a checklist.
+
+Before proceeding with any major changes, please:
+1. List all files that will be affected
+2. Provide a detailed and systematic plan
+3. Explain how you'll maintain consistency across the codebase
+
+Systematic Changes Request When requesting changes that affect multiple files:
+Please make changes systematically:
+1. First show all files that need changes
+2. Explain the pattern you'll apply
+3. Make changes in small, verifiable batches
+4. Verify each batch before proceeding
+
+Framework Verification Before implementing features:
+Please verify:
+1. What routing library we're using
+2. What UI components we're using
+3. What state management we're using
+4. Show me the relevant imports before making changes
+
+Consistency Check After making changes:
+Please verify:
+1. All exports follow our project convention
+2. All imports match their corresponding exports
+3. No framework-specific code is mixed (e.g., Next.js with React Router)
+4. All component patterns are consistent
+
+Change Scope When making changes:
+Please:
+1. List all files you plan to modify
+2. Explain why each file needs changes
+3. Show the pattern you'll apply
+4. Make changes in small batches
+5. Test each batch before proceeding
+
+ALWAYS CLARIFIY BEFORE EXECUTING ANY FILE CHANGES:
+Seek for clarifications before executing any file, UI and visual changes or adding new features, never overwrite and change any UI or visuals without my permission.

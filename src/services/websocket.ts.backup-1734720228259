@@ -1,0 +1,199 @@
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+
+import { supabase } from '@/lib/supabase';
+
+export type MessageHandler;
+export type Message;
+export type to;
+export type Channel;
+
+/**
+ * Type for message handler functions.
+ */
+export type MessageHandler = (data: unknown) => void;
+
+/**
+ * WebSocket service for handling real-time updates.
+ */
+export class WebSocketService {
+  private static instance: WebSocketService;
+  private messageHandlers: Map<string, Set<MessageHandler>> = new Map();
+  private channels: Map<string, RealtimeChannel> = new Map();
+
+  private constructor() {}
+
+  /**
+   * Gets the singleton instance of WebSocketService.
+   * @returns WebSocketService instance.
+   */
+  public static getInstance(): WebSocketService {
+    if (!WebSocketService.instance) {
+      WebSocketService.instance = new WebSocketService();
+    }
+    return WebSocketService.instance;
+  }
+
+  /**
+   * Connects to the Supabase realtime service.
+   */
+  public connect(): void {
+    toast.success('Connected to realtime service');
+  }
+
+  /**
+   * Subscribes to a specific message type.
+   * @param type Message type to subscribe to.
+   * @param handler Handler function for messages.
+   * @returns Unsubscribe function.
+   */
+  public subscribe(type: string, handler: MessageHandler): () => void {
+    if (!this.messageHandlers.has(type)) {
+      this.messageHandlers.set(type, new Set());
+      this.setupChannel(type);
+    }
+
+    const handlers = this.messageHandlers.get(type)!;
+    handlers.add(handler);
+
+    return () => {
+      handlers.delete(handler);
+      if (handlers.size === 0) {
+        this.messageHandlers.delete(type);
+        this.cleanupChannel(type);
+      }
+    };
+  }
+
+  /**
+   * Sets up a Supabase channel for a specific type.
+   * @param type Channel type to set up.
+   */
+  private setupChannel(type: string): void {
+    let channel: RealtimeChannel;
+
+    switch (type) {
+      case 'stats_update':
+        channel = supabase
+          .channel('dashboard_stats')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'dashboard_stats',
+          }, (payload) => {
+            const handlers = this.messageHandlers.get(type);
+            if (handlers) {
+              handlers.forEach((handler) => handler(payload.new));
+            }
+          });
+        break;
+
+      case 'activity_update':
+        channel = supabase
+          .channel('dashboard_activities')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'activities',
+          }, (payload) => {
+            const handlers = this.messageHandlers.get(type);
+            if (handlers) {
+              handlers.forEach((handler) => handler(payload.new));
+            }
+          });
+        break;
+
+      case 'notification_update':
+        channel = supabase
+          .channel('dashboard_notifications')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+          }, (payload) => {
+            const handlers = this.messageHandlers.get(type);
+            if (handlers) {
+              handlers.forEach((handler) => handler(payload.new));
+            }
+          });
+        break;
+
+      default:
+        return;
+    }
+
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        toast.success(`Subscribed to ${type} updates`);
+      }
+    });
+
+    this.channels.set(type, channel);
+  }
+
+  /**
+   * Cleans up a channel by type.
+   * @param type Channel type to clean up.
+   */
+  private cleanupChannel(type: string): void {
+    const channel = this.channels.get(type);
+    if (channel) {
+      channel.unsubscribe();
+      this.channels.delete(type);
+    }
+  }
+
+  /**
+   * Sends data through Supabase.
+   * @param type Message type.
+   * @param payload Data to send.
+   */
+  public send(type: string, payload: unknown): void {
+    switch (type) {
+      case 'stats_update':
+        void supabase
+          .from('dashboard_stats')
+          .upsert(payload)
+          .then(({ error }) => {
+            if (error) {
+              toast.error(`Error sending stats update: ${error.message}`);
+            }
+          });
+        break;
+
+      case 'activity_update':
+        void supabase
+          .from('activities')
+          .insert(payload)
+          .then(({ error }) => {
+            if (error) {
+              toast.error(`Error sending activity update: ${error.message}`);
+            }
+          });
+        break;
+
+      case 'notification_update':
+        void supabase
+          .from('notifications')
+          .insert(payload)
+          .then(({ error }) => {
+            if (error) {
+              toast.error(`Error sending notification update: ${error.message}`);
+            }
+          });
+        break;
+    }
+  }
+
+  /**
+   * Disconnects from all channels.
+   */
+  public disconnect(): void {
+    this.channels.forEach((channel) => {
+      channel.unsubscribe();
+    });
+    this.channels.clear();
+    this.messageHandlers.clear();
+    toast.info('Disconnected from realtime service');
+  }
+}

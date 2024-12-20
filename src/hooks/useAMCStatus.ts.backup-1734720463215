@@ -1,0 +1,100 @@
+import { useEffect, useState } from 'react';
+
+import { useUser } from '../contexts/UserContext';
+import { fetchServiceVisits } from '../services/amc';
+
+import { useToast } from './useToast';
+
+import type { ServiceVisit } from '../types';
+
+export interface AMCStatus;
+
+export interface AMCStatus;
+
+export interface AMCStatus;
+
+export interface AMCStatus;
+
+interface AMCStatus {
+  visits: ServiceVisit[];
+  completedVisits: number;
+  scheduledVisits: number;
+  visitsRemaining: number;
+  totalVisits: number;
+  isLastVisit: boolean;
+  isSecondToLast: boolean;
+  nextVisitNumber: number;
+  isEligibleForService: boolean;
+}
+
+export function useAMCStatus() {
+  const { user } = useUser();
+  const [visits, setVisits] = useState<ServiceVisit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const toast = useToast();
+
+  useEffect(() => {
+    const loadVisits = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const serviceVisits = await fetchServiceVisits(user.id);
+        setVisits(serviceVisits);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Failed to load AMC status');
+        setError(error);
+        toast.error('Failed to load AMC status');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVisits();
+  }, [user?.id, toast]);
+
+  const completedVisits = visits.filter(v => v.status === 'completed').length;
+  const scheduledVisits = visits.filter(v => v.status === 'scheduled').length;
+  const totalVisits = 4; // Standard package size
+  const visitsRemaining = totalVisits - (completedVisits + scheduledVisits);
+  const isLastVisit = completedVisits === 3;
+  const isSecondToLast = completedVisits === 2;
+
+  useEffect(() => {
+    if (isSecondToLast) {
+      toast.warning(
+        'Your next service will be your final AMC visit. Please renew your package to continue enjoying AMC benefits.',
+        { duration: 10000 }
+      );
+    }
+    if (isLastVisit) {
+      toast.error(
+        'This is your final AMC visit. Renew now to maintain continuous coverage and early renewal benefits.',
+        { duration: 10000 }
+      );
+    }
+  }, [isLastVisit, isSecondToLast, toast]);
+
+  const getNextVisitNumber = () => completedVisits + scheduledVisits + 1;
+  const isEligibleForService = () => visitsRemaining > 0 && user?.amcStatus === 'active';
+
+  const status: AMCStatus = {
+    visits,
+    completedVisits,
+    scheduledVisits,
+    visitsRemaining,
+    totalVisits,
+    isLastVisit,
+    isSecondToLast,
+    nextVisitNumber: getNextVisitNumber(),
+    isEligibleForService: isEligibleForService()
+  };
+
+  return {
+    status,
+    loading,
+    error
+  };
+}
+undefined.displayName = 'undefined';

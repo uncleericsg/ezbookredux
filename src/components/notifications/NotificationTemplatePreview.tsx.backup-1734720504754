@@ -1,0 +1,67 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { MessageSquare } from 'lucide-react';
+import React from 'react';
+
+import { Card } from '../ui/Card';
+
+import { NotificationTemplate } from './types';
+
+export interface NotificationTemplatePreviewProps;
+
+
+
+
+
+interface NotificationTemplatePreviewProps {
+  template: NotificationTemplate;
+  className?: string;
+};
+
+
+NotificationTemplatePreview.displayName = 'NotificationTemplatePreview';
+const NotificationTemplatePreview: React.FC<NotificationTemplatePreviewProps> = ({
+  template,
+  className,
+}) => {
+  return (
+    <motion.div
+      className={`space-y-4 ${className || ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <Card className="w-full">
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <MessageSquare className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h3 className="font-medium">{template.name}</h3>
+              <div className="rounded-md bg-muted p-4">
+                <p className="text-sm whitespace-pre-wrap">{template.content}</p>
+              </div>
+              {template.variables && template.variables.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Available Variables:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground">
+                    {template.variables.map((variable, index) => (
+                      <li key={index}>{variable}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+};
+
+
+
+export { NotificationTemplatePreview };
+undefined.displayName = 'undefined';

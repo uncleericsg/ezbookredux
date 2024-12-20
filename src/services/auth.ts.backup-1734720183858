@@ -1,0 +1,188 @@
+'use client';
+
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/user';
+
+import type { User } from '../types';
+
+// @integration-point Mock data for development
+const TEST_ACCOUNTS = {
+  TEST_USER: {
+    email: 'user@example.com',
+    password: 'test123',
+    user: {
+      id: '1',
+      email: 'user@example.com',
+      role: 'user',
+      name: 'Test User',
+      phone: '+1234567890',
+      verified: true
+    }
+  }
+};
+
+/**
+ * Authenticates a user with email and password
+ * @param email User's email
+ * @param password User's password
+ * @returns Promise resolving to User object or null if authentication fails
+ */
+export const authenticateUser = async (
+  email: string,
+  password: string
+): Promise<User | null> => {
+  try {
+    // Check test accounts first
+    if (
+      email === TEST_ACCOUNTS.TEST_USER.email &&
+      password === TEST_ACCOUNTS.TEST_USER.password
+    ) {
+      return TEST_ACCOUNTS.TEST_USER.user;
+    }
+
+    // Authenticate with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data.user) {
+      return null;
+    }
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    return {
+      id: data.user.id,
+      email: data.user.email!,
+      role: profile?.role || 'user',
+      name: profile?.name || '',
+      phone: profile?.phone || '',
+      verified: profile?.verified || false,
+    };
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return null;
+  }
+};
+
+/**
+ * Auth service with mock implementations
+ * To be replaced with Supabase implementation
+ */
+const authService = {
+  /**
+   * Simulates a login request with email and password
+   * @param email User's email
+   * @param password User's password
+   * @returns Promise resolving to User object or null if login fails
+   */
+  login: async (email: string, password: string): Promise<User | null> => {
+    return authenticateUser(email, password);
+  },
+
+  /**
+   * Simulates sending OTP to phone number
+   * @param _phoneNumber User's phone number
+   * @returns Promise resolving to verification ID
+   */
+  sendOTP: async (_phoneNumber: string): Promise<string> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('mock-verification-id');
+      }, 1000);
+    });
+  },
+
+  /**
+   * Simulates verifying OTP code
+   * @param _verificationId Verification ID from sendOTP
+   * @param code OTP code
+   * @returns Promise resolving to boolean indicating success
+   */
+  verifyOTP: async (_verificationId: string, code: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(code === '123456');
+      }, 1000);
+    });
+  },
+};
+
+/**
+ * User service with mock implementations
+ * To be replaced with Supabase implementation
+ */
+const userService = {
+  /**
+   * Retrieves user data by ID
+   * @param userId User's ID
+   * @returns Promise resolving to User object or null if not found
+   */
+  getUser: async (userId: string): Promise<User | null> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as User;
+  },
+
+  /**
+   * Updates user profile
+   * @param userId User's ID
+   * @param data Partial User object with updated fields
+   * @returns Promise resolving to updated User object
+   */
+  updateUserProfile: async (userId: string, data: Partial<User>): Promise<User> => {
+    const { data: updatedData, error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error || !updatedData) {
+      throw new Error('Failed to update user profile');
+    }
+
+    toast.success('Profile updated successfully');
+    return updatedData as User;
+  },
+};
+
+/**
+ * Session service with mock implementations
+ * To be replaced with Firebase/Supabase implementation
+ */
+const sessionService = {
+  /**
+   * Logs out the current user
+   * @returns Promise resolving to void
+   */
+  logout: async (): Promise<void> => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+  },
+};
+
+export { TEST_ACCOUNTS, authService, userService, sessionService };

@@ -1,0 +1,122 @@
+import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import {
+  getUsers,
+  deactivateUser as deactivateUserApi,
+  updateUser as updateUserApi
+} from '../services/admin';
+
+import type { User, AMCStatus } from '../types';
+
+export interface UseUsersResult;
+
+export interface UseUsersResult;
+
+export interface UseUsersResult {
+  users: User[];
+  loading: boolean;
+  error: Error | null;
+  deactivateUser: (userId: string) => Promise<void>;
+  updateUser: (userId: string, updates: Partial<User>) => Promise<void>;
+  updateAmcStatus: (userId: string, newStatus: AMCStatus) => Promise<void>;
+  isLoaded: boolean;
+}
+
+const validateUserData = (data: unknown): data is User[] => {
+  if (!Array.isArray(data)) return false;
+  return data.every(
+    (user) =>
+      typeof user === 'object' &&
+      user !== null &&
+      typeof user.id === 'string' &&
+      typeof user.firstName === 'string' &&
+      typeof user.lastName === 'string' &&
+      typeof user.email === 'string' &&
+      ['active', 'expired', 'pending', 'inactive'].includes(user.amcStatus)
+  );
+};
+
+export const useUsers = (): UseUsersResult => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getUsers();
+      setUsers(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch users'));
+      toast.error('Failed to fetch users');
+    } finally {
+      setLoading(false);
+      setIsLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const deactivateUser = useCallback(async (userId: string) => {
+    try {
+      setError(null);
+      await deactivateUserApi(userId);
+      setUsers((prev) => prev.filter((user) => user.id !== userId));
+      toast.success('User deactivated successfully');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to deactivate user');
+      setError(error);
+      toast.error(error.message);
+      throw error;
+    }
+  }, []);
+
+  const updateUser = useCallback(async (userId: string, updates: Partial<User>) => {
+    try {
+      setError(null);
+      const updatedUser = await updateUserApi(userId, updates);
+      setUsers((prev) =>
+        prev.map((user) => (user.id === userId ? { ...user, ...updatedUser } : user))
+      );
+      toast.success('User updated successfully');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to update user');
+      setError(error);
+      toast.error(error.message);
+      throw error;
+    }
+  }, []);
+
+  const updateAmcStatus = useCallback(async (userId: string, newStatus: AMCStatus) => {
+    try {
+      setError(null);
+      await updateUserApi(userId, { amcStatus: newStatus });
+      setUsers((prev) =>
+        prev.map((user) => (user.id === userId ? { ...user, amcStatus: newStatus } : user))
+      );
+      toast.success(
+        `AMC status ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+      );
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to update AMC status');
+      setError(error);
+      toast.error(error.message);
+      throw error;
+    }
+  }, []);
+
+  return {
+    users,
+    loading,
+    error,
+    deactivateUser,
+    updateUser,
+    updateAmcStatus,
+    isLoaded
+  };
+};

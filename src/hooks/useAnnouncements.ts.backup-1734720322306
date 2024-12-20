@@ -1,0 +1,58 @@
+import { useState, useEffect } from 'react';
+
+import { fetchAnnouncements } from '../services/announcements';
+
+import type { Announcement } from '../types';
+
+export interface UseAnnouncementsReturn;
+
+export interface UseAnnouncementsReturn;
+
+interface UseAnnouncementsReturn {
+  announcements: Announcement[];
+  loading: boolean;
+  error: string | null;
+  dismissAnnouncement: (id: string) => void;
+}
+
+export function useAnnouncements(): UseAnnouncementsReturn {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchAnnouncements();
+        const now = new Date();
+        const activeAnnouncements = data.filter((announcement) => {
+          const start = new Date(announcement.startDate);
+          const end = new Date(announcement.endDate);
+          return now >= start && now <= end;
+        });
+        setAnnouncements(activeAnnouncements);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to fetch announcements';
+        setError(message);
+        console.error('Failed to fetch announcements:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnnouncements();
+  }, []);
+
+  const dismissAnnouncement = (id: string) => {
+    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  return { 
+    announcements, 
+    loading, 
+    error,
+    dismissAnnouncement 
+  };
+}

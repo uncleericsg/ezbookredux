@@ -1,0 +1,167 @@
+'use client';
+
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+  Alert,
+} from '@mui/material';
+import { Calendar } from 'lucide-react';
+import { type HTMLAttributes, useState } from 'react';
+import { toast } from 'sonner';
+
+import { TimeSlotPicker } from '../../components/booking/TimeSlotPicker';
+import { useNotifications } from '../../hooks/useNotifications';
+import { cn } from '../../lib/utils';
+import { SupabaseBookingService } from '../../services/supabaseBookingService';
+import { type Booking } from '../../types/booking';
+import { formatTimeUntil } from '../../utils/dateUtils';
+
+import { BookingManager } from './panels/BookingManager';
+
+export type HTMLAttributes;
+export type Booking;
+export interface BookingManagementProps;
+
+export type HTMLAttributes;
+export type Booking;
+export interface BookingManagementProps;
+
+interface BookingManagementProps extends HTMLAttributes<HTMLDivElement> {
+  booking: Booking;
+  onUpdate?: () => void;
+}
+
+const BookingManagement = ({ booking, onUpdate, className, ...props }: BookingManagementProps) => {
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const bookingService = new SupabaseBookingService();
+  const { addNotification } = useNotifications();
+  const timeUntilBooking = formatTimeUntil(booking.start_time);
+  const isWithin24Hours = timeUntilBooking <= 24;
+
+  const handleAdminReschedule = async (newSlotId: string) => {
+    try {
+      setIsLoading(true);
+      await bookingService.rescheduleBooking(booking.id, newSlotId, true); // Admin override
+      addNotification({
+        type: 'success',
+        message: 'Booking rescheduled successfully',
+      });
+      
+      setIsRescheduleDialogOpen(false);
+      onUpdate?.();
+      toast.success('Booking rescheduled successfully');
+    } catch (error) {
+      console.error('Failed to reschedule booking:', error);
+      addNotification({
+        type: 'error',
+        message: 'Failed to reschedule booking',
+      });
+      toast.error('Failed to reschedule booking');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className={cn('rounded-lg border border-gray-200', className)} {...props}>
+      <CardContent className="p-6">
+        <Box className="space-y-4">
+          <Typography variant="h6" className="font-semibold">
+            Booking Management
+          </Typography>
+          
+          {isWithin24Hours && (
+            <Alert 
+              severity="warning" 
+              className="rounded-md"
+            >
+              This booking is within 24 hours ({timeUntilBooking} hours remaining)
+            </Alert>
+          )}
+          
+          <Box className="flex gap-2">
+            <Button
+              variant="contained"
+              startIcon={<Calendar className="h-5 w-5" />}
+              onClick={() => setIsRescheduleDialogOpen(true)}
+              className={cn(
+                'w-full rounded-md px-4 py-2 text-sm font-medium',
+                'bg-blue-500 text-white transition-colors',
+                'hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'disabled:cursor-not-allowed disabled:opacity-50',
+                'sm:w-auto'
+              )}
+            >
+              Reschedule Booking
+            </Button>
+          </Box>
+        </Box>
+      </CardContent>
+
+      <Dialog
+        open={isRescheduleDialogOpen}
+        onClose={() => !isLoading && setIsRescheduleDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        className="rounded-lg"
+      >
+        <DialogTitle className="border-b border-gray-200 px-6 py-4">
+          Admin Reschedule Booking
+        </DialogTitle>
+        
+        <DialogContent className="p-6">
+          {isWithin24Hours && (
+            <Alert 
+              severity="warning" 
+              className="mb-4 rounded-md"
+            >
+              Warning: This booking is scheduled to start in less than 24 hours. 
+              Rescheduling may cause inconvenience to the customer.
+            </Alert>
+          )}
+          
+          <TimeSlotPicker
+            currentBooking={booking}
+            onSlotSelect={handleAdminReschedule}
+            isLoading={isLoading}
+            className="mt-4"
+          />
+        </DialogContent>
+        
+        <DialogActions className="border-t border-gray-200 px-6 py-4">
+          <Button
+            onClick={() => setIsRescheduleDialogOpen(false)}
+            disabled={isLoading}
+            className={cn(
+              'rounded-md px-4 py-2 text-sm font-medium',
+              'bg-gray-100 text-gray-700 transition-colors',
+              'hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+          >
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Box className="mt-8">
+        <Typography variant="h5" gutterBottom className="font-semibold">
+          All Bookings
+        </Typography>
+        <BookingManager className="mt-4" />
+      </Box>
+    </Card>
+  );
+};
+
+BookingManagement.displayName = 'BookingManagement';
+
+export { BookingManagement };

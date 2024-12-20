@@ -1,0 +1,288 @@
+import axios from 'axios';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { sendServiceNotification } from './notifications';
+
+import type { ServiceVisit } from '../types';
+
+// Validation Schemas
+const userSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email format'),
+  phone: z.string().optional()
+});
+
+const serviceVisitSchema = z.object({
+  id: z.string().uuid('Invalid service visit ID'),
+  userId: z.string().uuid('Invalid user ID'),
+  date: z.string().datetime('Invalid date format'),
+  status: z.enum(['scheduled', 'in_progress', 'completed', 'cancelled']),
+  notes: z.string().optional()
+});
+
+const configSchema = z.object({
+  apiKey: z.string().min(1, 'API key is required'),
+  tenantUrl: z.string().url('Invalid tenant URL')
+});
+
+interface ImportProgress {
+  total: number;
+  current: number;
+}
+
+interface ImportResult {
+  success: boolean;
+  message: string;
+  importedCount: number;
+  failedCount: number;
+  errors: Array<{
+    id: string;
+    error: string;
+  }>;
+}
+
+// Constants
+const BATCH_SIZE = 50;
+const IMPORT_DELAY = 1000; // 1 second delay between batches
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
+
+export class RepairShoprService {
+  private config: { apiKey: string; tenantUrl: string };
+
+  constructor() {
+    this.config = this.validateRepairShoprConfig();
+  }
+
+  /**
+   * Bulk imports users from RepairShopr
+   * @param onProgress Optional callback to report import progress
+   * @returns Import result with success status, message, and statistics
+   */
+  async bulkImportUsers(
+    onProgress?: (progress: ImportProgress) => void
+  ): Promise<ImportResult> {
+    try {
+      const result: ImportResult = {
+        success: false,
+        message: '',
+        importedCount: 0,
+        failedCount: 0,
+        errors: []
+      };
+
+      const users = await this.fetchAllUsers();
+      const total = users.length;
+      let current = 0;
+
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        const batch = users.slice(i, i + BATCH_SIZE);
+        
+        await Promise.all(
+          batch.map(async (user) => {
+            try {
+              await this.importUser(user);
+              result.importedCount++;
+            } catch (error) {
+              result.failedCount++;
+              result.errors.push({
+                id: user.id,
+                error: error instanceof Error ? error.message : 'Unknown error'
+              });
+            }
+          })
+        );
+
+        current += batch.length;
+        if (onProgress) {
+          onProgress({ total, current });
+        }
+
+        if (i + BATCH_SIZE < total) {
+          await new Promise(resolve => setTimeout(resolve, IMPORT_DELAY));
+        }
+      }
+
+      result.success = result.failedCount === 0;
+      result.message = result.success
+        ? `Successfully imported ${result.importedCount} users`
+        : `Imported ${result.importedCount} users with ${result.failedCount} failures`;
+
+      return result;
+    } catch (error) {
+      console.error('Bulk import failed:', error);
+      throw new Error('Failed to bulk import users');
+    }
+  }
+
+  /**
+   * Fetches service reports for a given user
+   * @param userId User ID to fetch service reports for
+   * @returns Array of service visits
+   */
+  async fetchServiceReports(userId: string): Promise<ServiceVisit[]> {
+    try {
+      const response = await axios.get<ServiceVisit[]>(
+        `${this.config.tenantUrl}/api/v1/service_reports`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.config.apiKey}`
+          },
+          params: {
+            user_id: userId,
+            include_details: true
+          }
+        }
+      );
+
+      // Validate each service visit
+      const validatedReports = response.data.map(report => {
+        try {
+          return serviceVisitSchema.parse(report);
+        } catch (error) {
+          console.error('Invalid service report format:', error);
+          throw new Error('Invalid service report format');
+        }
+      });
+
+      return validatedReports;
+    } catch (error) {
+      console.error('Error fetching service reports:', error);
+      toast.error('Failed to fetch service reports');
+      throw error;
+    }
+  }
+
+  /**
+   * Updates a service report
+   * @param reportId Service report ID to update
+   * @param status New status for the service report
+   * @param notes Optional notes for the service report
+   */
+  async updateServiceReport(
+    reportId: string,
+    status: string,
+    notes?: string
+  ): Promise<void> {
+    try {
+      await axios.patch(
+        `${this.config.tenantUrl}/api/v1/service_reports/${reportId}`,
+        {
+          status,
+          notes
+        },
+        {
+          headers: { Authorization: `Bearer ${this.config.apiKey}` }
+        }
+      );
+
+      await sendServiceNotification({
+        type: 'service_report_updated',
+        reportId,
+        status,
+        notes
+      });
+    } catch (error) {
+      console.error('Error updating service report:', error);
+      throw new Error('Failed to update service report');
+    }
+  }
+
+  /**
+   * Validates the RepairShopr configuration
+   * @returns Validated configuration data
+   */
+  private validateRepairShoprConfig(): { apiKey: string; tenantUrl: string } {
+    try {
+      const config = {
+        apiKey: import.meta.env.VITE_REPAIRSHOPR_API_KEY || '',
+        tenantUrl: import.meta.env.VITE_REPAIRSHOPR_TENANT_URL || ''
+      };
+
+      const result = configSchema.parse(config);
+      return result;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const messages = error.errors.map(err => err.message).join(', ');
+        throw new Error(`Invalid RepairShopr configuration: ${messages}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Retries a function with exponential backoff
+   * @param fn Function to retry
+   * @param retries Number of retries
+   * @returns Result of the function
+   */
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries = MAX_RETRIES
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries === 0) throw error;
+
+      await new Promise(resolve => 
+        setTimeout(resolve, RETRY_DELAY * (MAX_RETRIES - retries + 1))
+      );
+
+      return this.retryWithBackoff(fn, retries - 1);
+    }
+  }
+
+  /**
+   * Tests the connection to RepairShopr
+   * @returns Whether the connection was successful
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      await axios.get(`${this.config.tenantUrl}/api/v1/ping`, {
+        headers: { Authorization: `Bearer ${this.config.apiKey}` }
+      });
+      return true;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Syncs customer data
+   * @param userId User ID to sync data for
+   * @returns Whether the sync was successful
+   */
+  async syncCustomerData(userId: string): Promise<boolean> {
+    try {
+      await this.retryWithBackoff(async () => {
+        const reports = await this.fetchServiceReports(userId);
+        await this.importUserTickets(userId);
+        await this.importUserInvoices(userId);
+        
+        for (const report of reports) {
+          await this.incrementVisitLabel(userId);
+        }
+      });
+
+      toast.success('Customer data synced successfully');
+      return true;
+    } catch (error) {
+      console.error('Error syncing customer data:', error);
+      toast.error('Failed to sync customer data');
+      return false;
+    }
+  }
+}
+
+// Create a singleton instance
+const repairShoprService = new RepairShoprService();
+
+// Export standalone functions that use the singleton
+export const fetchServiceReports = (userId: string) => repairShoprService.fetchServiceReports(userId);
+
+export type { ImportProgress, ImportResult };
+export { userSchema, serviceVisitSchema, configSchema };

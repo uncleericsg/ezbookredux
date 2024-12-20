@@ -1,0 +1,173 @@
+'use client';
+
+import { type FC, useState } from 'react';
+import { Loader2, Send } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { ScrollArea } from '@/components/ui/ScrollArea';
+import type { ServiceContract } from '@/types/contracts';
+
+export type FC;
+export interface ExportField;
+export interface ContractExportProps;
+
+// Types
+interface ExportField {
+  id: string;
+  label: string;
+  format?: (value: unknown) => string;
+}
+
+interface ContractExportProps {
+  contracts: ServiceContract[];
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const exportFields: ExportField[] = [
+  { id: 'customerName', label: 'Customer Name' },
+  { id: 'contractType', label: 'Contract Type' },
+  { id: 'status', label: 'Status' },
+  {
+    id: 'startDate',
+    label: 'Start Date',
+    format: (value: Date) => value.toLocaleDateString(),
+  },
+  {
+    id: 'endDate',
+    label: 'End Date',
+    format: (value: Date) => value.toLocaleDateString(),
+  },
+  { id: 'servicesCompleted', label: 'Services Completed' },
+  { id: 'servicesTotal', label: 'Total Services' },
+  { id: 'contactNumber', label: 'Contact Number' },
+  { id: 'email', label: 'Email' },
+  { id: 'location', label: 'Location' },
+];
+
+const ContractExport: FC<ContractExportProps> = ({
+  contracts,
+  isOpen,
+  onClose,
+}) => {
+  const [selectedFields, setSelectedFields] = useState<Set<string>>(
+    new Set(exportFields.map((field) => field.id))
+  );
+  const [isExporting, setIsExporting] = useState(false);
+
+  const toggleField = (fieldId: string) => {
+    const newFields = new Set(selectedFields);
+    if (newFields.has(fieldId)) {
+      newFields.delete(fieldId);
+    } else {
+      newFields.add(fieldId);
+    }
+    setSelectedFields(newFields);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const selectedFieldsList = Array.from(selectedFields);
+      const csvData = contracts.map((contract) => {
+        const row: Record<string, string> = {};
+        selectedFieldsList.forEach((fieldId) => {
+          const field = exportFields.find((f) => f.id === fieldId);
+          if (field) {
+            const value = contract[fieldId as keyof ServiceContract];
+            row[field.label] = field.format
+              ? field.format(value)
+              : String(value ?? '');
+          }
+        });
+        return row;
+      });
+
+      const headers = selectedFieldsList
+        .map((fieldId) => {
+          const field = exportFields.find((f) => f.id === fieldId);
+          return field?.label;
+        })
+        .join(',');
+
+      const rows = csvData
+        .map((row) =>
+          selectedFieldsList
+            .map((fieldId) => {
+              const field = exportFields.find((f) => f.id === fieldId);
+              return row[field?.label ?? ''];
+            })
+            .join(',')
+        )
+        .join('\n');
+
+      const csvContent = `${headers}\n${rows}`;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'contracts.csv';
+      link.click();
+      onClose();
+    } catch (error) {
+      console.error('Error exporting contracts:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Export Contracts</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Select the fields you want to include in the export:
+          </p>
+          <ScrollArea className="h-[300px] pr-4">
+            <div className="space-y-4">
+              {exportFields.map((field) => (
+                <div key={field.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={field.id}
+                    checked={selectedFields.has(field.id)}
+                    onCheckedChange={() => toggleField(field.id)}
+                  />
+                  <label
+                    htmlFor={field.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {field.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || selectedFields.size === 0}
+            >
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+ContractExport.displayName = 'ContractExport';
+
+export { ContractExport };
+export type { ContractExportProps, ExportField };

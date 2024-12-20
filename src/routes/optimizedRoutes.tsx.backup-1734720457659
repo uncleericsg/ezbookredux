@@ -1,0 +1,43 @@
+import React, { lazy, Suspense } from 'react';
+import type { RouteObject } from 'react-router-dom';
+
+import { LoadingState } from '@/components/booking/components/LoadingState';
+
+// Lazy load components
+const OptimizedBookingFlow = lazy(() =>
+  import('@/components/booking/OptimizedBookingFlow')
+);
+
+// Preload component function
+const preloadBookingComponents = async () => {
+  const preloadComponents = [
+    import('@/components/booking/BrandSelection'),
+    import('@/components/booking/IssueSelection'),
+    import('@/components/booking/CustomerForm')
+  ];
+  return Promise.all(preloadComponents);
+};
+
+// Optimized booking route configuration
+const optimizedRoutes: RouteObject[] = [
+  {
+    path: '/booking/optimized',
+    element: (
+      <Suspense fallback={<LoadingState />}>
+        <OptimizedBookingFlow />
+      </Suspense>
+    ),
+    loader: async () => {
+      // Start preloading components
+      void preloadBookingComponents();
+      return null;
+    },
+    handle: {
+      crumb: 'Optimized Booking'
+    }
+  }
+];
+
+export { optimizedRoutes };
+
+undefined.displayName = 'undefined';

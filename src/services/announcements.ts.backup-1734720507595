@@ -1,0 +1,26 @@
+import type { Announcement } from '../types';
+
+/**
+ * Fetch announcements from the system
+ * In a real app, this would fetch from an API
+ * @returns Promise resolving to array of announcements
+ */
+export async function fetchAnnouncements(): Promise<Announcement[]> {
+  const now = new Date();
+  
+  return [
+    {
+      id: '1',
+      title: 'Announcement 1',
+      startDate: now.toISOString(),
+      endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '2',
+      title: 'Announcement 2',
+      startDate: now.toISOString(),
+      endDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+}
+undefined.displayName = 'undefined';

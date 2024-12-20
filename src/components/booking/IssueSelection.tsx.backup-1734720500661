@@ -1,0 +1,292 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  Home,
+  LogOut,
+  Thermometer,
+  Droplet,
+  Wind,
+  Volume2,
+  Droplets,
+  MessageCircle,
+  ThumbsUp
+} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { IssueCard } from './components/IssueCard';
+import styles from './IssueSelection.module.css';
+
+export type IssueId;
+export type Issue;
+export type IssueSelectionState;
+export type IssueSelectionProps;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Export types at the top
+
+
+  title: string;
+  description: string;
+  icon: React.FC<{ className?: string }>;
+};
+
+
+  otherIssue: string;
+  validationError?: string;
+  isCompactView: boolean;
+};
+
+
+  error?: string;
+};
+
+const MAX_OTHER_ISSUE_LENGTH = 500;
+
+const COMMON_ISSUES: Issue[] = [
+  {
+    id: 'all-good',
+    title: 'All good',
+    description: 'No issues',
+    icon: ThumbsUp,
+  },
+  {
+    id: 'just-moved',
+    title: 'Just moved in',
+    description: 'New to the building',
+    icon: Home,
+  },
+  {
+    id: 'moving-out',
+    title: 'Moving out',
+    description: 'Leaving the building',
+    icon: LogOut,
+  },
+  {
+    id: 'not-cooling',
+    title: 'Not cooling',
+    description: 'Air conditioning not working',
+    icon: Thermometer,
+  },
+  {
+    id: 'water-leaking',
+    title: 'Water leaking',
+    description: 'Water leak in the building',
+    icon: Droplet,
+  },
+  {
+    id: 'funky-smell',
+    title: 'Funky smell',
+    description: 'Unpleasant odor in the building',
+    icon: Wind,
+  },
+  {
+    id: 'weird-noises',
+    title: 'Weird noises',
+    description: 'Strange sounds in the building',
+    icon: Volume2,
+  },
+  {
+    id: 'sweating-trunking',
+    title: 'Sweating trunking',
+    description: 'Condensation on pipes',
+    icon: Droplets,
+  },
+  {
+    id: 'other',
+    title: 'Other',
+    description: 'Something else',
+    icon: MessageCircle,
+  },
+];
+
+// Component declaration as const
+const IssueSelection = ({
+  onContinue,
+  error,
+  className,
+  ...props
+}: IssueSelectionProps) => {
+  const [state, setState] = useState<IssueSelectionState>({
+    selectedIssues: [],
+    otherIssue: '',
+    validationError: undefined,
+    isCompactView: false,
+  });
+
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [fadeOutItems, setFadeOutItems] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let fadeTimeout: number | null = null;
+    let compactTimeout: number | null = null;
+
+    if (state.selectedIssues.length > 0) {
+      // Start fade out animation
+      fadeTimeout = window.setTimeout(() => {
+        setFadeOutItems(true);
+        // After fade out, switch to compact view
+        compactTimeout = window.setTimeout(() => {
+          setState((prev) => ({ ...prev, isCompactView: true }));
+          setFadeOutItems(false);
+        }, 500); // Wait for fade out animation to complete
+      }, 2000);
+    } else {
+      setFadeOutItems(false);
+      setState((prev) => ({ ...prev, isCompactView: false }));
+    }
+
+    return () => {
+      if (fadeTimeout) window.clearTimeout(fadeTimeout);
+      if (compactTimeout) window.clearTimeout(compactTimeout);
+    };
+  }, [state.selectedIssues]);
+
+  const handleIssueToggle = (issueId: IssueId) => {
+    setState((prevState) => {
+      const { selectedIssues } = prevState;
+      let newSelection: IssueId[];
+
+      if (issueId === 'all-good') {
+        const isSelected = selectedIssues.includes(issueId);
+        setFadeOutItems(false);
+        return {
+          ...prevState,
+          selectedIssues: isSelected ? [] : ['all-good'],
+        };
+      }
+
+      newSelection = selectedIssues.filter((i) => i !== 'all-good');
+
+      if (selectedIssues.includes(issueId)) {
+        newSelection = newSelection.filter((i) => i !== issueId);
+      } else {
+        newSelection = [...newSelection, issueId];
+      }
+
+      return {
+        ...prevState,
+        selectedIssues: newSelection,
+      };
+    });
+
+    if (issueId === 'other') {
+      setShowOtherInput((prev) => !prev);
+    }
+  };
+
+  const handleOtherIssueChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= MAX_OTHER_ISSUE_LENGTH) {
+      setState((prev) => ({ ...prev, otherIssue: value }));
+    }
+  };
+
+  const handleContinue = () => {
+    if (state.selectedIssues.length === 0) {
+      setState((prev) => ({
+        ...prev,
+        validationError: 'Please select at least one issue',
+      }));
+      return;
+    }
+
+    if (state.selectedIssues.includes('other') && !state.otherIssue.trim()) {
+      setState((prev) => ({
+        ...prev,
+        validationError: 'Please describe your issue',
+      }));
+      return;
+    }
+
+    setIsLoading(true);
+    onContinue(
+      state.selectedIssues,
+      state.selectedIssues.includes('other') ? state.otherIssue : undefined
+    );
+  };
+
+  return (
+    <div className={`${styles.container} ${className || ''}`} {...props}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={styles.grid}
+      >
+        {COMMON_ISSUES.map((issue) => (
+          <IssueCard
+            key={issue.id}
+            issue={issue}
+            selected={state.selectedIssues.includes(issue.id)}
+            onToggle={() => handleIssueToggle(issue.id)}
+            fadeOut={fadeOutItems}
+            compact={state.isCompactView}
+          />
+        ))}
+      </motion.div>
+
+      {showOtherInput && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className={styles.otherInput}
+        >
+          <textarea
+            value={state.otherIssue}
+            onChange={handleOtherIssueChange}
+            placeholder="Please describe your issue..."
+            maxLength={MAX_OTHER_ISSUE_LENGTH}
+            rows={4}
+            className={styles.textarea}
+          />
+          <div className={styles.characterCount}>
+            {state.otherIssue.length}/{MAX_OTHER_ISSUE_LENGTH}
+          </div>
+        </motion.div>
+      )}
+
+      {state.validationError && (
+        <div className={styles.error}>{state.validationError}</div>
+      )}
+
+      {error && <div className={styles.error}>{error}</div>}
+
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={handleContinue}
+        className={styles.continueButton}
+        disabled={isLoading}
+      >
+        Continue
+      </motion.button>
+    </div>
+  );
+};
+
+// Add displayName
+IssueSelection.displayName = 'IssueSelection';
+
+// Both named and default exports at the bottom
+export { IssueSelection };
+
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,162 @@
+'use client';
+
+import { Close as CloseIcon } from '@mui/icons-material';
+import {
+  Dialog as MuiDialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Typography,
+  Button,
+  Box,
+  useTheme,
+  CircularProgress
+} from '@mui/material';
+import * as React from 'react';
+
+export interface DialogProps {
+  open: boolean;
+  onClose: () => void;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
+  footer?: React.ReactNode;
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  fullWidth?: boolean;
+  hideCloseButton?: boolean;
+}
+
+interface DialogFooterProps {
+  children: React.ReactNode;
+  startContent?: React.ReactNode;
+}
+
+interface DialogButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'text' | 'outlined' | 'contained';
+  color?: 'inherit' | 'primary' | 'secondary' | 'error';
+  loading?: boolean;
+  disabled?: boolean;
+}
+
+export const Dialog: React.FC<DialogProps> = ({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  maxWidth = 'sm',
+  fullWidth = true,
+  hideCloseButton = false,
+  ...props
+}) => {
+  const theme = useTheme();
+
+  return (
+    <MuiDialog
+      open={open}
+      onClose={onClose}
+      maxWidth={maxWidth}
+      fullWidth={fullWidth}
+      {...props}
+    >
+      <DialogTitle
+        sx={{
+          m: 0,
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
+      >
+        <Typography variant="h6" component="div">
+          {title}
+        </Typography>
+        {!hideCloseButton && (
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              color: theme.palette.grey[500],
+              marginLeft: 'auto'
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
+      </DialogTitle>
+      {description && (
+        <Box sx={{ px: 3, pt: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            {description}
+          </Typography>
+        </Box>
+      )}
+      {children && <DialogContent>{children}</DialogContent>}
+      {footer && <DialogActions>{footer}</DialogActions>}
+    </MuiDialog>
+  );
+};
+
+export const DialogFooter: React.FC<DialogFooterProps> = ({
+  children,
+  startContent
+}) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 2,
+        width: '100%'
+      }}
+    >
+      {startContent && (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {startContent}
+        </Box>
+      )}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          marginLeft: startContent ? 'auto' : undefined
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
+};
+
+export const DialogButton: React.FC<DialogButtonProps> = ({
+  children,
+  onClick,
+  variant = 'contained',
+  color = 'primary',
+  loading = false,
+  disabled = false,
+  ...props
+}) => {
+  return (
+    <Button
+      variant={variant}
+      color={color}
+      onClick={onClick}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <CircularProgress size={24} color="inherit" />
+      ) : (
+        children
+      )}
+    </Button>
+  );
+};
+
+export default Dialog;

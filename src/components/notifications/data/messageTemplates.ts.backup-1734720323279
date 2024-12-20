@@ -1,0 +1,33 @@
+import { MessageTemplate } from '../types/messageTypes';
+;
+    id;
+    content: e}, this is a reminder that your next service is scheduled for {next_service_date} at {appointment_time}. Your technician {technician_name} will be visiting {customer_address}.',
+    type;
+    characterLimit: any;,
+  {;
+    id;
+    content: e}, thank you for choosing our service. How was your recent aircon service on {last_service_date}? We value your feedback!',
+    type;
+    characterLimit: },
+  {;
+    id;
+    content: e} {last_name},\n\nThis is a detailed report of your {service_type} conducted on {last_service_date}.\n\nYour next maintenance is scheduled for {next_service_date}.\n\nBest regards,\n{technician_name}',
+    type;
+];
+;
+const messageTemplates.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const messageTemplates: any;,
+  return null
+};
+;
+// Additional exports;
+{ messageTemplates };
+;
+{ messageTemplates };
+;
+export { messageTemplates };
+export default messageTemplates;

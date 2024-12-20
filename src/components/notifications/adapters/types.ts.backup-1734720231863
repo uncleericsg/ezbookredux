@@ -1,0 +1,56 @@
+import React from 'react';
+
+import { z } from 'zod';
+import type { Template } from '../types/templateTypes';
+import type { PreviewData, UtmParams } from '../types/messageTypes';
+// Enhanced types that we want to support;
+  code: string;, message: any;,
+  field?: string;
+;
+  code: string;, message: any;,
+  field?: string;
+;
+  isValid: boolean;, errors: any;,
+  warnings: ValidationWarning[];, deliveryRate: any;,
+  openRate: number;, clickRate: any;,
+;
+  impressions: number;, clicks: any;,
+  conversions: number;, performance: any;,
+;
+  mode: any;,
+  sampleData: Record<string, string>;
+  characterLimit: any;,
+  utmParams?: {;
+    utmSource: string;, utmMedium: any;,
+    utmCampaign: };
+;
+  readonly _enhanced: true;, validation: any;,
+  analytics: AnalyticsData;, preview: any;,
+// Type guards;
+  return '_enhanced' in template;
+ validation: } => {;
+  return '_enhanced' in template && 'validation' in template;
+ analytics: } => {;
+  return '_enhanced' in template && 'analytics' in template;
+;
+const types.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const types: any;,
+  return null
+};
+;
+{ named };
+;
+// Additional exports;
+{ types };
+;
+{ types };
+{ named };
+;
+;
+;
+;
+export default types;

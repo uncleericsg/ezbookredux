@@ -1,0 +1,47 @@
+export type BusinessRules;
+
+export const BUSINESS_RULES = {
+  SLOT_DURATION: {
+    AMC: 60, // 60 minutes for AMC appointments
+    REGULAR: 30 // 30 minutes for regular appointments
+  },
+  BUFFER_TIME: 30, // 30 minutes buffer between appointments
+  MIN_BOOKING_HOURS: 24, // Minimum 24 hours advance booking
+  
+  BUSINESS_HOURS: {
+    START: 9.5, // 9:30 AM
+    MIN_TIME: 9.5, // 9:30 AM
+    MAX_TIME: {
+      FRIDAY: 16.5, // Last booking at 4:30 PM for Fridays
+      DEFAULT: 18 // 6:00 PM for other days
+    }
+  },
+
+  PEAK_HOURS: {
+    START: 14, // 2:00 PM
+    END: 18, // 6:00 PM
+    WARNING: 'Peak hours are between 2:00 PM and 6:00 PM'
+  },
+
+  BOOKING_LIMITS: {
+    PEAK_HOURS: {
+      AMC: 2, // Max 2 AMC bookings during peak hours
+      REGULAR: 4 // Max 4 regular bookings during peak hours
+    },
+    PER_DAY: {
+      AMC: 3, // Maximum 3 AMC slots per day
+      TOTAL: 6, // Maximum 6 total slots per day
+      MIN_REGULAR: 2 // Minimum 2 slots reserved for regular bookings
+    }
+  },
+
+  RECOMMENDED_HOURS: {
+    AMC: {
+      START: 9.5, // 9:30 AM
+      END: 13, // 1:00 PM
+      MESSAGE: 'Recommended booking time for AMC is between 9:30 AM and 1:00 PM'
+    }
+  }
+} as const;
+
+undefined.displayName = 'undefined';

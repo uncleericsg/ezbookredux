@@ -1,0 +1,223 @@
+'use client';
+
+/*
+ * @AI_INSTRUCTION - DO NOT MODIFY THIS FILE
+ * This component orchestrates the entire first-time booking flow and is considered stable.
+ *
+ * Critical Features:
+ * - Step management and navigation
+ * - Form state handling
+ * - Integration with all booking steps (Customer, Brand, Issue, Payment)
+ * - Progress persistence
+ *
+ * Any modifications could affect the entire booking experience.
+ * If changes are needed, please:
+ * 1. Create a detailed proposal
+ * 2. Test thoroughly in a development environment
+ * 3. Ensure all steps still work correctly
+ * 4. Validate form state management
+ */
+
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { updateBooking } from '../../services/bookingService';
+
+import { BookingProgress } from './BookingProgress';
+import { BrandSelection } from './BrandSelection';
+import { CustomerForm } from './CustomerForm';
+import { IssueSelection } from './IssueSelection';
+import { PaymentStep } from './PaymentStep';
+import { ScheduleStep } from './ScheduleStep';
+
+export type ServiceOption;
+
+export type CustomerFormData;
+
+export type BookingData;
+
+export type FirstTimeBookingFlowProps;
+
+
+// Export types at the top
+
+  title: string;
+  price: number;
+  usualPrice?: number;
+  description: string;
+  duration: number;
+  paddingBefore: number;
+  paddingAfter: number;
+};
+
+  lastName: string;
+  email: string;
+  mobile: string;
+  floorUnit: string;
+  blockStreet: string;
+  postalCode: string;
+  condoName?: string;
+  lobbyTower?: string;
+  specialInstructions?: string;
+};
+
+  issues: string[];
+  customerInfo: CustomerFormData | null;
+  scheduledDateTime?: Date;
+  scheduledTimeSlot?: string;
+  selectedService?: ServiceOption;
+  bookingId?: string;
+};
+
+};
+
+// Component declaration as const
+const FirstTimeBookingFlow = ({ className }: FirstTimeBookingFlowProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingData, setBookingData] = useState<BookingData>({
+    brands: [],
+    issues: [],
+    customerInfo: null,
+  });
+
+  const steps = [
+    { title: 'Brand', component: BrandSelection },
+    { title: 'Issue', component: IssueSelection },
+    { title: 'Customer Info', component: CustomerForm },
+    { title: 'Schedule', component: ScheduleStep },
+    { title: 'Payment', component: PaymentStep },
+  ];
+
+  useEffect(() => {
+    const selectedService = location.state?.selectedService;
+    if (selectedService) {
+      setBookingData((prev) => ({ ...prev, selectedService }));
+    } else {
+      navigate('/booking');
+    }
+  }, [location.state, navigate]);
+
+  const handleBrandSelection = (brands: string[]) => {
+    setBookingData((prev) => ({ ...prev, brands }));
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const handleIssueSelection = (issues: string[], otherIssue?: string) => {
+    setBookingData((prev) => ({
+      ...prev,
+      issues: otherIssue ? [...issues, otherIssue] : issues,
+    }));
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const handleCustomerSave = async (formData: CustomerFormData) => {
+    setIsLoading(true);
+    try {
+      const updatedData = { ...bookingData, customerInfo: formData };
+      const bookingId = await updateBooking(updatedData);
+      setBookingData((prev) => ({ ...prev, customerInfo: formData, bookingId }));
+      setCurrentStep((prev) => prev + 1);
+    } catch (error) {
+      toast.error('Failed to save customer information. Please try again.');
+      console.error('Error saving customer data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScheduleSelect = async (date: Date, timeSlot: string) => {
+    setIsLoading(true);
+    try {
+      const updatedData = {
+        ...bookingData,
+        scheduledDateTime: date,
+        scheduledTimeSlot: timeSlot,
+      };
+      await updateBooking(updatedData);
+      setBookingData(updatedData);
+      setCurrentStep((prev) => prev + 1);
+    } catch (error) {
+      toast.error('Failed to save schedule. Please try again.');
+      console.error('Error saving schedule:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePaymentComplete = async () => {
+    setIsLoading(true);
+    try {
+      const updatedData = { ...bookingData, status: 'paid' };
+      await updateBooking(updatedData);
+      setBookingData(updatedData);
+      toast.success('Booking completed successfully!');
+      navigate('/booking/success', { state: { bookingData: updatedData } });
+    } catch (error) {
+      toast.error('Payment processing failed. Please try again.');
+      console.error('Error processing payment:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className={`mx-auto max-w-4xl px-4 pt-8 ${className || ''}`}>
+      <BookingProgress steps={steps} currentStep={currentStep} />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          {isLoading ? (
+            <div className="flex h-[400px] items-center justify-center">
+              <Loader2 className="text-primary h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {currentStep === 0 && (
+                <BrandSelection onSubmit={handleBrandSelection} selected={bookingData.brands} />
+              )}
+              {currentStep === 1 && (
+                <IssueSelection onSubmit={handleIssueSelection} selected={bookingData.issues} />
+              )}
+              {currentStep === 2 && (
+                <CustomerForm
+                  onSubmit={handleCustomerSave}
+                  initialData={bookingData.customerInfo}
+                />
+              )}
+              {currentStep === 3 && (
+                <ScheduleStep
+                  onSubmit={handleScheduleSelect}
+                  selectedDate={bookingData.scheduledDateTime}
+                  selectedTimeSlot={bookingData.scheduledTimeSlot}
+                  service={bookingData.selectedService}
+                />
+              )}
+              {currentStep === 4 && (
+                <PaymentStep onComplete={handlePaymentComplete} bookingData={bookingData} />
+              )}
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Add displayName
+FirstTimeBookingFlow.displayName = 'FirstTimeBookingFlow';
+
+// Both named and default exports at the bottom
+export { FirstTimeBookingFlow };
+
+undefined.displayName = 'undefined';

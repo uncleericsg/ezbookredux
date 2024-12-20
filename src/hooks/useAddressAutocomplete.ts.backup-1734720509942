@@ -1,0 +1,76 @@
+ 
+import debounce from 'lodash/debounce';
+import { useState, useCallback, useRef, useEffect } from 'react';
+
+import { initGooglePlaces, getPlacePredictions, getPlaceDetails, PlaceDetails } from '../services/googlePlaces';
+
+export interface UseAddressAutocompleteProps;
+
+
+
+
+
+
+  debounceMs?: number;
+}
+
+export function useAddressAutocomplete({
+  onSelect,
+  debounceMs = 300
+}: UseAddressAutocompleteProps) {
+  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+
+  useEffect(() => {
+    const initService = async () => {
+      try {
+        autocompleteServiceRef.current = await initGooglePlaces();
+      } catch (err) {
+        setError('Failed to initialize Google Places service');
+      }
+    };
+    initService();
+  }, []);
+
+  // Debounce the search to avoid too many API calls
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchPredictions = useCallback(
+    debounce(async (input: string) => {
+      if (!input || !autocompleteServiceRef.current) return;
+      setLoading(true);
+      try {
+        const results = await getPlacePredictions(input, autocompleteServiceRef.current);
+        setPredictions(results);
+      } catch (err) {
+        setError('Failed to fetch address predictions');
+      } finally {
+        setLoading(false);
+      }
+    }, debounceMs),
+    [debounceMs]
+  );
+
+  const handleSelect = async (placeId: string) => {
+    if (!autocompleteServiceRef.current) return;
+    setLoading(true);
+    try {
+      const details = await getPlaceDetails(placeId, autocompleteServiceRef.current);
+      onSelect(details);
+    } catch (err) {
+      setError('Failed to fetch place details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    predictions,
+    loading,
+    error,
+    fetchPredictions,
+    handleSelect
+  };
+}
+undefined.displayName = 'undefined';

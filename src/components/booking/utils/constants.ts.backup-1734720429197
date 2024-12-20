@@ -1,0 +1,43 @@
+;
+  PHONE: { ,INVALID_FORMAT;
+  ADDRESS: { ,BLOCK: any;,
+      REQUIRED;
+    STREET: { ,REQUIRED;
+    UNIT: { ,INVALID_FORMAT;
+    POSTAL_CODE: { ,REQUIRED;
+  DATE: { ,REQUIRED;
+  TIME: { ,REQUIRED;
+    OUTSIDE_HOURS: };
+
+  ,businessHours: { ,start: 9, // 9 AM;
+    end;
+  bookingWindow: { ,minDays;
+    maxDays: };
+
+  ,PHONE: { ,singapore;
+  UNIT: { ,withHash;
+    noHash: };
+
+const constants.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const constants: any;,
+  return null
+};
+;
+{ named };
+;
+// Additional exports;
+{ constants };
+;
+{ constants };
+{ named };
+;
+;
+;
+;
+;
+export { constants };
+export default constants;

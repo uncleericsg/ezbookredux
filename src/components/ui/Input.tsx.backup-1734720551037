@@ -1,0 +1,44 @@
+import React from 'react';
+
+import { cn } from '@/lib/utils';
+
+export type InputProps;
+
+
+// Export types at the top
+
+  /** Input type (e.g., 'text', 'password', 'email', etc.) */
+  type?: string;
+} & React.InputHTMLAttributes<HTMLInputElement>;
+
+/**
+ * Input component with styling and accessibility features
+ * @example
+ * <Input
+ *   type="text"
+ *   placeholder="Enter your name"
+ *   required
+ *   aria-label="Name"
+ * />
+ */
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type = 'text', ...props }, ref) => (
+    <input
+      type={type}
+      className={cn(
+        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        className
+      )}
+      ref={ref}
+      {...props}
+    />
+  )
+);
+
+// Add displayName
+Input.displayName = 'Input';
+
+// Both named and default exports at the bottom
+export { Input };
+
+undefined.displayName = 'undefined';

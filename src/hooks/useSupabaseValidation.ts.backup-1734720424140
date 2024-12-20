@@ -1,0 +1,119 @@
+import { useState } from 'react';
+
+import { brevoService } from '@/services/brevoService';
+
+export interface ValidationState;
+
+export interface ValidationState;
+
+export interface ValidationState;
+
+export interface ValidationState {
+  isVerifying: boolean;
+  isVerified: boolean;
+  error: string | null;
+  showOTPInput: boolean;
+}
+
+export const useSupabaseValidation = () => {
+  const [validationState, setValidationState] = useState<ValidationState>({
+    isVerifying: false,
+    isVerified: false,
+    error: null,
+    showOTPInput: false
+  });
+
+  const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const sendOTP = async (email: string) => {
+    try {
+      setValidationState(prev => ({ ...prev, isVerifying: true, error: null }));
+      
+      // Generate OTP
+      const otp = generateOTP();
+      
+      // Store OTP in session storage with timestamp
+      const otpData = {
+        code: otp,
+        timestamp: Date.now(),
+        email
+      };
+      window.sessionStorage.setItem('otpData', JSON.stringify(otpData));
+      
+      // Send OTP via email using Brevo
+      await brevoService.sendOTPEmail(email, otp);
+      
+      setValidationState(prev => ({
+        ...prev,
+        isVerifying: false,
+        showOTPInput: true
+      }));
+      
+      return true;
+    } catch (error) {
+      setValidationState(prev => ({
+        ...prev,
+        isVerifying: false,
+        error: error instanceof Error ? error.message : 'Failed to send OTP'
+      }));
+      return false;
+    }
+  };
+
+  const verifyOTP = async (enteredOTP: string) => {
+    try {
+      const otpDataString = window.sessionStorage.getItem('otpData');
+      if (!otpDataString) {
+        throw new Error('OTP session expired');
+      }
+
+      const otpData = JSON.parse(otpDataString);
+      const { code, timestamp } = otpData;
+
+      // Check if OTP is expired (5 minutes)
+      if (Date.now() - timestamp > 5 * 60 * 1000) {
+        throw new Error('OTP expired');
+      }
+
+      // Verify OTP
+      if (enteredOTP === code) {
+        setValidationState(prev => ({
+          ...prev,
+          isVerified: true,
+          error: null
+        }));
+        
+        // Clear OTP data
+        window.sessionStorage.removeItem('otpData');
+        return true;
+      } else {
+        throw new Error('Invalid verification code');
+      }
+    } catch (error) {
+      setValidationState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Verification failed'
+      }));
+      return false;
+    }
+  };
+
+  const resetValidation = () => {
+    setValidationState({
+      isVerifying: false,
+      isVerified: false,
+      error: null,
+      showOTPInput: false
+    });
+    window.sessionStorage.removeItem('otpData');
+  };
+
+  return {
+    validationState,
+    sendOTP,
+    verifyOTP,
+    resetValidation
+  };
+};

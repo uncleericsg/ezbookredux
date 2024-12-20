@@ -1,0 +1,269 @@
+import { toast } from 'sonner';
+
+export interface BookingErrorOptions;
+
+export interface BookingErrorOptions;
+
+export interface BookingErrorOptions;
+
+/**
+ * Booking error codes
+ */
+export enum BookingErrorCode {
+  /** Another booking is currently in progress */
+  BOOKING_IN_PROGRESS = 'BOOKING_IN_PROGRESS',
+  /** Selected time slot is no longer available */
+  SLOT_UNAVAILABLE = 'SLOT_UNAVAILABLE',
+  /** AMC package is invalid or expired */
+  AMC_INVALID = 'AMC_INVALID',
+  /** Maximum number of bookings reached */
+  MAX_BOOKINGS = 'MAX_BOOKINGS',
+  /** Network or connectivity error */
+  NETWORK = 'NETWORK_ERROR',
+  /** Form validation error */
+  VALIDATION = 'VALIDATION_ERROR',
+  /** Service availability error */
+  AVAILABILITY = 'AVAILABILITY_ERROR',
+  /** Authentication or authorization error */
+  AUTH = 'AUTH_ERROR',
+  /** Rate limit exceeded */
+  RATE_LIMIT = 'RATE_LIMIT',
+  /** Unknown or unhandled error */
+  UNKNOWN = 'UNKNOWN_ERROR'
+}
+
+/**
+ * Options for creating a booking error
+ */
+export interface BookingErrorOptions {
+  /** Error message */
+  message: string;
+  /** Error code */
+  code: BookingErrorCode;
+  /** Whether the action can be retried */
+  retry?: boolean;
+  /** Whether to show a toast notification */
+  showToast?: boolean;
+}
+
+/**
+ * Custom error class for booking-related errors
+ */
+export class BookingError extends Error {
+  /** Error code */
+  public readonly code: BookingErrorCode;
+  /** Whether the action can be retried */
+  public readonly retry: boolean;
+  /** Whether to show a toast notification */
+  public readonly showToast: boolean;
+
+  constructor(options: BookingErrorOptions) {
+    super(options.message);
+    this.name = 'BookingError';
+    this.code = options.code;
+    this.retry = options.retry ?? false;
+    this.showToast = options.showToast ?? true;
+
+    if (this.showToast) {
+      toast.error(this.message);
+    }
+  }
+
+  /**
+   * Create a network error
+   * @param message Error message
+   */
+  static network(message = 'Network error. Please check your connection.'): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.NETWORK,
+      retry: true
+    });
+  }
+
+  /**
+   * Create a validation error
+   * @param message Error message
+   */
+  static validation(message: string): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.VALIDATION,
+      retry: false
+    });
+  }
+
+  /**
+   * Create an availability error
+   * @param message Error message
+   */
+  static availability(message: string): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.AVAILABILITY,
+      retry: true
+    });
+  }
+
+  /**
+   * Create an authentication error
+   * @param message Error message
+   */
+  static auth(message = 'Please log in to continue.'): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.AUTH,
+      retry: false
+    });
+  }
+
+  /**
+   * Create a rate limit error
+   * @param message Error message
+   */
+  static rateLimit(message = 'Too many requests. Please try again later.'): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.RATE_LIMIT,
+      retry: true,
+      showToast: true
+    });
+  }
+
+  /**
+   * Create a booking in progress error
+   */
+  static bookingInProgress(): BookingError {
+    return new BookingError({
+      message: 'Another booking is currently in progress.',
+      code: BookingErrorCode.BOOKING_IN_PROGRESS,
+      retry: false
+    });
+  }
+
+  /**
+   * Create a slot unavailable error
+   */
+  static slotUnavailable(): BookingError {
+    return new BookingError({
+      message: 'This time slot is no longer available.',
+      code: BookingErrorCode.SLOT_UNAVAILABLE,
+      retry: false
+    });
+  }
+
+  /**
+   * Create an AMC invalid error
+   * @param message Error message
+   */
+  static amcInvalid(message = 'Your AMC package is not active'): BookingError {
+    return new BookingError({
+      message,
+      code: BookingErrorCode.AMC_INVALID,
+      retry: false
+    });
+  }
+
+  /**
+   * Create a max bookings error
+   */
+  static maxBookings(): BookingError {
+    return new BookingError({
+      message: 'You have reached the maximum number of bookings.',
+      code: BookingErrorCode.MAX_BOOKINGS,
+      retry: false
+    });
+  }
+}
+
+/**
+ * Handle a booking error and show appropriate UI feedback
+ * @param error Error to handle
+ * @returns Error message or null if error was handled
+ */
+export function handleBookingError(error: unknown): string | null {
+  if (error instanceof BookingError) {
+    if (error.showToast) {
+      toast.error(error.message);
+    }
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message || 'An unknown error occurred';
+    toast.error(message);
+    return message;
+  }
+
+  const message = 'An unknown error occurred';
+  toast.error(message);
+  return message;
+}
+
+/**
+ * Determine if an error can be retried
+ * @param error Error to check
+ * @returns Whether the error can be retried
+ */
+export function shouldRetry(error: unknown): boolean {
+  if (error instanceof BookingError) {
+    return error.retry === true;
+  }
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('network') ||
+      message.includes('timeout') ||
+      message.includes('rate limit') ||
+      message.includes('unavailable')
+    );
+  }
+  return false;
+}
+
+/**
+ * Get a user-friendly error message for a booking error
+ * @param error Error to get message for
+ * @returns User-friendly error message or null if error is unknown
+ */
+export function getErrorMessage(error: unknown): string | null {
+  if (error instanceof BookingError) {
+    switch (error.code) {
+      case BookingErrorCode.SLOT_UNAVAILABLE:
+        return 'Try selecting a different time slot';
+      case BookingErrorCode.AMC_INVALID:
+        return 'Visit the AMC page to renew your package';
+      case BookingErrorCode.MAX_BOOKINGS:
+        return 'View your dashboard to manage existing bookings';
+      case BookingErrorCode.NETWORK:
+        return 'Check your internet connection and try again';
+      default:
+        return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks if an error is retryable
+ * @param error Error to check
+ * @returns Whether the error can be retried
+ */
+export const isRetryableError = (error: unknown): boolean => {
+  if (error instanceof BookingError) {
+    return error.retry;
+  }
+
+  // Network errors are generally retryable
+  if (error instanceof Error) {
+    const networkErrors = [
+      'NetworkError',
+      'TimeoutError',
+      'AbortError',
+      'FetchError'
+    ];
+    return networkErrors.some(type => error.name.includes(type));
+  }
+
+  return false;
+};

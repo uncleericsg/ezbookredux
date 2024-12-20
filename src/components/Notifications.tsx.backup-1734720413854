@@ -1,0 +1,129 @@
+import type { ForwardRefRenderFunction, forwardRef } from 'react';
+
+import { useNotifications } from '@/hooks/useNotifications';
+import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/store';
+
+import NotificationList from './NotificationList';
+
+export interface INotificationsProps;
+
+export interface INotificationsProps;
+
+export interface INotificationsProps;
+
+/**
+ * Notifications component for the iAircon Easy Booking system
+ *
+ * @component Notifications
+ * @description Displays a list of notifications with options to mark as read and delete
+ * @example
+ * ```tsx
+ * import { Notifications } from './components';
+ * 
+ * const MyComponent = () => {
+ *   return <Notifications onClose={() => console.log('closed')} />;
+ * };
+ * ```
+ */
+
+interface INotificationsProps {
+  /** Optional callback function when the notifications panel is closed */
+  onClose?: () => void;
+}
+
+const NotificationsBase: ForwardRefRenderFunction<HTMLDivElement, INotificationsProps> = (
+  { onClose: _onClose },
+  ref
+) => {
+  const { currentUser: _currentUser } = useAppSelector((state) => state.user);
+  const { notifications, isLoading, markAsRead, markAllRead, deleteAll } = useNotifications();
+
+  if (isLoading) {
+    return (
+      <div
+        ref={ref}
+        role="status"
+        aria-label="Loading notifications"
+        className={cn("flex items-center justify-center p-4", "text-gray-400")}
+      >
+        <div
+          className={cn(
+            "h-8 w-8 animate-spin rounded-full",
+            "border-b-2 border-[#FFD700]"
+          )}
+        />
+        <span className="sr-only">Loading notifications...</span>
+      </div>
+    );
+  }
+
+  if (!notifications?.length) {
+    return (
+      <div
+        ref={ref}
+        role="status"
+        aria-label="No notifications"
+        className={cn("p-4 text-center", "text-gray-400")}
+      >
+        <p>No notifications</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={ref}
+      role="dialog"
+      aria-label="Notifications panel"
+      className={cn(
+        "w-full max-w-md overflow-hidden",
+        "rounded-lg bg-gray-800 shadow-lg"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between",
+          "border-b border-gray-700 p-4"
+        )}
+      >
+        <h2 className="text-lg font-semibold text-white">Notifications</h2>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={markAllRead}
+            aria-label="Mark all notifications as read"
+            className={cn(
+              "text-sm text-[#FFD700]",
+              "transition-colors hover:bg-[#FFC400] hover:text-gray-900",
+              "rounded px-2 py-1",
+              "focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
+            )}
+          >
+            Mark All Read
+          </button>
+          <button
+            type="button"
+            onClick={deleteAll}
+            aria-label="Delete all notifications"
+            className={cn(
+              "text-sm text-red-400",
+              "transition-colors hover:bg-red-600 hover:text-white",
+              "rounded px-2 py-1",
+              "focus:outline-none focus:ring-2 focus:ring-red-500"
+            )}
+          >
+            Delete All
+          </button>
+        </div>
+      </div>
+      <NotificationList notifications={notifications} onMarkAsRead={markAsRead} />
+    </div>
+  );
+};
+
+const Notifications = forwardRef(NotificationsBase);
+Notifications.displayName = 'Notifications';
+
+type { INotificationsProps };
+export { INotificationsProps };

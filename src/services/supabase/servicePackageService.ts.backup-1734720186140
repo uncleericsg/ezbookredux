@@ -1,0 +1,52 @@
+import * as React from 'react';
+
+import { supabase } from '@/lib/supabase';
+import type { Service } from '@/types/supabase';
+
+export const servicePackageService = {
+  // Get all active service packages
+  async getActiveServices(): Promise<Service[]> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
+  // Get specific service package
+  async getServiceById(serviceId: string): Promise<Service | null> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', serviceId)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Get services by category
+  async getServicesByCategory(category: string): Promise<Service[]> {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('category', category)
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
+  // Update service package
+  async updateService(serviceId: string, updates: Partial<Service>): Promise<Service> {
+    const { data, error } = await supabase
+      .from('services')
+      .update(updates)
+      .eq('id', serviceId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+};

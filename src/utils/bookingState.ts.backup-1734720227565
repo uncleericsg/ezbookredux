@@ -1,0 +1,170 @@
+import { BookingError } from './errors';
+
+export type BookingStatus;
+export interface BookingState;
+export type BookingAction;
+
+/**
+ * Possible states of a booking process
+ */
+export type BookingStatus =
+  | 'idle'
+  | 'validating'
+  | 'submitting'
+  | 'retrying'
+  | 'failed'
+  | 'success';
+
+/**
+ * State of a booking process
+ */
+export interface BookingState {
+  /** Current status of the booking */
+  status: BookingStatus;
+  /** Error message if any */
+  error?: string;
+  /** Validation errors if any */
+  validationErrors?: string[];
+  /** Warning messages if any */
+  warnings?: string[];
+  /** Number of retry attempts made */
+  retryCount: number;
+  /** Timestamp of last retry attempt */
+  lastRetryTimestamp?: number;
+}
+
+/**
+ * Initial state for a booking process
+ */
+export const initialBookingState: BookingState = {
+  status: 'idle',
+  retryCount: 0
+};
+
+/**
+ * Check if a booking is currently in progress
+ * @param state Current booking state
+ * @returns Whether booking is in progress
+ */
+export function isBookingInProgress(state: BookingState): boolean {
+  return ['validating', 'submitting', 'retrying'].includes(state.status);
+}
+
+/**
+ * Check if a booking can be retried
+ * @param state Current booking state
+ * @param maxRetries Maximum number of retries allowed
+ * @returns Whether booking can be retried
+ */
+export function canRetry(state: BookingState, maxRetries = 3): boolean {
+  if (state.status !== 'failed' || state.retryCount >= maxRetries) {
+    return false;
+  }
+
+  // Check if enough time has passed since last retry
+  if (state.lastRetryTimestamp) {
+    const minRetryInterval = 1000; // 1 second
+    const now = Date.now();
+    if (now - state.lastRetryTimestamp < minRetryInterval) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Actions that can be performed on a booking state
+ */
+export type BookingAction =
+  | { type: 'START_VALIDATION' }
+  | {
+      type: 'VALIDATION_COMPLETE';
+      validationErrors?: string[];
+      warnings?: string[];
+    }
+  | { type: 'START_BOOKING' }
+  | { type: 'RETRY_BOOKING' }
+  | { type: 'BOOKING_SUCCESS' }
+  | { type: 'BOOKING_FAILED'; error: string }
+  | { type: 'RESET' };
+
+/**
+ * Reducer for managing booking state
+ * @param state Current booking state
+ * @param action Action to perform
+ * @returns New booking state
+ */
+export function bookingReducer(
+  state: BookingState,
+  action: BookingAction
+): BookingState {
+  switch (action.type) {
+    case 'START_VALIDATION':
+      return {
+        ...state,
+        status: 'validating',
+        error: undefined,
+        validationErrors: undefined,
+        warnings: undefined
+      };
+
+    case 'VALIDATION_COMPLETE':
+      if (action.validationErrors?.length) {
+        return {
+          ...state,
+          status: 'failed',
+          validationErrors: action.validationErrors,
+          warnings: action.warnings,
+          error: 'Validation failed'
+        };
+      }
+      return {
+        ...state,
+        status: 'idle',
+        validationErrors: undefined,
+        warnings: action.warnings
+      };
+
+    case 'START_BOOKING':
+      return {
+        ...state,
+        status: 'submitting',
+        error: undefined
+      };
+
+    case 'RETRY_BOOKING':
+      if (!canRetry(state)) {
+        throw new BookingError('Cannot retry booking');
+      }
+      return {
+        ...state,
+        status: 'retrying',
+        error: undefined,
+        retryCount: state.retryCount + 1,
+        lastRetryTimestamp: Date.now()
+      };
+
+    case 'BOOKING_SUCCESS':
+      return {
+        ...state,
+        status: 'success',
+        error: undefined,
+        validationErrors: undefined,
+        warnings: undefined
+      };
+
+    case 'BOOKING_FAILED':
+      return {
+        ...state,
+        status: 'failed',
+        error: action.error
+      };
+
+    case 'RESET':
+      return initialBookingState;
+
+    default:
+      return state;
+  }
+}

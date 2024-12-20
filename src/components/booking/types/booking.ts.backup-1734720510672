@@ -1,0 +1,83 @@
+import { ReactNode } from 'react';
+
+export interface CustomerInfo;
+export interface BookingData;
+export interface BookingStep;
+export interface BookingFlowProps;
+export interface QuickBookingPromptProps;
+export interface BookingFormState;
+export interface BookingValidationErrors;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  lastName: string;
+  email: string;
+  mobile: string;
+  floorUnit: string;
+  blockStreet: string;
+  postalCode: string;
+  condoName?: string;
+  lobbyTower?: string;
+  specialInstructions?: string;
+}
+
+
+  issues: string[];
+  customerInfo: CustomerInfo;
+  otherIssue?: string;
+  scheduledDateTime?: Date;
+  scheduledTimeSlot?: string;
+}
+
+
+  label: string;
+}
+
+
+}
+
+
+  onQuickBook: () => void;
+  onClose: () => void;
+  isOpen: boolean;
+}
+
+
+  bookingData: BookingData;
+  showQuickBooking: boolean;
+  previousBookingDetails: BookingData | null;
+  timeoutWarningOpen: boolean;
+  timeRemaining: number;
+}
+
+
+}
+
+undefined.displayName = 'undefined';

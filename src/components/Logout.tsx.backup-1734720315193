@@ -1,0 +1,72 @@
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { resetAdmin } from '../store/slices/adminSlice';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { setUser } from '../store/slices/userSlice';
+
+export interface LogoutProps;
+
+export interface LogoutProps;
+
+
+/**
+ * Props for the Logout component
+ */
+interface LogoutProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Optional callback to be called after successful logout */
+  onLogoutSuccess?: () => void;
+}
+
+/**
+ * Manages user logout process
+ * 
+ * @example
+ * ```tsx
+ * <Logout onLogoutSuccess={() => console.log('Logged out')} />
+ * ```
+ */
+const Logout: React.FC<LogoutProps> = ({ onLogoutSuccess }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const performLogout = async (): Promise<void> => {
+      try {
+        // Clear localStorage
+        window.localStorage.removeItem('auth_token');
+        window.localStorage.removeItem('user_data');
+
+        // Reset Redux state
+        dispatch(setToken(null));
+        dispatch(setAuthenticated(false));
+        dispatch(setUser(null));
+        dispatch(resetAdmin());
+
+        // Show success message
+        toast.success('Successfully logged out');
+
+        // Call the success callback if provided
+        onLogoutSuccess?.();
+
+        // Redirect to login
+        navigate('/login', { replace: true });
+      } catch (error) {
+        // Handle any potential errors
+        console.error('Error during logout:', error);
+        toast.error('Error during logout');
+      }
+    };
+
+    void performLogout();
+  }, [dispatch, navigate, onLogoutSuccess]);
+
+  // This component doesn't render anything
+  return null;
+};
+
+// Set display name for debugging
+Logout.displayName = 'Logout';
+export { LogoutProps, Logout };

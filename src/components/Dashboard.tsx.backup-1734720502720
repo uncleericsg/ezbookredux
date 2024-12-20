@@ -1,0 +1,168 @@
+import { Clock, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAppSelector } from '../store';
+
+import ServiceHub from './admin/ServiceHub/ServiceHub';
+
+export interface ServiceRequest;
+export interface ServiceRequestNew;
+export type definition;
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Interface for basic service request data
+ */
+interface ServiceRequest {
+  id: string;
+  customerName: string;
+  serviceType: string;
+  scheduledTime: Date;
+  location: string;
+  contactNumber?: string;
+  notes?: string;
+}
+
+/**
+ * Interface for extended service request data with customer information
+ */
+interface ServiceRequestNew {
+  id: string;
+  title?: string;
+  status?: string;
+  createdAt?: string;
+  customer: {
+    name: string;
+    email?: string;
+  };
+}
+
+/**
+ * Dashboard component for the iAircon Easy Booking system
+ * Displays service requests and user information
+ */
+const Dashboard: React.FC = () => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequestNew[]>([]);
+  const { currentUser } = useAppSelector((state) => state.user);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Mock data loading with window.setTimeout for proper type definition
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        setServiceRequests([
+          {
+            id: '1',
+            title: 'AC Service',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            customer: {
+              name: 'John Doe',
+              email: 'john@example.com'
+            },
+          },
+          {
+            id: '2',
+            title: 'AC Repair',
+            status: 'confirmed',
+            createdAt: new Date().toISOString(),
+            customer: {
+              name: 'Jane Doe',
+              email: 'jane@example.com'
+            },
+          },
+        ]);
+      } catch (error) {
+        console.error('Error loading service requests:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadData();
+  }, []);
+
+  const handleServiceClick = (serviceId: string): void => {
+    navigate(`/service/${serviceId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center" role="status" aria-label="Loading dashboard">
+        Loading...
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      {/* User Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">
+          Welcome back, {currentUser?.firstName || 'User'}!
+        </h1>
+        <p className="mt-2 text-gray-600">Here's your service dashboard</p>
+      </div>
+
+      {/* Service Requests Grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" role="list" aria-label="Service requests">
+        {serviceRequests.map((service) => (
+          <div
+            key={service.id}
+            onClick={() => handleServiceClick(service.id)}
+            onKeyDown={(e) => e.key === 'Enter' && handleServiceClick(service.id)}
+            className="cursor-pointer rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            role="listitem"
+            tabIndex={0}
+            aria-label={`Service request for ${service.customer.name}`}
+          >
+            <h3 className="font-semibold text-gray-800">{service.title || 'Untitled Service'}</h3>
+            <span
+              className={`rounded-full px-3 py-1 text-sm ${
+                service.status === 'pending'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-green-100 text-green-800'
+              }`}
+            >
+              {service.status || 'unknown'}
+            </span>
+            <div className="mb-2 flex items-center text-sm text-gray-600">
+              <Clock className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : 'Date not set'}</span>
+            </div>
+
+            <div className="flex items-center text-sm text-gray-600">
+              <User className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>{service.customer.name}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Service Hub Section */}
+      <div className="mt-12">
+        <ServiceHub />
+      </div>
+    </div>
+  );
+};
+
+// Set display name for debugging
+Dashboard.displayName = 'Dashboard';
+export { ServiceRequest, ServiceRequestNew };
+
+undefined.displayName = 'undefined';

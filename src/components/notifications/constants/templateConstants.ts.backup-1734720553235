@@ -1,0 +1,20 @@
+;
+  EMAIL;
+const templateConstants.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const templateConstants: any;,
+  return null
+};
+;
+// Additional exports;
+{ templateConstants };
+;
+{ templateConstants };
+;
+export { templateConstants };
+export default templateConstants;
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,111 @@
+import React from 'react';
+
+;
+import DOMPurify from 'dompurify';
+import { Template, TemplateVariable } from '../types/templateTypes';
+
+export interface ProcessingResult;
+export type TemplateVariable;
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+
+  processedMessage: string;, charCount: any;,
+  variables: TemplateVariable[];, hasErrors: any;,
+  errors: string[];, sanitizedMessage: };
+
+const useTemplateProcessing: any;,
+  // Extract variables from template message;
+  const extractVariables: any = React.useCallback((message: any;,
+    const matches: \}/g) || [];
+    return [...new Set(matches)].map(match => ({;
+      key;
+      description: `Variable for ${match.slice(1, -1)}`
+    }))
+  }, []);
+;
+  // Check for missing required variables;
+  const findMissingVariables: any;,
+    message;
+    data: Record<string, string>;
+  ): string[] => {;
+    const variables: any;,
+    return variables;
+      .filter(v => v.required && !data[v.key]);
+      .map(v => v.key)
+  }, [extractVariables]);
+;
+  // Process message with variable substitution;
+  const processMessage: any;,
+    message;
+    data: Record<string, string>;
+  ): (string): (any): (any): (any) => {;
+    return message.replace(/\{(\w+)\}/g, (match, key): (any): (any): (any): (any) => {;
+      return data[key] || match
+    })
+  }, []);
+;
+  // Memoized results;
+  const result: any;,
+    const variables: any;,
+    const missingVars: any = findMissingVariables(template.message, sampleData);
+    const processedMessage: any = processMessage(template.message, sampleData);
+    const sanitizedMessage: any;,
+    const errors: any;,
+    if (missingVars.length > 0) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      errors.push(`Missing required variables: ${missingVars.join(', ')}`)
+    };
+    // Check message length limits based on type;
+    const maxLength: any = template.type === 'sms' ? 160: any;,
+    if (processedMessage.length > maxLength) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      errors.push(`Message exceeds maximum length of ${maxLength} characters`)
+    };
+    return {;
+      processedMessage,
+      charCount;
+  }, [template, sampleData, extractVariables, findMissingVariables, processMessage]);
+;
+  return {;
+    extractVariables,
+    findMissingVariables,
+    processMessage,
+    sanitizeMessage;
+};
+;
+export { ;
+  useTemplateProcessing,
+  type ProcessingResult,
+  type TemplateVariable
+};
+;
+export const useTemplateProcessing: any;,
+export default useTemplateProcessing;
+
+undefined.displayName = 'undefined';

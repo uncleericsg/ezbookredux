@@ -1,0 +1,257 @@
+'use client';
+
+// External imports
+import { type FC, useState, useMemo, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Eye, Maximize2, Minimize2, Pencil, Search } from 'lucide-react';
+
+// Internal imports
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Calendar } from '@/components/ui/Calendar';
+import { Input } from '@/components/ui/Input';
+import { Pagination } from '@/components/ui/Pagination';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/Table';
+import { cn } from '@/lib/utils';
+
+export type FC;
+export interface ServiceQueueProps;
+export interface ServiceRequestProps;
+
+export type FC;
+export interface ServiceQueueProps;
+export interface ServiceRequestProps;
+
+// Types
+export interface ServiceQueueProps {
+  className?: string;
+  expanded?: boolean;
+  onExpand?: () => void;
+  onBlockContract?: (contractId: string, reason: string) => Promise<void>;
+  onUnblockContract?: (contractId: string) => Promise<void>;
+  onSendReminder?: (contractId: string) => Promise<void>;
+}
+
+export interface ServiceRequestProps {
+  id: string;
+  customerName: string;
+  serviceType: string;
+  scheduledTime: Date;
+  location: string;
+  contactNumber?: string;
+  email?: string;
+  notes?: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  assignedTeam?: string;
+  bookingReference: string;
+  specialInstructions?: string;
+  address: {
+    blockStreet: string;
+    floorUnit: string;
+    postalCode: string;
+    condoName?: string;
+    lobbyTower?: string;
+  };
+}
+
+const mockServiceRequests: ServiceRequestProps[] = [
+  {
+    id: '1',
+    customerName: 'John Doe',
+    serviceType: 'Regular Service',
+    scheduledTime: new Date(),
+    location: 'North',
+    contactNumber: '1234567890',
+    email: 'john.doe@example.com',
+    status: 'pending',
+    bookingReference: 'REF001',
+    address: {
+      blockStreet: '123 Main St',
+      floorUnit: '#12-34',
+      postalCode: '123456',
+    },
+  },
+  {
+    id: '2',
+    customerName: 'Jane Smith',
+    serviceType: 'Emergency Service',
+    scheduledTime: new Date(),
+    location: 'South',
+    contactNumber: '0987654321',
+    email: 'jane.smith@example.com',
+    status: 'in-progress',
+    bookingReference: 'REF002',
+    address: {
+      blockStreet: '456 Oak St',
+      floorUnit: '#05-67',
+      postalCode: '654321',
+    },
+  },
+];
+
+export const ServiceQueue: React.FC<ServiceQueueProps> = ({
+  className,
+  expanded = false,
+  onExpand,
+  onBlockContract,
+  onUnblockContract,
+  onSendReminder,
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isExpanded, setIsExpanded] = useState(expanded);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsExpanded(expanded);
+  }, [expanded]);
+
+  const handleExpand = (): void => {
+    setIsExpanded(!isExpanded);
+    onExpand?.();
+  };
+
+  const filteredRequests = useMemo(() => {
+    return mockServiceRequests.filter((request) => {
+      const matchesSearch = request.customerName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesDate = selectedDate
+        ? request.scheduledTime.toDateString() === selectedDate.toDateString()
+        : true;
+      return matchesSearch && matchesDate;
+    });
+  }, [searchQuery, selectedDate]);
+
+  const paginatedRequests = useMemo(() => {
+    const startIndex = (currentPage - 1) * 10;
+    return filteredRequests.slice(startIndex, startIndex + 10);
+  }, [filteredRequests, currentPage]);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className={cn(
+        'bg-background rounded-lg shadow-sm border p-4',
+        { 'h-[calc(100vh-2rem)]': isExpanded },
+        className
+      )}
+      layout
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Service Queue</h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleExpand}
+          className="p-2"
+        >
+          {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by customer name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            className="rounded-md border"
+          />
+        </div>
+
+        <div className="relative">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer</TableHead>
+                <TableHead>Service Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Scheduled Time</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell>{request.customerName}</TableCell>
+                  <TableCell>{request.serviceType}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        request.status === 'completed'
+                          ? 'success'
+                          : request.status === 'in-progress'
+                          ? 'warning'
+                          : 'default'
+                      }
+                    >
+                      {request.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {request.scheduledTime.toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{request.location}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          // View details
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          // Edit request
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <Pagination
+          total={filteredRequests.length}
+          pageSize={10}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+    </motion.div>
+  );
+};
+
+ServiceQueue.displayName = 'ServiceQueue';
+
+export { ServiceQueue };

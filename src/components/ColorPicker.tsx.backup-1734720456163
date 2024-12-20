@@ -1,0 +1,76 @@
+import React, { useCallback } from 'react';
+
+export interface ColorPickerProps;
+
+export interface ColorPickerProps;
+
+export interface ColorPickerProps;
+
+export interface ColorPickerProps;
+
+/**
+ * ColorPicker component for the iAircon Easy Booking system
+ * 
+ * @component ColorPicker
+ * @description A customizable color picker component that allows users to select colors
+ * using both a visual color picker and hex input field.
+ */
+interface ColorPickerProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** 
+   * Callback function when a color is selected
+   * @param hexColor - The selected color in hex format
+   */
+  onSelect: (hexColor: string) => void;
+  /** The currently selected color */
+  selected?: string;
+  /** Custom className for styling */
+  className?: string;
+}
+
+/**
+ * A color picker component that provides both visual and text input methods for color selection
+ */
+const ColorPicker: React.FC<ColorPickerProps> = ({
+  selected = '#000000',
+  onSelect = () => {},
+  className = '',
+  ...props
+}) => {
+  const handleColorChange = useCallback((hexColor: string) => {
+    // Validate hex color format
+    if (/^#[0-9A-F]{6}$/i.test(hexColor)) {
+      onSelect(hexColor);
+    }
+  }, [onSelect]);
+
+  return (
+    <div 
+      className={`flex items-center space-x-2 ${className}`}
+      {...props}
+    >
+      <input
+        type="color"
+        value={selected}
+        onChange={(e) => handleColorChange(e.target.value)}
+        className="h-10 w-10 rounded border-0 bg-transparent cursor-pointer"
+        aria-label="Color picker"
+      />
+      <input
+        type="text"
+        value={selected}
+        onChange={(e) => handleColorChange(e.target.value)}
+        className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="#000000"
+        pattern="^#[0-9A-Fa-f]{6}$"
+        maxLength={7}
+        aria-label="Color hex value"
+      />
+    </div>
+  );
+};
+
+// Set display name for debugging
+ColorPicker.displayName = 'ColorPicker';
+export { ColorPickerProps, ColorPicker };
+
+undefined.displayName = 'undefined';

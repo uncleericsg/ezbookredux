@@ -1,0 +1,55 @@
+import { useCallback, useState, useEffect } from 'react';
+
+export type SectionId;
+
+export type SectionId;
+
+export type SectionId;
+
+export const SECTION_IDS = {
+  APP_SETTINGS: 'app-settings',
+  REPAIR_SHOPR: 'repair-shopr',
+  STRIPE: 'stripe',
+  CHATGPT: 'chatgpt',
+  NOTIFICATIONS: 'notifications',
+  CYPRESS: 'cypress',
+  BACKUP: 'backup'
+} as const;
+
+export type SectionId = typeof SECTION_IDS[keyof typeof SECTION_IDS];
+
+export const useSettingsSections = () => {
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    const stored = window.localStorage.getItem('admin-settings-sections');
+    return stored ? JSON.parse(stored) : {
+      [SECTION_IDS.APP_SETTINGS]: true,
+      [SECTION_IDS.REPAIR_SHOPR]: false,
+      [SECTION_IDS.STRIPE]: false,
+      [SECTION_IDS.CHATGPT]: false,
+      [SECTION_IDS.NOTIFICATIONS]: false,
+      [SECTION_IDS.CYPRESS]: false,
+      [SECTION_IDS.BACKUP]: false
+    };
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem('admin-settings-sections', JSON.stringify(expandedSections));
+  }, [expandedSections]);
+
+  const toggleSection = useCallback((sectionId: SectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  }, []);
+
+  const isSectionExpanded = useCallback((sectionId: SectionId) => {
+    return expandedSections[sectionId] ?? false;
+  }, [expandedSections]);
+
+  return {
+    expandedSections,
+    isSectionExpanded,
+    toggleSection
+  };
+};

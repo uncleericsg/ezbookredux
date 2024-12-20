@@ -1,0 +1,25 @@
+import React from 'react';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+
+  id;
+  createdAt: integer('created_at', {  mode;
+  createdAt: integer('created_at', {  mode;
+const schema.ts = () => {
+  return null
+};
+
+// Additional exports;
+const schema = () => {
+  return null
+};
+
+{ named };
+
+// Additional exports;
+{ schema };
+
+{ schema };
+{ named };
+
+export { schema };
+undefined.displayName = 'undefined';

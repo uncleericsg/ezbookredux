@@ -1,0 +1,220 @@
+'use client';
+
+import { type FC } from 'react';
+import { CalendarDays, Clock, MapPin, Phone, Mail } from 'lucide-react';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
+
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/Tabs';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import type { ServiceContract } from '@/types/contracts';
+
+// Types
+interface ServiceHistory {
+  date: string;
+  type: string;
+  status: string;
+  technician: string;
+  notes?: string;
+}
+
+interface ContractDetailsProps {
+  contract: ServiceContract;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ContractDetails: FC<ContractDetailsProps> = ({
+  contract,
+  isOpen,
+  onClose,
+}) => {
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' => {
+    switch (status) {
+      case 'active':
+      case 'completed':
+        return 'default';
+      case 'expiring':
+      case 'pending':
+        return 'secondary';
+      default:
+        return 'destructive';
+    }
+  };
+
+  const renderStarRating = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span
+        key={i}
+        className={`text-lg ${
+          i < rating ? 'text-yellow-400' : 'text-muted-foreground'
+        }`}
+      >
+        ★
+      </span>
+    ));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Contract Details</DialogTitle>
+        </DialogHeader>
+        <Tabs defaultValue="details">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="history">Service History</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+          <TabsContent value="details">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-medium">Customer Information</h3>
+                <dl className="mt-2 space-y-2">
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Name</dt>
+                    <dd>{contract.customerName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Contact</dt>
+                    <dd>{contract.contactNumber}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Email</dt>
+                    <dd>{contract.email}</dd>
+                  </div>
+                </dl>
+              </div>
+              <div>
+                <h3 className="font-medium">Contract Information</h3>
+                <dl className="mt-2 space-y-2">
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Contract Type</dt>
+                    <dd>{contract.contractType}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Start Date</dt>
+                    <dd>{contract.startDate.toLocaleDateString()}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">End Date</dt>
+                    <dd>{contract.endDate.toLocaleDateString()}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Status</dt>
+                    <dd>
+                      <Badge variant={getStatusVariant(contract.status)}>
+                        {contract.status}
+                      </Badge>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Button className="flex-1">
+                <Clock className="h-4 w-4 mr-2" />
+                Schedule Service
+              </Button>
+              <Button variant="secondary" className="flex-1">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Send Reminder
+              </Button>
+            </div>
+          </TabsContent>
+          <TabsContent value="history">
+            <div className="space-y-4">
+              {/* serviceHistory.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">{service.type}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {service.date.toLocaleDateString()}
+                    </p>
+                    <p className="text-sm">Technician: {service.technician}</p>
+                    {service.notes && (
+                      <p className="text-sm mt-2">Notes: {service.notes}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                        service.status === 'completed'
+                          ? 'bg-green-100 text-green-800'
+                          : service.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {service.status}
+                    </span>
+                    {service.feedback && (
+                      <div className="mt-2">
+                        <p className="text-sm">
+                          Rating: {service.feedback.rating}/5
+                        </p>
+                        <div className="flex items-center">
+                          {renderStarRating(service.feedback.rating)}
+                        </div>
+                        {service.feedback.comment && (
+                          <p className="text-sm text-muted-foreground">
+                            "{service.feedback.comment}"
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )) */}
+            </div>
+          </TabsContent>
+          <TabsContent value="documents">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span>Contract Agreement</span>
+                </div>
+                <Button variant="ghost" size="sm">
+                  View
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span>Service Reports</span>
+                </div>
+                <Button variant="ghost" size="sm">
+                  View All
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+ContractDetails.displayName = 'ContractDetails';
+
+export { ContractDetails };
+export type { ContractDetailsProps, ServiceHistory };

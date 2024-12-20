@@ -1,0 +1,207 @@
+'use client';
+
+import { type FC, useState } from 'react';
+import { Loader2, Send } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { Progress } from '@/components/ui/Progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
+import type { ServiceContract } from '@/types/contracts';
+
+export type FC;
+export interface BatchOperationsProps;
+export type NotificationTemplate;
+
+export type FC;
+export interface BatchOperationsProps;
+export type NotificationTemplate;
+
+export type FC;
+export interface BatchOperationsProps;
+export type NotificationTemplate;
+
+export type FC;
+export interface BatchOperationsProps;
+export type NotificationTemplate;
+
+// Types
+export interface BatchOperationsProps {
+  contracts: ServiceContract[];
+  isOpen: boolean;
+  onClose: () => void;
+  onSendNotifications: (data: { contractIds: string[]; message: string }) => Promise<void>;
+}
+
+export type NotificationTemplate = keyof typeof NotificationTemplates;
+
+const NotificationTemplates = {
+  'service-reminder': 'Your next service is due soon. Please schedule at your earliest convenience.',
+  'contract-expiry': 'Your contract is expiring soon. Early renewal is recommended for more savings.',
+  'maintenance-alert': 'Regular maintenance is recommended for optimal performance.',
+  'custom': 'Custom message'
+} as const;
+
+const BatchOperations: FC<BatchOperationsProps> = ({
+  contracts,
+  isOpen,
+  onClose,
+  onSendNotifications,
+}) => {
+  const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
+  const [template, setTemplate] = useState<NotificationTemplate>('service-reminder');
+  const [customMessage, setCustomMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const handleSelectAll = () => {
+    if (selectedContracts.length === contracts.length) {
+      setSelectedContracts([]);
+    } else {
+      setSelectedContracts(contracts.map(contract => contract.id));
+    }
+  };
+
+  const toggleContract = (contractId: string) => {
+    if (selectedContracts.includes(contractId)) {
+      setSelectedContracts(selectedContracts.filter(id => id !== contractId));
+    } else {
+      setSelectedContracts([...selectedContracts, contractId]);
+    }
+  };
+
+  const handleSend = async () => {
+    if (selectedContracts.length === 0) return;
+    setIsSending(true);
+    setProgress(0);
+
+    try {
+      const message = template === 'custom' ? customMessage : NotificationTemplates[template];
+      const total = selectedContracts.length;
+
+      for (let index = 0; index < total; index++) {
+        await onSendNotifications({
+          contractIds: [selectedContracts[index]],
+          message
+        });
+        setProgress(((index + 1) / total) * 100);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Failed to send notifications:', error);
+    } finally {
+      setIsSending(false);
+      setProgress(0);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Send Batch Notifications</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium">Select Contracts</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAll}
+              >
+                {selectedContracts.length === contracts.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            </div>
+            <div className="max-h-40 overflow-y-auto space-y-2 rounded-md p-2 border">
+              {contracts.map(contract => (
+                <div key={contract.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={selectedContracts.includes(contract.id)}
+                    onCheckedChange={() => toggleContract(contract.id)}
+                  />
+                  <label className="text-sm">
+                    {contract.customerName} - {contract.contractType}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Notification Template</label>
+            <Select value={template} onValueChange={setTemplate}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select template" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(NotificationTemplates).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>{value}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {template === 'custom' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Custom Message</label>
+              <Textarea
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                placeholder="Enter your custom message..."
+                className="h-24"
+              />
+            </div>
+          )}
+
+          {isSending && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sending Progress</label>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isSending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={selectedContracts.length === 0 || isSending || (template === 'custom' && !customMessage)}
+              className="gap-2"
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Send Notifications
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+BatchOperations.displayName = 'BatchOperations';
+
+export { BatchOperations };
+export type { BatchOperationsProps, NotificationTemplate };
+undefined.displayName = 'undefined';

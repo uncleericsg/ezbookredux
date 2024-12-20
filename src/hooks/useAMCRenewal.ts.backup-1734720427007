@@ -1,0 +1,37 @@
+import { useState } from 'react';
+
+import { renewAMC } from '../services/amc';
+
+export interface UseAMCRenewalProps;
+
+export interface UseAMCRenewalProps;
+
+export interface UseAMCRenewalProps;
+
+interface UseAMCRenewalProps {
+  userId: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}
+
+export function useAMCRenewal({ userId, onSuccess, onError }: UseAMCRenewalProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleRenewal = async (packageId: string) => {
+    setLoading(true);
+
+    try {
+      await renewAMC(packageId, userId);
+      onSuccess?.();
+    } catch (error) {
+      onError?.(error instanceof Error ? error : new Error('Failed to renew AMC'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    handleRenewal
+  };
+}

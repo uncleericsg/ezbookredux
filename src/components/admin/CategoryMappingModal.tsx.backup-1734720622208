@@ -1,0 +1,96 @@
+'use client';
+
+import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+
+import { Button } from '@/components/ui/Button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/Input';
+
+export interface CategoryMapping;
+
+export interface CategoryMappingModalProps;
+
+
+interface CategoryMapping {
+  id: string;
+  sourceCategory: string;
+  targetCategory: string;
+}
+
+interface CategoryMappingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (mappings: CategoryMapping[]) => void;
+  initialMappings?: CategoryMapping[];
+}
+
+const CategoryMappingModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialMappings = []
+}: CategoryMappingModalProps) => {
+  const [mappings, setMappings] = useState<CategoryMapping[]>(initialMappings);
+
+  const handleAddMapping = () => {
+    setMappings([...mappings, { id: uuidv4(), sourceCategory: '', targetCategory: '' }]);
+  };
+
+  const handleRemoveMapping = (id: string) => {
+    setMappings(mappings.filter((mapping) => mapping.id !== id));
+  };
+
+  const handleUpdateMapping = (id: string, field: keyof CategoryMapping, value: string) => {
+    setMappings(
+      mappings.map((mapping) =>
+        mapping.id === id ? { ...mapping, [field]: value } : mapping
+      )
+    );
+  };
+
+  const handleSave = () => {
+    onSave(mappings);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Category Mapping</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {mappings.map((mapping) => (
+            <div key={mapping.id} className="flex gap-2">
+              <Input
+                placeholder="Source Category"
+                value={mapping.sourceCategory}
+                onChange={(e) => handleUpdateMapping(mapping.id, 'sourceCategory', e.target.value)}
+              />
+              <Input
+                placeholder="Target Category"
+                value={mapping.targetCategory}
+                onChange={(e) => handleUpdateMapping(mapping.id, 'targetCategory', e.target.value)}
+              />
+              <Button variant="destructive" onClick={() => handleRemoveMapping(mapping.id)}>
+                Remove
+              </Button>
+            </div>
+          ))}
+          <div className="flex justify-between">
+            <Button onClick={handleAddMapping}>Add Mapping</Button>
+            <Button onClick={handleSave}>Save</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+CategoryMappingModal.displayName = 'CategoryMappingModal';
+
+export type { CategoryMapping };
+export { CategoryMappingModal };
+
+undefined.displayName = 'undefined';

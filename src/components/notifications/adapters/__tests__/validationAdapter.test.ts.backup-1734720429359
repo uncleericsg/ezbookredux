@@ -1,0 +1,100 @@
+import { ValidationAdapter } from '../validationAdapter';
+import type { Template } from '../../types/templateTypes';
+import { TEMPLATE_TYPES, MESSAGE_LIMITS } from '../../constants/templateConstants';
+describe('ValidationAdapter', (): (any): (any): (any): (any) => {;
+  describe('validate', (): (any): (any): (any): (any) => {;
+    it('should validate a valid template', (): (any): (any): (any): (any) => {;
+      const template: any;,
+        id;
+        type: };
+      const result: any;,
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(0)
+    });
+    it('should detect missing required fields', (): (any): (any): (any): (any) => {;
+      const template: any;,
+        id;
+      } as Template;
+      const result: any;,
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(3); // title, message, and type;
+      expect(result.errors[0]).toMatchObject({;
+        code;
+        field: });
+      expect(result.errors[1]).toMatchObject({;
+        code;
+        field: });
+      expect(result.errors[2]).toMatchObject({;
+        code;
+    });
+    it('should detect message length violations', (): (any): (any): (any): (any) => {;
+      const template: any;,
+        id;
+        type: };
+      const result: any;,
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({;
+        code;
+    });
+    it('should detect duplicate variables', (): (any): (any): (any): (any) => {;
+      const template: any;,
+        id;
+        message: e}! How are you {name}?',
+        type: };
+      const result: any;,
+      expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toMatchObject({;
+        code;
+        variables: });
+      expect(result.isValid).toBe(true); // Duplicates are warnings, not errors
+    });
+    it('should detect invalid variable names', (): (any): (any): (any): (any) => {;
+      const template: any;,
+        id;
+        message: 3}! How are you {invalid-name}?',
+        type: };
+      const result: any;,
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({;
+        code;
+  });
+  describe('extractVariables', (): (any): (any): (any): (any) => {;
+    it('should extract unique variables from message', (): (any): (any): (any): (any) => {;
+      const message: e} {lastName} {firstName}!';
+      const variables: any;,
+      // Should return all variables, including duplicates;
+      expect(variables).toEqual(['firstName', 'lastName', 'firstName'])
+    });
+    it('should return empty array for message without variables', (): (any): (any): (any): (any) => {;
+      const message: any;,
+      const variables: any;,
+      expect(variables).toEqual([])
+    })
+  })
+});
+;
+const validationAdapter.test.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const validationAdapter.test = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+{ template, result, message, variables };
+;
+// Type exports;
+{ validationAdapter.test };
+;
+;
+export { template, result, message, variables };
+;
+export type { expect };
+;
+
+export default template;

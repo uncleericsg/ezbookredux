@@ -1,0 +1,152 @@
+'use client';
+
+import { type FC, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/hooks/useToast';
+import { cn } from '@/lib/utils';
+import type { ServiceContract } from '@/types/contracts';
+import { ContractMonitoring } from './ContractMonitoring';
+import { ServiceMetrics } from './ServiceMetrics';
+import { ServiceQueue } from './ServiceQueue';
+
+export type FC;
+export interface ServiceHubProps;
+export interface ServiceMenuItemProps;
+
+export type FC;
+export interface ServiceHubProps;
+export interface ServiceMenuItemProps;
+
+export type FC;
+export interface ServiceHubProps;
+export interface ServiceMenuItemProps;
+
+export type FC;
+export interface ServiceHubProps;
+export interface ServiceMenuItemProps;
+
+// Types
+interface ServiceHubProps {
+  className?: string;
+  contracts?: ServiceContract[];
+  onBlockContract?: (id: string, reason: string) => Promise<void>;
+  onUnblockContract?: (id: string) => Promise<void>;
+  onSendReminder?: (id: string) => Promise<void>;
+  onScheduleService?: (id: string) => Promise<void>;
+}
+
+interface ServiceMenuItemProps {
+  title: string;
+  icon: JSX.Element;
+  onClick: () => void;
+}
+
+const ServiceHub: React.FC<ServiceHubProps> = ({
+  className,
+  contracts = [],
+  onBlockContract,
+  onUnblockContract,
+  onSendReminder,
+  onScheduleService,
+}) => {
+  const { toast } = useToast();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Implement refresh logic here
+      toast({
+        title: 'Refreshed',
+        description: 'Service data has been updated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh service data.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleExpand = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  return (
+    <div className={cn('space-y-4', className)}>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Service Hub</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={cn('h-4 w-4', { 'animate-spin': isRefreshing })} />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AnimatePresence>
+          <motion.div
+            layout
+            className={cn(
+              'col-span-1',
+              expandedSection === 'metrics' && 'md:col-span-2'
+            )}
+          >
+            <ServiceMetrics
+              contracts={contracts}
+              expanded={expandedSection === 'metrics'}
+              onExpand={() => handleExpand('metrics')}
+            />
+          </motion.div>
+
+          <motion.div
+            layout
+            className={cn(
+              'col-span-1',
+              expandedSection === 'queue' && 'md:col-span-2'
+            )}
+          >
+            <ServiceQueue
+              contracts={contracts}
+              expanded={expandedSection === 'queue'}
+              onExpand={() => handleExpand('queue')}
+              onScheduleService={onScheduleService}
+            />
+          </motion.div>
+
+          <motion.div
+            layout
+            className={cn(
+              'col-span-1',
+              expandedSection === 'monitoring' && 'md:col-span-2'
+            )}
+          >
+            <ContractMonitoring
+              contracts={contracts}
+              expanded={expandedSection === 'monitoring'}
+              onExpand={() => handleExpand('monitoring')}
+              onBlockContract={onBlockContract}
+              onUnblockContract={onUnblockContract}
+              onSendReminder={onSendReminder}
+              onScheduleService={onScheduleService}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+ServiceHub.displayName = 'ServiceHub';
+
+export { ServiceHub, ServiceHubProps, ServiceMenuItemProps };
+undefined.displayName = 'undefined';

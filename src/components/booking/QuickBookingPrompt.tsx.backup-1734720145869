@@ -1,0 +1,102 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { ArrowRight, History, Copy, MapPin, Calendar, Wrench } from 'lucide-react';
+import React from 'react';
+
+import { BookingDetails } from '../../services/bookingService';
+
+export type QuickBookingPromptProps = React.HTMLAttributes<HTMLDivElement> & {
+  previousBooking: BookingDetails;
+  onQuickBook: (useExisting: boolean) => void;
+};
+
+const QuickBookingPrompt = ({
+  previousBooking,
+  onQuickBook,
+}: QuickBookingPromptProps) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-xl rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-2xl"
+    >
+      <div className="mb-6 text-center">
+        <h2 className="mb-2 text-2xl font-semibold text-white">
+          Welcome Back, {previousBooking.customerInfo.firstName}!
+        </h2>
+        <p className="text-gray-400">Would you like to book the same service as before?</p>
+      </div>
+      <div className="space-y-6">
+        <div className="rounded-xl border border-gray-700 bg-gray-800/50 p-4">
+          <h3 className="mb-3 text-lg font-medium text-gray-200">Previous Booking Details</h3>
+          <div className="space-y-4 text-sm">
+            <div className="flex items-start">
+              <Wrench className="mr-3 mt-0.5 h-5 w-5 text-blue-400" />
+              <div>
+                <p className="text-gray-400">AC Brands</p>
+                <p className="font-medium text-white">{previousBooking.brands.join(', ')}</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <Wrench className="mr-3 mt-0.5 h-5 w-5 text-blue-400" />
+              <div>
+                <p className="text-gray-400">Issues</p>
+                <p className="font-medium text-white">{previousBooking.issues.join(', ')}</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <MapPin className="mr-3 mt-0.5 h-5 w-5 text-blue-400" />
+              <div>
+                <p className="text-gray-400">Service Location</p>
+                <p className="font-medium text-white">
+                  {previousBooking.customerInfo.floorUnit},{' '}
+                  {previousBooking.customerInfo.blockStreet}
+                  {previousBooking.customerInfo.condoName &&
+                    `, ${previousBooking.customerInfo.condoName}`}
+                </p>
+                <p className="text-gray-500">S({previousBooking.customerInfo.postalCode})</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <Calendar className="mr-3 mt-0.5 h-5 w-5 text-blue-400" />
+              <div>
+                <p className="text-gray-400">Last Service Date</p>
+                <p className="font-medium text-white">
+                  {new Date(previousBooking.lastServiceDate).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <button
+            onClick={() => onQuickBook(true)}
+            className="flex w-full items-center justify-between rounded-lg bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
+          >
+            <div className="flex items-center">
+              <Copy className="mr-3 h-5 w-5" />
+              <span>Quick Book - Same as Before</span>
+            </div>
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => onQuickBook(false)}
+            className="flex w-full items-center justify-between rounded-lg bg-gray-800 px-4 py-3 text-gray-300 hover:bg-gray-700"
+          >
+            <div className="flex items-center">
+              <History className="mr-3 h-5 w-5" />
+              <span>New Booking - Different Details</span>
+            </div>
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+QuickBookingPrompt.displayName = 'QuickBookingPrompt';
+
+export { QuickBookingPrompt };
+

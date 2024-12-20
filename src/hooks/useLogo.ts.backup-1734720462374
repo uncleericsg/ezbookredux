@@ -1,0 +1,169 @@
+/* eslint-disable no-undef */
+import { useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+
+export type LogoType;
+export interface UseLogoOptions;
+export interface ImageDimensions;
+export interface UseLogoReturn;
+export type if;
+
+export type LogoType;
+export interface UseLogoOptions;
+export interface ImageDimensions;
+export interface UseLogoReturn;
+export type if;
+
+export type LogoType;
+export interface UseLogoOptions;
+export interface ImageDimensions;
+export interface UseLogoReturn;
+export type if;
+
+export type LogoType;
+export interface UseLogoOptions;
+export interface ImageDimensions;
+export interface UseLogoReturn;
+export type if;
+
+export type LogoType = 'website' | 'webapp' | 'favicon';
+
+export interface UseLogoOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  maxSize?: number;
+  allowedTypes?: string[];
+}
+
+interface ImageDimensions {
+  width: number;
+  height: number;
+}
+
+interface UseLogoReturn {
+  uploadLogo: (file: File, type: LogoType) => Promise<string>;
+  getLogo: (type: LogoType, size?: number) => string;
+  loading: boolean;
+  error: string | null;
+  dimensions: ImageDimensions | null;
+}
+
+/**
+ * Hook for managing logo uploads and retrieval
+ * @param options Configuration options for the logo management
+ * @returns Object containing logo management functions and state
+ */
+export function useLogo(options: UseLogoOptions = {}): UseLogoReturn {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+
+  const maxSize = useMemo(() => options.maxSize || 2 * 1024 * 1024, [options.maxSize]); // 2MB default
+  const allowedTypes = useMemo(() => options.allowedTypes || ['image/png', 'image/jpeg', 'image/svg+xml'], [options.allowedTypes]);
+
+  const getImageDimensions = useCallback((file: File): Promise<ImageDimensions> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          width: img.width,
+          height: img.height
+        });
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  const uploadLogo = useCallback(async (file: File, type: LogoType): Promise<string> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Validate file type
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Invalid file type. Allowed: ${allowedTypes.map(t => t.split('/')[1]).join(', ')}`);
+      }
+
+      // Validate file size
+      if (file.size > maxSize) {
+        throw new Error(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
+      }
+
+      // Check dimensions for webapp logo
+      if (type === 'webapp') {
+        const imageDimensions = await getImageDimensions(file);
+        if (imageDimensions.width < 512 || imageDimensions.height < 512) {
+          throw new Error('Web app logo must be at least 512x512px');
+        }
+        setDimensions(imageDimensions);
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      // Upload to server
+      const response = await fetch('/api/admin/logo', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload logo');
+      }
+
+      // Cache the new logo URL
+      const { url } = await response.json();
+      localStorage.setItem(`logo_${type}`, url);
+      options.onSuccess?.();
+      return url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload logo';
+      setError(message);
+      toast.error(message);
+      options.onError?.(err instanceof Error ? err : new Error(message));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [allowedTypes, maxSize, getImageDimensions, options]);
+
+  const getLogo = useCallback((type: LogoType, size?: number): string => {
+    // Try to get from cache first
+    const cached = localStorage.getItem(`logo_${type}`);
+    if (cached) {
+      // Append size parameter if specified
+      if (size && type === 'webapp') {
+        const url = new URL(cached);
+        url.searchParams.set('size', size.toString());
+        return url.toString();
+      }
+      return cached;
+    }
+
+    // Return default fallback logos
+    switch (type) {
+      case 'website':
+        return '/logo.svg';
+      case 'webapp':
+        return size ? `/logo-${size}.png` : '/logo-512.png';
+      case 'favicon':
+        return '/favicon.ico';
+      default:
+        return '/logo.svg';
+    }
+  }, []);
+
+  return {
+    uploadLogo,
+    getLogo,
+    loading,
+    error,
+    dimensions
+  };
+}
+
+export default useLogo;
+undefined.displayName = 'undefined';

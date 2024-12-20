@@ -1,0 +1,192 @@
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths, isSameDay } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { useHolidayNotifications } from '../hooks/notifications/useHolidayNotifications';
+
+export interface CalendarProps;
+
+
+
+
+
+/**
+ * Calendar component for the iAircon Easy Booking system
+ *
+ * @component Calendar
+ * @description A customizable calendar component that supports:
+ * 1. Public holidays (marked in red with tooltips)
+ * 2. Date selection constraints (past dates, min/max dates)
+ * 3. Disabled dates based on business rules
+ * 4. Visual indicators for today's date and selected date
+ *
+ * @example
+ * ```tsx
+ * import { Calendar } from './components';
+ * 
+ * <Calendar
+ *   selected={selectedDate}
+ *   onSelect={handleDateSelect}
+ *   minDate={new Date()}
+ *   maxDate={addMonths(new Date(), 3)}
+ * />
+ * ```
+ */
+interface CalendarProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** The currently selected date */
+  selected?: Date;
+  /** 
+   * Callback function when a date is selected 
+   * @param selectedDate - The selected date
+   */
+  onSelect: (selectedDate: Date) => void;
+  /** 
+   * Function to determine if a date should be disabled
+   * @param targetDate - The date to check
+   */
+  disabled?: (targetDate: Date) => boolean;
+  /** Minimum selectable date */
+  minDate?: Date;
+  /** Maximum selectable date */
+  maxDate?: Date;
+  /** Selection mode - currently only supports 'single' */
+  mode?: 'single';
+  /** Additional class name for styling */
+  className?: string;
+}
+
+const Calendar: React.FC<CalendarProps> = ({
+  mode = 'single',
+  selected,
+  onSelect,
+  disabled,
+  minDate = new Date(),
+  maxDate,
+  className = ''
+}) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const { holidays } = useHolidayNotifications();
+
+  const { days, startDay } = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    const firstDayOfMonth = start.getDay();
+
+    return {
+      days: eachDayOfInterval({ start, end }),
+      startDay: firstDayOfMonth
+    };
+  }, [currentMonth]);
+
+  const isDateSelectable = useCallback((date: Date) => {
+    // Check if date is before minDate or after maxDate
+    if (minDate && date < minDate) return false;
+    if (maxDate && date > maxDate) return false;
+
+    // Check if date is a holiday
+    if (holidays?.some(holiday => isSameDay(date, new Date(holiday.date)))) {
+      return false;
+    }
+
+    // Check custom disabled function
+    if (disabled?.(date)) return false;
+
+    return true;
+  }, [disabled, minDate, maxDate, holidays]);
+
+  const handleDateClick = useCallback((date: Date) => {
+    if (disabled?.(date)) return;
+    if (mode === 'single') {
+      onSelect(date);
+    }
+  }, [disabled, mode, onSelect]);
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(prev => addMonths(prev, 1));
+  };
+
+  return (
+    <div className={`p-4 bg-gray-800 rounded-xl shadow-xl ${className}`}>
+      {/* Month navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={handlePrevMonth}
+          className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h2 className="text-lg font-semibold">
+          {format(currentMonth, 'MMMM yyyy')}
+        </h2>
+        <button
+          onClick={handleNextMonth}
+          className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+          aria-label="Next month"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-sm font-medium text-gray-400">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {/* Empty cells for alignment */}
+        {Array.from({ length: startDay }).map((_, index) => (
+          <div key={`empty-${index}`} className="aspect-square" />
+        ))}
+
+        {/* Date cells */}
+        {days.map((date) => {
+          const isSelected = selected ? isSameDay(selected, date) : false;
+          const selectable = isDateSelectable(date);
+          const dateString = format(date, 'yyyy-MM-dd');
+          const isHoliday = holidays?.some(holiday => isSameDay(date, new Date(holiday.date)));
+
+          return (
+            <button
+              key={date.toISOString()}
+              onClick={() => handleDateClick(date)}
+              disabled={!selectable}
+              className={`
+                aspect-square p-2 rounded-lg text-sm font-medium
+                transition-colors relative
+                ${isSelected
+                  ? 'bg-blue-600 text-white'
+                  : selectable
+                    ? 'hover:bg-gray-700'
+                    : 'text-gray-500 cursor-not-allowed'
+                }
+                ${isToday(date) ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900' : ''}
+                ${isHoliday ? 'bg-red-900/50' : ''}
+              `}
+              title={isHoliday ? 'Public Holiday' : undefined}
+              aria-label={format(date, 'PPP')}
+              aria-selected={isSelected}
+              aria-disabled={!selectable}
+            >
+              {format(date, 'd')}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+Calendar.displayName = 'Calendar';
+export { CalendarProps, Calendar };
+
+undefined.displayName = 'undefined';

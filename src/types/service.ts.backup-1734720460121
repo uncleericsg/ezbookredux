@@ -1,0 +1,428 @@
+import * as React from 'react';
+
+export type ServiceStatus;
+export type categories;
+export type ServiceType;
+export type ServicePriority;
+export interface ServiceAddress;
+export interface ServiceSchedule;
+export interface ServiceTeam;
+export interface ServiceFeedback;
+export interface ServiceHistory;
+export interface ServiceRequest;
+export interface ServiceStats;
+export interface ServiceSettings;
+
+export type ServiceStatus;
+export type categories;
+export type ServiceType;
+export type ServicePriority;
+export interface ServiceAddress;
+export interface ServiceSchedule;
+export interface ServiceTeam;
+export interface ServiceFeedback;
+export interface ServiceHistory;
+export interface ServiceRequest;
+export interface ServiceStats;
+export interface ServiceSettings;
+
+export type ServiceStatus;
+export type categories;
+export type ServiceType;
+export type ServicePriority;
+export interface ServiceAddress;
+export interface ServiceSchedule;
+export interface ServiceTeam;
+export interface ServiceFeedback;
+export interface ServiceHistory;
+export interface ServiceRequest;
+export interface ServiceStats;
+export interface ServiceSettings;
+
+export type ServiceStatus;
+export type categories;
+export type ServiceType;
+export type ServicePriority;
+export interface ServiceAddress;
+export interface ServiceSchedule;
+export interface ServiceTeam;
+export interface ServiceFeedback;
+export interface ServiceHistory;
+export interface ServiceRequest;
+export interface ServiceStats;
+export interface ServiceSettings;
+
+/**
+ * Service status types
+ */
+export type ServiceStatus = 'pending' | 'assigned' | 'in-progress' | 'completed' | 'cancelled';
+
+/**
+ * Service type categories
+ */
+export type ServiceType = 'repair' | 'maintenance' | 'installation' | 'inspection';
+
+/**
+ * Service priority levels
+ */
+export type ServicePriority = 'low' | 'medium' | 'high' | 'urgent';
+
+/**
+ * Service address details
+ */
+export interface ServiceAddress {
+  /**
+   * Block and street information
+   */
+  blockStreet: string;
+  /**
+   * Floor and unit information
+   */
+  floorUnit: string;
+  /**
+   * Postal code
+   */
+  postalCode: string;
+  /**
+   * Condo name (optional)
+   */
+  condoName?: string;
+  /**
+   * Lobby or tower information (optional)
+   */
+  lobbyTower?: string;
+  /**
+   * Additional directions (optional)
+   */
+  additionalDirections?: string;
+}
+
+/**
+ * Service schedule details
+ */
+export interface ServiceSchedule {
+  /**
+   * Scheduled date
+   */
+  date: Date;
+  /**
+   * Start time
+   */
+  startTime: string;
+  /**
+   * End time
+   */
+  endTime: string;
+  /**
+   * Duration in minutes
+   */
+  duration: number;
+  /**
+   * Whether the schedule is flexible
+   */
+  isFlexible: boolean;
+}
+
+/**
+ * Service team details
+ */
+export interface ServiceTeam {
+  /**
+   * Unique team ID
+   */
+  id: string;
+  /**
+   * Team name
+   */
+  name: string;
+  /**
+   * Team members
+   */
+  members: string[];
+  /**
+   * Team availability
+   */
+  availability: {
+    /**
+     * Date
+     */
+    date: Date;
+    /**
+     * Available time slots
+     */
+    slots: {
+      /**
+       * Start time
+       */
+      startTime: string;
+      /**
+       * End time
+       */
+      endTime: string;
+      /**
+       * Whether the slot is available
+       */
+      isAvailable: boolean;
+    }[];
+  }[];
+  /**
+   * Team specializations
+   */
+  specializations: ServiceType[];
+  /**
+   * Team rating (optional)
+   */
+  rating?: number;
+}
+
+/**
+ * Service feedback details
+ */
+export interface ServiceFeedback {
+  /**
+   * Rating (1-5)
+   */
+  rating: number;
+  /**
+   * Feedback comment (optional)
+   */
+  comment?: string;
+  /**
+   * Timestamp
+   */
+  timestamp: Date;
+  /**
+   * Feedback categories (optional)
+   */
+  categories?: {
+    /**
+     * Workmanship rating
+     */
+    workmanship: number;
+    /**
+     * Punctuality rating
+     */
+    punctuality: number;
+    /**
+     * Professionalism rating
+     */
+    professionalism: number;
+  };
+}
+
+/**
+ * Service history details
+ */
+export interface ServiceHistory {
+  /**
+   * Timestamp
+   */
+  timestamp: Date;
+  /**
+   * Status
+   */
+  status: ServiceStatus;
+  /**
+   * Notes (optional)
+   */
+  notes?: string;
+  /**
+   * Technician ID (optional)
+   */
+  technicianId?: string;
+  /**
+   * Location (optional)
+   */
+  location?: {
+    /**
+     * Latitude
+     */
+    latitude: number;
+    /**
+     * Longitude
+     */
+    longitude: number;
+  };
+}
+
+/**
+ * Service request details
+ */
+export interface ServiceRequest {
+  /**
+   * Unique request ID
+   */
+  id: string;
+  /**
+   * Customer name
+   */
+  customerName: string;
+  /**
+   * Service type
+   */
+  serviceType: ServiceType;
+  /**
+   * Scheduled time
+   */
+  scheduledTime: Date;
+  /**
+   * Location
+   */
+  location: string;
+  /**
+   * Contact number (optional)
+   */
+  contactNumber?: string;
+  /**
+   * Email (optional)
+   */
+  email?: string;
+  /**
+   * Notes (optional)
+   */
+  notes?: string;
+  /**
+   * Status
+   */
+  status: ServiceStatus;
+  /**
+   * Priority
+   */
+  priority: ServicePriority;
+  /**
+   * Assigned team (optional)
+   */
+  assignedTeam?: string;
+  /**
+   * Booking reference
+   */
+  bookingReference: string;
+  /**
+   * Special instructions (optional)
+   */
+  specialInstructions?: string;
+  /**
+   * Address details
+   */
+  address: ServiceAddress;
+  /**
+   * Schedule details
+   */
+  schedule: ServiceSchedule;
+  /**
+   * History
+   */
+  history: ServiceHistory[];
+  /**
+   * Feedback (optional)
+   */
+  feedback?: ServiceFeedback;
+  /**
+   * Created at timestamp
+   */
+  createdAt: Date;
+  /**
+   * Updated at timestamp
+   */
+  updatedAt: Date;
+  /**
+   * Metadata (optional)
+   */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Service statistics
+ */
+export interface ServiceStats {
+  /**
+   * Total requests
+   */
+  totalRequests: number;
+  /**
+   * Completed requests
+   */
+  completedRequests: number;
+  /**
+   * Average rating
+   */
+  averageRating: number;
+  /**
+   * Response time
+   */
+  responseTime: number;
+  /**
+   * Team performance
+   */
+  teamPerformance: {
+    /**
+     * Team ID
+     */
+    teamId: string;
+    /**
+     * Completed jobs
+     */
+    completedJobs: number;
+    /**
+     * Average rating
+     */
+    averageRating: number;
+    /**
+     * On-time percentage
+     */
+    onTimePercentage: number;
+  }[];
+}
+
+/**
+ * Service settings
+ */
+export interface ServiceSettings {
+  /**
+   * Working hours
+   */
+  workingHours: {
+    /**
+     * Start time
+     */
+    start: string;
+    /**
+     * End time
+     */
+    end: string;
+    /**
+     * Days of the week
+     */
+    days: number[];
+  };
+  /**
+   * Buffer time
+   */
+  bufferTime: number;
+  /**
+   * Maximum daily bookings
+   */
+  maxDailyBookings: number;
+  /**
+   * Auto-assignment
+   */
+  autoAssignment: boolean;
+  /**
+   * Notification preferences
+   */
+  notificationPreferences: {
+    /**
+     * Email notifications
+     */
+    email: boolean;
+    /**
+     * SMS notifications
+     */
+    sms: boolean;
+    /**
+     * Push notifications
+     */
+    push: boolean;
+  };
+}
+undefined.displayName = 'undefined';

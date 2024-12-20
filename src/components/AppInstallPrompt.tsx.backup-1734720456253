@@ -1,0 +1,192 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import { usePWA } from '../hooks/usePWA';
+
+export interface AppInstallPromptProps;
+export interface is;
+
+export interface AppInstallPromptProps;
+export interface is;
+
+export interface AppInstallPromptProps;
+export interface is;
+
+export interface AppInstallPromptProps;
+export interface is;
+
+/**
+ * AppInstallPrompt component for the iAircon Easy Booking system
+ *
+ * @component AppInstallPrompt
+ * @description A React component that prompts users to install the iAircon app
+ * as a PWA. Shows installation benefits and handles the installation process.
+ * The prompt appears after a delay and can be dismissed.
+ *
+ * @example
+ * ```tsx
+ * import { AppInstallPrompt } from './components';
+ * 
+ * <AppInstallPrompt />
+ * ```
+ */
+
+const PROMPT_DELAY = 3000; // 3 seconds delay before showing the prompt
+
+/**
+ * Safely get an item from localStorage
+ */
+const getLocalStorageItem = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Safely set an item in localStorage
+ */
+const setLocalStorageItem = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+interface AppInstallPromptProps extends React.ComponentPropsWithoutRef<'div'> {
+  // Currently no additional props needed, but interface is defined for future extensibility
+}
+
+const AppInstallPrompt: React.FC<AppInstallPromptProps> = () => {
+  const { isInstallable, promptInstall } = usePWA();
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    if (isInstallable && !hasInteracted && typeof window !== 'undefined') {
+      const isDismissed = getLocalStorageItem('app-install-prompt-dismissed');
+      const isStandalone = (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as { standalone?: boolean }).standalone ||
+        window.document.referrer.includes('android-app:')
+      );
+
+      if (isDismissed || isStandalone) {
+        return;
+      }
+
+      const timer = window.setTimeout(() => {
+        setShowPrompt(true);
+      }, PROMPT_DELAY);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [isInstallable, hasInteracted]);
+
+  const handleDismiss = () => {
+    setHasInteracted(true);
+    setLocalStorageItem('app-install-prompt-dismissed', 'true');
+    setShowPrompt(false);
+  };
+
+  const handleInstall = async () => {
+    setHasInteracted(true);
+    await promptInstall();
+    setShowPrompt(false);
+  };
+
+  const handleOutsideClick = (e: React.MouseEvent<React.ComponentPropsWithoutRef<'div'>>) => {
+    if (e.target === e.currentTarget) {
+      handleDismiss();
+    }
+  };
+
+  if (!showPrompt) {
+    return null;
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleOutsideClick}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700 shadow-xl"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <img src="/pwa-64x64.png" alt="App Icon" className="w-16 h-16 rounded-xl" />
+              <div>
+                <h2 className="text-xl font-semibold">Install iAircon App</h2>
+                <p className="text-gray-400 text-sm mt-1">Get the best booking experience</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Close"
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                  <span>Quick access from your home screen</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                  <span>Faster booking experience</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                  <span>Works offline for better reliability</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+              <button
+                onClick={handleDismiss}
+                className="btn btn-secondary"
+                type="button"
+              >
+                Not Now
+              </button>
+              <button
+                onClick={handleInstall}
+                className="btn btn-primary flex items-center justify-center space-x-2"
+                type="button"
+              >
+                <Download className="h-5 w-5" />
+                <span>Install App</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+AppInstallPrompt.displayName = 'AppInstallPrompt';
+export { AppInstallPromptProps, AppInstallPrompt };
+
+undefined.displayName = 'undefined';

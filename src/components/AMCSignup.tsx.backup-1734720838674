@@ -1,0 +1,154 @@
+import { motion } from 'framer-motion';
+import { Shield, CheckCircle, Star, Clock, Wrench } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export interface AMCPackage;
+
+export interface AMCSignupProps;
+
+
+/**
+ * AMCSignup component for the iAircon Easy Booking system
+ *
+ * @component AMCSignup
+ * @description A React component that manages the AMC (Annual Maintenance Contract) signup flow.
+ * Displays available packages and handles package selection.
+ *
+ * @example
+ * ```tsx
+ * import { AMCSignup } from './components';
+ * <AMCSignup onPackageSelect={(packageId) => console.log('Selected package:', packageId)} />
+ * ```
+ */
+
+interface AMCSignupProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** 
+   * Callback function called when a package is selected
+   * @param selectedId - The ID of the selected package
+   */
+  // eslint-disable-next-line no-unused-vars
+  onPackageSelect?: (selectedId: string) => void;
+  /** Additional CSS classes to apply to the component */
+  className?: string;
+}
+
+const AMCSignup: React.FC<AMCSignupProps> = ({ onPackageSelect, className = '', ...props }) => {
+  const navigate = useNavigate();
+
+  const packages: AMCPackage[] = [
+    {
+      id: '1',
+      name: 'Basic Package',
+      price: 100,
+      visits: 1,
+      features: [
+        'Annual air conditioning inspection',
+        'Basic cleaning and maintenance',
+        'Priority customer support'
+      ],
+    },
+    {
+      id: '2',
+      name: 'Premium Package',
+      price: 200,
+      visits: 2,
+      features: [
+        'Semi-annual air conditioning inspection',
+        'Deep cleaning and maintenance',
+        'Priority customer support',
+        'Emergency service response',
+        'Extended warranty coverage'
+      ],
+    },
+  ];
+
+  const handlePackageSelect = (id: string) => {
+    onPackageSelect?.(id);
+    navigate(`/amc/checkout/${id}`);
+  };
+
+  return (
+    <div className={`mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 ${className}`} {...props}>
+      <div className="mb-12 text-center">
+        <h1 className="mb-4 text-4xl font-bold text-gray-900">Annual Maintenance Contract (AMC)</h1>
+        <p className="text-xl text-gray-600">Professional care for your air conditioning systems</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {packages.map((pkg) => (
+          <motion.div
+            key={pkg.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-gray-900">{pkg.name}</h3>
+              <Shield className="h-6 w-6 text-blue-500" />
+            </div>
+            <div className="mb-6">
+              <p className="text-3xl font-bold text-gray-900">
+                ${pkg.price}
+                <span className="text-lg font-normal text-gray-600">/year</span>
+              </p>
+              <p className="mt-2 text-gray-600">{pkg.visits} {pkg.visits === 1 ? 'visit' : 'visits'} per year</p>
+            </div>
+            <ul className="mb-8 space-y-3">
+              {pkg.features.map((feature, index) => (
+                <li key={index} className="flex items-start">
+                  <CheckCircle className="mr-2 mt-0.5 h-5 w-5 flex-shrink-0 text-green-500" />
+                  <span className="text-gray-600">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handlePackageSelect(pkg.id)}
+              className="w-full rounded-lg bg-blue-600 px-4 py-3 text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label={`Select ${pkg.name}`}
+            >
+              Select Package
+            </button>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="flex items-center space-x-4">
+          <Shield className="h-8 w-8 text-blue-500" />
+          <div>
+            <h4 className="font-semibold">Guaranteed Service</h4>
+            <p className="text-sm text-gray-600">Professional technicians</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Star className="h-8 w-8 text-yellow-500" />
+          <div>
+            <h4 className="font-semibold">Quality Assurance</h4>
+            <p className="text-sm text-gray-600">Satisfaction guaranteed</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Clock className="h-8 w-8 text-green-500" />
+          <div>
+            <h4 className="font-semibold">24/7 Support</h4>
+            <p className="text-sm text-gray-600">Always here to help</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Wrench className="h-8 w-8 text-purple-500" />
+          <div>
+            <h4 className="font-semibold">Expert Care</h4>
+            <p className="text-sm text-gray-600">Certified maintenance</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+AMCSignup.displayName = 'AMCSignup';
+export { AMCPackage, AMCSignupProps };
+
+undefined.displayName = 'undefined';

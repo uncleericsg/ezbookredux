@@ -1,0 +1,127 @@
+import axios from 'axios';
+import { startOfDay } from 'date-fns';
+
+import type { Holiday } from '../types';
+
+class PublicHolidayService {
+  private static instance: PublicHolidayService;
+  private readonly DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  private constructor() {}
+
+  public static getInstance(): PublicHolidayService {
+    if (!PublicHolidayService.instance) {
+      PublicHolidayService.instance = new PublicHolidayService();
+    }
+    return PublicHolidayService.instance;
+  }
+
+  /**
+   * Fetch public holidays for a specific year
+   * @param year Year to fetch holidays for
+   * @returns Array of holidays
+   */
+  public async fetchPublicHolidays(year: number): Promise<Holiday[]> {
+    if (import.meta.env.DEV) {
+      // Only include remaining 2024 holidays and 2025 holidays
+      const currentDate = new Date();
+      const holidays: Holiday[] = [];
+
+      // 2024 holidays (only include upcoming ones)
+      if (year === 2024) {
+        const remainingHolidays: Holiday[] = [
+          { id: '2024-03-29', date: '2024-03-29', name: 'Good Friday', dayOfWeek: 'Friday' },
+          { id: '2024-04-10', date: '2024-04-10', name: 'Hari Raya Puasa', dayOfWeek: 'Wednesday' },
+          { id: '2024-05-01', date: '2024-05-01', name: 'Labour Day', dayOfWeek: 'Wednesday' },
+          { id: '2024-05-22', date: '2024-05-22', name: 'Vesak Day', dayOfWeek: 'Wednesday' },
+          { id: '2024-06-17', date: '2024-06-17', name: 'Hari Raya Haji', dayOfWeek: 'Monday' },
+          { id: '2024-08-09', date: '2024-08-09', name: 'National Day', dayOfWeek: 'Friday' },
+          { id: '2024-11-02', date: '2024-11-02', name: 'Deepavali', dayOfWeek: 'Saturday' }
+        ];
+        holidays.push(
+          ...remainingHolidays.filter((holiday) => new Date(holiday.date) > currentDate)
+        );
+      }
+
+      // 2025 holidays
+      if (year === 2025) {
+        holidays.push(
+          { id: '2025-01-01', date: '2025-01-01', name: "New Year's Day", dayOfWeek: 'Wednesday' },
+          { id: '2025-01-29', date: '2025-01-29', name: 'Chinese New Year', dayOfWeek: 'Wednesday' },
+          { id: '2025-01-30', date: '2025-01-30', name: 'Chinese New Year', dayOfWeek: 'Thursday' },
+          { id: '2025-04-18', date: '2025-04-18', name: 'Good Friday', dayOfWeek: 'Friday' },
+          { id: '2025-05-01', date: '2025-05-01', name: 'Labour Day', dayOfWeek: 'Thursday' },
+          { id: '2025-05-11', date: '2025-05-11', name: 'Hari Raya Puasa', dayOfWeek: 'Sunday' },
+          { id: '2025-05-12', date: '2025-05-12', name: 'Vesak Day', dayOfWeek: 'Monday' },
+          { id: '2025-07-07', date: '2025-07-07', name: 'Hari Raya Haji', dayOfWeek: 'Monday' },
+          { id: '2025-08-09', date: '2025-08-09', name: 'National Day', dayOfWeek: 'Saturday' },
+          { id: '2025-10-22', date: '2025-10-22', name: 'Deepavali', dayOfWeek: 'Wednesday' }
+        );
+      }
+
+      // Filter out past holidays
+      const today = startOfDay(new Date());
+      return holidays.filter((holiday) => {
+        const holidayDate = new Date(holiday.date);
+        return holidayDate >= today;
+      });
+    }
+
+    try {
+      const response = await axios.get(`https://api.data.gov.sg/v1/holidays/${year}`, {
+        headers: {
+          'api-key': import.meta.env.VITE_DATA_GOV_SG_API_KEY
+        }
+      });
+
+      const holidays = response.data.items.map((item: { id: string; date: string; name: string }) => ({
+        id: item.id,
+        date: item.date,
+        name: item.name,
+        dayOfWeek: this.DAYS_OF_WEEK[new Date(item.date).getDay()]
+      }));
+
+      // Filter out past holidays
+      const today = startOfDay(new Date());
+      return holidays.filter((holiday) => {
+        const holidayDate = new Date(holiday.date);
+        return holidayDate >= today;
+      });
+    } catch (error) {
+      console.error('Failed to fetch holidays: ', error);
+      return [];
+    }
+  }
+
+  /**
+   * Update public holidays cache
+   * @returns Array of holidays
+   */
+  public async updatePublicHolidays(): Promise<Holiday[]> {
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+
+    try {
+      const [currentYearHolidays, nextYearHolidays] = await Promise.all([
+        this.fetchPublicHolidays(currentYear),
+        this.fetchPublicHolidays(nextYear)
+      ]);
+
+      const holidays = [...currentYearHolidays, ...nextYearHolidays].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // Store in localStorage for offline access
+      globalThis.localStorage.setItem('publicHolidays', JSON.stringify(holidays));
+      return holidays;
+    } catch (error) {
+      console.error('Failed to update holidays: ', error);
+      throw error;
+    }
+  }
+}
+
+// Create singleton instance
+const publicHolidayService = PublicHolidayService.getInstance();
+
+export { publicHolidayService };

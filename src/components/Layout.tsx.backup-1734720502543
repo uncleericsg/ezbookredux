@@ -1,0 +1,124 @@
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import { Toaster } from 'sonner';
+
+import { useAnnouncements } from '../hooks/useAnnouncements';
+import { useAppSelector } from '../store';
+
+import Footer from './Footer';
+import Navbar from './Navbar';
+
+export interface LayoutProps;
+
+
+
+
+
+/**
+ * Props for the Layout component
+ */
+interface LayoutProps {
+  /** Optional custom class name */
+  className?: string;
+  /** Optional child components */
+  children?: React.ReactNode;
+}
+
+/**
+ * Layout component for the iAircon Easy Booking system
+ * Provides the app shell with navigation, announcements, and footer
+ * 
+ * @example
+ * ```tsx
+ * <Layout>
+ *   <YourContent />
+ * </Layout>
+ * ```
+ */
+const Layout: React.FC<LayoutProps> = ({ 
+  className = '', 
+  children 
+}) => {
+  const { announcements, dismissAnnouncement } = useAnnouncements();
+  const { currentUser: _currentUser } = useAppSelector((state) => state.user);
+  const currentAnnouncement = announcements[0];
+
+  return (
+    <div 
+      className="min-h-screen bg-gray-900 text-white"
+      role="application"
+    >
+      {/* Announcement Banner */}
+      {currentAnnouncement && !currentAnnouncement.dismissed && (
+        <div 
+          className="bg-blue-500 text-white"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="mx-auto max-w-7xl px-4 py-3 sm:rounded-lg">
+            <span className="hidden md:inline">{currentAnnouncement.message}</span>
+          </div>
+          <div className="order-2 flex-shrink-0 sm:order-1">
+            <button
+              onClick={() => dismissAnnouncement(currentAnnouncement.id)}
+              type="button"
+              className="text-white hover:text-gray-200 transition-colors"
+              aria-label="Dismiss announcement"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <Navbar />
+
+      {/* Main Content */}
+      <main 
+        className={`flex-grow ${className}`}
+        role="main"
+        aria-label="Main content"
+      >
+        {children || <Outlet />}
+      </main>
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Toast Container */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#363636',
+            color: '#FFFFFF',
+            fontSize: '16px',
+            fontWeight: '600',
+            padding: '16px',
+            borderRadius: '10px',
+            boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#FFFFFF',
+              secondary: '#FFFFFF',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#FFFFFF',
+              secondary: '#FFFFFF',
+            },
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+// Set display name for debugging
+Layout.displayName = 'Layout';
+export { LayoutProps };
+
+undefined.displayName = 'undefined';

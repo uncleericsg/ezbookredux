@@ -1,0 +1,110 @@
+import axios from 'axios';
+import { z } from 'zod';
+
+import type { User } from '../types';
+
+/**
+ * User schema for validation.
+ */
+export const userSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string(),
+  role: z.enum(['user', 'admin']).optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+/**
+ * Validates user data against the schema.
+ * @param data User data to validate.
+ * @returns Whether the data is valid.
+ */
+export const validateUserData = (data: unknown): data is User => {
+  try {
+    userSchema.parse(data);
+    return true;
+  } catch (error) {
+    console.error('User validation failed: ', error);
+    return false;
+  }
+};
+
+/**
+ * Gets user details by ID.
+ * @param userId User ID to fetch.
+ * @returns User details.
+ * @throws {Error} If user data is invalid or fetch fails.
+ */
+export const getUserDetails = async (userId: string): Promise<User> => {
+  if (import.meta.env.DEV) {
+    // Return mock user data for development
+    const mockUser: User = {
+      id: userId,
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'user',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!validateUserData(mockUser)) {
+      throw new Error('Invalid mock user data');
+    }
+
+    return mockUser;
+  }
+
+  try {
+    const response = await axios.get<User>(`/api/users/${userId}`);
+    const userData = response.data;
+
+    if (!validateUserData(userData)) {
+      throw new Error('Invalid user data received from server');
+    }
+
+    return userData;
+  } catch (error) {
+    console.error('Failed to fetch user details: ', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates user profile.
+ * @param userId User ID to update.
+ * @param updates Updates to apply.
+ * @returns Updated user data.
+ * @throws {Error} If user data is invalid or update fails.
+ */
+export const updateUserProfile = async (
+  userId: string,
+  updates: Partial<User>
+): Promise<User> => {
+  try {
+    // Validate updates
+    const validatedUpdates = userSchema.partial().parse(updates);
+
+    const response = await axios.put<User>(
+      `/api/users/${userId}`,
+      validatedUpdates,
+      {
+        headers: {
+          Authorization: `Bearer ${globalThis.localStorage.getItem('auth_token')}`,
+        },
+      }
+    );
+
+    const updatedUser = response.data;
+
+    if (!validateUserData(updatedUser)) {
+      throw new Error('Invalid user data received from server');
+    }
+
+    return updatedUser;
+  } catch (error) {
+    console.error('Failed to update user profile: ', error);
+    throw error;
+  }
+};
+undefined.displayName = 'undefined';

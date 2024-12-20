@@ -1,0 +1,104 @@
+export interface AppointmentType;
+export interface CategoryMap;
+export type details;
+
+export interface AppointmentType;
+export interface CategoryMap;
+export type details;
+
+export interface AppointmentType {
+  id: string;
+  name: string;
+  duration: string;
+  price: number | null;
+  calendarId?: string;
+  description?: string;
+}
+
+export interface CategoryMap {
+  [key: string]: AppointmentType;
+}
+
+// Define appointment types for different service categories
+const appointmentTypes: CategoryMap = {
+  regular: {
+    id: 'regular',
+    name: 'Regular Service',
+    duration: '1-2 hours',
+    price: 150,
+    description: 'Standard aircon servicing and maintenance'
+  },
+  repair: {
+    id: 'repair',
+    name: 'Repair Service',
+    duration: '2-4 hours',
+    price: 250,
+    description: 'Diagnostic and repair services'
+  },
+  amc: {
+    id: 'amc',
+    name: 'AMC Service',
+    duration: '1-2 hours',
+    price: null, // Free for AMC customers
+    calendarId: 'amc_calendar',
+    description: 'Annual maintenance contract service'
+  },
+  chemical: {
+    id: 'chemical',
+    name: 'Chemical Cleaning',
+    duration: '3-4 hours',
+    price: 300,
+    description: 'Deep chemical cleaning service'
+  },
+  installation: {
+    id: 'installation',
+    name: 'Installation',
+    duration: '4-6 hours',
+    price: 500,
+    description: 'New aircon installation service'
+  }
+};
+
+export class CategoryMapper {
+  // Get appointment type details based on category ID
+  getAppointmentTypeDetails(categoryId: string): AppointmentType | undefined {
+    return appointmentTypes[categoryId];
+  }
+
+  // Get duration in minutes (for scheduling)
+  getDurationInMinutes(categoryId: string): number {
+    const appointmentType = this.getAppointmentTypeDetails(categoryId);
+    if (!appointmentType) return 60; // Default to 1 hour
+
+    // Parse duration string (e.g., "1-2 hours" -> take the maximum value)
+    const durationMatch = appointmentType.duration.match(/(\d+)-?(\d+)?\s*hours?/i);
+    if (!durationMatch) return 60;
+
+    const maxDuration = durationMatch[2] || durationMatch[1];
+    return parseInt(maxDuration, 10) * 60;
+  }
+
+  // Check if a category requires pre-inspection
+  requiresPreInspection(categoryId: string): boolean {
+    return ['installation', 'repair'].includes(categoryId);
+  }
+
+  // Get base price for a category
+  getBasePrice(categoryId: string): number | null {
+    const appointmentType = this.getAppointmentTypeDetails(categoryId);
+    return appointmentType?.price ?? null;
+  }
+
+  // Get all available categories
+  getAllCategories(): AppointmentType[] {
+    return Object.values(appointmentTypes);
+  }
+
+  // Check if a category is available for AMC customers
+  isAmcEligible(categoryId: string): boolean {
+    return categoryId === 'amc' || categoryId === 'regular';
+  }
+}
+
+// Export a singleton instance
+export const categoryMapper = new CategoryMapper();

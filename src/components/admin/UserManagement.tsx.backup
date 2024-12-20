@@ -1,0 +1,138 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { Search, X, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { cn } from '@/lib/utils';
+
+import { useUserTable } from '../../hooks/useUserTable';
+import { updateUser } from '../../services/admin';
+
+import { UserImport } from './UserImport';
+import { UserTable } from './UserTable';
+
+export interface UserManagementProps extends React.HTMLAttributes<HTMLDivElement> {
+  // Add any specific props here if needed
+}
+
+export interface UserUpdateData {
+  name?: string;
+  email?: string;
+  role?: string;
+  status?: 'active' | 'inactive';
+  lastLogin?: Date;
+}
+
+export const UserManagement = ({ className, ...props }: UserManagementProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [savingUserId, setSavingUserId] = useState<string | null>(null);
+
+  const {
+    users,
+    loading,
+    error,
+    setUsers,
+    handleSearch,
+    handleSort,
+    currentSort
+  } = useUserTable(searchQuery);
+
+  const handleSaveUser = async (userId: string, data: UserUpdateData) => {
+    try {
+      setSavingUserId(userId);
+      await updateUser(userId, data);
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, ...data } : user
+        )
+      );
+      toast.success('User updated successfully');
+    } catch (error) {
+      toast.error('Failed to update user');
+      console.error('Error updating user:', error);
+    } finally {
+      setSavingUserId(null);
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        'overflow-hidden rounded-lg border border-gray-700 bg-gray-800',
+        className,
+        props.className
+      )}
+    >
+      <div className="p-4">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                handleSearch(e.target.value);
+              }}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            onClick={() => setIsImportModalOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            Import Users
+          </Button>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {error ? (
+            <div className="flex items-center gap-2 rounded bg-red-500/10 p-4 text-red-500">
+              <X className="h-4 w-4" />
+              <p>Error loading users: {error}</p>
+            </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+          ) : (
+            <UserTable
+              users={users}
+              onSort={handleSort}
+              currentSort={currentSort}
+              onSave={handleSaveUser}
+              savingUserId={savingUserId}
+            />
+          )}
+        </motion.div>
+      </div>
+
+      <UserImport
+        open={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={(importedUsers) => {
+          setUsers((prevUsers) => [...prevUsers, ...importedUsers]);
+          setIsImportModalOpen(false);
+          toast.success(`Successfully imported ${importedUsers.length} users`);
+        }}
+      />
+    </div>
+  );
+};
+
+UserManagement.displayName = 'UserManagement';
+
+export default UserManagement;
+
+export type { UserManagementProps, UserUpdateData };

@@ -1,0 +1,30 @@
+'use client';
+
+import React, { FC, ReactNode, useEffect } from 'react';
+
+export interface ScrollToTopWrapperProps;
+
+export interface ScrollToTopWrapperProps;
+
+export interface ScrollToTopWrapperProps;
+
+interface ScrollToTopWrapperProps {
+  children: ReactNode;
+  currentStep: number;
+}
+
+export const ScrollToTopWrapper: React.FC<ScrollToTopWrapperProps> = ({
+  children,
+  currentStep
+}) => {
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, [currentStep]);
+
+  return <>{children}</>;
+};
+
+ScrollToTopWrapper.displayName = 'ScrollToTopWrapper';

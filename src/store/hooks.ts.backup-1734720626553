@@ -1,0 +1,24 @@
+import React from 'react';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from './index';
+
+// Use throughout your app instead of plain `useDispatch` and `useSelector`;
+const hooks.ts = () => {
+  return null
+};
+
+// Additional exports;
+const hooks = () => {
+  return null
+};
+
+{ named };
+
+// Additional exports;
+{ hooks };
+
+{ hooks };
+{ named };
+
+export { hooks };
+undefined.displayName = 'undefined';

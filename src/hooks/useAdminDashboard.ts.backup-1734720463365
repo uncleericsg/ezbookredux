@@ -1,0 +1,46 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+
+import { fetchAnalytics } from '../services/admin';
+
+export interface UseAdminDashboardReturn;
+
+export interface UseAdminDashboardReturn;
+
+export interface UseAdminDashboardReturn;
+
+export interface UseAdminDashboardReturn;
+
+interface UseAdminDashboardReturn {
+  activeTab: number;
+  handleTabChange: (tab: number) => void;
+}
+
+export function useAdminDashboard(): UseAdminDashboardReturn {
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const queryClient = useQueryClient();
+
+  const handleTabChange = (tab: number) => {
+    setActiveTab(tab);
+    
+    // Prefetch data for the selected tab
+    queryClient.prefetchQuery({
+      queryKey: ['admin', tab],
+      queryFn: async () => {
+        switch (tab) {
+          case 5: // Analytics tab
+            return fetchAnalytics();
+          default:
+            return null;
+        }
+      },
+      staleTime: 5 * 60 * 1000 // 5 minutes
+    });
+  };
+
+  return {
+    activeTab,
+    handleTabChange
+  };
+}
+undefined.displayName = 'undefined';

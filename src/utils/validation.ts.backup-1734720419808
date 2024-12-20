@@ -1,0 +1,192 @@
+import { addDays, isBefore, isAfter, startOfDay, isWeekend, addMinutes } from 'date-fns';
+
+import {
+  ValidationResult,
+  TimeValidationContext,
+  ValidationState,
+  TimeSlotConstraints
+} from './validationTypes';
+
+import type { BookingValidation } from '../types';
+
+
+// Business rules constants
+export const BUSINESS_RULES = {
+  /** Minimum hours required in advance for booking */
+  MIN_BOOKING_HOURS: 24,
+  /** Maximum days allowed for advance booking */
+  MAX_BOOKING_DAYS: 104,
+  /** Buffer time between bookings in minutes */
+  BUFFER_MINUTES: 30,
+  /** Business hours start time (24-hour format) */
+  BUSINESS_START_HOUR: 9.5,
+  /** Business hours end time (24-hour format) */
+  BUSINESS_END_HOUR: 17,
+  /** Maximum number of slots allowed per day */
+  MAX_SLOTS_PER_DAY: 6,
+  /** Minimum interval between AMC bookings in days */
+  AMC_MIN_INTERVAL_DAYS: 70,
+  /** Maximum number of concurrent bookings allowed */
+  MAX_CONCURRENT_BOOKINGS: 3,
+  /** Start hour for peak hours (24-hour format) */
+  PEAK_HOURS_START: 14
+} as const;
+
+/**
+ * Validate if a time is within business hours
+ * @param time Time to validate
+ * @returns Whether time is within business hours
+ */
+function isWithinBusinessHours(time: Date): boolean {
+  const hour = time.getHours() + time.getMinutes() / 60;
+  return hour >= BUSINESS_RULES.BUSINESS_START_HOUR && 
+         hour <= BUSINESS_RULES.BUSINESS_END_HOUR;
+}
+
+/**
+ * Validate if a time is during peak hours
+ * @param time Time to validate
+ * @returns Whether time is during peak hours
+ */
+function isDuringPeakHours(time: Date): boolean {
+  const hour = time.getHours();
+  return hour >= BUSINESS_RULES.PEAK_HOURS_START;
+}
+
+/**
+ * Validate a booking time against business rules and constraints
+ * @param datetime Booking date and time
+ * @param constraints Custom time slot constraints
+ * @returns Validation result with errors and warnings
+ */
+export function validateBookingTime(
+  datetime: Date,
+  constraints: TimeSlotConstraints = {}
+): ValidationResult {
+  const result: ValidationResult = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  // Validate against business hours
+  if (!isWithinBusinessHours(datetime)) {
+    result.isValid = false;
+    result.errors.push('Booking must be within business hours (9:30 AM - 5:00 PM)');
+  }
+
+  // Validate against weekends
+  if (isWeekend(datetime)) {
+    result.isValid = false;
+    result.errors.push('Bookings are not available on weekends');
+  }
+
+  // Validate advance booking time
+  const now = new Date();
+  const minBookingTime = addMinutes(now, BUSINESS_RULES.MIN_BOOKING_HOURS * 60);
+  if (isBefore(datetime, minBookingTime)) {
+    result.isValid = false;
+    result.errors.push(`Bookings must be made at least ${BUSINESS_RULES.MIN_BOOKING_HOURS} hours in advance`);
+  }
+
+  // Validate maximum advance booking
+  const maxBookingTime = addDays(startOfDay(now), BUSINESS_RULES.MAX_BOOKING_DAYS);
+  if (isAfter(datetime, maxBookingTime)) {
+    result.isValid = false;
+    result.errors.push(`Bookings cannot be made more than ${BUSINESS_RULES.MAX_BOOKING_DAYS} days in advance`);
+  }
+
+  // Apply custom constraints
+  if (constraints.minTime && isBefore(datetime, constraints.minTime)) {
+    result.isValid = false;
+    result.errors.push('Booking time is before the allowed minimum time');
+  }
+
+  if (constraints.maxTime && isAfter(datetime, constraints.maxTime)) {
+    result.isValid = false;
+    result.errors.push('Booking time is after the allowed maximum time');
+  }
+
+  // Add warnings for peak hours
+  if (isDuringPeakHours(datetime)) {
+    result.warnings.push('This is a peak hour slot. Longer wait times may apply.');
+  }
+
+  return result;
+}
+
+/**
+ * Validate a booking request against business rules
+ * @param context Booking validation context
+ * @returns Validation result with errors and warnings
+ */
+export function validateBooking(context: TimeValidationContext): ValidationResult {
+  const result: ValidationResult = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  // Validate user state
+  if (!context.userId) {
+    result.isValid = false;
+    result.errors.push('User ID is required');
+    return result;
+  }
+
+  // Validate booking time
+  const timeValidation = validateBookingTime(context.datetime, context.constraints);
+  if (!timeValidation.isValid) {
+    result.isValid = false;
+    result.errors.push(...timeValidation.errors);
+  }
+  result.warnings.push(...timeValidation.warnings);
+
+  // Validate concurrent bookings
+  if (context.existingBookings >= BUSINESS_RULES.MAX_CONCURRENT_BOOKINGS) {
+    result.isValid = false;
+    result.errors.push(`Maximum of ${BUSINESS_RULES.MAX_CONCURRENT_BOOKINGS} concurrent bookings allowed`);
+  }
+
+  // Validate AMC specific rules
+  if (context.isAMC) {
+    const amcValidation = validateAmcStatus(context);
+    if (!amcValidation.isValid) {
+      result.isValid = false;
+      result.errors.push(...amcValidation.errors);
+    }
+    result.warnings.push(...amcValidation.warnings);
+  }
+
+  return result;
+}
+
+/**
+ * Validate AMC status for a booking
+ * @param context Booking validation context
+ * @returns Validation result
+ */
+export function validateAmcStatus(context: TimeValidationContext): ValidationResult {
+  const result: ValidationResult = {
+    isValid: true,
+    errors: [],
+    warnings: []
+  };
+
+  // Validate AMC interval
+  const lastAmcBooking = context.lastAmcBooking;
+  if (lastAmcBooking) {
+    const minInterval = addDays(lastAmcBooking, BUSINESS_RULES.AMC_MIN_INTERVAL_DAYS);
+    if (isBefore(context.datetime, minInterval)) {
+      result.isValid = false;
+      result.errors.push(`AMC bookings must be at least ${BUSINESS_RULES.AMC_MIN_INTERVAL_DAYS} days apart`);
+    }
+  }
+
+  // Add warnings for first-time AMC
+  if (!lastAmcBooking) {
+    result.warnings.push('This is your first AMC booking. Please review the terms and conditions.');
+  }
+
+  return result;
+}

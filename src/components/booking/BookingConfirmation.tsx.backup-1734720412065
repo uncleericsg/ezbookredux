@@ -1,0 +1,165 @@
+'use client';
+
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
+import { Calendar, CheckCircle, CreditCard, Download, MapPin, User } from 'lucide-react';
+import React, { FC, useState } from 'react';
+
+import PasswordCreationModal from '@/components/auth/PasswordCreationModal';
+import { useAppSelector } from '@/store';
+
+export interface BookingConfirmationProps;
+
+export interface BookingConfirmationProps;
+
+export interface BookingConfirmationProps;
+
+interface BookingConfirmationProps {
+  onCreateAccount?: (password: string) => void;
+  bookingReference?: string;
+  onDownloadReceipt?: () => void;
+  className?: string;
+}
+
+const BookingConfirmation = ({
+  onCreateAccount,
+  bookingReference: propBookingReference,
+  onDownloadReceipt,
+  className,
+}: BookingConfirmationProps) => {
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { user } = useAppSelector((state) => state.auth);
+  const { booking } = useAppSelector((state) => state.booking);
+
+  const bookingRef = propBookingReference || booking?.id;
+
+  const handleCreateAccount = async (password: string) => {
+    setIsCreatingAccount(true);
+    setError(null);
+    try {
+      await onCreateAccount?.(password);
+      setShowPasswordModal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create account');
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className={`mx-auto max-w-3xl space-y-8 px-4 py-8 ${className || ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <div className="bg-card text-card-foreground rounded-lg border p-6 shadow-sm">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-6 w-6 text-green-500" />
+            <h2 className="text-2xl font-semibold">Booking Confirmed</h2>
+          </div>
+          {bookingRef && <div className="text-muted-foreground text-sm">Ref: {bookingRef}</div>}
+        </div>
+
+        <div className="space-y-6">
+          {booking?.customerDetails && (
+            <div className="space-y-2">
+              <h3 className="font-semibold">Customer Details</h3>
+              <div className="grid gap-2 text-sm">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>
+                    {booking.customerDetails.firstName} {booking.customerDetails.lastName}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>{booking.customerDetails.email}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>{booking.customerDetails.mobile}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {booking?.serviceDetails && (
+            <div className="space-y-2">
+              <h3 className="font-semibold">Service Details</h3>
+              <div className="grid gap-2 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{format(new Date(booking.date), 'PPP')}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{booking.time}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{booking.address}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <h3 className="font-semibold">Payment Details</h3>
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="h-4 w-4" />
+                <span>{booking?.paymentMethod}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">Amount Paid:</span>
+                <span>${booking?.amount}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4">
+            {onDownloadReceipt && (
+              <button
+                onClick={onDownloadReceipt}
+                className="text-primary hover:text-primary/80 flex items-center space-x-2 text-sm"
+                type="button"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download Receipt</span>
+              </button>
+            )}
+            {!user && (
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="text-primary hover:text-primary/80 text-sm"
+                type="button"
+              >
+                Create Account
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {showPasswordModal && (
+        <PasswordCreationModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          onSubmit={handleCreateAccount}
+          isLoading={isCreatingAccount}
+          error={error}
+        />
+      )}
+    </motion.div>
+  );
+};
+
+BookingConfirmation.displayName = 'BookingConfirmation';
+
+type { BookingConfirmationProps };
+export { BookingConfirmationProps, BookingConfirmation };

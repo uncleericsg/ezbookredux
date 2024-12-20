@@ -1,0 +1,65 @@
+"use client";
+
+import { format, parseISO, isValid } from 'date-fns';
+import { Bell } from 'lucide-react';
+import React, { memo } from 'react';
+
+import type { HolidayGreeting } from '../../types';
+
+export interface ScheduledNotificationsProps;
+
+export interface ScheduledNotificationsProps;
+
+export interface ScheduledNotificationsProps;
+
+export interface ScheduledNotificationsProps;
+
+export interface ScheduledNotificationsProps extends React.HTMLAttributes<HTMLDivElement> {
+  notifications: HolidayGreeting[];
+}
+
+export const ScheduledNotifications = memo(({ notifications, className, ...props }: ScheduledNotificationsProps) => {
+  return (
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`} {...props}>
+      {notifications.map((notification) => {
+        const date = parseISO(notification.date);
+        if (!isValid(date)) {
+          return null;
+        }
+
+        return (
+          <div
+            key={notification.id}
+            className="bg-gray-800 rounded-lg p-4 border border-gray-700 space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Bell className="h-4 w-4 text-blue-400" />
+                <h3 className="font-medium">{notification.holiday}</h3>
+              </div>
+              <span className="text-sm text-gray-400">
+                {format(date, 'MMMM d, yyyy')}
+              </span>
+            </div>
+            {notification.message && (
+              <p className="text-sm text-gray-300">{notification.message}</p>
+            )}
+          </div>
+        );
+      })}
+      {notifications.length === 0 && (
+        <div className="col-span-full text-center py-8 text-gray-400">
+          No upcoming notifications scheduled
+        </div>
+      )}
+    </div>
+  );
+});
+
+ScheduledNotifications.displayName = 'ScheduledNotifications';
+
+
+
+export type { ScheduledNotificationsProps };
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,35 @@
+import React from 'react';
+
+import { useScrollToTop } from '../../hooks/useScrollToTop';
+
+import FirstTimeBookingFlow from './FirstTimeBookingFlow';
+
+export type FirstTimeBookingFlowWrapperProps;
+export interface kept;
+
+
+
+
+
+
+
+
+
+// Export types at the top
+
+// Component declaration as const
+const FirstTimeBookingFlowWrapper = () => {
+  // This will scroll to top whenever the component mounts
+  useScrollToTop([]);
+  
+  return <FirstTimeBookingFlow />;
+};
+
+// Add displayName
+FirstTimeBookingFlowWrapper.displayName = 'FirstTimeBookingFlowWrapper';
+
+// Both named and default exports at the bottom
+export { FirstTimeBookingFlowWrapper };
+
+
+undefined.displayName = 'undefined';

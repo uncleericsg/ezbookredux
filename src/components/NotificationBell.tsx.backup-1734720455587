@@ -1,0 +1,100 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../hooks/useNotifications';
+
+export interface NotificationBellProps;
+
+export interface NotificationBellProps;
+
+export interface NotificationBellProps;
+
+export interface NotificationBellProps;
+
+/**
+ * Props for the NotificationBell component
+ */
+interface NotificationBellProps extends React.HTMLAttributes<HTMLButtonElement> {
+  /** Optional className for styling */
+  className?: string;
+  /** Whether to show the notification count */
+  showCount?: boolean;
+}
+
+/**
+ * Displays notification status with unread count
+ * 
+ * @example
+ * ```tsx
+ * <NotificationBell
+ *   showCount={true}
+ *   className="my-custom-class"
+ * />
+ * ```
+ */
+const NotificationBell: React.FC<NotificationBellProps> = ({
+  className = '',
+  showCount = true,
+  ...props
+}) => {
+  const navigate = useNavigate();
+  const { user } = useUser();
+  const { unreadCount, notifications } = useNotifications(user?.id ?? '');
+
+  const hasUrgentNotifications = notifications.some(
+    (n) => !n.read && n.priority === 'high'
+  );
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => navigate('/notifications')}
+      className={`relative p-2 text-gray-400 hover:text-white dark:text-gray-300 dark:hover:text-white ${className}`}
+      aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+      {...props}
+    >
+      <Bell className="h-6 w-6" aria-hidden="true" />
+      <AnimatePresence>
+        {showCount && unreadCount > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium text-white ${
+              hasUrgentNotifications ? 'bg-red-500' : 'bg-blue-500'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {hasUrgentNotifications && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            repeatType: 'reverse'
+          }}
+          className="absolute -bottom-1 -right-1 h-2 w-2 rounded-full bg-red-500"
+          role="status"
+          aria-label="Urgent notifications"
+        />
+      )}
+    </motion.button>
+  );
+};
+
+// Set display name for debugging
+NotificationBell.displayName = 'NotificationBell';
+export { NotificationBellProps, NotificationBell };
+
+undefined.displayName = 'undefined';

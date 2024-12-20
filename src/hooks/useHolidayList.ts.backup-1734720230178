@@ -1,0 +1,98 @@
+import { addDays, startOfDay, parseISO } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+
+import { fetchPublicHolidays } from '../services/publicHolidays';
+
+import type { Holiday } from '../types';
+
+export interface UseHolidayListOptions;
+export interface UseHolidayListReturn;
+
+interface UseHolidayListOptions {
+  daysAhead?: number;
+}
+
+interface UseHolidayListReturn {
+  holidays: Holiday[];
+  loading: boolean;
+  error: string | null;
+  refreshHolidays: () => Promise<void>;
+}
+
+/**
+ * A hook to fetch and manage public holidays
+ * @param options Configuration options for the hook
+ * @returns An object containing holidays data and management functions
+ */
+export function useHolidayList(
+  { daysAhead = 90 }: UseHolidayListOptions = {}
+): UseHolidayListReturn {
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchHolidays = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+
+      // Fetch holidays for current and next year
+      const [currentYearHolidays, nextYearHolidays] = await Promise.all([
+        fetchPublicHolidays(currentYear),
+        fetchPublicHolidays(nextYear)
+      ]);
+
+      // Filter and sort upcoming holidays
+      const today = startOfDay(new Date());
+      const futureDate = addDays(today, daysAhead);
+
+      const upcomingHolidays = [...currentYearHolidays, ...nextYearHolidays]
+        .filter(holiday => {
+          const holidayDate = parseISO(holiday.date);
+          return holidayDate >= today && holidayDate <= futureDate;
+        })
+        .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+
+      setHolidays(upcomingHolidays);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load holidays';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [daysAhead]);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [fetchHolidays]);
+
+  const refreshHolidays = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await fetchHolidays();
+      toast.success('Holidays refreshed successfully');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh holidays';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchHolidays]);
+
+  return {
+    holidays,
+    loading,
+    error,
+    refreshHolidays
+  };
+}
+
+export type { UseHolidayListOptions, UseHolidayListReturn };
+export default useHolidayList;

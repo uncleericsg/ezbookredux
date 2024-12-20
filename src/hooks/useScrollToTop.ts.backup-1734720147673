@@ -1,0 +1,32 @@
+import { useCallback, useEffect } from 'react';
+
+/**
+ * Hook that scrolls the window to the top when route changes
+ * @param deps Dependencies that trigger scroll to top when changed
+ * @returns Function to manually trigger scroll to top
+ * @example
+ * // Auto scroll to top when route changes
+ * useScrollToTop([pathname]);
+ * 
+ * // Manual scroll to top
+ * const scrollToTop = useScrollToTop();
+ * scrollToTop();
+ */
+export function useScrollToTop(deps: readonly unknown[] = []): () => void {
+  const scrollToTop = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.scrollTo({ 
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollToTop();
+  }, [scrollToTop, ...deps]);
+
+  return scrollToTop;
+}

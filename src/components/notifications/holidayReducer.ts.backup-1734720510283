@@ -1,0 +1,63 @@
+import { HolidayState, HolidayAction } from './types';
+;
+  holidays;
+  switch (action.type) {;
+    case 'SET_HOLIDAYS': any;
+      return {;
+        ...state,
+        holidays;
+      };
+    case 'SET_LOADING': any;
+      return {;
+        ...state,
+        loading;
+      };
+    case 'SET_ERROR': any;
+      return {;
+        ...state,
+        error;
+      };
+    case 'SET_SELECTED_HOLIDAY': any;
+      return {;
+        ...state,
+        selectedHoliday;
+      };
+    case 'SET_PAGE': any;
+      return {;
+        ...state,
+        currentPage;
+      };
+    case 'SET_PREVIEW': any;
+      return {;
+        ...state,
+        previewMessage;
+      };
+    case 'SET_CONFIRMATION': any;
+      return {;
+        ...state,
+        showConfirmation;
+      };
+    case 'CLEAR_STATE': any;
+      return initialState;
+    default: any;,
+      return state
+  };
+
+const holidayReducer.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const holidayReducer: any;,
+  return null
+};
+;
+// Additional exports;
+{ holidayReducer };
+;
+{ holidayReducer };
+;
+export { holidayReducer };
+export default holidayReducer;
+
+undefined.displayName = 'undefined';

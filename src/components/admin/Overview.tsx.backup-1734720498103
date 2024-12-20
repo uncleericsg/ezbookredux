@@ -1,0 +1,139 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  CreditCard as _CreditCard,
+  DollarSign as _DollarSign,
+  Download,
+  Users as _Users,
+  Building2 as _Building2,
+  Wrench as _Wrench,
+  Star as _Star
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import { cn } from '../../lib/utils';
+import { Button } from '../ui/Button';
+import { Calendar } from '../ui/Calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import {
+
+export interface OverviewProps;
+
+
+
+
+
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '../ui/Select';
+
+
+  const [timeframe, setTimeframe] = useState('7d');
+
+  useEffect(() => {
+    // Fetch data based on selected timeframe and date
+  }, [timeframe, date]);
+
+  return (
+    <div className={cn('space-y-6', className)} {...props}>
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <Select value={timeframe} onValueChange={setTimeframe}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select timeframe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="90d">Last 90 days</SelectItem>
+            <SelectItem value="12m">Last 12 months</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Download
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card
+          as={motion.div}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <CardHeader>
+            <CardTitle>Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Add your revenue chart component here */}
+            <div className="h-[300px]" />
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              {/* Add your activity list component here */}
+              {[1, 2, 3].map((_, i) => (
+                <div key={i} className="flex items-center">
+                  <Activity className="text-muted-foreground mr-4 h-4 w-4" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">New service request</p>
+                    <p className="text-muted-foreground text-sm">2 hours ago</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card
+          as={motion.div}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <CardHeader>
+            <CardTitle>Service Analytics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Add your service analytics chart component here */}
+            <div className="h-[300px]" />
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+Overview.displayName = 'Overview';
+
+
+
+export type { OverviewProps };
+
+undefined.displayName = 'undefined';

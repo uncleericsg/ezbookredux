@@ -1,0 +1,270 @@
+"use client";
+
+import { motion } from 'framer-motion';
+import { Save, Plus, Trash2, Loader2, ArrowRight, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+export type FieldMapping;
+export type Field;
+export type UserImportMappingProps;
+
+export type FieldMapping;
+export type Field;
+export type UserImportMappingProps;
+
+export type FieldMapping;
+export type Field;
+export type UserImportMappingProps;
+
+export type FieldMapping = {
+  id: string;
+  systemField: string;
+  repairShoprField: string;
+  required: boolean;
+  defaultValue?: string;
+  transform?: string;
+};
+
+export type Field = {
+  label: string;
+  value: string;
+  required?: boolean;
+};
+
+export type UserImportMappingProps = React.HTMLAttributes<HTMLDivElement> & {
+  onSave?: (mappings: FieldMapping[]) => Promise<void>;
+};
+
+const systemFields: Field[] = [
+  { label: 'First Name', value: 'firstName', required: true },
+  { label: 'Last Name', value: 'lastName', required: true },
+  { label: 'Email', value: 'email', required: true },
+  { label: 'Mobile Number', value: 'phone', required: true },
+  { label: 'Address Line 1', value: 'addressLine1', required: true },
+  { label: 'Address Line 2', value: 'addressLine2', required: false },
+  { label: 'Postal Code', value: 'postalCode', required: true }
+];
+
+const repairShoprFields: Field[] = [
+  { label: 'First Name', value: 'first_name' },
+  { label: 'Last Name', value: 'last_name' },
+  { label: 'Email', value: 'email' },
+  { label: 'Phone', value: 'phone' },
+  { label: 'Address', value: 'address' },
+  { label: 'Address Line 2', value: 'address_line_2' },
+  { label: 'Zip', value: 'zip' }
+];
+
+const _mappingSchema = z.object({
+  systemField: z.string().min(1, 'System field is required'),
+  repairShoprField: z.string().min(1, 'RepairShopr field is required'),
+  transform: z.string().optional()
+});
+
+/**
+ * UserImportMapping component for configuring field mappings between system and RepairShopr
+ * @example
+ * <UserImportMapping 
+ *   onSave={async (mappings) => {
+ *     // Handle saving mappings
+ *   }}
+ * />
+ */
+const UserImportMapping = ({
+  onSave = async () => {},
+  className,
+  ...props
+}: UserImportMappingProps) => {
+  const [mappings, setMappings] = useState<FieldMapping[]>([
+    {
+      id: 'default-1',
+      systemField: '',
+      repairShoprField: '',
+      required: true,
+      defaultValue: '',
+      transform: ''
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  const addMapping = () => {
+    const newMapping: FieldMapping = {
+      id: `mapping-${Date.now()}`,
+      systemField: '',
+      repairShoprField: '',
+      required: false,
+      defaultValue: '',
+      transform: ''
+    };
+    setMappings([...mappings, newMapping]);
+  };
+
+  const removeMapping = (id: string) => {
+    const mapping = mappings.find(m => m.id === id);
+    if (mapping?.required) {
+      toast.error('Cannot remove required field mapping');
+      return;
+    }
+    setMappings(mappings.filter(m => m.id !== id));
+  };
+
+  const updateMapping = (id: string, updates: Partial<FieldMapping>) => {
+    setMappings(mappings.map(m => 
+      m.id === id ? { ...m, ...updates } : m
+    ));
+  };
+
+  const validateMappings = (): boolean => {
+    const errors: string[] = [];
+
+    // Check for required system fields
+    const requiredFields = systemFields.filter(f => f.required);
+    for (const field of requiredFields) {
+      if (!mappings.some(m => m.systemField === field.value)) {
+        errors.push(`Missing required field mapping: ${field.label}`);
+      }
+    }
+
+    // Check for duplicate mappings
+    const systemFieldCounts = mappings.reduce((acc, m) => {
+      acc[m.systemField] = (acc[m.systemField] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    Object.entries(systemFieldCounts).forEach(([field, count]) => {
+      if (count > 1 && field) {
+        const fieldLabel = systemFields.find(f => f.value === field)?.label;
+        errors.push(`Duplicate mapping for field: ${fieldLabel || field}`);
+      }
+    });
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateMappings()) {
+      toast.error('Please fix validation errors before saving');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await onSave(mappings);
+      toast.success('Field mappings saved successfully');
+    } catch (error) {
+      console.error('Error saving mappings:', error);
+      toast.error('Failed to save field mappings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={`space-y-6 ${className || ''}`} {...props}>
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/10 border border-red-500/20 rounded-lg p-4"
+        >
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="h-5 w-5 text-red-400 mt-1" />
+            <div>
+              <p className="text-sm text-red-400 font-medium">Please fix the following errors:</p>
+              <ul className="list-disc list-inside text-sm text-gray-300 mt-2 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Mapping Fields */}
+      <div className="space-y-4">
+        {mappings.map((mapping) => (
+          <div key={mapping.id} className="flex items-center space-x-4">
+            <select
+              value={mapping.systemField}
+              onChange={(e) => updateMapping(mapping.id, { systemField: e.target.value })}
+              className="select select-bordered flex-1"
+            >
+              <option value="">Select System Field</option>
+              {systemFields.map((field) => (
+                <option key={field.value} value={field.value}>
+                  {field.label} {field.required ? '*' : ''}
+                </option>
+              ))}
+            </select>
+
+            <ArrowRight className="h-4 w-4 text-gray-400" />
+
+            <select
+              value={mapping.repairShoprField}
+              onChange={(e) => updateMapping(mapping.id, { repairShoprField: e.target.value })}
+              className="select select-bordered flex-1"
+            >
+              <option value="">Select RepairShopr Field</option>
+              {repairShoprFields.map((field) => (
+                <option key={field.value} value={field.value}>
+                  {field.label}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              value={mapping.transform || ''}
+              onChange={(e) => updateMapping(mapping.id, { transform: e.target.value })}
+              placeholder="Transform (optional)"
+              className="input input-bordered flex-1"
+            />
+
+            <button
+              onClick={() => removeMapping(mapping.id)}
+              className="btn btn-ghost btn-square"
+              disabled={mapping.required}
+              aria-label="Remove mapping"
+            >
+              <Trash2 className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-between">
+        <button onClick={addMapping} className="btn btn-ghost space-x-2">
+          <Plus className="h-4 w-4" />
+          <span>Add Mapping</span>
+        </button>
+
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="btn btn-primary space-x-2"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          <span>Save Mappings</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Add displayName
+UserImportMapping.displayName = 'UserImportMapping';
+
+// Both named and default exports at the bottom
+export { UserImportMapping };
+

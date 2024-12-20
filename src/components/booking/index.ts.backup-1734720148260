@@ -1,0 +1,63 @@
+import type { CustomerFormData } from './CustomerForm';
+
+// Types
+// =========================================================
+/**
+ * Represents the steps in the booking process
+ */
+export type BookingStep = 'brands' | 'issues' | 'details' | 'schedule';
+
+/**
+ * Common interface for booking state management
+ */
+export interface BookingState {
+  currentStep: BookingStep;
+  selectedBrands: string[];
+  selectedIssues: string[];
+  customerData?: CustomerFormData;
+  scheduleData?: {
+    date: string;
+    time: string;
+  };
+}
+
+/**
+ * Validation error structure for booking flow
+ */
+export interface BookingErrors {
+  brands?: string;
+  issues?: string;
+  customerInfo?: Record<string, string>;
+}
+
+// Constants
+// =========================================================
+/**
+ * Defines the steps in the booking process
+ */
+export const BOOKING_STEPS = [
+  { id: 'brands', label: 'Brand Selection' },
+  { id: 'issues', label: 'Issue Selection' },
+  { id: 'details', label: 'Customer Details' },
+  { id: 'schedule', label: 'Schedule Service' }
+] as const;
+
+// Component Exports
+// =========================================================
+export { default as BookingFlow } from './BookingFlow';
+export { default as BrandSelection } from './BrandSelection';
+export { default as IssueSelection } from './IssueSelection';
+export { default as CustomerForm } from './CustomerForm';
+export { default as BookingProgress } from './BookingProgress';
+
+// Type Exports
+// =========================================================
+export type { BookingFlowProps } from './BookingFlow';
+export type { BrandSelectionProps } from './BrandSelection';
+export type { IssueSelectionProps } from './IssueSelection';
+export type { CustomerFormProps, CustomerFormData } from './CustomerForm';
+export type { BookingProgressProps } from './BookingProgress';
+
+// Utility Functions
+// =========================================================
+export { validateBookingData } from './utils/validation';

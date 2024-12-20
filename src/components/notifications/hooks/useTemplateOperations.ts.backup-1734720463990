@@ -1,0 +1,147 @@
+import React from 'react';
+
+;
+import { Template } from '../utils/templateUtils';
+import { ITEMS_PER_PAGE } from '../constants/templateConstants';
+
+export interface UseTemplateOperationsProps;
+export interface UseTemplateOperationsReturn;
+
+export interface UseTemplateOperationsProps;
+export interface UseTemplateOperationsReturn;
+
+export interface UseTemplateOperationsProps;
+export interface UseTemplateOperationsReturn;
+
+export interface UseTemplateOperationsProps;
+export interface UseTemplateOperationsReturn;
+export interface UseTemplateOperationsProps extends React.HTMLAttributes<HTMLDivElement> { {;
+  templates: Template[];, onDelete: };
+export interface UseTemplateOperationsReturn extends React.HTMLAttributes<HTMLDivElement> { {;
+  filteredTemplates: Template[];, paginatedTemplates: any;,
+  selectedItems: string[];, currentPage: any;,
+  totalPages: number;, search: any;,
+  sortBy: string;, handleSearch: any;,
+  handleSort: any;,
+  handlePageChange: any;,
+  toggleSelection: any;,
+  toggleSelectAll: any;,
+  handleBulkDelete: any;,
+  clearSelection: };
+
+  templates,
+  onDelete
+}: UseTemplateOperationsProps): (UseTemplateOperationsReturn): (any): (any): (any) => {;
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  // Reset page when search changes;
+  useEffect((): (any): (any): (any): (any) => {;
+    setCurrentPage(1)
+  }, [search]);
+  // Filter and sort templates;
+  const filteredTemplates: any;,
+    .filter(template =>;
+      template.name.toLowerCase().includes(search.toLowerCase()) ||;
+      template.content.toLowerCase().includes(search.toLowerCase());
+    );
+    .sort((a, b): (any): (any): (any): (any) => {;
+      switch (sortBy) {;
+        case 'title': any;
+          return a.name.localeCompare(b.name);
+        case 'type': any;
+          return a.type.localeCompare(b.type);
+        case 'status': any;
+          return (a.status || '').localeCompare(b.status || '');
+        case 'date': any;
+        default: any;,
+          return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+      }
+    });
+  // Calculate pagination;
+  const totalPages: any;,
+  const paginatedTemplates: any;,
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE;
+  );
+  // Handlers;
+  const handleSearch: any = useCallback((term: any;,
+    setSearch(term)
+  }, []);
+  const handleSort: any = useCallback((criteria: any;,
+    setSortBy(criteria)
+  }, []);
+  const handlePageChange: any = useCallback((page: any;,
+    setCurrentPage(page)
+  }, []);
+  const toggleSelection: any = useCallback((id: any;,
+    setSelectedItems(prev =>;
+      prev.includes(id);
+        ? prev.filter(i => i !== id);
+        : [...prev, id];
+    )
+  }, []);
+  const toggleSelectAll: any;,
+    setSelectedItems(prev =>;
+      prev.length === paginatedTemplates.length;
+        ? [];
+        : paginatedTemplates.map(t => t.id);
+    )
+  }, [paginatedTemplates]);
+  const handleBulkDelete: any;,
+    if (window.confirm(\`Are you sure you want to delete \${selectedItems.length} templates?\`) {
+   {
+}
+   {
+}
+   {
+}
+  ) {
+}
+      selectedItems.forEach(onDelete);
+      setSelectedItems([])
+    }
+  }, [selectedItems, onDelete]);
+  const clearSelection: any;,
+    setSelectedItems([])
+  }, []);
+  return {;
+    filteredTemplates,
+    paginatedTemplates,
+    selectedItems,
+    currentPage,
+    totalPages,
+    search,
+    sortBy,
+    handleSearch,
+    handleSort,
+    handlePageChange,
+    toggleSelection,
+    toggleSelectAll,
+    handleBulkDelete,
+    clearSelection
+  };
+;
+const useTemplateOperations.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const useTemplateOperations: any;,
+  return null
+};
+;
+// Additional exports;
+{ filteredTemplates, totalPages, paginatedTemplates, handleSearch, handleSort, handlePageChange, toggleSelection, toggleSelectAll, handleBulkDelete, clearSelection, useTemplateOperations };
+;
+// Type exports;
+{ useTemplateOperations };
+;
+;
+export type { UseTemplateOperationsProps, UseTemplateOperationsReturn };
+;
+export { filteredTemplates, totalPages, paginatedTemplates, handleSearch, handleSort, handlePageChange, toggleSelection, toggleSelectAll, handleBulkDelete, clearSelection, useTemplateOperations };
+export default filteredTemplates;
+
+undefined.displayName = 'undefined';

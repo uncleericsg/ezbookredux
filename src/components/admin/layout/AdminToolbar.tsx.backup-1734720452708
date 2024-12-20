@@ -1,0 +1,35 @@
+import { Toolbar } from '@mui/material';
+import React from 'react';
+
+export interface AdminToolbarProps;
+
+export interface AdminToolbarProps;
+
+export interface AdminToolbarProps;
+
+export interface AdminToolbarProps;
+
+export interface AdminToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode;
+};
+
+
+AdminToolbar.displayName = 'AdminToolbar';
+export const AdminToolbar: React.FC<AdminToolbarProps> = ({ children, ...props }) => {
+  return (
+    <Toolbar 
+      sx={{ 
+        minHeight: { xs: 48, sm: 64 },
+        p: 2
+      }}
+      {...props}
+    >
+      {children}
+    </Toolbar>
+  );
+};
+
+
+
+export { AdminToolbar, AdminToolbarProps };
+undefined.displayName = 'undefined';

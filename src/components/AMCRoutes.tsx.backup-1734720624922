@@ -1,0 +1,52 @@
+import React from 'react';
+import { Route } from 'react-router-dom';
+
+import AMCManagement from './AMCManagement';
+import AMCRenewal from './AMCRenewal';
+import AMCSubscriptionFlow from './AMCSubscriptionFlow';
+import ProtectedRoute from './ProtectedRoute';
+
+export interface AMCRoutesProps;
+
+export interface is;
+
+
+/**
+ * AMCRoutes component for the iAircon Easy Booking system
+ *
+ * @component AMCRoutes
+ * @description A React component that defines the routing structure for the AMC (Annual Maintenance Contract) section
+ *
+ * @example
+ * ```tsx
+ * import { AMCRoutes } from './components';
+ * <AMCRoutes />
+ * ```
+ */
+
+interface AMCRoutesProps extends React.ComponentPropsWithoutRef<'div'> {
+  // Currently no additional props needed, but interface is defined for future extensibility
+}
+
+const AMCRoutes: React.FC<AMCRoutesProps> = () => {
+  return (
+    <>
+      <Route
+        path="amc-management"
+        element={
+          <ProtectedRoute>
+            <AMCManagement />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="subscribe" element={<AMCSubscriptionFlow />} />
+        <Route path="renew" element={<AMCRenewal />} />
+      </Route>
+    </>
+  );
+};
+
+AMCRoutes.displayName = 'AMCRoutes';
+
+export { AMCRoutes, AMCRoutesProps };
+undefined.displayName = 'undefined';

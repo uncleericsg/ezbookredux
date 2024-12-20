@@ -1,0 +1,93 @@
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { createPaymentIntent, confirmPayment } from '../services/stripe';
+
+export interface PaymentOptions;
+export interface PaymentResult;
+export interface PaymentError;
+export interface UsePaymentReturn;
+
+interface PaymentOptions {
+  currency?: string;
+  description?: string;
+  metadata?: Record<string, string>;
+}
+
+interface PaymentResult {
+  paymentIntent: {
+    id: string;
+    status: string;
+    amount: number;
+    currency: string;
+    created: number;
+    metadata: Record<string, string>;
+  };
+}
+
+interface PaymentError {
+  message: string;
+}
+
+interface UsePaymentReturn {
+  loading: boolean;
+  error: string | null;
+  processPayment: (amount: number, options?: PaymentOptions) => Promise<PaymentResult>;
+}
+
+export function usePayment(): UsePaymentReturn {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const processPayment = async (
+    amount: number,
+    options: PaymentOptions = {}
+  ): Promise<PaymentResult> => {
+    if (amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { clientSecret } = await createPaymentIntent(
+        amount,
+        options.currency || 'sgd',
+        {
+          description: options.description,
+          metadata: options.metadata,
+        }
+      );
+
+      if (!clientSecret) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      const result = await confirmPayment(clientSecret);
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      toast.success('Payment processed successfully');
+      return result.paymentIntent;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Payment failed';
+      setError(message);
+      toast.error(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    error,
+    processPayment,
+  };
+}
+
+export type { PaymentOptions, PaymentResult, PaymentError };
+export default usePayment;

@@ -1,0 +1,151 @@
+import { addDays, startOfDay, format, isSameDay, addMonths } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
+
+
+import { fetchAvailableSlots, fetchBlockedTimes } from '../services/apiService';
+import { fetchNearbyBookings, determineRegion } from '../services/locations/regions';
+import { fetchServiceReports } from '../services/repairShopr';
+
+import { useHolidayList } from './useHolidayList';
+import { useToast } from './useToast';
+import { useUserRedux } from './useUserRedux';
+
+export interface Appointment;
+export interface NearbyBooking;
+export interface UseAppointmentSuggestionsReturn;
+
+
+
+
+
+
+
+
+
+
+
+
+
+interface Appointment {
+  date: string;
+  time: string;
+  status: string;
+}
+
+interface NearbyBooking {
+  date: string;
+  time: string;
+  distance: number;
+}
+
+interface UseAppointmentSuggestionsReturn {
+  suggestedDate: Date | null;
+  suggestedTimeSlots: string[];
+  loading: boolean;
+  nearbyAppointments: NearbyBooking[];
+}
+
+export function useAppointmentSuggestions(): UseAppointmentSuggestionsReturn {
+  const { user } = useUserRedux();
+  const { holidays } = useHolidayList();
+  const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
+  const [suggestedTimeSlots, setSuggestedTimeSlots] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [nearbyAppointments, setNearbyAppointments] = useState<NearbyBooking[]>([]);
+  const toast = useToast();
+
+  const getSuggestions = useCallback(async () => {
+    if (!user?.id || !user?.lastName || !user?.address) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const isAmcCustomer = user.lastName.toLowerCase().includes('amc');
+      const intervalDays = isAmcCustomer ? 75 : 90;
+
+      // Get blocked times for the next 120 days
+      const today = startOfDay(new Date());
+      const endDate = addDays(today, 100);
+      const blockedTimes = await fetchBlockedTimes(today, endDate);
+
+      // Get last service date and nearby bookings
+      const [reports, nearbyBookings] = await Promise.all([
+        fetchServiceReports(user.id),
+        fetchNearbyBookings(user.address)
+      ]);
+
+      // Find last service date
+      const lastService = reports[0];
+      const lastServiceDate = lastService ? new Date(lastService.date) : null;
+      const nextDate = lastServiceDate ? addMonths(lastServiceDate, 3) : today;
+      const baseDate = nextDate < today ? today : nextDate;
+
+      // Get available slots for each day
+      const availableSlots = new Map<string, string[]>();
+      let currentDate = baseDate;
+
+      while (currentDate <= endDate) {
+        if (!holidays.some(h => isSameDay(new Date(h.date), currentDate))) {
+          const dateStr = format(currentDate, 'yyyy-MM-dd');
+          const slots = await fetchAvailableSlots(dateStr);
+          
+          // Filter out blocked times
+          const filteredSlots = slots.filter(slot => {
+            const slotTime = new Date(`${dateStr}T${slot}`);
+            return !blockedTimes.some(block => {
+              const blockStart = new Date(block.start);
+              const blockEnd = new Date(block.end);
+              return slotTime >= blockStart && slotTime <= blockEnd;
+            });
+          });
+
+          if (filteredSlots.length > 0) {
+            availableSlots.set(dateStr, filteredSlots);
+          }
+        }
+        currentDate = addDays(currentDate, 1);
+      }
+
+      // Sort dates by nearby appointment count
+      const sortedDates = Array.from(availableSlots.keys()).sort((a, b) => {
+        const aDate = new Date(a);
+        const bDate = new Date(b);
+        const aNearbyCount = nearbyBookings.filter(booking => 
+          isSameDay(new Date(booking.date), aDate)
+        ).length;
+        const bNearbyCount = nearbyBookings.filter(booking => 
+          isSameDay(new Date(booking.date), bDate)
+        ).length;
+        return aNearbyCount - bNearbyCount;
+      });
+
+      if (sortedDates.length > 0) {
+        const bestDate = sortedDates[0];
+        setSuggestedDate(new Date(bestDate));
+        setSuggestedTimeSlots(availableSlots.get(bestDate) || []);
+        setNearbyAppointments(nearbyBookings);
+      } else {
+        toast.showError('No available appointment slots found');
+      }
+    } catch (error) {
+      console.error('Failed to get appointment suggestions:', error);
+      toast.showError('Failed to get appointment suggestions');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, user?.lastName, user?.address, holidays, toast]);
+
+  useEffect(() => {
+    getSuggestions();
+  }, [getSuggestions]);
+
+  return {
+    suggestedDate,
+    suggestedTimeSlots,
+    loading,
+    nearbyAppointments
+  };
+}
+undefined.displayName = 'undefined';

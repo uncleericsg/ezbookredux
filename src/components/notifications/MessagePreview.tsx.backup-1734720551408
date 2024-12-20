@@ -1,0 +1,185 @@
+'use client';
+
+import { Badge } from '@components/atoms/badge';
+import { Button } from '@components/atoms/button';
+import { Skeleton } from '@components/atoms/skeleton';
+import { Card, CardContent, CardHeader, CardFooter } from '@components/molecules/card';
+import { Toast } from '@components/molecules/toast';
+import { motion } from 'framer-motion';
+import { ExternalLink, X, Copy, AlertTriangle, Check, MessageSquare } from 'lucide-react';
+import type { FC } from 'react';
+import React, { useCallback, useState } from 'react';
+import { toast } from 'sonner';
+
+import { messageTemplates } from './data/messageTemplates';
+import { useProcessedMessage, useCharacterCount } from './hooks/useMessageProcessing';
+import type { MessageTemplate } from './types/messageTypes';
+import { MESSAGE_LIMITS } from './types/messageTypes';
+
+export interface MessagePreviewProps;
+
+
+interface MessagePreviewProps {
+  message: MessageTemplate;
+  previewData?: Record<string, string>;
+  onClose: () => void;
+  onTemplateSelect?: (template: MessageTemplate) => void;
+  isLoading?: boolean;
+  className?: string;
+};
+
+MessagePreview.displayName = 'MessagePreview';
+const MessagePreview: FC<MessagePreviewProps> = ({
+  message,
+  previewData = {
+    first_name: '',
+  },
+  onClose,
+  onTemplateSelect,
+  isLoading = false,
+  className,
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const processedContent = useProcessedMessage(message?.content ?? '', previewData);
+  const characterCount = useCharacterCount(processedContent);
+  const messageType = message?.type ?? 'default';
+  const characterLimit = MESSAGE_LIMITS[messageType] ?? MESSAGE_LIMITS.default;
+  const isOverLimit = characterCount > characterLimit;
+
+  const handleCopy = useCallback(async () => {
+    if (!processedContent) return;
+
+    try {
+      const isClipboardAvailable = 
+        typeof globalThis !== 'undefined' && 
+        'navigator' in globalThis && 
+        'clipboard' in globalThis.navigator;
+
+      if (isClipboardAvailable) {
+        await globalThis.navigator.clipboard.writeText(processedContent);
+        setCopied(true);
+        toast.success('Message copied to clipboard');
+        
+        const timeoutId = globalThis.setTimeout(() => setCopied(false), 2000);
+        return () => globalThis.clearTimeout(timeoutId);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // eslint-disable-next-line no-console
+      globalThis.console.error('Failed to copy message:', errorMessage);
+      toast.error('Failed to copy message');
+    }
+  }, [processedContent]);
+
+  const handleTemplateSelect = useCallback((template: MessageTemplate) => {
+    if (!template) return;
+    onTemplateSelect?.(template);
+    toast.success('Template applied successfully');
+  }, [onTemplateSelect]);
+
+  if (isLoading) {
+    return (
+      <Card className={`w-full max-w-2xl mx-auto animate-pulse ${className || ''}`}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Skeleton className="h-6 w-1/4" />
+          <Skeleton className="h-9 w-24" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-24 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      className={`space-y-4 ${className || ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <Card className="w-full">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Message Preview</h3>
+            <Badge variant={isOverLimit ? 'destructive' : 'success'}>
+              {characterCount} / {characterLimit}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="gap-2"
+              disabled={isOverLimit || !processedContent}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </>
+              )}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <MessageSquare className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h3 className="font-medium">Message Preview</h3>
+                <div className="rounded-md bg-muted p-4">
+                  <p className="text-sm whitespace-pre-wrap">{processedContent}</p>
+                </div>
+              </div>
+            </div>
+            {isOverLimit && (
+              <Toast variant="destructive" className="mt-4 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Message exceeds character limit
+              </Toast>
+            )}
+          </div>
+        </CardContent>
+        {messageTemplates?.length > 0 && (
+          <CardFooter className="flex flex-col gap-2">
+            <h4 className="text-sm font-medium">Suggested Templates</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {messageTemplates.map((template) => (
+                <Button
+                  key={template.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleTemplateSelect(template)}
+                  className="justify-start gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {template.name}
+                </Button>
+              ))}
+            </div>
+          </CardFooter>
+        )}
+      </Card>
+    </motion.div>
+  );
+};
+
+export { MessagePreview };
+undefined.displayName = 'undefined';

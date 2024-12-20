@@ -1,0 +1,106 @@
+'use client';
+
+import { Button, Tooltip, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import { Calendar } from 'lucide-react';
+import React from 'react';
+
+import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
+import { useNotifications } from '@/hooks/useNotifications';
+import { SupabaseBookingService } from '@/services/supabaseBookingService';
+import { Booking } from '@/types/booking';
+import { isAtLeast24HoursAhead, formatTimeUntil } from '@/utils/dateUtils';
+
+export type RescheduleButtonProps;
+
+
+
+
+
+// Export types at the top
+
+  onRescheduleSuccess?: () => void;
+};
+
+// Component declaration as const
+const RescheduleButton = ({
+  booking,
+  onRescheduleSuccess
+}: RescheduleButtonProps) => {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const bookingService = new SupabaseBookingService();
+  const { addNotification } = useNotifications();
+  
+  const canReschedule = isAtLeast24HoursAhead(booking.scheduledDate);
+  const timeUntilBooking = formatTimeUntil(booking.scheduledDate);
+
+  const handleReschedule = async (newSlotId: string) => {
+    try {
+      setIsLoading(true);
+      await bookingService.rescheduleBooking(booking.id, newSlotId);
+      addNotification({
+        type: 'success',
+        message: 'Booking rescheduled successfully',
+        duration: 5000
+      });
+      setIsDialogOpen(false);
+      onRescheduleSuccess?.();
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        message: 'Failed to reschedule booking. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Tooltip title={
+        canReschedule
+          ? 'Reschedule your booking'
+          : `Cannot reschedule - Bookings can only be rescheduled at least 24 hours in advance (${timeUntilBooking} until booking)`
+      }>
+        <span>
+          <Button
+            variant="outlined"
+            startIcon={<Calendar className="h-5 w-5" />}
+            onClick={() => setIsDialogOpen(true)}
+            disabled={!canReschedule || isLoading}
+            className="w-full sm:w-auto"
+          >
+            Reschedule
+          </Button>
+        </span>
+      </Tooltip>
+      <Dialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Reschedule Booking
+        </DialogTitle>
+        <DialogContent>
+          <TimeSlotPicker
+            currentBooking={booking}
+            onSlotSelect={handleReschedule}
+            isLoading={isLoading}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+// Add displayName
+RescheduleButton.displayName = 'RescheduleButton';
+
+// Both named and default exports at the bottom
+export { RescheduleButton };
+
+
+undefined.displayName = 'undefined';

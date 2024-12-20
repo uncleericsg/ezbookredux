@@ -1,0 +1,178 @@
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { toast } from 'sonner';
+
+import { useUsers } from './useUsers';
+
+import type { User } from '../types';
+
+export interface SortConfig;
+export interface UseUserTableResult;
+
+export interface SortConfig;
+export interface UseUserTableResult;
+
+export interface SortConfig;
+export interface UseUserTableResult;
+
+
+export interface SortConfig {
+  key: keyof User;
+  direction: 'asc' | 'desc';
+}
+
+export interface UseUserTableResult {
+  users: User[];
+  loading: boolean;
+  error: unknown;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  searchTerm: string;
+  setSearchTerm: (searchTerm: string) => void;
+  handlePageChange: (page: number) => void;
+  handleItemsPerPageChange: (items: number) => void;
+  handleDeactivate: (userId: string) => Promise<void>;
+  editingUser: User | null;
+  editForm: Partial<User>;
+  handleEditUser: (user: User) => void;
+  handleCancelEdit: () => void;
+  sortedUsers: User[];
+  sortConfig: SortConfig | null;
+  handleSort: (key: keyof User) => void;
+  filterUsers: (users: User[], searchTerm: string) => User[];
+}
+
+export const useUserTable = (): UseUserTableResult => {
+  const { users, loading, error, deactivateUser } = useUsers();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<Partial<User>>({});
+  const deactivationInProgress = useRef(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  const sortUsers = useCallback((users: User[], config: SortConfig | null): User[] => {
+    if (!config) return users;
+
+    return [...users].sort((a, b) => {
+      const aValue = a[config.key];
+      const bValue = b[config.key];
+
+      if (aValue === null) return config.direction === 'asc' ? 1 : -1;
+      if (bValue === null) return config.direction === 'asc' ? -1 : 1;
+
+      if (aValue < bValue) return config.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return config.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, []);
+
+  const handleSort = useCallback((key: keyof User) => {
+    setSortConfig((currentConfig) => {
+      if (!currentConfig || currentConfig.key !== key) {
+        return { key, direction: 'asc' };
+      }
+
+      if (currentConfig.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+
+      return null;
+    });
+  }, []);
+
+  const filterUsers = useCallback((users: User[], searchTerm: string): User[] => {
+    if (!searchTerm) return users;
+
+    const lowercaseSearch = searchTerm.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.firstName.toLowerCase().includes(lowercaseSearch) ||
+        user.lastName.toLowerCase().includes(lowercaseSearch) ||
+        user.email.toLowerCase().includes(lowercaseSearch)
+    );
+  }, []);
+
+  const sortedUsers = useMemo(() => sortUsers(users, sortConfig), [users, sortConfig, sortUsers]);
+  
+  const paginatedUsers = useMemo(() => {
+    const filteredUsers = filterUsers(sortedUsers, searchTerm);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedUsers, searchTerm, currentPage, itemsPerPage, filterUsers]);
+  
+  const totalPages = useMemo(() => 
+    Math.ceil(filterUsers(sortedUsers, searchTerm).length / itemsPerPage),
+    [sortedUsers, searchTerm, itemsPerPage, filterUsers]
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    },
+    [totalPages]
+  );
+
+  const handleItemsPerPageChange = useCallback((items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  }, []);
+
+  const handleDeactivate = useCallback(
+    async (userId: string) => {
+      if (deactivationInProgress.current) {
+        return;
+      }
+      try {
+        deactivationInProgress.current = true;
+        await deactivateUser(userId);
+        toast.success('User deactivated successfully');
+      } catch (error) {
+        toast.error('Failed to deactivate user');
+      } finally {
+        deactivationInProgress.current = false;
+      }
+    },
+    [deactivateUser]
+  );
+
+  const handleEditUser = useCallback((user: User) => {
+    setEditingUser(user);
+    setEditForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role
+    });
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingUser(null);
+    setEditForm({});
+  }, []);
+
+  return {
+    users: paginatedUsers,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    searchTerm,
+    setSearchTerm,
+    handlePageChange,
+    handleItemsPerPageChange,
+    handleDeactivate,
+    editingUser,
+    editForm,
+    handleEditUser,
+    handleCancelEdit,
+    sortedUsers,
+    sortConfig,
+    handleSort,
+    filterUsers
+  };
+};

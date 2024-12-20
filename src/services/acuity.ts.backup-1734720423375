@@ -1,0 +1,131 @@
+import axios from 'axios';
+import { addMinutes } from 'date-fns';
+
+import { BUSINESS_RULES } from '../constants/businessRules';
+import { BookingError } from '../utils/errors';
+import { validateSlotAllocation } from '../utils/validation';
+
+import type { ServiceCategory, TimeSlot } from '../types';
+
+export interface BookingDetails;
+export interface ExistingBooking;
+
+export interface BookingDetails;
+export interface ExistingBooking;
+
+export interface BookingDetails;
+export interface ExistingBooking;
+
+export interface BookingDetails {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  categoryId: string;
+  notes?: string;
+  address?: string;
+}
+
+export interface ExistingBooking {
+  id: string;
+  datetime: string;
+  type: ServiceCategory;
+}
+
+/**
+ * Fetches existing bookings for a given date
+ * @param date The date to fetch bookings for
+ * @returns Array of existing bookings
+ */
+export async function getExistingBookings(date: Date): Promise<ExistingBooking[]> {
+  if (import.meta.env.DEV) {
+    return [
+      {
+        id: 'mock-1',
+        datetime: new Date().toISOString(),
+        type: 'repair'
+      },
+      {
+        id: 'mock-2',
+        datetime: addMinutes(new Date(), 60).toISOString(),
+        type: 'maintenance'
+      }
+    ];
+  }
+
+  try {
+    const response = await axios.get('/api/bookings', {
+      params: { date: date.toISOString() }
+    });
+    return response.data;
+  } catch (error) {
+    // Log error and return empty array
+    return [];
+  }
+}
+
+/**
+ * Creates a new booking
+ * @param datetime The date and time of the booking
+ * @param details The booking details
+ * @returns The booking ID
+ */
+export async function createBooking(
+  datetime: string,
+  details: BookingDetails
+): Promise<string> {
+  if (import.meta.env.DEV) {
+    return new Promise(resolve => {
+      globalThis.setTimeout(() => resolve('mock-booking-id'), 1000);
+    });
+  }
+
+  try {
+    const response = await axios.post('/api/bookings', {
+      datetime,
+      ...details
+    });
+    return response.data.id;
+  } catch (error) {
+    throw new BookingError('Failed to book appointment');
+  }
+}
+
+/**
+ * Fetches available time slots for a given date
+ * @param date The date to fetch slots for
+ * @returns Array of available time slots
+ */
+export async function getAvailableSlots(date: Date): Promise<TimeSlot[]> {
+  if (import.meta.env.DEV) {
+    return new Promise(resolve => {
+      globalThis.setTimeout(() => {
+        const slots: TimeSlot[] = [];
+        const startHour = 9;
+        const endHour = 17;
+
+        for (let hour = startHour; hour < endHour; hour++) {
+          slots.push({
+            time: `${hour.toString().padStart(2, '0')}:00`,
+            available: Math.random() > 0.3
+          });
+        }
+        resolve(slots);
+      }, 1000);
+    });
+  }
+
+  try {
+    const existingBookings = await getExistingBookings(date);
+    const response = await axios.get('/api/slots', {
+      params: { date: date.toISOString() }
+    });
+    const slots = response.data;
+    return validateSlotAllocation(slots, existingBookings, BUSINESS_RULES);
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      return [];
+    }
+    throw error;
+  }
+}

@@ -1,0 +1,103 @@
+import { Shield, CheckCircle, Loader2 } from 'lucide-react';
+import React from 'react';
+
+import type { AMCPackage } from '../types';
+
+export interface AMCPackageCardProps;
+
+export interface AMCPackageCardProps;
+
+export interface AMCPackageCardProps;
+
+/**
+ * Displays AMC package details with pricing and features
+ *
+ * @component AMCPackageCard
+ * @description A React component for the iAircon Easy Booking system
+ *
+ * @example
+ * ```tsx
+ * import { AMCPackageCard } from './components';
+ * <AMCPackageCard
+ *   package={amcPackage}
+ *   onSelect={handleSelect}
+ *   isSelected={selected}
+ *   recommended={true}
+ * />
+ * ```
+ */
+
+interface AMCPackageCardProps extends React.ComponentPropsWithoutRef<'div'> {
+  package: AMCPackage;
+  /** 
+   * Callback when a package is selected
+   * @param selectedId - The ID of the selected package
+   */
+  // eslint-disable-next-line no-unused-vars
+  onSelect?: (selectedId: string) => void;
+  isSelected?: boolean;
+  recommended?: boolean;
+  loading?: boolean;
+}
+
+const AMCPackageCard: React.FC<AMCPackageCardProps> = ({
+  package: amcPackage,
+  onSelect,
+  isSelected = false,
+  recommended = false,
+  loading = false,
+  ...props
+}) => {
+  const handleSelect = () => {
+    if (onSelect && !loading) {
+      onSelect(amcPackage.id);
+    }
+  };
+
+  return (
+    <div
+      className={`relative p-6 rounded-lg border transition-all cursor-pointer hover:border-primary/50 ${
+        isSelected ? 'border-primary bg-primary/10' : 'border-gray-700 bg-gray-800'
+      }`}
+      onClick={handleSelect}
+      {...props}
+    >
+      {loading && (
+        <div className="absolute inset-0 bg-gray-900/50 rounded-lg flex items-center justify-center">
+          <Loader2 className="animate-spin text-primary" />
+        </div>
+      )}
+      {recommended && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-4 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          Recommended
+        </div>
+      )}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-xl font-semibold">{amcPackage.name}</h3>
+          <p className="text-gray-400">{amcPackage.description}</p>
+        </div>
+        <div>
+          <div className="text-3xl font-bold">
+            ${amcPackage.price}
+            <span className="text-lg font-normal text-gray-400">/year</span>
+          </div>
+          <p className="text-sm text-gray-400">Billed annually</p>
+        </div>
+        <ul className="space-y-2">
+          {amcPackage.features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+AMCPackageCard.displayName = 'AMCPackageCard';
+
+export { AMCPackageCard, AMCPackageCardProps };

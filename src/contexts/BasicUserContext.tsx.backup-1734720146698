@@ -1,0 +1,87 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import { authenticateUser } from '../services/auth';
+import type { User } from '../types';
+
+export interface UserContextType { {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+}
+
+export interface UserProviderProps { {
+  children: React.ReactNode;
+}
+
+const BasicUserContext = createContext<UserContextType | undefined>(undefined);
+
+export const BasicUserProvider: React.FC<UserProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const storedUser = localStorage.getItem('userData');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+        }
+      } catch (err) {
+        console.error('Error checking auth: ', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const userData = await authenticateUser(email, password);
+      setUser(userData);
+      localStorage.setItem('userData', JSON.stringify(userData));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      localStorage.removeItem('userData');
+      setUser(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Logout failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <BasicUserContext.Provider value={{ user, loading, error, login, logout }}>
+      {children}
+    </BasicUserContext.Provider>
+  );
+};
+
+export const useBasicUser = (): UserContextType => {
+  const context = useContext(BasicUserContext);
+  if (context === undefined) {
+    throw new Error('useBasicUser must be used within a BasicUserProvider');
+  }
+  return context;
+};
+
+export default BasicUserContext;

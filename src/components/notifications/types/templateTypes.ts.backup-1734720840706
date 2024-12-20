@@ -1,0 +1,49 @@
+import React from 'react';
+
+import { z } from 'zod';
+;
+  readonly _enhanced?: boolean;
+  validation?: {;
+    isValid: boolean;, errors: any;,
+    warnings: };
+  analytics?: {;
+    impressions: number;, clicks: any;,
+    conversions: };
+  preview?: {;
+    mode: any;,
+    sampleData: Record<string, string>;
+    characterLimit: };
+;
+  id;
+  features: z.object({ ,_enhanced;
+    validation: z.object({ ,isValid;
+    analytics: z.object({ ,impressions;
+    preview: z.object({ ,mode;
+  }).optional();
+  field: string;, message: any;,
+  code: string;, valid: any;,
+  errors: any;,
+;
+  version: string;, content: any;,
+  modifiedBy: string;, modifiedAt: any;,
+  comment?: string;
+;
+const templateTypes.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+// Type exports;
+const templateTypes: any;,
+  return null
+};
+;
+// Additional exports;
+{ templateTypes };
+;
+{ templateTypes };
+;
+export { templateTypes };
+export default templateTypes;
+
+undefined.displayName = 'undefined';

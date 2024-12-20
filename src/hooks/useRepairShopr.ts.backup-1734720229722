@@ -1,0 +1,95 @@
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
+
+import type { Ticket, Customer } from '../types';
+
+export interface RepairShoprConfig;
+export interface RepairShoprHook;
+
+interface RepairShoprConfig {
+  apiKey: string;
+  subdomain: string;
+}
+
+interface RepairShoprHook {
+  createTicket: (ticket: Partial<Ticket>) => Promise<Ticket>;
+  createCustomer: (customer: Partial<Customer>) => Promise<Customer>;
+  loading: boolean;
+  error: Error | null;
+}
+
+export const useRepairShopr = (config: RepairShoprConfig): RepairShoprHook => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const baseUrl = `https://${config.subdomain}.repairshopr.com/api/v1`;
+
+  const handleRequest = useCallback(async <T>(
+    endpoint: string,
+    method: string,
+    data?: unknown
+  ): Promise<T> => {
+    try {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`
+        },
+        body: data ? JSON.stringify(data) : undefined
+      });
+
+      if (!response.ok) {
+        throw new Error(`RepairShopr API error: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to connect to RepairShopr';
+      throw new Error(message);
+    }
+  }, [baseUrl, config.apiKey]);
+
+  const createTicket = useCallback(async (ticket: Partial<Ticket>): Promise<Ticket> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await handleRequest<Ticket>('/tickets', 'POST', ticket);
+      toast.success('Ticket created successfully');
+      return result;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to create ticket');
+      setError(error);
+      toast.error(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [handleRequest]);
+
+  const createCustomer = useCallback(async (customer: Partial<Customer>): Promise<Customer> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await handleRequest<Customer>('/customers', 'POST', customer);
+      toast.success('Customer created successfully');
+      return result;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to create customer');
+      setError(error);
+      toast.error(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [handleRequest]);
+
+  return {
+    createTicket,
+    createCustomer,
+    loading,
+    error
+  };
+};

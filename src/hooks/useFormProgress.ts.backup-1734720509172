@@ -1,0 +1,90 @@
+import { useState, useEffect } from 'react';
+
+import { FormData } from './useFormValidation';
+
+export interface FieldWeight;
+export interface UseFormProgressReturn;
+
+
+
+
+
+
+
+
+
+
+  weight: number;
+}
+
+const FIELD_WEIGHTS: FieldWeight[] = [
+  { field: 'firstName', weight: 10 },
+  { field: 'mobile', weight: 15 },
+  { field: 'blockStreet', weight: 20 },
+  { field: 'postalCode', weight: 15 },
+  { field: 'floorUnit', weight: 10 }
+];
+
+const ESTIMATED_TIME_PER_FIELD = 15; // seconds
+
+interface UseFormProgressReturn {
+  progress: number;
+  estimatedTimeRemaining: number;
+  getProgressColor: () => string;
+  formatTimeRemaining: () => string;
+}
+
+export function useFormProgress(formData: FormData): UseFormProgressReturn {
+  const [progress, setProgress] = useState<number>(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number>(0);
+
+  useEffect(() => {
+    try {
+      let completedWeight = 0;
+      const totalWeight = FIELD_WEIGHTS.reduce((sum, { weight }) => sum + weight, 0);
+
+      FIELD_WEIGHTS.forEach(({ field, weight }) => {
+        if (formData[field] && formData[field].length > 0) {
+          completedWeight += weight;
+        }
+      });
+
+      const newProgress = Math.round((completedWeight / totalWeight) * 100);
+      setProgress(newProgress);
+
+      // Calculate estimated time remaining
+      const remainingFields = FIELD_WEIGHTS.filter(
+        ({ field }) => !formData[field] || formData[field].length === 0
+      ).length;
+
+      setEstimatedTimeRemaining(remainingFields * ESTIMATED_TIME_PER_FIELD);
+    } catch (error) {
+      console.error('Error calculating form progress:', error);
+      setProgress(0);
+      setEstimatedTimeRemaining(0);
+    }
+  }, [formData]);
+
+  const getProgressColor = () => {
+    if (progress < 33) return 'text-red-500';
+    if (progress < 66) return 'text-yellow-500';
+    return 'text-green-500';
+  };
+
+  const formatTimeRemaining = () => {
+    if (estimatedTimeRemaining === 0) return 'Complete!';
+    if (estimatedTimeRemaining < 60) {
+      return `About ${estimatedTimeRemaining} seconds`;
+    }
+    const minutes = Math.ceil(estimatedTimeRemaining / 60);
+    return `About ${minutes} minute${minutes > 1 ? 's' : ''}`;
+  };
+
+  return {
+    progress,
+    estimatedTimeRemaining,
+    getProgressColor,
+    formatTimeRemaining
+  };
+}
+undefined.displayName = 'undefined';

@@ -1,0 +1,68 @@
+import { ReactNode } from 'react';
+
+export interface CustomerInfo;
+export interface BookingData;
+export interface BookingStep;
+export interface BookingFlowProps;
+export interface QuickBookingPromptProps;
+export interface BookingFormState;
+export interface BookingValidationErrors;
+
+export interface CustomerInfo;
+export interface BookingData;
+export interface BookingStep;
+export interface BookingFlowProps;
+export interface QuickBookingPromptProps;
+export interface BookingFormState;
+export interface BookingValidationErrors;
+
+export interface CustomerInfo { {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile: string;
+  floorUnit: string;
+  blockStreet: string;
+  postalCode: string;
+  condoName?: string;
+  lobbyTower?: string;
+  specialInstructions?: string;
+}
+
+export interface BookingData { {
+  brands: string[];
+  issues: string[];
+  customerInfo: CustomerInfo;
+  otherIssue?: string;
+  scheduledDateTime?: Date;
+  scheduledTimeSlot?: string;
+}
+
+export interface BookingStep { {
+  id: string;
+  label: string;
+}
+
+export interface BookingFlowProps { {
+  children?: ReactNode;
+}
+
+export interface QuickBookingPromptProps { {
+  previousBooking: BookingData | null;
+  onQuickBook: () => void;
+  onClose: () => void;
+  isOpen: boolean;
+}
+
+export interface BookingFormState { {
+  currentStep: number;
+  bookingData: BookingData;
+  showQuickBooking: boolean;
+  previousBookingDetails: BookingData | null;
+  timeoutWarningOpen: boolean;
+  timeRemaining: number;
+}
+
+export interface BookingValidationErrors { {
+  [key: string]: string;
+}

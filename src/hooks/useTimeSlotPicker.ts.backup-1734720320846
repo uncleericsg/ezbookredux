@@ -1,0 +1,63 @@
+import { useState, useCallback } from 'react';
+
+import { bookingService } from '@/services/bookingService';
+import { TimeSlot } from '@/types/booking';
+
+export interface UseTimeSlotPickerProps;
+
+export interface UseTimeSlotPickerProps;
+
+export interface UseTimeSlotPickerProps {
+  onSlotSelect?: (slot: TimeSlot) => void;
+  initialDate?: Date;
+}
+
+export const useTimeSlotPicker = ({
+  onSlotSelect,
+  initialDate = new Date()
+}: UseTimeSlotPickerProps = {}) => {
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchAvailableSlots = useCallback(async (date: Date) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const slots = await bookingService.getAvailableTimeSlots(date);
+      setAvailableSlots(slots);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch time slots'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleDateChange = useCallback(async (date: Date) => {
+    setSelectedDate(date);
+    setSelectedSlot(null);
+    await fetchAvailableSlots(date);
+  }, [fetchAvailableSlots]);
+
+  const handleSlotSelect = useCallback((slot: TimeSlot) => {
+    setSelectedSlot(slot);
+    onSlotSelect?.(slot);
+  }, [onSlotSelect]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedSlot(null);
+  }, []);
+
+  return {
+    selectedDate,
+    selectedSlot,
+    availableSlots,
+    loading,
+    error,
+    handleDateChange,
+    handleSlotSelect,
+    clearSelection
+  };
+};

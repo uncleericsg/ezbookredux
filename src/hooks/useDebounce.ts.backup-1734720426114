@@ -1,0 +1,40 @@
+import { useEffect, useState } from 'react';
+
+export type of;
+
+export type of;
+
+export type of;
+
+/**
+ * A hook that debounces a value by delaying its update
+ * @template T The type of the value to debounce
+ * @param value The value to debounce
+ * @param delay The delay in milliseconds (default: 500ms)
+ * @returns The debounced value
+ * @example
+ * const [searchTerm, setSearchTerm] = useState('');
+ * const debouncedSearchTerm = useDebounce(searchTerm, 300);
+ */
+export function useDebounce<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    // Don't debounce if delay is 0
+    if (delay === 0) {
+      setDebouncedValue(value);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup timeout on value change or unmount
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}

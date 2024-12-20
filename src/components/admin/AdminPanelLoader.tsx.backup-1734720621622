@@ -1,0 +1,77 @@
+'use client';
+
+import { Box, CircularProgress, Alert, AlertTitle, Fade } from '@mui/material';
+import { type FC, type HTMLAttributes, Suspense, lazy } from 'react';
+
+import { useAppSelector } from '../../store';
+
+export type FC, type HTMLAttributes, Suspense, lazy } from 'react';
+
+export type HTMLAttributes;
+
+export type AdminPanelType;
+
+export interface AdminPanelLoaderProps;
+
+
+// Lazy load components with error boundaries
+const AdminPanels = {
+  services: lazy(() => import('./panels/ServiceManagement')),
+  users: lazy(() => import('./panels/UserManagement')),
+  settings: lazy(() => import('./panels/Settings')),
+  analytics: lazy(() => import('./panels/Analytics'))
+} as const;
+
+type AdminPanelType = keyof typeof AdminPanels;
+
+}
+
+const LoadingFallback = (
+  <Fade in timeout={200}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '200px',
+        width: '100%'
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  </Fade>
+);
+
+// Rename unused ErrorFallback to _ErrorFallback to satisfy eslint
+function _ErrorFallback({ error }: { error: Error }) {
+  return (
+    <Alert severity="error">
+      <AlertTitle>Error</AlertTitle>
+      {error.message}
+    </Alert>
+  );
+}
+
+export function AdminPanelLoader({ panel, ...props }: AdminPanelLoaderProps) {
+  const isLoading = useAppSelector((state) => state.admin.isLoading);
+
+  if (isLoading) {
+    return LoadingFallback;
+  }
+
+  const Panel = AdminPanels[panel];
+
+  return (
+    <div {...props}>
+      <Suspense fallback={LoadingFallback}>
+        <Panel />
+      </Suspense>
+    </div>
+  );
+};
+
+AdminPanelLoader.displayName = 'AdminPanelLoader';
+
+export type { AdminPanelType };
+
+undefined.displayName = 'undefined';

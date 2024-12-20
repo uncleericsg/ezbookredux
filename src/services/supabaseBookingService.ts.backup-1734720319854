@@ -1,0 +1,374 @@
+import { supabase } from '@/lib/supabase';
+import type {
+  Booking,
+  TimeSlot,
+  CustomerPreferences,
+  BookingService,
+  TimeSlotService,
+  CustomerPreferenceService,
+} from '@/types/booking';
+
+
+/**
+ * Supabase implementation of the booking service.
+ */
+export class SupabaseBookingService implements BookingService, TimeSlotService, CustomerPreferenceService {
+  /**
+   * Creates a new booking.
+   * @param booking Booking data without id and timestamps.
+   * @returns Created booking.
+   * @throws {Error} If booking creation fails.
+   */
+  public async createBooking(
+    booking: Omit<Booking, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<Booking> {
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([booking])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create booking: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Updates an existing booking.
+   * @param id Booking ID.
+   * @param booking Partial booking data to update.
+   * @returns Updated booking.
+   * @throws {Error} If booking update fails.
+   */
+  public async updateBooking(
+    id: string,
+    booking: Partial<Booking>
+  ): Promise<Booking> {
+    const { data, error } = await supabase
+      .from('bookings')
+      .update(booking)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update booking: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Gets a booking by ID.
+   * @param id Booking ID.
+   * @returns Booking data.
+   * @throws {Error} If booking retrieval fails.
+   */
+  public async getBooking(id: string): Promise<Booking> {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to get booking: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Cancels a booking.
+   * @param id Booking ID.
+   * @returns Cancelled booking.
+   * @throws {Error} If booking cancellation fails.
+   */
+  public async cancelBooking(id: string): Promise<Booking> {
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to cancel booking: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Gets all bookings for a user.
+   * @param userId User ID.
+   * @returns List of user's bookings.
+   * @throws {Error} If bookings retrieval fails.
+   */
+  public async getUserBookings(userId: string): Promise<Booking[]> {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('scheduled_datetime', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to get user bookings: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Reschedules a booking to a new time slot.
+   * @param bookingId Booking ID.
+   * @param newSlotId New time slot ID.
+   * @param isAdmin Whether the reschedule is done by an admin.
+   * @returns Rescheduled booking.
+   * @throws {Error} If booking reschedule fails.
+   */
+  public async rescheduleBooking(
+    bookingId: string,
+    newSlotId: string,
+    isAdmin = false
+  ): Promise<Booking> {
+    try {
+      const { error } = await supabase.rpc('reschedule_booking', {
+        p_booking_id: bookingId,
+        p_new_slot_id: newSlotId,
+        p_is_admin: isAdmin,
+      });
+
+      if (error) {
+        // Handle specific error messages
+        if (error.message.includes('24 hours')) {
+          throw new Error(
+            'Bookings can only be rescheduled at least 24 hours before the scheduled time'
+          );
+        }
+        throw error;
+      }
+
+      // Fetch and return the updated booking
+      const { data: updatedBooking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch updated booking: ${fetchError.message}`);
+      }
+
+      return updatedBooking;
+    } catch (error) {
+      console.error('Reschedule booking error: ', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Checks if a booking can be rescheduled.
+   * @param bookingId Booking ID.
+   * @returns Whether the booking can be rescheduled.
+   * @throws {Error} If booking check fails.
+   */
+  public async canReschedule(bookingId: string): Promise<boolean> {
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('scheduled_datetime, status')
+      .eq('id', bookingId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to check booking: ${error.message}`);
+    }
+
+    const scheduledDate = new Date(booking.scheduled_datetime);
+    const now = new Date();
+    const hoursDifference = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    return booking.status === 'confirmed' && hoursDifference >= 24;
+  }
+
+  /**
+   * Gets available time slots for a service area on a specific date.
+   * @param date Date to check.
+   * @param serviceAreaId Service area ID.
+   * @returns List of available time slots.
+   * @throws {Error} If time slots retrieval fails.
+   */
+  public async getAvailableSlots(
+    date: Date,
+    serviceAreaId: string
+  ): Promise<TimeSlot[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from('time_slots')
+      .select('*')
+      .eq('service_area_id', serviceAreaId)
+      .eq('status', 'available')
+      .gte('start_time', startOfDay.toISOString())
+      .lte('end_time', endOfDay.toISOString())
+      .lt('current_bookings', 'max_bookings');
+
+    if (error) {
+      throw new Error(`Failed to get available slots: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Reserves a time slot for a booking.
+   * @param slotId Time slot ID.
+   * @param bookingId Booking ID.
+   * @returns Whether the reservation was successful.
+   * @throws {Error} If slot reservation fails.
+   */
+  public async reserveSlot(
+    slotId: string,
+    bookingId: string
+  ): Promise<boolean> {
+    const { error } = await supabase.rpc('reserve_time_slot', {
+      p_slot_id: slotId,
+      p_booking_id: bookingId,
+    });
+
+    if (error) {
+      throw new Error(`Failed to reserve slot: ${error.message}`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Releases a reserved time slot.
+   * @param slotId Time slot ID.
+   * @returns Whether the release was successful.
+   * @throws {Error} If slot release fails.
+   */
+  public async releaseSlot(slotId: string): Promise<boolean> {
+    const { error } = await supabase.rpc('release_time_slot', {
+      p_slot_id: slotId,
+    });
+
+    if (error) {
+      throw new Error(`Failed to release slot: ${error.message}`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Blocks a time slot.
+   * @param slotId Time slot ID.
+   * @param reason Reason for blocking.
+   * @returns Whether the block was successful.
+   * @throws {Error} If slot blocking fails.
+   */
+  public async blockSlot(slotId: string, reason: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('time_slots')
+      .update({
+        status: 'blocked',
+        block_reason: reason,
+      })
+      .eq('id', slotId);
+
+    if (error) {
+      throw new Error(`Failed to block slot: ${error.message}`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Gets customer preferences.
+   * @param userId User ID.
+   * @returns Customer preferences.
+   * @throws {Error} If preferences retrieval fails.
+   */
+  public async getPreferences(userId: string): Promise<CustomerPreferences> {
+    const { data, error } = await supabase
+      .from('customer_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to get preferences: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Updates customer preferences.
+   * @param userId User ID.
+   * @param preferences Preferences to update.
+   * @returns Updated preferences.
+   * @throws {Error} If preferences update fails.
+   */
+  public async updatePreferences(
+    userId: string,
+    preferences: Partial<CustomerPreferences>
+  ): Promise<CustomerPreferences> {
+    const { data, error } = await supabase
+      .from('customer_preferences')
+      .upsert({
+        user_id: userId,
+        ...preferences,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update preferences: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Gets smart time slot suggestions based on user preferences.
+   * @param userId User ID.
+   * @returns List of suggested time slots.
+   * @throws {Error} If suggestions retrieval fails.
+   */
+  public async getSmartSuggestions(userId: string): Promise<TimeSlot[]> {
+    // Get user preferences
+    const { data: prefs } = await supabase
+      .from('customer_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (!prefs) {
+      return [];
+    }
+
+    // Get available slots matching preferences
+    const { data: slots, error } = await supabase
+      .from('time_slots')
+      .select('*')
+      .eq('status', 'available')
+      .lt('current_bookings', 'max_bookings')
+      .in('extract(dow from start_time)::text', prefs.preferred_days)
+      .order('start_time', { ascending: true })
+      .limit(5);
+
+    if (error) {
+      throw new Error(`Failed to get smart suggestions: ${error.message}`);
+    }
+
+    return slots;
+  }
+}

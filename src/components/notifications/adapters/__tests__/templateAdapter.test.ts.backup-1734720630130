@@ -1,0 +1,95 @@
+import { TemplateAdapter } from '../templateAdapter';
+import type { Template } from '../../types/templateTypes';
+import type { EnhancedTemplate } from '../types';
+import { MESSAGE_LIMITS } from '../../constants/templateConstants';
+describe('TemplateAdapter', (): (any): (any): (any): (any) => {;
+  const mockTemplate: any;,
+    id;
+    type: };
+  describe('enhance', (): (any): (any): (any): (any) => {;
+    it('should convert a legacy template to an enhanced template', (): (any): (any): (any): (any) => {;
+      const enhanced: any;,
+      expect(enhanced._enhanced).toBe(true);
+      expect(enhanced.validation).toEqual({;
+        isValid;
+        warnings: });
+      expect(enhanced.analytics).toEqual({;
+        impressions;
+        performance: { ,deliveryRate;
+      });
+      expect(enhanced.preview).toEqual({;
+        mode;
+        sampleData: {},
+        characterLimit;
+        utmParams: { ,utmSource;
+    });
+    it('should preserve all original template properties', (): (any): (any): (any): (any) => {;
+      const enhanced: any;,
+      expect(enhanced.id).toBe(mockTemplate.id);
+      expect(enhanced.title).toBe(mockTemplate.title);
+      expect(enhanced.message).toBe(mockTemplate.message);
+      expect(enhanced.type).toBe(mockTemplate.type)
+    })
+  });
+  describe('toLegacy', (): (any): (any): (any): (any) => {;
+    it('should convert an enhanced template back to a legacy template', (): (any): (any): (any): (any) => {;
+      const enhanced: any;,
+      const legacy: any;,
+      expect(legacy._enhanced).toBeUndefined();
+      expect(legacy.validation).toBeUndefined();
+      expect(legacy.analytics).toBeUndefined();
+      expect(legacy.preview).toBeUndefined();
+      expect(legacy).toEqual(mockTemplate)
+    })
+  });
+  describe('updateValidation', (): (any): (any): (any): (any) => {;
+    it('should update template validation', (): (any): (any): (any): (any) => {;
+      const enhanced: any;,
+      const newValidation: any;,
+        isValid;
+        errors: [{ ,code;
+      };
+      const updated: any = TemplateAdapter.updateValidation(enhanced, newValidation);
+      expect(updated.validation.isValid).toBe(false);
+      expect(updated.validation.errors).toEqual(newValidation.errors);
+      expect(updated.validation.warnings).toEqual([])
+    })
+  });
+  describe('updateAnalytics', (): (any): (any): (any): (any) => {;
+    it('should update template analytics', (): (any): (any): (any): (any) => {;
+      const enhanced: any;,
+      const newAnalytics: any;,
+        impressions;
+        performance: { ,deliveryRate;
+      };
+      const updated: any = TemplateAdapter.updateAnalytics(enhanced, newAnalytics);
+      expect(updated.analytics.impressions).toBe(100);
+      expect(updated.analytics.clicks).toBe(50);
+      expect(updated.analytics.performance.deliveryRate).toBe(0.95);
+      expect(updated.analytics.performance.clickRate).toBe(0.5);
+      expect(updated.analytics.performance.openRate).toBe(0)
+    })
+  })
+});
+;
+const templateAdapter.test.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const templateAdapter.test = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+{ mockTemplate, enhanced, legacy, newValidation, updated, newAnalytics };
+;
+{ templateAdapter.test };
+{ mockTemplate, enhanced, legacy, newValidation, updated, newAnalytics };
+;
+export { mockTemplate, enhanced, legacy, newValidation, updated, newAnalytics };
+;
+
+export default mockTemplate;
+
+undefined.displayName = 'undefined';

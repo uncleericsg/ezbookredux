@@ -1,0 +1,242 @@
+import axios from 'axios';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import type { ChatGPTSettings } from '../types/settings';
+
+interface RateLimiter {
+  tokens: number;
+  lastRefill: number;
+  maxTokens: number;
+  refillRate: number;
+}
+
+interface ChatGPTResponse {
+  text: string;
+  usage: {
+    total_tokens: number;
+  };
+}
+
+// Validation schemas
+const responseSchema = z.object({
+  text: z.string(),
+  usage: z.object({
+    total_tokens: z.number()
+  })
+});
+
+const settingsSchema = z.object({
+  apiKey: z.string(),
+  rateLimit: z.object({
+    maxRequests: z.number()
+  })
+});
+
+/**
+ * Client for interacting with ChatGPT API
+ */
+class ChatGPTClient {
+  private static instance: ChatGPTClient;
+  private readonly rateLimiter: RateLimiter;
+  private readonly API_ENDPOINT = import.meta.env.DEV ? '/api/chatgpt' : import.meta.env.VITE_CHATGPT_API_ENDPOINT;
+
+  private constructor() {
+    this.rateLimiter = {
+      tokens: 60,
+      lastRefill: Date.now(),
+      maxTokens: 60,
+      refillRate: 60000 // 1 minute
+    };
+  }
+
+  /**
+   * Get singleton instance
+   */
+  public static getInstance(): ChatGPTClient {
+    if (!ChatGPTClient.instance) {
+      ChatGPTClient.instance = new ChatGPTClient();
+    }
+    return ChatGPTClient.instance;
+  }
+
+  /**
+   * Validate ChatGPT settings
+   * @param settings Settings to validate
+   */
+  private async validateSettings(settings: ChatGPTSettings): Promise<void> {
+    try {
+      await settingsSchema.parseAsync(settings);
+    } catch (error) {
+      throw new Error('Invalid ChatGPT settings');
+    }
+  }
+
+  /**
+   * Check rate limit status
+   * @returns True if request is allowed
+   */
+  private async checkRateLimit(): Promise<boolean> {
+    const now = Date.now();
+    const timePassed = now - this.rateLimiter.lastRefill;
+    const tokensToAdd = Math.floor(timePassed / this.rateLimiter.refillRate) * this.rateLimiter.maxTokens;
+
+    if (tokensToAdd > 0) {
+      this.rateLimiter.tokens = Math.min(
+        this.rateLimiter.maxTokens,
+        this.rateLimiter.tokens + tokensToAdd
+      );
+      this.rateLimiter.lastRefill = now;
+    }
+
+    if (this.rateLimiter.tokens <= 0) {
+      return false;
+    }
+
+    this.rateLimiter.tokens--;
+    return true;
+  }
+
+  /**
+   * Generate response using ChatGPT
+   * @param prompt Input prompt
+   * @param settings ChatGPT settings
+   * @returns Generated response
+   */
+  public async generateResponse(
+    prompt: string,
+    settings: ChatGPTSettings
+  ): Promise<string> {
+    try {
+      await this.validateSettings(settings);
+
+      if (!settings.enabled) {
+        throw new Error('ChatGPT integration is not enabled');
+      }
+
+      if (!(await this.checkRateLimit())) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+
+      const response = await axios.post<ChatGPTResponse>(
+        `${this.API_ENDPOINT}/generate`,
+        {
+          prompt,
+          model: 'gpt-3.5-turbo'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${settings.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const validatedResponse = responseSchema.parse(response.data);
+      return validatedResponse.text;
+    } catch (error) {
+      console.error('ChatGPT API error:', error);
+      throw error;
+    }
+  }
+}
+
+const chatGPTClient = ChatGPTClient.getInstance();
+
+/**
+ * Client for interacting with ChatGPT API with default settings
+ */
+export const chatGPTService = {
+  generateHolidayGreeting: async (
+    holiday: string,
+    language = 'en'
+  ): Promise<string> => {
+    return chatGPTClient.generateHolidayGreeting(holiday, {
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      rateLimit: { maxRequests: 60 }
+    }, language);
+  },
+  
+  generateRatingResponse: async (
+    rating: number,
+    feedback: string
+  ): Promise<string> => {
+    return chatGPTClient.generateRatingResponse(rating, feedback, {
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      rateLimit: { maxRequests: 60 }
+    });
+  }
+};
+
+/**
+ * Generate a holiday greeting message
+ * @param holiday Holiday name
+ * @param settings ChatGPT settings
+ * @param language Target language
+ * @returns Generated greeting
+ */
+export async function generateHolidayGreeting(
+  holiday: string,
+  settings: ChatGPTSettings,
+  language = 'en'
+): Promise<string> {
+  if (import.meta.env.DEV) {
+    await new Promise<void>(resolve => {
+      globalThis.setTimeout(() => resolve(), 1000);
+    });
+    return `Happy ${holiday}! Our office will be closed. For emergencies, please contact 9187 4498.`;
+  }
+
+  try {
+    const prompt = `Generate a professional holiday greeting message for ${holiday}.
+      The message should:
+      - Be professional and concise
+      - Mention office closure
+      - Include emergency contact: 9187 4498
+      - Be concise (2-3 sentences)
+      ${language !== 'en' ? `- Provide translation in ${language}` : ''}`;
+
+    return await chatGPTClient.generateResponse(prompt, settings);
+  } catch (error) {
+    console.error('Failed to generate holiday greeting:', error);
+    toast.error('Failed to generate greeting message');
+    throw error;
+  }
+}
+
+/**
+ * Generate a response to a rating
+ * @param rating Rating value
+ * @param feedback User feedback
+ * @param settings ChatGPT settings
+ * @returns Generated response
+ */
+export async function generateRatingResponse(
+  rating: number,
+  feedback: string,
+  settings: ChatGPTSettings
+): Promise<string> {
+  if (import.meta.env.DEV) {
+    await new Promise<void>(resolve => {
+      globalThis.setTimeout(() => resolve(), 1000);
+    });
+    return `Thank you for your ${rating}-star rating! We're glad you enjoyed our service.`;
+  }
+
+  try {
+    const prompt = `Generate a personalized response to a ${rating}-star rating with the following feedback: "${feedback}".
+      The response should:
+      - Be grateful and professional
+      - Address specific points in their feedback
+      - If rating is 4-5 stars, encourage them to share on Google
+      - Be concise (2-3 sentences)`;
+
+    return await chatGPTClient.generateResponse(prompt, settings);
+  } catch (error) {
+    console.error('Failed to generate rating response:', error);
+    toast.error('Failed to generate response');
+    throw error;
+  }
+}
+
+export type { RateLimiter, ChatGPTResponse };

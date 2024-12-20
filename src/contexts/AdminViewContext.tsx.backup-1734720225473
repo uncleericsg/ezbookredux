@@ -1,0 +1,76 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+
+import type { UserViewType } from '../components/admin/AdminViewToggle';
+import { RootState } from '../store';
+
+export interface AdminViewContextType;
+export interface AdminViewProviderProps;
+
+export interface AdminViewContextType {
+  currentView: UserViewType;
+  setCurrentView: (view: UserViewType) => void;
+  isFeatureVisible: (feature: string) => boolean;
+  resetView: () => void;
+}
+
+export interface AdminViewProviderProps {
+  children: React.ReactNode;
+}
+
+const AdminViewContext = createContext<AdminViewContextType | undefined>(undefined);
+
+const useAdminView = (): AdminViewContextType => {
+  const context = useContext(AdminViewContext);
+  if (!context) {
+    throw new Error('useAdminView must be used within an AdminViewProvider');
+  }
+  return context;
+};
+
+const AdminViewProvider: React.FC<AdminViewProviderProps> = ({ children }) => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [currentView, setCurrentView] = useState<UserViewType>('non-user');
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      setCurrentView('admin');
+    } else if (user) {
+      setCurrentView('user');
+    } else {
+      setCurrentView('non-user');
+    }
+  }, [user]);
+
+  const isFeatureVisible = (feature: string): boolean => {
+    switch (currentView) {
+      case 'admin':
+        return true;
+      case 'user':
+        return ['dashboard', 'profile', 'bookings', 'support'].includes(feature);
+      case 'non-user':
+        return ['login', 'register', 'about', 'contact'].includes(feature);
+      default:
+        return false;
+    }
+  };
+
+  const resetView = () => {
+    setCurrentView('non-user');
+  };
+
+  const value: AdminViewContextType = {
+    currentView,
+    setCurrentView,
+    isFeatureVisible,
+    resetView
+  };
+
+  return (
+    <AdminViewContext.Provider value={value}>
+      {children}
+    </AdminViewContext.Provider>
+  );
+};
+
+export { AdminViewProvider, useAdminView };

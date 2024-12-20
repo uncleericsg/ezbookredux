@@ -1,0 +1,153 @@
+'use client';
+
+import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { logger } from '@/lib/logger';
+
+import { useUserRedux } from '../../hooks/useUserRedux';
+import { BookingSelectionModal } from '../modals/BookingSelectionModal';
+import ServicePricingSelection from '../ServicePricingSelection';
+
+import PaymentStep from './PaymentStep';
+import ReturnCustomerSchedule from './ReturnCustomerSchedule';
+
+import type { PricingOption, CustomerInfo } from '../../types/booking';
+
+/**
+ * ReturnCustomerBooking component handles the booking flow for returning customers
+ * Includes service selection, scheduling, and payment steps
+ */
+
+const ReturnCustomerBooking = () => {
+  const navigate = useNavigate();
+  const { user, savedLocations, savedDetails } = useUserRedux();
+
+  const [step, setStep] = useState<'service' | 'schedule' | 'payment'>('service');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<PricingOption | null>(null);
+  const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  const handlePriceSelection = async (service: PricingOption) => {
+    try {
+      setSelectedService(service);
+      logger.log('[DEBUG] ReturnCustomerBooking - Selected service updated');
+      setShowAuthModal(true);
+      logger.log('[DEBUG] ReturnCustomerBooking - Modal visibility set to true');
+    } catch (error) {
+      logger.error('[DEBUG] ReturnCustomerBooking - Error in price selection:', error);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowAuthModal(false);
+  };
+
+  const handleAuthSuccess = () => {
+    if (!selectedService) {
+      logger.error('ReturnCustomerBooking - No service selected');
+      return;
+    }
+
+    if (!savedDetails || !savedLocations || savedLocations.length === 0) {
+      logger.error('ReturnCustomerBooking - Missing saved details or locations');
+      return;
+    }
+
+    const defaultLocation = savedLocations.find((loc) => loc.default) || savedLocations[0];
+
+    const info: CustomerInfo = {
+      firstName: savedDetails.firstName,
+      lastName: savedDetails.lastName,
+      email: savedDetails.email,
+      phone: savedDetails.phone,
+      address: {
+        address: defaultLocation.address,
+        unit: defaultLocation.unit,
+        postalCode: defaultLocation.postalCode,
+        city: defaultLocation.city,
+        country: defaultLocation.country,
+      },
+    };
+
+    setCustomerInfo(info);
+    setStep('schedule');
+  };
+
+  const handleScheduleSelection = (date: Date, timeSlot: string) => {
+    setSelectedDateTime(date);
+    setSelectedTimeSlot(timeSlot);
+    setStep('payment');
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 'service':
+        return (
+          <ServicePricingSelection
+            onSelect={handlePriceSelection}
+            selectedService={selectedService}
+          />
+        );
+      case 'schedule':
+        return (
+          <ReturnCustomerSchedule
+            selectedService={selectedService!}
+            onScheduleSelect={handleScheduleSelection}
+          />
+        );
+      case 'payment':
+        return (
+          <PaymentStep
+            bookingData={{
+              service: selectedService!,
+              date: selectedDateTime!,
+              timeSlot: selectedTimeSlot,
+              customerInfo: customerInfo!,
+            }}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {renderStep()}
+        </motion.div>
+      </AnimatePresence>
+
+      <BookingSelectionModal
+        show={showAuthModal}
+        onClose={handleModalClose}
+        onSuccess={handleAuthSuccess}
+      />
+    </div>
+  );
+};
+
+ReturnCustomerBooking.displayName = 'ReturnCustomerBooking';
+
+export { ReturnCustomerBooking };
+
+
+undefined.displayName = 'undefined';

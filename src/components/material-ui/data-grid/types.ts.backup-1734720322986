@@ -1,0 +1,79 @@
+import { GridSortModel, GridFilterModel, GridSelectionModel } from '@mui/x-data-grid';
+
+export interface for;
+export interface DataGridState;
+export interface SortConfig;
+export interface FilterConfig;
+export interface DataGridStateProps;
+export interface DataGridResponse;
+
+export interface for;
+export interface DataGridState;
+export interface SortConfig;
+export interface FilterConfig;
+export interface DataGridStateProps;
+export interface DataGridResponse;
+
+/**
+ * State interface for the DataGrid component
+ */
+export interface DataGridState {
+  /** Current page number */
+  page: number;
+  /** Number of rows per page */
+  pageSize: number;
+  /** Current sort model */
+  sortModel: GridSortModel;
+  /** Current filter model */
+  filterModel: GridFilterModel;
+  /** Selected rows */
+  selectionModel: GridSelectionModel;
+  /** Total number of rows */
+  total?: number;
+}
+
+/**
+ * Sort configuration for a column
+ */
+export interface SortConfig {
+  /** Field to sort by */
+  field: string;
+  /** Sort direction */
+  sort: 'asc' | 'desc';
+}
+
+/**
+ * Filter configuration for a column
+ */
+export interface FilterConfig {
+  /** Field to filter by */
+  field: string;
+  /** Filter value */
+  value: string | number | boolean | null;
+  /** Filter operator */
+  operator: string;
+}
+
+/**
+ * Props for the DataGrid state management
+ */
+export interface DataGridStateProps {
+  /** Initial sort model */
+  sortModel?: GridSortModel;
+  /** Initial filter model */
+  filterModel?: GridFilterModel;
+}
+
+/**
+ * Response from the data grid query
+ */
+export interface DataGridResponse<T> {
+  /** Array of data items */
+  data: T[];
+  /** Total number of items */
+  total: number;
+  /** Current page number */
+  page: number;
+  /** Number of items per page */
+  pageSize: number;
+}

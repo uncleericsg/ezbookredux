@@ -1,0 +1,55 @@
+import React from 'react';
+import { z } from 'zod';
+// Environment variable schema;
+const envSchema = z.object({ 
+  VITE_ONEMAP_API_TOKEN;
+});
+// Default configuration;
+  API_URL;
+  ENDPOINTS: { ,SEARCH;
+  CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours;
+  RATE_LIMIT: { ,MAX_REQUESTS;
+// Validate environment variables;
+const validateEnv = (): z.infer<typeof envSchema> => {
+  try {
+    return envSchema.parse({ 
+      VITE_ONEMAP_API_TOKEN;
+  } catch (error) {
+    console.error('Environment validation failed: ', error);
+    throw new Error('Missing or invalid environment variables for OneMap API')
+  }
+};
+// Export validated configuration;
+  VITE_ONEMAP_API_URL;
+  ENDPOINTS: { ,SEARCH;
+  RATE_LIMIT: { ,MAX_REQUESTS;
+// Type definitions for OneMap API responses;
+  SEARCHVAL: string;, BLK_NO: string;
+  ,ROAD_NAME: string;, BUILDING: string;
+  ,ADDRESS: string;, POSTAL: string;
+  ,X: string;, Y: string;
+  ,LATITUDE: string;, LONGITUDE: string;
+
+  ,found: number;, totalNumPages: number;
+  ,pageNum: number;, results: OneMapSearchResult[];
+
+  ,error: string;, message: string;
+
+  return response && typeof response.error === 'string';
+
+const oneMapConfig.ts = () => {
+  return null
+};
+
+// Additional exports;
+const oneMapConfig = () => {
+  return null
+};
+
+// Additional exports;
+{ envSchema, validateEnv, oneMapConfig };
+
+{ oneMapConfig };
+{ envSchema, validateEnv };
+
+export { envSchema, validateEnv, oneMapConfig };

@@ -1,0 +1,349 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { Search, Calendar, Maximize2, Minimize2, Eye, Pencil } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Pagination } from '@/components/ui/Pagination';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/Table';
+import { cn } from '@/lib/utils';
+
+export interface ServiceRequest {
+  id: string;
+  customerName: string;
+  serviceType: string;
+  scheduledTime: Date;
+  location: string;
+  contactNumber?: string;
+  email?: string;
+  notes?: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  assignedTeam?: string;
+  bookingReference: string;
+  specialInstructions?: string;
+  address: {
+    blockStreet: string;
+    floorUnit: string;
+    postalCode: string;
+    condoName?: string;
+    lobbyTower?: string;
+  };
+}
+
+export interface ServiceQueueProps {
+  className?: string;
+  expanded?: boolean;
+  onExpand?: () => void;
+  onBlockContract?: (contractId: string, reason: string) => Promise<void>;
+  onUnblockContract?: (contractId: string) => Promise<void>;
+  onSendReminder?: (contractId: string) => Promise<void>;
+}
+
+const mockServiceRequests: ServiceRequest[] = [
+  {
+    id: '1',
+    customerName: 'John Doe',
+    serviceType: 'Regular Service',
+    scheduledTime: new Date(),
+    location: 'North',
+    contactNumber: '1234567890',
+    email: 'john@example.com',
+    status: 'pending',
+    bookingReference: 'REF-001',
+    address: {
+      blockStreet: '123 Main St',
+      floorUnit: '#12-34',
+      postalCode: '123456',
+      condoName: 'The Residence',
+      lobbyTower: 'Tower A',
+    },
+  },
+  {
+    id: '2',
+    customerName: 'Jane Smith',
+    serviceType: 'Emergency Service',
+    scheduledTime: new Date(),
+    location: 'South',
+    contactNumber: '0987654321',
+    email: 'jane@example.com',
+    status: 'in-progress',
+    bookingReference: 'REF-002',
+    address: {
+      blockStreet: '456 Oak St',
+      floorUnit: '#05-67',
+      postalCode: '654321',
+      condoName: 'The Gardens',
+      lobbyTower: 'Tower B',
+    },
+  },
+];
+
+export const ServiceQueue: React.FC<ServiceQueueProps> = ({
+  className,
+  expanded,
+  onExpand,
+  onBlockContract: _onBlockContract,
+  onUnblockContract: _onUnblockContract,
+  onSendReminder: _onSendReminder,
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const allServiceRequests = useMemo(() => mockServiceRequests, []);
+
+  const filteredRequests = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return allServiceRequests.filter((request) => {
+      const searchableFields = [
+        request.customerName,
+        request.email,
+        request.serviceType,
+        request.bookingReference,
+        request.location,
+      ];
+      return searchableFields.some(
+        (field) => field && field.toLowerCase().includes(query)
+      );
+    });
+  }, [allServiceRequests, searchQuery]);
+
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const paginatedRequests = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredRequests.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredRequests, currentPage]);
+
+  const stats = useMemo(() => {
+    const pending = filteredRequests.filter((request) => request.status === 'pending').length;
+    const inProgress = filteredRequests.filter(
+      (request) => request.status === 'in-progress'
+    ).length;
+    const completed = filteredRequests.filter((request) => request.status === 'completed').length;
+    return { pending, inProgress, completed };
+  }, [filteredRequests]);
+
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        // Close search suggestions if needed
+      }
+    };
+
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleViewRequest = (_request: ServiceRequest) => {
+    // TODO: Implement view request logic
+  };
+
+  const handleEditRequest = (_request: ServiceRequest) => {
+    // TODO: Implement edit request logic
+  };
+
+  return (
+    <div className={cn('relative', className)}>
+      {expanded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/50"
+          onClick={onExpand}
+        />
+      )}
+      <motion.div
+        layout
+        className={cn(
+          'relative overflow-hidden rounded-lg border bg-card',
+          expanded && 'fixed inset-4 z-50'
+        )}
+        initial={false}
+        animate={expanded ? 'expanded' : 'collapsed'}
+        variants={{
+          expanded: {
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.3 },
+          },
+          collapsed: {
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.3 },
+          },
+        }}
+      >
+        <div className="flex h-full flex-col">
+          {/* Header */}
+          <div className="border-b p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Service Queue</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onExpand}
+                className="ml-auto rounded-full"
+              >
+                {expanded ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 space-y-4 overflow-auto p-4">
+            {/* Stats */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
+                <p className="mt-1 text-2xl font-bold">{stats.pending}</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">In Progress</h3>
+                <p className="mt-1 text-2xl font-bold">{stats.inProgress}</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Completed</h3>
+                <p className="mt-1 text-2xl font-bold">{stats.completed}</p>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative" ref={searchRef}>
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Table */}
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Service Type</TableHead>
+                    <TableHead>Scheduled Time</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{request.customerName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {request.email}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{request.serviceType}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>
+                            {request.scheduledTime.toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            request.status === 'pending'
+                              ? 'secondary'
+                              : request.status === 'in-progress'
+                                ? 'default'
+                                : 'outline'
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            request.status === 'pending'
+                              ? 'destructive'
+                              : request.status === 'in-progress'
+                                ? 'secondary'
+                                : 'outline'
+                          }
+                        >
+                          {request.status === 'pending'
+                            ? 'High'
+                            : request.status === 'in-progress'
+                              ? 'Medium'
+                              : 'Low'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewRequest(request)}
+                            className="h-8 w-8"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditRequest(request)}
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default ServiceQueue;

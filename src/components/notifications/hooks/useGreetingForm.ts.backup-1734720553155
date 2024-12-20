@@ -1,0 +1,226 @@
+import React from 'react';
+
+;
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { greetingMessageSchema } from '../utils/holidayGreetings';
+
+export interface UseGreetingFormProps;
+
+export type FormData;
+
+
+  onSave: any;,
+  onGenerateAI?: () => Promise<string>
+};
+const formSchema: any;,
+  message: any;,
+    .min(1, 'Message is required');
+    .max(500, 'Message must be less than 500 characters')
+});
+type FormData = z.infer<typeof formSchema>;
+ onSave, onGenerateAI }: UseGreetingFormProps) {;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const form: any;,
+    resolver;
+    defaultValues: { ,message;
+  });
+  const { watch, setValue, formState } = form;
+  const message: any;,
+  useEffect((): (any): (any): (any): (any) => {;
+    const formErrors: any;,
+    const validationErrors: any;,
+    if (formErrors.message) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      validationErrors.push(formErrors.message.message || 'Message is required')
+    } else {
+  if (message.length === 0) {
+   {
+}
+   {
+}
+   {
+}
+}
+   {
+}
+      validationErrors.push('Message is required')
+    } else {
+  if (message.length > 500) {
+   {
+}
+   {
+}
+   {
+}
+}
+   {
+}
+      validationErrors.push('Message must be less than 500 characters')
+    };
+    setErrors(validationErrors)
+  }, [formState.errors, message]);
+  const setMessage: any = useCallback((newMessage: any;,
+    setValue('message', newMessage);
+    setUndoStack(prev => [...prev, message]);
+    setRedoStack([])
+  }, [setValue, message]);
+  // Auto-save draft;
+  useEffect((): (any): (any): (any): (any) => {;
+    const timeoutId: any;,
+      localStorage.setItem('greetingDraft', message)
+    }, 1000);
+    return () => clearTimeout(timeoutId)
+  }, [message]);
+  // Load draft on mount;
+  useEffect((): (any): (any): (any): (any) => {;
+    const draft: any;,
+    if (draft) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      setValue('message', draft)
+    }
+  }, [setValue]);
+  const handleSave: any = useCallback(async (data: any;,
+    try {;
+      setIsLoading(true);
+      setErrors([]);
+      await form.trigger('message');
+      if (form.formState.errors.message) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+        setErrors([form.formState.errors.message.message || 'Invalid message']);
+        return
+      };
+      await onSave(data.message);
+      localStorage.removeItem('greetingDraft')
+    } catch (error) {;
+      setErrors([error instanceof Error ? error.message: } finally {;
+      setIsLoading(false)
+    }
+  }, [onSave, form]);
+  const handleGenerateAI: any;,
+    if (!onGenerateAI) {
+   {
+}
+   {
+}
+   {
+}
+  return
+}
+    try {;
+      setIsGenerating(true);
+      setErrors([]);
+      if (message) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+        setUndoStack(prev => [...prev, message])
+      };
+      const generatedMessage: any;,
+      setValue('message', generatedMessage)
+    } catch (error) {;
+      setErrors([error instanceof Error ? error.message: } finally {;
+      setIsGenerating(false)
+    }
+  }, [onGenerateAI, setValue, message]);
+  const handleUndo: any;,
+    const lastMessage: any;,
+    if (lastMessage) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      setRedoStack(prev => [...prev, message]);
+      setUndoStack(prev => prev.slice(0, -1));
+      setValue('message', lastMessage)
+    }
+  }, [setValue, message, undoStack]);
+  const handleRedo: any;,
+    const lastMessage: any;,
+    if (lastMessage) {
+   {
+}
+   {
+}
+   {
+}
+   {
+}
+      setUndoStack(prev => [...prev, message]);
+      setRedoStack(prev => prev.slice(0, -1));
+      setValue('message', lastMessage)
+    }
+  }, [setValue, message, redoStack]);
+  const isValid: any;,
+  const isDirty: any;,
+  const characterCount: any;,
+  return {;
+    message,
+    setMessage,
+    isValid,
+    isDirty,
+    characterCount,
+    errors,
+    isLoading,
+    isGenerating,
+    canUndo;
+  };
+;
+const useGreetingForm.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+// Type exports;
+const useGreetingForm: any;,
+  return null
+};
+;
+// Additional exports;
+{ formSchema, form, message, formErrors, validationErrors, setMessage, timeoutId, draft, handleSave, handleGenerateAI, generatedMessage, handleUndo, lastMessage, handleRedo, isValid, isDirty, characterCount, useGreetingForm };
+;
+// Type exports;
+{ useGreetingForm };
+;
+;
+export type { UseGreetingFormProps, FormData };
+;
+export { formSchema, form, message, formErrors, validationErrors, setMessage, timeoutId, draft, handleSave, handleGenerateAI, generatedMessage, handleUndo, lastMessage, handleRedo, isValid, isDirty, characterCount, useGreetingForm };
+export default formSchema;
+
+undefined.displayName = 'undefined';

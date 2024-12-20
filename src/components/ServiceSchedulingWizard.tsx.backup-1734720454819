@@ -1,0 +1,146 @@
+import { format } from 'date-fns';
+import { CalendarIcon, Clock, MapPin, ArrowRight } from 'lucide-react';
+import type { HTMLAttributes , type FC, useState } from 'react';
+
+
+import { TimeSlotPicker } from '../components/TimeSlotPicker';
+import { useUser } from '../contexts/UserContext';
+import { useTimeSlots } from '../hooks/useTimeSlots';
+import { useToast } from '../hooks/useToast';
+
+import { DatePicker } from './Calendar';
+
+export type FC;
+export interface ServiceSchedulingWizardProps;
+
+export type FC;
+export interface ServiceSchedulingWizardProps;
+
+export type FC;
+export interface ServiceSchedulingWizardProps;
+
+export type FC;
+export interface ServiceSchedulingWizardProps;
+
+interface ServiceSchedulingWizardProps extends HTMLAttributes<HTMLDivElement> {
+  categoryId: string;
+  onComplete: (date: Date, time: string) => Promise<void>;
+  suggestedDate?: Date;
+  isAMC?: boolean;
+  price?: number;
+}
+
+const ServiceSchedulingWizard: FC<ServiceSchedulingWizardProps> = ({
+  categoryId,
+  onComplete,
+  suggestedDate,
+  isAMC,
+  price
+}) => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(suggestedDate || null);
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const { slots, loading: slotsLoading } = useTimeSlots(selectedDate, categoryId);
+  const { user } = useUser();
+  const toast = useToast();
+
+  const handleConfirm = async (): Promise<void> => {
+    if (!selectedDate || !selectedTime) {
+      toast.showError('Please select both date and time');
+      return;
+    }
+
+    try {
+      await onComplete(selectedDate, selectedTime);
+    } catch (error) {
+      toast.showError('Failed to schedule service');
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center space-x-2">
+              <CalendarIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
+              <span>Select Date</span>
+            </div>
+          </label>
+          <DatePicker
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            suggestedDate={suggestedDate}
+          />
+        </div>
+        {selectedDate && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                <span>Select Time</span>
+              </div>
+            </label>
+            <TimeSlotPicker
+              slots={slots}
+              selectedTime={selectedTime}
+              onTimeSelect={setSelectedTime}
+              loading={slotsLoading}
+              isAMC={isAMC}
+            />
+          </div>
+        )}
+      </div>
+      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold mb-6">Booking Summary</h3>
+        <div className="space-y-4">
+          {selectedDate && (
+            <div className="flex items-start space-x-3">
+              <CalendarIcon className="h-5 w-5 text-blue-400 mt-1" aria-hidden="true" />
+              <div>
+                <p className="text-sm text-gray-400">Date</p>
+                <p className="font-medium">{format(selectedDate, 'MMMM d, yyyy')}</p>
+              </div>
+            </div>
+          )}
+          {selectedTime && (
+            <div className="flex items-start space-x-3">
+              <Clock className="h-5 w-5 text-blue-400 mt-1" aria-hidden="true" />
+              <div>
+                <p className="text-sm text-gray-400">Time</p>
+                <p className="font-medium">
+                  {format(new Date(selectedTime), 'h:mm a')}
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-start space-x-3">
+            <MapPin className="h-5 w-5 text-blue-400 mt-1" aria-hidden="true" />
+            <div>
+              <p className="text-sm text-gray-400">Service Location</p>
+              <p className="font-medium">{user?.address || 'Your Registered Address'}</p>
+            </div>
+          </div>
+          {price && !isAMC && (
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <p className="text-sm text-gray-400">Service Fee</p>
+              <p className="text-2xl font-bold">${price}</p>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!selectedDate || !selectedTime}
+          className="w-full btn btn-primary mt-6 flex items-center justify-center space-x-2"
+          aria-label="Confirm booking"
+        >
+          <span>Confirm Booking</span>
+          <ArrowRight className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+};
+export { ServiceSchedulingWizardProps, FC };
+
+undefined.displayName = 'undefined';

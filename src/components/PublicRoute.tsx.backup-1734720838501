@@ -1,0 +1,43 @@
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Navigate, useLocation } from 'react-router-dom';
+
+import { RootState } from '../store';
+
+import { LoadingScreen } from './LoadingScreen';
+
+export interface PublicRouteProps;
+
+
+/**
+ * Route component for access
+ *
+ * @component PublicRoute
+ * @description A React component for the iAircon Easy Booking system
+ *
+ * @example
+ * import { PublicRoute } from './components';
+ * <PublicRoute />
+ */
+
+('use client');
+
+const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
+  const location = useLocation();
+  const { user, loading } = useSelector((state: RootState) => state);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+PublicRoute.displayName = 'PublicRoute';
+export { PublicRouteProps };
+
+undefined.displayName = 'undefined';

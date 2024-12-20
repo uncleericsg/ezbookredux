@@ -1,0 +1,197 @@
+import {
+  getAuth,
+  fetchSignInMethodsForEmail,
+  PhoneAuthProvider,
+  RecaptchaVerifier,
+  Auth,
+  ApplicationVerifier
+} from 'firebase/auth';
+import { z } from 'zod';
+
+export interface ValidationResult;
+export interface PhoneValidationResult;
+export interface OTPVerificationResult;
+
+export interface ValidationResult;
+export interface PhoneValidationResult;
+export interface OTPVerificationResult;
+
+export interface ValidationResult;
+export interface PhoneValidationResult;
+export interface OTPVerificationResult;
+
+export interface ValidationResult;
+export interface PhoneValidationResult;
+export interface OTPVerificationResult;
+
+// Validation Schemas
+const phoneSchema = z.string()
+  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format');
+
+const emailSchema = z.string()
+  .email('Invalid email format');
+
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+interface PhoneValidationResult extends ValidationResult {
+  verificationId?: string;
+}
+
+interface OTPVerificationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+/**
+ * Service for handling Firebase authentication validation
+ */
+export class FirebaseValidationService {
+  private auth: Auth;
+  private recaptchaVerifier: ApplicationVerifier | null = null;
+
+  constructor() {
+    this.auth = getAuth();
+  }
+
+  /**
+   * Initialize recaptcha verifier
+   * @param containerId HTML element ID for recaptcha container
+   * @returns RecaptchaVerifier instance
+   */
+  public initRecaptcha(containerId: string): ApplicationVerifier {
+    if (!this.recaptchaVerifier) {
+      this.recaptchaVerifier = new RecaptchaVerifier(this.auth, containerId, {
+        size: 'invisible',
+        callback: () => {},
+        'expired-callback': () => {}
+      });
+    }
+    return this.recaptchaVerifier;
+  }
+
+  /**
+   * Validate email format and check if it exists in Firebase
+   * @param email Email to validate
+   * @returns Validation result
+   */
+  public async validateEmail(email: string): Promise<ValidationResult> {
+    try {
+      // Validate email format
+      emailSchema.parse(email);
+
+      // Check if email exists in Firebase
+      const signInMethods = await fetchSignInMethodsForEmail(this.auth, email);
+      const exists = signInMethods.length > 0;
+
+      return {
+        isValid: !exists,
+        error: exists ? 'Email already exists' : undefined
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: error instanceof Error ? error.message : 'Invalid email'
+      };
+    }
+  }
+
+  /**
+   * Validate phone number format and send verification code
+   * @param phone Phone number to validate
+   * @returns Validation result with verification ID
+   */
+  public async validatePhone(phone: string): Promise<PhoneValidationResult> {
+    try {
+      // Validate phone format
+      phoneSchema.parse(phone);
+
+      if (!this.recaptchaVerifier) {
+        throw new Error('Recaptcha verifier not initialized');
+      }
+
+      // Format phone number
+      const formattedPhone = this.formatPhoneNumber(phone);
+
+      // Send verification code
+      const provider = new PhoneAuthProvider(this.auth);
+      const verificationId = await provider.verifyPhoneNumber(
+        formattedPhone,
+        this.recaptchaVerifier
+      );
+
+      return {
+        isValid: true,
+        verificationId
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: error instanceof Error ? error.message : 'Invalid phone number'
+      };
+    }
+  }
+
+  /**
+   * Format phone number to E.164 format
+   * @param phone Phone number to format
+   * @returns Formatted phone number
+   */
+  private formatPhoneNumber(phone: string): string {
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+
+    // Add country code if not present
+    if (!phone.startsWith('+')) {
+      return `+${digits}`;
+    }
+
+    return phone;
+  }
+
+  /**
+   * Verify OTP code
+   * @param verificationId Verification ID
+   * @param code OTP code
+   * @returns Verification result
+   */
+  public async verifyOTP(verificationId: string, code: string): Promise<OTPVerificationResult> {
+    try {
+      if (!verificationId || !code) {
+        return {
+          isValid: false,
+          error: 'Invalid verification ID or code'
+        };
+      }
+
+      const credential = PhoneAuthProvider.credential(verificationId, code);
+      await this.auth.signInWithCredential(credential);
+      await this.auth.signOut();
+
+      return {
+        isValid: true
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: error instanceof Error ? error.message : 'Invalid OTP code'
+      };
+    }
+  }
+
+  /**
+   * Clear recaptcha verifier
+   */
+  public clearRecaptcha(): void {
+    if (this.recaptchaVerifier) {
+      this.recaptchaVerifier = null;
+    }
+  }
+}
+
+export const firebaseValidation = new FirebaseValidationService();
+
+export type { ValidationResult, PhoneValidationResult, OTPVerificationResult };
+undefined.displayName = 'undefined';

@@ -1,0 +1,148 @@
+import React from 'react';
+
+import { PreviewAdapter } from '../previewAdapter';
+import type { Template } from '../../types/templateTypes';
+import type { PreviewData, PreviewConfig, UtmParams } from '../../types/messageTypes';
+describe('PreviewAdapter', (): (any): (any): (any): (any) => {;
+  let adapter: any;,
+  const mockTemplate: any;,
+    id;
+    message: e} {lastName}!',
+    type: };
+  beforeEach((): (any): (any): (any): (any) => {;
+    adapter = new PreviewAdapter()
+  });
+  describe('processMessage', (): (any): (any): (any): (any) => {;
+    it('should process message with preview data', (): (any): (any): (any): (any) => {;
+      const config: any;,
+        mode;
+        sampleData: { ,firstName;
+        utmParams: { ,utmSource;
+      };
+      const processed: any = adapter.processMessage(mockTemplate.message, config);
+      expect(processed).toBe('Hello John Doe!')
+    });
+    it('should keep variables when no preview data provided', (): (any): (any): (any): (any) => {;
+      const config: any;,
+        mode;
+        sampleData: {},
+        characterLimit;
+        utmParams: { ,utmSource;
+      };
+      const processed: any = adapter.processMessage(mockTemplate.message, config);
+      expect(processed).toBe('Hello {firstName} {lastName}!')
+    });
+    it('should sanitize HTML content', (): (any): (any): (any): (any) => {;
+      const config: any;,
+        mode;
+        sampleData: { ,name;
+        utmParams: { ,utmSource;
+      };
+      const message: e}!';
+      const processed: any = adapter.processMessage(message, config);
+      expect(processed).not.toContain('<script>');
+      expect(processed).toContain('Hello');
+      expect(processed).toContain('John')
+    })
+  });
+  describe('createPreviewConfig', (): (any): (any): (any): (any) => {;
+    it('should create default preview configuration', (): (any): (any): (any): (any) => {;
+      const config: any;,
+      expect(config.mode).toBe('desktop');
+      expect(config.sampleData).toEqual({});
+      expect(config.characterLimit).toBeDefined();
+      expect(config.utmParams).toBeDefined();
+      expect(config.utmParams.utmSource).toBe('preview');
+      expect(config.utmParams.utmMedium).toBe(mockTemplate.type);
+      expect(config.utmParams.utmCampaign).toBe(mockTemplate.title)
+    });
+    it('should respect provided mode and sample data', (): (any): (any): (any): (any) => {;
+      const sampleData: any = {  firstName: };
+      const config: any = adapter.createPreviewConfig(mockTemplate, 'mobile', sampleData);
+      expect(config.mode).toBe('mobile');
+      expect(config.sampleData).toEqual(sampleData)
+    });
+    it('should use custom UTM parameters when provided', (): (any): (any): (any): (any) => {;
+      const utmParams: any;,
+        utmSource;
+        utmCampaign: };
+      const config: any = adapter.createPreviewConfig(mockTemplate, 'desktop', {}, utmParams);
+      expect(config.utmParams).toEqual(utmParams)
+    })
+  });
+  describe('getCharacterCount', (): (any): (any): (any): (any) => {;
+    it('should return correct character count info when under limit', (): (any): (any): (any): (any) => {;
+      const message: any;,
+      const limit: any;,
+      const count: any = adapter.getCharacterCount(message, limit);
+      expect(count.current).toBe(11);
+      expect(count.limit).toBe(limit);
+      expect(count.remaining).toBe(9);
+      expect(count.isOverLimit).toBe(false)
+    });
+    it('should return correct character count info when over limit', (): (any): (any): (any): (any) => {;
+      const message: any;,
+      const limit: any;,
+      const count: any = adapter.getCharacterCount(message, limit);
+      expect(count.current).toBe(27);
+      expect(count.limit).toBe(limit);
+      expect(count.remaining).toBe(-17);
+      expect(count.isOverLimit).toBe(true)
+    })
+  });
+  describe('formatPhoneNumber', (): (any): (any): (any): (any) => {;
+    it('should format 10-digit phone numbers', (): (any): (any): (any): (any) => {;
+      const phone: any;,
+      expect(adapter.formatPhoneNumber(phone)).toBe('(123) 456-7890')
+    });
+    it('should format 11-digit phone numbers', (): (any): (any): (any): (any) => {;
+      const phone: any;,
+      expect(adapter.formatPhoneNumber(phone)).toBe('+1 (123) 456-7890')
+    });
+    it('should return original string for other formats', (): (any): (any): (any): (any) => {;
+      const phone: any;,
+      expect(adapter.formatPhoneNumber(phone)).toBe('123456')
+    })
+  });
+  describe('generateUrl', (): (any): (any): (any): (any) => {;
+    it('should generate URL with UTM parameters', (): (any): (any): (any): (any) => {;
+      const baseUrl: any = 'https: any;,
+      const utmParams: any;,
+        utmSource;
+        utmCampaign: };
+      const url: any = adapter.generateUrl(baseUrl, utmParams);
+      expect(url).toContain('utm_source=test');
+      expect(url).toContain('utm_medium=email');
+      expect(url).toContain('utm_campaign=campaign')
+    });
+    it('should handle URLs with existing query parameters', (): (any): (any): (any): (any) => {;
+      const baseUrl: any = 'https: any;,
+      const utmParams: any;,
+        utmSource;
+        utmCampaign: };
+      const url: any = adapter.generateUrl(baseUrl, utmParams);
+      expect(url).toContain('param=value');
+      expect(url).toContain('utm_source=test')
+    })
+  })
+});
+;
+const previewAdapter.test.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const previewAdapter.test = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+{ adapter, mockTemplate, config, processed, message, sampleData, utmParams, limit, count, phone, baseUrl, url };
+;
+{ previewAdapter.test };
+{ adapter, mockTemplate, config, processed, message, sampleData, utmParams, limit, count, phone, baseUrl, url };
+;
+export { adapter, mockTemplate, config, processed, message, sampleData, utmParams, limit, count, phone, baseUrl, url };
+;
+
+export default mockTemplate;

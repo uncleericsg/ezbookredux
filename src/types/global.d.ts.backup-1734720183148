@@ -1,0 +1,78 @@
+import React from 'react';
+
+/**
+ * Global declarations for the application.
+ */
+declare global {
+  /**
+   * Extended Window interface with additional properties.
+   */
+  interface Window {
+    /**
+     * Initializes Google Maps.
+     */
+    initGoogleMaps: () => void;
+    /**
+     * Google API object.
+     */
+    google: typeof google;
+    /**
+     * Stripe API object.
+     */
+    Stripe: any;
+    /**
+     * OneMap API object.
+     */
+    OneMap: any;
+    /**
+     * Environment variables.
+     */
+    env: {
+      /**
+       * VITE API URL.
+       */
+      VITE_API_URL: string;
+      /**
+       * VITE Firebase API key.
+       */
+      VITE_FIREBASE_API_KEY: string;
+      /**
+       * VITE Firebase auth domain.
+       */
+      VITE_FIREBASE_AUTH_DOMAIN: string;
+      /**
+       * VITE Firebase project ID.
+       */
+      VITE_FIREBASE_PROJECT_ID: string;
+      /**
+       * VITE Firebase storage bucket.
+       */
+      VITE_FIREBASE_STORAGE_BUCKET: string;
+      /**
+       * VITE Firebase messaging sender ID.
+       */
+      VITE_FIREBASE_MESSAGING_SENDER_ID: string;
+      /**
+       * VITE Firebase app ID.
+       */
+      VITE_FIREBASE_APP_ID: string;
+      /**
+       * VITE Stripe publishable key.
+       */
+      VITE_STRIPE_PUBLISHABLE_KEY: string;
+      /**
+       * VITE OneMap API key.
+       */
+      VITE_ONEMAP_API_KEY: string;
+      /**
+       * Additional environment variables.
+       */
+      [key: string]: string | undefined;
+    };
+  }
+}
+
+/**
+ * Empty export to satisfy TypeScript.
+ */
+export {};

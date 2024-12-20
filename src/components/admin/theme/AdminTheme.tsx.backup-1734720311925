@@ -1,0 +1,141 @@
+'use client';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import * as React from 'react';
+
+export interface AdminThemeProps;
+
+export interface AdminThemeProps;
+
+const adminTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    background: {
+      default: '#1a1a1a',
+      paper: '#2d2d2d'
+    },
+    primary: {
+      main: '#3f51b5'
+    },
+    secondary: {
+      main: '#f50057'
+    },
+    text: {
+      primary: '#ffffff'
+    };
+
+
+AdminTheme.displayName = 'AdminTheme';
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#1a1a1a',
+          '& *::-webkit-scrollbar': {
+            width: '8px'
+          },
+          '& *::-webkit-scrollbar-track': {
+            background: '#2d2d2d'
+          },
+          '& *::-webkit-scrollbar-thumb': {
+            background: '#666',
+            '&:hover': {
+              background: '#888'
+            }
+          }
+        }
+      }
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#2d2d2d'
+        }
+      }
+    },
+    MuiAppBar: {
+      defaultProps: {
+        elevation: 0
+      },
+      styleOverrides: {
+        root: {
+          backgroundColor: '#2d2d2d'
+        }
+      }
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#2d2d2d',
+          borderRight: 'none'
+        }
+      }
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none'
+        }
+      }
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          padding: '8px'
+        }
+      }
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: '#666'
+        }
+      }
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'rgba(255, 255, 255, 0.12)'
+        }
+      }
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(255, 255, 255, 0.08)'
+          }
+        }
+      }
+    },
+    MuiListItemIcon: {
+      styleOverrides: {
+        root: {
+          color: 'inherit',
+          minWidth: 'auto',
+          marginRight: '16px'
+        }
+      }
+    },
+    MuiListItemText: {
+      styleOverrides: {
+        primary: {
+          fontSize: '14px'
+        }
+      }
+    }
+  }
+});
+
+export interface AdminThemeProps {
+  children?: React.ReactNode;
+}
+
+export const AdminTheme: React.FC<AdminThemeProps> = ({ children }) => {
+  return <ThemeProvider theme={adminTheme}>{children}</ThemeProvider>;
+};
+
+
+
+export { AdminTheme, AdminThemeProps };

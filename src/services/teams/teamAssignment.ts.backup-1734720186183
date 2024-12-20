@@ -1,0 +1,149 @@
+import * as React from 'react';
+
+import { supabase } from '@/lib/database';
+
+import { Team, TeamAssignment } from './types';
+
+/**
+ * Team Assignment Service
+ * Handles team assignments and related operations
+ */
+export class TeamAssignmentService {
+  /**
+   * Get all active teams
+   * @returns Promise<Team[]>
+   */
+  async getActiveTeams(): Promise<Team[]> {
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('active', true)
+        .order('id');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching active teams:', error);
+      throw new Error('Failed to fetch active teams');
+    }
+  }
+
+  /**
+   * Get team assignments for a specific day
+   * @param date Date string in YYYY-MM-DD format
+   * @returns Promise<TeamAssignment[]>
+   */
+  async getTeamAssignmentsForDay(date: string): Promise<TeamAssignment[]> {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data, error } = await supabase
+        .from('team_assignments')
+        .select('*')
+        .gte('assigned_at', startOfDay.toISOString())
+        .lte('assigned_at', endOfDay.toISOString())
+        .order('assigned_at');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching team assignments:', error);
+      throw new Error('Failed to fetch team assignments');
+    }
+  }
+
+  /**
+   * Get next available team using round-robin algorithm
+   * @param bookingDate Date string in YYYY-MM-DD format
+   * @returns Promise<Team | null>
+   */
+  async getNextAvailableTeam(bookingDate: string): Promise<Team | null> {
+    try {
+      const activeTeams = await this.getActiveTeams();
+      if (activeTeams.length === 0) return null;
+
+      const assignments = await this.getTeamAssignmentsForDay(bookingDate);
+      if (assignments.length === 0) {
+        // If no assignments for the day, return first active team
+        return activeTeams[0];
+      }
+
+      // Get the last assigned team
+      const lastAssignment = assignments[assignments.length - 1];
+      const lastTeamIndex = activeTeams.findIndex(team => team.id === lastAssignment.team_id);
+
+      // Get next team in round-robin fashion
+      const nextTeamIndex = (lastTeamIndex + 1) % activeTeams.length;
+      return activeTeams[nextTeamIndex];
+    } catch (error) {
+      console.error('Error getting next available team:', error);
+      throw new Error('Failed to get next available team');
+    }
+  }
+
+  /**
+   * Assign a team to a booking
+   * @param bookingId Booking ID
+   * @param teamId Team ID
+   * @param assignedAt Assignment datetime
+   * @returns Promise<TeamAssignment>
+   */
+  async assignTeamToBooking(
+    bookingId: string,
+    teamId: string,
+    assignedAt: Date
+  ): Promise<TeamAssignment> {
+    try {
+      const { data, error } = await supabase
+        .from('team_assignments')
+        .insert({
+          booking_id: bookingId,
+          team_id: teamId,
+          assigned_at: assignedAt.toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from assignment creation');
+
+      return data;
+    } catch (error) {
+      console.error('Error assigning team to booking:', error);
+      throw new Error('Failed to assign team to booking');
+    }
+  }
+
+  /**
+   * Update a team assignment
+   * @param assignmentId Assignment ID
+   * @param teamId New team ID
+   * @returns Promise<TeamAssignment>
+   */
+  async updateTeamAssignment(
+    assignmentId: string,
+    teamId: string
+  ): Promise<TeamAssignment> {
+    try {
+      const { data, error } = await supabase
+        .from('team_assignments')
+        .update({ team_id: teamId })
+        .eq('id', assignmentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from assignment update');
+
+      return data;
+    } catch (error) {
+      console.error('Error updating team assignment:', error);
+      throw new Error('Failed to update team assignment');
+    }
+  }
+}

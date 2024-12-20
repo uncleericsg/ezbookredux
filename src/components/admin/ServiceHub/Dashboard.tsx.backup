@@ -1,0 +1,143 @@
+'use client';
+
+import { Send } from 'lucide-react';
+import { type FC, useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import type { ServiceContract, ContractAnalytics as AnalyticsData } from '@/types/contracts';
+
+import { BatchOperations, ContractAnalytics, ContractMonitoring } from '.';
+
+// Mock data - replace with actual API calls
+const mockContracts: ServiceContract[] = [
+  {
+    id: '1',
+    customerName: 'John Doe',
+    contractType: 'Standard',
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2024-12-31'),
+    status: 'active',
+    servicesCompleted: 2,
+    servicesTotal: 4
+  },
+  {
+    id: '2',
+    customerName: 'Jane Smith',
+    contractType: 'Premium',
+    startDate: new Date('2024-01-15'),
+    endDate: new Date('2024-12-31'),
+    status: 'active',
+    servicesCompleted: 1,
+    servicesTotal: 6
+  }
+];
+
+const mockAnalytics: AnalyticsData = {
+  renewalRate: 85,
+  customerSatisfaction: 4.5,
+  serviceCompletionRate: 92,
+  averageResponseTime: '2.5 hours',
+  revenueMetrics: {
+    totalRevenue: 150000,
+    monthlyGrowth: 5.2,
+    yearlyProjection: 1800000
+  }
+};
+
+export interface DashboardProps {
+  className?: string;
+}
+
+export const Dashboard: FC<DashboardProps> = ({ className }) => {
+  const [isBatchOperationsOpen, setIsBatchOperationsOpen] = useState(false);
+
+  const handleSendNotifications = async (data: { contractIds: string[]; message: string }): Promise<void> => {
+    try {
+      // Implement notification sending logic
+       
+      console.log('Sending notifications:', data);
+      // Make API call to send notifications
+    } catch (error) {
+       
+      console.error('Failed to send notifications:', error);
+    }
+  };
+
+  return (
+    <div className={`space-y-6 ${className ?? ''}`}>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Service Hub Dashboard
+        </h1>
+        <Button
+          onClick={() => setIsBatchOperationsOpen(true)}
+          className="gap-2 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          size="sm"
+        >
+          <Send className="h-4 w-4" />
+          Batch Operations
+        </Button>
+      </div>
+
+      <Tabs defaultValue="monitoring" className="space-y-6">
+        <TabsList className="bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger
+            value="monitoring"
+            className="text-gray-700 dark:text-gray-200"
+          >
+            Contract Monitoring
+          </TabsTrigger>
+          <TabsTrigger
+            value="analytics"
+            className="text-gray-700 dark:text-gray-200"
+          >
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="monitoring" className="mt-6">
+          <ContractMonitoring
+            contracts={mockContracts}
+            serviceHistory={{}}
+            onBlockContract={async (id: string, reason: string) => {
+               
+              console.log('Blocking contract:', id, reason);
+            }}
+            onUnblockContract={async (id: string) => {
+               
+              console.log('Unblocking contract:', id);
+            }}
+            onSendReminder={async (id: string) => {
+               
+              console.log('Sending reminder:', id);
+            }}
+            onScheduleService={async (id: string) => {
+               
+              console.log('Scheduling service:', id);
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-6">
+          <ContractAnalytics
+            contracts={mockContracts}
+            analytics={mockAnalytics}
+            renewalRate={mockAnalytics.renewalRate}
+            customerSatisfaction={mockAnalytics.customerSatisfaction}
+            serviceCompletionRate={mockAnalytics.serviceCompletionRate}
+            averageResponseTime={mockAnalytics.averageResponseTime}
+            revenueMetrics={mockAnalytics.revenueMetrics}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <BatchOperations
+        contracts={mockContracts}
+        isOpen={isBatchOperationsOpen}
+        onClose={() => setIsBatchOperationsOpen(false)}
+        onSendNotifications={handleSendNotifications}
+      />
+    </div>
+  );
+};

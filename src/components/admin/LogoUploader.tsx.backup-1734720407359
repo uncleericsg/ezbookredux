@@ -1,0 +1,184 @@
+'use client';
+
+import { Upload, Image, Loader2, AlertTriangle } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+
+export interface Dimensions;
+export interface LogoUploaderProps;
+
+export interface Dimensions;
+export interface LogoUploaderProps;
+
+export interface Dimensions;
+export interface LogoUploaderProps;
+
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
+export interface LogoUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  currentLogo?: string;
+  onUpload: (file: File) => Promise<void>;
+  allowedTypes?: string[];
+  maxSize?: number;
+  minDimensions?: Dimensions;
+  exactDimensions?: Dimensions;
+  loading?: boolean;
+}
+
+export const LogoUploader = ({
+  currentLogo,
+  onUpload,
+  allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'],
+  maxSize = 2 * 1024 * 1024, // 2MB
+  minDimensions,
+  exactDimensions,
+  loading = false,
+  className,
+  ...props
+}: LogoUploaderProps) => {
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateFile = useCallback(async (file: File): Promise<boolean> => {
+    if (!allowedTypes.includes(file.type)) {
+      setError(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      setError(`File size too large. Maximum size: ${maxSize / (1024 * 1024)}MB`);
+      return false;
+    }
+
+    if (minDimensions || exactDimensions) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(img.src);
+          if (exactDimensions) {
+            if (img.width !== exactDimensions.width || img.height !== exactDimensions.height) {
+              setError(`Image must be exactly ${exactDimensions.width}x${exactDimensions.height} pixels`);
+              resolve(false);
+            }
+          } else if (minDimensions) {
+            if (img.width < minDimensions.width || img.height < minDimensions.height) {
+              setError(`Image must be at least ${minDimensions.width}x${minDimensions.height} pixels`);
+              resolve(false);
+            }
+          }
+          resolve(true);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    return true;
+  }, [allowedTypes, maxSize, minDimensions, exactDimensions]);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    setError(null);
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const isValid = await validateFile(file);
+    if (isValid) {
+      try {
+        await onUpload(file);
+      } catch (error) {
+        setError((error as Error).message);
+      }
+    }
+  }, [onUpload, validateFile]);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isValid = await validateFile(file);
+    if (isValid) {
+      try {
+        await onUpload(file);
+      } catch (error) {
+        setError((error as Error).message);
+      }
+    }
+  }, [onUpload, validateFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragging(false);
+  }, []);
+
+  return (
+    <div {...props} className={className}>
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          dragging ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'
+        }`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => {
+          fileInputRef.current?.click();
+        }}
+      >
+        <input
+          ref={fileInputRef}
+          id="logo-upload"
+          type="file"
+          className="hidden"
+          accept={allowedTypes.join(',')}
+          onChange={handleFileChange}
+          disabled={loading}
+        />
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <p className="text-sm text-gray-400">Uploading logo...</p>
+          </div>
+        ) : currentLogo ? (
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <img
+              src={currentLogo}
+              alt="Current Logo"
+              className="max-w-xs max-h-32 object-contain"
+            />
+            <p className="text-sm text-gray-400">
+              Drag and drop a new logo here, or click to select a file
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <Upload className="h-8 w-8 text-gray-400" />
+            <p className="text-sm text-gray-400">
+              Drag and drop your logo here, or click to select a file
+            </p>
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className="mt-2 flex items-center space-x-2 text-red-500">
+          <AlertTriangle className="h-4 w-4" />
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+LogoUploader.displayName = 'LogoUploader';

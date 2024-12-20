@@ -1,0 +1,193 @@
+import { Bell, Mail, Phone, Save, Loader2 } from 'lucide-react';
+import { type FC, type FormEvent, useState } from 'react';
+
+import { useToast } from '../hooks/useToast';
+import { cn } from '../lib/utils';
+
+export type FC, type FormEvent, useState } from 'react';
+
+export type FormEvent;
+
+export interface INotificationPreferences;
+
+export interface NotificationPreferencesProps;
+
+
+/**
+ * Interface for notification preferences
+ */
+
+/**
+ * Props for the NotificationPreferences component
+ */
+
+/**
+ * Component for managing notification preferences
+ * 
+ * @example
+ * ```tsx
+ * <NotificationPreferences
+ *   initialPreferences={{
+ *     email: true,
+ *     sms: false,
+ *     push: true,
+ *     reminderDays: 3
+ *   }}
+ *   onSave={async (prefs) => {
+ *     await updatePreferences(prefs);
+ *   }}
+ * />
+ * ```
+ */
+const NotificationPreferences: FC<NotificationPreferencesProps> = ({
+  initialPreferences,
+  onSave,
+  className
+}) => {
+  const [preferences, setPreferences] = useState<INotificationPreferences>({
+    email: initialPreferences?.email ?? false,
+    sms: initialPreferences?.sms ?? false,
+    push: initialPreferences?.push ?? false,
+    reminderDays: initialPreferences?.reminderDays ?? 3
+  });
+  const [loading, setLoading] = useState(false);
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async (e: FormEvent): Promise<void> => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (onSave) {
+        await onSave(preferences);
+      }
+      showSuccess('Notification preferences updated');
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      showError('Failed to update preferences');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggle = (key: keyof Omit<INotificationPreferences, 'reminderDays'>) => {
+    setPreferences(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleReminderDaysChange = (value: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      reminderDays: parseInt(value, 10)
+    }));
+  };
+
+  const toggles = [
+    {
+      key: 'email' as const,
+      label: 'Email Notifications',
+      Icon: Mail
+    },
+    {
+      key: 'sms' as const,
+      label: 'SMS Notifications',
+      Icon: Phone
+    },
+    {
+      key: 'push' as const,
+      label: 'Push Notifications',
+      Icon: Bell
+    }
+  ];
+
+  return (
+    <div className={cn('rounded-lg border border-gray-700 bg-gray-800 p-6', className)}>
+      <h2 className="mb-6 text-xl font-semibold">Notification Preferences</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          {toggles.map(({ key, label, Icon }) => (
+            <div key={key} className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Icon className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                <span>{label}</span>
+              </div>
+              <label
+                className="relative inline-flex cursor-pointer items-center"
+                htmlFor={`toggle-${key}`}
+              >
+                <input
+                  id={`toggle-${key}`}
+                  type="checkbox"
+                  checked={preferences[key]}
+                  onChange={() => handleToggle(key)}
+                  className="peer sr-only"
+                  aria-label={label}
+                />
+                <div
+                  className={cn(
+                    'h-6 w-11 rounded-full bg-gray-700',
+                    'after:absolute after:left-[2px] after:top-[2px]',
+                    'after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[""]',
+                    'peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white',
+                    'peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500'
+                  )}
+                />
+              </label>
+            </div>
+          ))}
+          <div>
+            <label
+              htmlFor="reminder-days"
+              className="mb-2 block text-sm font-medium text-gray-300"
+            >
+              Reminder Days Before Service
+            </label>
+            <select
+              id="reminder-days"
+              value={preferences.reminderDays}
+              onChange={(e) => handleReminderDaysChange(e.target.value)}
+              className={cn(
+                'w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-gray-100',
+                'focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+              )}
+            >
+              <option value={3}>3 days before</option>
+              <option value={5}>5 days before</option>
+              <option value={7}>7 days before</option>
+              <option value={14}>14 days before</option>
+            </select>
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className={cn(
+            'btn btn-primary flex w-full items-center justify-center space-x-2',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+            loading && 'cursor-not-allowed opacity-50'
+          )}
+          aria-label={loading ? 'Saving preferences...' : 'Save preferences'}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="h-5 w-5" aria-hidden="true" />
+              <span>Save Preferences</span>
+            </>
+          )}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// Set display name for debugging
+NotificationPreferences.displayName = 'NotificationPreferences';
+export { INotificationPreferences, NotificationPreferencesProps, NotificationPreferences };
+
+undefined.displayName = 'undefined';

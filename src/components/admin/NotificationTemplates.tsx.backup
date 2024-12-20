@@ -1,0 +1,62 @@
+'use client';
+
+import { Bell } from 'lucide-react';
+import React from 'react';
+
+export interface NotificationTemplatesProps extends React.HTMLAttributes<HTMLDivElement> {
+  // Add any specific props here if needed
+}
+
+export const NotificationTemplates = ({ className, ...props }: NotificationTemplatesProps) => {
+  return (
+    <div className={`${className} space-y-6`} {...props}>
+      {/* Header */}
+      <div className="mb-6 flex items-center space-x-3">
+        <Bell className="h-6 w-6 text-blue-400" />
+        <h2 className="text-xl font-semibold">Notification Management</h2>
+      </div>
+
+      {/* Templates Section */}
+      <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+        <h3 className="mb-4 text-lg font-semibold">Templates</h3>
+        <div className="grid gap-4">
+          {/* Template Items */}
+          <div className="rounded-lg bg-gray-700/50 p-4">
+            <h4 className="font-medium">Booking Confirmation</h4>
+            <p className="mt-1 text-sm text-gray-400">Sent when a booking is confirmed</p>
+          </div>
+          <div className="rounded-lg bg-gray-700/50 p-4">
+            <h4 className="font-medium">Appointment Reminder</h4>
+            <p className="mt-1 text-sm text-gray-400">Sent 24 hours before appointment</p>
+          </div>
+          <div className="rounded-lg bg-gray-700/50 p-4">
+            <h4 className="font-medium">Service Completed</h4>
+            <p className="mt-1 text-sm text-gray-400">Sent after service completion</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Scheduled Messages */}
+      <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+        <h3 className="mb-4 text-lg font-semibold">Scheduled Messages</h3>
+        <div className="grid gap-4">
+          {/* Message Items */}
+          <div className="rounded-lg bg-gray-700/50 p-4">
+            <h4 className="font-medium">Holiday Greetings</h4>
+            <p className="mt-1 text-sm text-gray-400">Scheduled for Dec 25, 2024</p>
+          </div>
+          <div className="rounded-lg bg-gray-700/50 p-4">
+            <h4 className="font-medium">Maintenance Reminder</h4>
+            <p className="mt-1 text-sm text-gray-400">Scheduled for next week</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NotificationTemplates;
+
+NotificationTemplates.displayName = 'NotificationTemplates';
+
+export type { NotificationTemplatesProps };

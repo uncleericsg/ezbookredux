@@ -1,0 +1,232 @@
+/// <reference types="node" />
+
+import crypto from 'crypto';
+
+export interface EncryptedData;
+export interface HashOptions;
+export interface EncryptionOptions;
+
+/**
+ * Result of encryption operation
+ */
+export interface EncryptedData {
+  /** Encrypted data */
+  encrypted: Buffer;
+  /** Authentication tag */
+  tag: Buffer;
+  /** Initialization vector */
+  iv: Buffer;
+}
+
+/**
+ * Options for hashing operations
+ */
+export interface HashOptions {
+  /** Hash algorithm to use */
+  algorithm?: 'sha256' | 'sha512';
+  /** Output encoding */
+  encoding?: 'hex' | 'base64';
+}
+
+/**
+ * Options for encryption operations
+ */
+export interface EncryptionOptions {
+  /** Encryption algorithm to use */
+  algorithm?: 'aes-256-gcm';
+  /** Output encoding */
+  encoding?: 'hex' | 'base64';
+}
+
+/**
+ * Generates a checksum for the given data
+ * @param data Data to generate checksum for
+ * @param options Hash options
+ * @returns Checksum in specified encoding
+ * @throws Error if data is invalid
+ */
+export function generateChecksum(
+  data: Buffer | string,
+  options: HashOptions = {}
+): string {
+  const {
+    algorithm = 'sha256',
+    encoding = 'hex'
+  } = options;
+
+  if (!data) {
+    throw new Error('Data is required for checksum generation');
+  }
+
+  try {
+    const hash = crypto.createHash(algorithm);
+    hash.update(typeof data === 'string' ? Buffer.from(data) : data);
+    return hash.digest(encoding);
+  } catch (error) {
+    throw new Error(`Failed to generate checksum: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Generates a cryptographically secure random string
+ * @param length Length of random string to generate
+ * @param encoding Output encoding
+ * @returns Random string in specified encoding
+ * @throws Error if length is invalid
+ */
+export function generateRandomString(
+  length: number,
+  encoding: BufferEncoding = 'hex'
+): string {
+  if (length <= 0) {
+    throw new Error('Length must be greater than 0');
+  }
+
+  try {
+    return crypto.randomBytes(Math.ceil(length / 2))
+      .toString(encoding)
+      .slice(0, length);
+  } catch (error) {
+    throw new Error(`Failed to generate random string: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Encrypts data using AES-256-GCM
+ * @param data Data to encrypt
+ * @param key Encryption key (must be 32 bytes for AES-256)
+ * @param options Encryption options
+ * @returns Encrypted data, auth tag, and IV
+ * @throws Error if key length is invalid or encryption fails
+ */
+export function encrypt(
+  data: Buffer | string,
+  key: Buffer | string,
+  options: EncryptionOptions = {}
+): EncryptedData {
+  const {
+    algorithm = 'aes-256-gcm',
+    encoding = 'hex'
+  } = options;
+
+  if (!data) {
+    throw new Error('Data is required for encryption');
+  }
+
+  if (!key) {
+    throw new Error('Key is required for encryption');
+  }
+
+  try {
+    const keyBuffer = typeof key === 'string' ? Buffer.from(key, encoding) : key;
+    if (keyBuffer.length !== 32) {
+      throw new Error('Key must be 32 bytes for AES-256');
+    }
+
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(algorithm, keyBuffer, iv);
+    
+    const dataBuffer = typeof data === 'string' ? Buffer.from(data) : data;
+    const encrypted = Buffer.concat([
+      cipher.update(dataBuffer),
+      cipher.final()
+    ]);
+
+    return {
+      encrypted,
+      tag: cipher.getAuthTag(),
+      iv
+    };
+  } catch (error) {
+    throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Decrypts data encrypted with AES-256-GCM
+ * @param encryptedData Encrypted data with auth tag and IV
+ * @param key Decryption key (must be 32 bytes for AES-256)
+ * @param options Decryption options
+ * @returns Decrypted data as Buffer
+ * @throws Error if decryption fails or key length is invalid
+ */
+export function decrypt(
+  encryptedData: EncryptedData,
+  key: Buffer | string,
+  options: EncryptionOptions = {}
+): Buffer {
+  const {
+    algorithm = 'aes-256-gcm',
+    encoding = 'hex'
+  } = options;
+
+  if (!encryptedData || !encryptedData.encrypted || !encryptedData.tag || !encryptedData.iv) {
+    throw new Error('Invalid encrypted data');
+  }
+
+  if (!key) {
+    throw new Error('Key is required for decryption');
+  }
+
+  try {
+    const keyBuffer = typeof key === 'string' ? Buffer.from(key, encoding) : key;
+    if (keyBuffer.length !== 32) {
+      throw new Error('Key must be 32 bytes for AES-256');
+    }
+
+    const decipher = crypto.createDecipheriv(algorithm, keyBuffer, encryptedData.iv);
+    decipher.setAuthTag(encryptedData.tag);
+
+    return Buffer.concat([
+      decipher.update(encryptedData.encrypted),
+      decipher.final()
+    ]);
+  } catch (error) {
+    throw new Error(`Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Derives a key from a password using PBKDF2
+ * @param password Password to derive key from
+ * @param salt Salt for key derivation
+ * @param iterations Number of iterations
+ * @param keyLength Length of derived key in bytes
+ * @param digest Hash algorithm to use
+ * @returns Derived key as Buffer
+ * @throws Error if key derivation fails
+ */
+export function deriveKey(
+  password: string | Buffer,
+  salt: string | Buffer,
+  iterations = 100000,
+  keyLength = 32,
+  digest = 'sha256'
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    if (!password || !salt) {
+      reject(new Error('Password and salt are required'));
+      return;
+    }
+
+    if (iterations < 1000) {
+      reject(new Error('Iterations should be at least 1000'));
+      return;
+    }
+
+    crypto.pbkdf2(
+      password,
+      salt,
+      iterations,
+      keyLength,
+      digest,
+      (error, derivedKey) => {
+        if (error) {
+          reject(new Error(`Key derivation failed: ${error.message}`));
+        } else {
+          resolve(derivedKey);
+        }
+      }
+    );
+  });
+}

@@ -1,0 +1,200 @@
+'use client';
+
+import { motion, AnimatePresence } from 'framer-motion';
+import { Book, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+
+export interface ComponentIntegrationProps;
+export interface Section;
+export interface ComponentProps;
+export type safety;
+
+export interface ComponentIntegrationProps;
+export interface Section;
+export interface ComponentProps;
+export type safety;
+
+export interface ComponentIntegrationProps;
+export interface Section;
+export interface ComponentProps;
+export type safety;
+
+interface ComponentIntegrationProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+interface Section {
+  title: string;
+  content: string;
+}
+
+const ComponentIntegration = ({ className, ...props }: ComponentIntegrationProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const sections: Section[] = [
+    {
+      title: 'File Structure',
+      content: `src/
+  components/
+    admin/
+      settings/
+        ComponentName/
+          index.tsx
+          types.ts
+          hooks/
+          utils/
+          components/
+
+Key Considerations:
+- Each component should be self-contained with its own types, hooks, and utilities
+- Follow existing naming conventions and file structure
+- Maintain consistent styling with the admin dashboard theme`
+    },
+    {
+      title: 'Integration Points',
+      content: `- Use existing context providers (UserContext, etc.)
+- Leverage shared hooks and utilities
+- Maintain consistent state management patterns
+
+Data Flow Example:
+const [settings, setSettings] = useState<Settings>(defaultSettings);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);`
+    },
+    {
+      title: 'Error Handling',
+      content: `- Use consistent error handling patterns
+- Implement proper loading states
+- Follow existing retry mechanisms
+
+Development vs Production:
+if (import.meta.env.DEV) {
+  // Development mock data
+} else {
+  // Production API calls
+}`
+    },
+    {
+      title: 'Component Structure',
+      content: `- Use existing Tailwind CSS classes
+- Maintain dark mode compatibility
+- Follow responsive design patterns
+
+Component Interface:
+export interface ComponentProps extends React.HTMLAttributes<HTMLDivElement> {
+  settings: Settings;
+  loading?: boolean;
+  onSave: (settings: Settings) => Promise<void>;
+}`
+    },
+    {
+      title: 'Test Coverage',
+      content: `- Maintain existing Cypress test patterns
+- Include unit tests for utilities
+- Add integration tests for API interactions`
+    },
+    {
+      title: 'Best Practices',
+      content: `- Implement proper memoization
+- Use lazy loading for sub-components
+- Follow existing code-splitting patterns`
+    },
+    {
+      title: 'Data Handling',
+      content: `- Validate all user inputs
+- Sanitize data before display
+- Follow existing security patterns`
+    },
+    {
+      title: 'Component Documentation',
+      content: `/**
+ * @component ComponentName
+ * @description Brief description of component purpose
+ * @example
+ * <ComponentName
+ *   settings={settings}
+ *   onSave={handleSave}
+ * />
+ */`
+    },
+    {
+      title: 'Pre-merge Checklist',
+      content: `1. Component follows project structure
+2. All tests pass
+3. No console errors/warnings
+4. Proper error handling
+5. Responsive design implemented
+6. Documentation complete
+
+Integration Steps:
+1. Create feature branch
+2. Implement component
+3. Add tests
+4. Update documentation
+5. Create pull request
+6. Address review feedback
+7. Merge to main branch`
+    },
+    {
+      title: 'Common Pitfalls',
+      content: `Things to Avoid:
+- Breaking existing functionality
+- Inconsistent styling
+- Duplicate state management
+- Poor error handling
+- Missing loading states
+- Incomplete documentation
+
+Best Practices:
+- Follow existing patterns
+- Maintain type safety
+- Use proper error boundaries
+- Implement proper loading states
+- Document all props and functions`
+    }
+  ];
+
+  return (
+    <div className={`bg-gray-800 rounded-lg p-6 border border-gray-700 ${className}`} {...props}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <Book className="h-6 w-6 text-blue-400" />
+          <h2 className="text-xl font-semibold">Component Integration</h2>
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="btn btn-secondary flex items-center space-x-2"
+        >
+          <span>Read Me</span>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6 overflow-hidden"
+          >
+            {sections.map((section, index) => (
+              <div key={index} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                <h3 className="text-lg font-medium mb-3 text-blue-400">{section.title}</h3>
+                <pre className="whitespace-pre-wrap text-sm text-gray-300 font-mono bg-gray-800 p-4 rounded-lg overflow-x-auto">
+                  {section.content}
+                </pre>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+ComponentIntegration.displayName = 'ComponentIntegration';
+
+export { ComponentIntegration };

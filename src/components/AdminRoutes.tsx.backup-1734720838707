@@ -1,0 +1,58 @@
+import React from 'react';
+import { Route } from 'react-router-dom';
+
+import ProtectedRoute from './ProtectedRoute';
+import AdminDashboard from './admin/AdminDashboard';
+import AdminPanels from './admin/AdminPanels';
+import { Overview } from './admin/Dashboard/Overview';
+import SettingsPage from './admin/SettingsPage';
+import UserManagement from './admin/UserManagement';
+
+export interface AdminRoutesProps;
+
+export interface is;
+
+
+/**
+ * AdminRoutes component for the iAircon Easy Booking system
+ *
+ * @component AdminRoutes
+ * @description Defines the routing structure for the admin section, including
+ * dashboard, user management, and settings pages. All routes are protected and
+ * require admin authentication.
+ *
+ * @example
+ * ```tsx
+ * import { AdminRoutes } from './components';
+ * <AdminRoutes />
+ * ```
+ */
+
+interface AdminRoutesProps extends React.HTMLAttributes<HTMLDivElement> {
+  // Currently no additional props needed, but interface is defined for future extensibility
+}
+
+const AdminRoutes: React.FC<AdminRoutesProps> = () => {
+  return (
+    <>
+      <Route
+        path="admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminPanels />} />
+        <Route path="dashboard" element={<Overview />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
+    </>
+  );
+};
+
+AdminRoutes.displayName = 'AdminRoutes';
+
+export { AdminRoutes, AdminRoutesProps };
+undefined.displayName = 'undefined';

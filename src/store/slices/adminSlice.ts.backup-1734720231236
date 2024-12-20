@@ -1,0 +1,51 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+export interface AdminData;
+export interface AdminState;
+
+interface AdminData {
+  permissions: string[];
+  role: string;
+  lastLogin?: Date;
+}
+
+interface AdminState {
+  isAdmin: boolean;
+  adminData: AdminData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AdminState = {
+  isAdmin: false,
+  adminData: null,
+  loading: false,
+  error: null
+};
+
+const adminSlice = createSlice({
+  name: 'admin',
+  initialState,
+  reducers: {
+    setAdmin(state, action: PayloadAction<boolean>) {
+      state.isAdmin = action.payload;
+    },
+    setAdminData(state, action: PayloadAction<AdminData | null>) {
+      state.adminData = action.payload;
+    },
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.loading = action.payload;
+    },
+    setError(state, action: PayloadAction<string | null>) {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    resetAdmin(_state) {
+      return initialState;
+    }
+  }
+});
+
+export const { setAdmin, setAdminData, setLoading, setError, resetAdmin } = adminSlice.actions;
+
+export default adminSlice.reducer;

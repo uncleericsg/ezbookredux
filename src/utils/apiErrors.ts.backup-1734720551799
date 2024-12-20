@@ -1,0 +1,215 @@
+import { toast } from 'sonner';
+
+import { errorReportingService } from './errorReporting';
+
+export interface ApiErrorOptions;
+
+
+/**
+ * API error codes
+ */
+export enum ApiErrorCode {
+  // Authentication Errors
+  /** User is not authenticated */
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  /** User lacks required permissions */
+  FORBIDDEN = 'FORBIDDEN',
+  /** Firebase authentication error */
+  FIREBASE_AUTH_ERROR = 'FIREBASE_AUTH_ERROR',
+  /** Firebase token has expired */
+  FIREBASE_TOKEN_EXPIRED = 'FIREBASE_TOKEN_EXPIRED',
+
+  // Database Errors
+  /** Firebase database operation error */
+  FIREBASE_DB_ERROR = 'FIREBASE_DB_ERROR',
+  /** Firebase database permission denied */
+  FIREBASE_PERMISSION_DENIED = 'FIREBASE_PERMISSION_DENIED',
+
+  // Email/Communication Errors
+  /** Failed to send email */
+  EMAIL_SEND_ERROR = 'EMAIL_SEND_ERROR',
+  /** Email template error */
+  EMAIL_TEMPLATE_ERROR = 'EMAIL_TEMPLATE_ERROR',
+  /** Firebase Cloud Messaging error */
+  FCM_ERROR = 'FCM_ERROR',
+
+  // Payment Errors
+  /** Payment processing error */
+  PAYMENT_ERROR = 'PAYMENT_ERROR',
+  /** Invalid payment details */
+  INVALID_PAYMENT = 'INVALID_PAYMENT',
+  /** Payment declined */
+  PAYMENT_DECLINED = 'PAYMENT_DECLINED',
+
+  // Server Errors
+  /** Internal server error */
+  SERVER_ERROR = 'SERVER_ERROR',
+  /** Service unavailable */
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
+  /** Rate limit exceeded */
+  RATE_LIMIT = 'RATE_LIMIT',
+}
+
+/**
+ * Options for creating an API error
+ */
+interface ApiErrorOptions {
+  /** Whether the error can be retried */
+  retryable?: boolean;
+  /** Whether to show a toast notification */
+  shouldToast?: boolean;
+  /** HTTP status code */
+  statusCode?: number;
+  /** Number of retry attempts made */
+  retryCount?: number;
+  /** Maximum number of retry attempts */
+  maxRetries?: number;
+  /** Additional error context */
+  context?: string;
+}
+
+/**
+ * Custom error class for API-related errors
+ */
+export class ApiError extends Error {
+  public readonly code: ApiErrorCode;
+  public readonly retryable: boolean;
+  public readonly shouldToast: boolean;
+  public readonly statusCode?: number;
+  public readonly retryCount: number;
+  public readonly maxRetries: number;
+  public readonly context?: string;
+
+  constructor(code: ApiErrorCode, message: string, options: ApiErrorOptions = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+    this.retryable = options.retryable ?? false;
+    this.shouldToast = options.shouldToast ?? true;
+    this.statusCode = options.statusCode;
+    this.retryCount = options.retryCount ?? 0;
+    this.maxRetries = options.maxRetries ?? 3;
+    this.context = options.context;
+
+    // Report error to monitoring service
+    errorReportingService.logError(this, { componentStack: '' });
+
+    // Show toast if enabled
+    if (this.shouldToast) {
+      toast.error(message);
+    }
+  }
+
+  /**
+   * Check if the error can be retried
+   * @returns Whether the error can be retried
+   */
+  canRetry(): boolean {
+    return this.retryable && this.retryCount < this.maxRetries;
+  }
+
+  /**
+   * Create a new API error with incremented retry count
+   * @returns New API error with incremented retry count
+   */
+  withRetry(): ApiError {
+    return new ApiError(this.code, this.message, {
+      ...this,
+      retryCount: this.retryCount + 1,
+    });
+  }
+
+  /**
+   * Check if an error is an API error
+   * @param error Error to check
+   * @returns Whether the error is an API error
+   */
+  static isApiError(error: unknown): error is ApiError {
+    return error instanceof ApiError;
+  }
+
+  /**
+   * Create an API error from any error
+   * @param error Source error
+   * @param defaultCode Default error code if not an API error
+   * @returns API error
+   */
+  static fromError(error: unknown, defaultCode = ApiErrorCode.SERVER_ERROR): ApiError {
+    if (error instanceof ApiError) {
+      return error;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    return new ApiError(defaultCode, message);
+  }
+
+  /**
+   * Handle an error by throwing an API error
+   * @param error Error to handle
+   * @param context Additional error context
+   */
+  static handleError(error: unknown, context?: string): never {
+    throw ApiError.fromError(error, ApiErrorCode.SERVER_ERROR);
+  }
+}
+
+/**
+ * Delay execution for a specified time
+ * @param ms Time to delay in milliseconds
+ */
+export const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Calculate exponential backoff time
+ * @param retryCount Number of retry attempts made
+ * @returns Backoff time in milliseconds
+ */
+export const calculateBackoff = (retryCount: number): number => {
+  const baseDelay = 1000; // 1 second
+  const maxDelay = 30000; // 30 seconds
+  const jitter = Math.random() * 1000; // Random delay between 0-1000ms
+  return Math.min(baseDelay * Math.pow(2, retryCount) + jitter, maxDelay);
+};
+
+/**
+ * Handle an API error with automatic retries
+ * @param error Error to handle
+ */
+export const handleApiError = async (error: unknown): Promise<void> => {
+  const apiError = ApiError.fromError(error);
+  if (apiError.canRetry()) {
+    const backoff = calculateBackoff(apiError.retryCount);
+    await delay(backoff);
+    throw apiError.withRetry();
+  }
+  throw apiError;
+};
+
+/**
+ * Retry an operation with exponential backoff
+ * @param operation Operation to retry
+ * @param maxRetries Maximum number of retry attempts
+ * @returns Result of the operation
+ */
+export const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> => {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+      const backoff = calculateBackoff(attempt);
+      await delay(backoff);
+    }
+  }
+  throw lastError;
+};
+
+undefined.displayName = 'undefined';

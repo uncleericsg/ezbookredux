@@ -1,0 +1,128 @@
+import type { Template } from '../types/templateTypes';
+import type { ;
+  EnhancedTemplate,
+  ValidationResult,
+  AnalyticsData,
+  PreviewConfig
+} from './types';
+import { MESSAGE_LIMITS } from '../constants/templateConstants';
+;
+  /**;
+   * Convert a legacy template to an enhanced template;
+   */;
+    */;
+*/;
+static enhance(template: any;,
+    // Return if already enhanced;
+    if ((template as EnhancedTemplate) {
+   {
+}
+   {
+}
+   {
+}
+  ._enhanced) {
+}
+      return template as EnhancedTemplate
+    };
+    return {;
+      ...template,
+      _enhanced;
+  };
+  /**;
+   * Convert an enhanced template back to a legacy template;
+   */;
+    */;
+*/;
+static toLegacy(template: any;,
+    const { _enhanced, validation, analytics, preview, ...legacyTemplate } = template;
+    return legacyTemplate
+  };
+  /**;
+   * Create default validation result;
+   */;
+    */;
+*/;
+static createDefaultValidation(): ValidationResult {;
+    return {;
+      isValid;
+  };
+  /**;
+   * Create default analytics data;
+   */;
+    */;
+*/;
+static createDefaultAnalytics(): AnalyticsData {;
+    return {;
+      impressions;
+      performance: { ,deliveryRate;
+  };
+  /**;
+   * Create default preview configuration;
+   */;
+    */;
+*/;
+static createDefaultPreview(template: any;,
+    return {;
+      mode;
+      utmParams: { ,utmSource;
+  };
+  /**;
+   * Update template validation;
+   */;
+    */;
+*/;
+static updateValidation(;
+    template;
+    validation: any;,
+  ): EnhancedTemplate {;
+    return {;
+      ...template,
+      validation: any;,
+        ...template.validation,
+        ...validation
+      }
+    }
+  };
+  /**;
+   * Update template analytics;
+   */;
+    */;
+*/;
+static updateAnalytics(;
+    template;
+    analytics: any;,
+  ): EnhancedTemplate {;
+    return {;
+      ...template,
+      analytics: any;,
+        ...template.analytics,
+        ...analytics,
+        performance: any;,
+          ...template.analytics.performance,
+          ...(analytics.performance || )
+        }
+      }
+    }
+  };
+
+const templateAdapter.ts = (): (any): (any): (any): (any) => {;
+  return null
+};
+;
+// Additional exports;
+const TemplateAdapter: any;,
+  return null
+};
+;
+// Additional exports;
+{ templateAdapter };
+;
+;
+;
+;
+;
+export { TemplateAdapter, templateAdapter };
+export default templateAdapter;
+
+undefined.displayName = 'undefined';

@@ -1,0 +1,68 @@
+ 
+import { useState, useCallback } from 'react';
+
+import { FormData } from './useFormValidation';
+
+const FORM_STORAGE_KEY = 'customerFormData';
+const RECENT_ADDRESSES_KEY = 'recentAddresses';
+const MAX_RECENT_ADDRESSES = 5;
+
+export interface FormPersistenceOptions {
+  rememberDetails?: boolean;
+}
+
+interface UseFormPersistenceReturn {
+  savedAddresses: Partial<FormData>[];
+  saveFormData: (data: FormData) => void;
+  clearSavedData: () => void;
+}
+
+export function useFormPersistence(options: FormPersistenceOptions = {}): UseFormPersistenceReturn {
+  const [savedAddresses, setSavedAddresses] = useState<Partial<FormData>[]>(() => {
+    if (!options.rememberDetails) return [];
+    try {
+      const savedData = window.localStorage.getItem(RECENT_ADDRESSES_KEY);
+      return savedData ? JSON.parse(savedData) : [];
+    } catch (error) {
+      console.error('Error loading saved addresses:', error);
+      return [];
+    }
+  });
+
+  const saveFormData = useCallback((data: FormData) => {
+    if (!options.rememberDetails) return;
+
+    try {
+      // Save form data
+      window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+
+      // Update recent addresses
+      setSavedAddresses(prev => {
+        const newAddresses = [data, ...prev.filter(addr => 
+          addr.address !== data.address
+        )].slice(0, MAX_RECENT_ADDRESSES);
+        
+        window.localStorage.setItem(RECENT_ADDRESSES_KEY, JSON.stringify(newAddresses));
+        return newAddresses;
+      });
+    } catch (error) {
+      console.error('Error saving form data:', error);
+    }
+  }, [options.rememberDetails]);
+
+  const clearSavedData = useCallback(() => {
+    try {
+      window.localStorage.removeItem(FORM_STORAGE_KEY);
+      window.localStorage.removeItem(RECENT_ADDRESSES_KEY);
+      setSavedAddresses([]);
+    } catch (error) {
+      console.error('Error clearing saved data:', error);
+    }
+  }, []);
+
+  return {
+    savedAddresses: options.rememberDetails ? savedAddresses : [],
+    saveFormData,
+    clearSavedData
+  };
+}

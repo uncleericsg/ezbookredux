@@ -1,0 +1,87 @@
+import axios from 'axios';
+import { toast } from 'sonner';
+
+import type { AppSettings } from '../types/appSettings';
+
+const APP_SETTINGS_KEY = 'app_settings';
+const ADMIN_TOKEN_KEY = 'admin_token';
+
+const defaultAppSettings: AppSettings = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  timezone: 'Asia/Singapore'
+};
+
+/**
+ * Get stored app settings from localStorage
+ * @returns App settings with defaults
+ */
+function getStoredSettings(): AppSettings {
+  try {
+    const stored = globalThis.localStorage?.getItem(APP_SETTINGS_KEY);
+    if (!stored) return defaultAppSettings;
+    
+    const settings = JSON.parse(stored);
+    return { ...defaultAppSettings, ...settings };
+  } catch (error) {
+    console.error('Error parsing stored settings:', error);
+    return defaultAppSettings;
+  }
+}
+
+/**
+ * Fetch app settings from the server
+ * @returns Promise resolving to app settings
+ */
+export async function fetchAppSettings(): Promise<AppSettings> {
+  if (import.meta.env.DEV) {
+    return getStoredSettings();
+  }
+
+  try {
+    const token = globalThis.localStorage?.getItem(ADMIN_TOKEN_KEY);
+    const response = await axios.get<AppSettings>('/api/admin/settings/app', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return { ...defaultAppSettings, ...response.data };
+  } catch (error) {
+    console.error('Failed to fetch app settings:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update app settings
+ * @param settings Settings to update
+ * @returns Promise resolving to updated settings
+ */
+export async function updateAppSettings(settings: Partial<AppSettings>): Promise<AppSettings> {
+  if (import.meta.env.DEV) {
+    // Persist settings in localStorage for development
+    const updatedSettings = { ...defaultAppSettings, ...settings };
+    globalThis.localStorage?.setItem(APP_SETTINGS_KEY, JSON.stringify(updatedSettings));
+    toast.success('App settings updated successfully');
+    return updatedSettings;
+  }
+
+  try {
+    const token = globalThis.localStorage?.getItem(ADMIN_TOKEN_KEY);
+    const response = await axios.post<AppSettings>('/api/admin/settings/app', settings, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    toast.success('App settings updated successfully');
+    return { ...defaultAppSettings, ...response.data };
+  } catch (error) {
+    console.error('Failed to update app settings:', error);
+    toast.error('Failed to update app settings');
+    throw error;
+  }
+}
+
+export { APP_SETTINGS_KEY, getStoredSettings };
+undefined.displayName = 'undefined';

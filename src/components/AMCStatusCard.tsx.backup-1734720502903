@@ -1,0 +1,134 @@
+import { format } from 'date-fns';
+import { Shield, Calendar, Clock } from 'lucide-react';
+import React from 'react';
+
+import type { User } from '../types';
+
+export interface AMCStatusCardProps;
+
+
+
+
+
+/**
+ * AMCStatusCard component for the iAircon Easy Booking system
+ *
+ * @component AMCStatusCard
+ * @description Displays the current AMC subscription status, including service visits, 
+ * last service date, and next service due date
+ *
+ * @example
+ * ```tsx
+ * import { AMCStatusCard } from './components';
+ * <AMCStatusCard 
+ *   user={user}
+ *   visitsCompleted={2}
+ *   totalVisits={4}
+ *   onSchedule={() => console.log('Schedule service')}
+ * />
+ * ```
+ */
+
+interface AMCStatusCardProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** User object containing AMC status and service dates */
+  user: User;
+  /** Number of service visits completed */
+  visitsCompleted: number;
+  /** Total number of service visits in the package */
+  totalVisits: number;
+  /** Callback function to schedule a service */
+  onSchedule: () => void;
+}
+
+const AMCStatusCard: React.FC<AMCStatusCardProps> = ({
+  user,
+  visitsCompleted,
+  totalVisits,
+  onSchedule,
+  ...props
+}) => {
+  const getStatusColor = () => {
+    switch (user.amcStatus) {
+      case 'active':
+        return 'text-green-500';
+      case 'expired':
+        return 'text-red-500';
+      case 'pending':
+        return 'text-yellow-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (user.amcStatus) {
+      case 'active':
+        return 'Active';
+      case 'expired':
+        return 'Expired';
+      case 'pending':
+        return 'Pending';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  return (
+    <div
+      className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+      {...props}
+    >
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold">AMC Status</h2>
+          <p className={`${getStatusColor()} font-medium`}>{getStatusText()}</p>
+        </div>
+        <Shield className={getStatusColor()} size={24} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <div className="text-gray-400 mb-1">Service Visits</div>
+          <div className="text-2xl font-bold">
+            {visitsCompleted}/{totalVisits}
+          </div>
+        </div>
+        <div>
+          <div className="text-gray-400 mb-1 flex items-center gap-2">
+            <Calendar size={16} />
+            Last Service
+          </div>
+          <div className="font-medium">
+            {user.lastServiceDate
+              ? format(new Date(user.lastServiceDate), 'MMM d, yyyy')
+              : 'No service yet'}
+          </div>
+        </div>
+        <div>
+          <div className="text-gray-400 mb-1 flex items-center gap-2">
+            <Clock size={16} />
+            Next Service Due
+          </div>
+          <div className="font-medium">
+            {user.nextServiceDate
+              ? format(new Date(user.nextServiceDate), 'MMM d, yyyy')
+              : 'Not scheduled'}
+          </div>
+        </div>
+      </div>
+      {user.amcStatus === 'active' && (
+        <button
+          onClick={onSchedule}
+          className="btn btn-primary w-full mt-6"
+          type="button"
+        >
+          Schedule Service
+        </button>
+      )}
+    </div>
+  );
+};
+
+AMCStatusCard.displayName = 'AMCStatusCard';
+
+export { AMCStatusCard, AMCStatusCardProps };
+undefined.displayName = 'undefined';

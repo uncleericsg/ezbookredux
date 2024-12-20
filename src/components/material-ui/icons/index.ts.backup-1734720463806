@@ -1,0 +1,23 @@
+/**
+ * Re-export Material-UI icons
+ */
+export {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Search as SearchIcon,
+  Close as CloseIcon,
+  Menu as MenuIcon,
+  MoreVert as MoreVertIcon,
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
+  Check as CheckIcon,
+  Clear as ClearIcon,
+  FilterList as FilterListIcon,
+  Sort as SortIcon,
+  Refresh as RefreshIcon,
+  Save as SaveIcon,
+  Settings as SettingsIcon
+} from '@mui/icons-material';
+
+undefined.displayName = 'undefined';

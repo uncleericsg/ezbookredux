@@ -1,0 +1,246 @@
+'use client';
+
+import { Calendar, MapPin, Phone, Mail, FileText, Wrench, User, AlertCircle } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/Dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/Tabs';
+import { cn } from '@/lib/utils';
+import { ServiceContract } from '@/types/contracts';
+
+export interface ServiceHistory {
+  id: string;
+  date: Date;
+  type: string;
+  technician: string;
+  status: 'completed' | 'pending' | 'cancelled';
+  notes?: string;
+  feedback?: {
+    rating: number;
+    comment?: string;
+  };
+}
+
+export interface ContractDetailsProps {
+  contract: ServiceContract;
+  isOpen: boolean;
+  onClose: () => void;
+  serviceHistory: ServiceHistory[];
+  onScheduleService: () => void;
+  onSendReminder: () => void;
+}
+
+const ContractDetails: React.FC<ContractDetailsProps> = ({
+  contract,
+  isOpen,
+  onClose,
+  serviceHistory,
+  onScheduleService,
+  onSendReminder
+}) => {
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' => {
+    switch (status) {
+      case 'active':
+      case 'completed':
+        return 'default';
+      case 'expiring':
+      case 'pending':
+        return 'secondary';
+      default:
+        return 'destructive';
+    }
+  };
+
+  const renderStarRating = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span
+        key={i}
+        className={cn(
+          'text-lg',
+          i < rating ? 'text-yellow-400' : 'text-muted-foreground'
+        )}
+      >
+        ★
+      </span>
+    ));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">Contract Details</DialogTitle>
+        </DialogHeader>
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="services">Service History</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+          <TabsContent value="details" className="space-y-6">
+            {/* Customer Information */}
+            <div className="rounded-lg border bg-card p-4 space-y-4">
+              <h3 className="text-lg font-semibold">Customer Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>{contract.customerName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{contract.contactNumber}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{contract.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{contract.location}</span>
+                </div>
+              </div>
+            </div>
+            {/* Contract Information */}
+            <div className="rounded-lg border bg-card p-4 space-y-4">
+              <h3 className="text-lg font-semibold">Contract Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Contract Type</p>
+                  <p className="font-medium">{contract.contractType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant={getStatusVariant(contract.status)}>
+                    {contract.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Start Date</p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {contract.startDate.toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">End Date</p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {contract.endDate.toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Quick Actions */}
+            <div className="flex gap-4">
+              <Button onClick={onScheduleService} className="flex-1">
+                <Wrench className="h-4 w-4 mr-2" />
+                Schedule Service
+              </Button>
+              <Button onClick={onSendReminder} variant="secondary" className="flex-1">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Send Reminder
+              </Button>
+            </div>
+          </TabsContent>
+          <TabsContent value="services" className="space-y-4">
+            {serviceHistory.map((service) => (
+              <div key={service.id} className="rounded-lg border bg-card p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-medium">{service.type}</h4>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {service.date.toLocaleDateString('en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        {service.technician}
+                      </div>
+                    </div>
+                    {service.notes && (
+                      <p className="mt-2 text-sm">{service.notes}</p>
+                    )}
+                  </div>
+                  <Badge variant={getStatusVariant(service.status)}>
+                    {service.status}
+                  </Badge>
+                </div>
+                {service.feedback && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Customer Rating:</span>
+                      <div className="flex items-center">
+                        {renderStarRating(service.feedback.rating)}
+                      </div>
+                    </div>
+                    {service.feedback.comment && (
+                      <p className="mt-2 text-sm italic">"{service.feedback.comment}"</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </TabsContent>
+          <TabsContent value="documents" className="space-y-4">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span>Contract Agreement</span>
+                </div>
+                <Button variant="ghost" size="sm">
+                  View
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span>Service Reports</span>
+                </div>
+                <Button variant="ghost" size="sm">
+                  View All
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+ContractDetails.displayName = 'ContractDetails';
+
+export { ContractDetails };
+export default ContractDetails;

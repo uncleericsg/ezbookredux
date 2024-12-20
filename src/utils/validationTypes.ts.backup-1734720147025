@@ -1,0 +1,65 @@
+/**
+ * Result of a validation operation
+ */
+export interface ValidationResult {
+  /** Whether validation passed */
+  isValid: boolean;
+  /** List of validation errors */
+  errors: string[];
+  /** List of validation warnings */
+  warnings: string[];
+}
+
+/**
+ * Constraints for time slot validation
+ */
+export interface TimeSlotConstraints {
+  /** Minimum allowed time */
+  minTime?: Date;
+  /** Maximum allowed time */
+  maxTime?: Date;
+  /** Whether to allow weekend bookings */
+  allowWeekends?: boolean;
+  /** Minimum hours required in advance */
+  minBookingHours?: number;
+  /** Maximum days allowed in advance */
+  maxBookingDays?: number;
+  /** Buffer time between bookings in minutes */
+  bufferMinutes?: number;
+  /** Maximum slots allowed per day */
+  maxSlotsPerDay?: number;
+}
+
+/**
+ * Context for time validation
+ */
+export interface TimeValidationContext {
+  /** User ID making the booking */
+  userId: string;
+  /** Booking date and time */
+  datetime: Date;
+  /** Service category ID */
+  categoryId?: string;
+  /** Number of existing bookings */
+  existingBookings: number;
+  /** Whether this is an AMC booking */
+  isAMC: boolean;
+  /** Date of last AMC booking */
+  lastAmcBooking?: Date;
+  /** Custom time slot constraints */
+  constraints?: TimeSlotConstraints;
+}
+
+/**
+ * State of validation
+ */
+export interface ValidationState {
+  /** List of validation errors */
+  errors: string[];
+  /** List of validation warnings */
+  warnings?: string[];
+  /** Whether validation passed */
+  isValid?: boolean;
+}
+
+export type { ValidationResult, TimeValidationContext, ValidationState };

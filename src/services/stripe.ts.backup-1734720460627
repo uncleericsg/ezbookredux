@@ -1,0 +1,208 @@
+import { loadStripe, Stripe } from '@stripe/stripe-js';
+import axios from 'axios';
+import { z } from 'zod';
+
+import { ApiError, handleApiError, retryOperation } from '../utils/apiErrors';
+
+export interface PaymentOptions;
+
+export interface PaymentOptions;
+
+export interface PaymentOptions;
+
+export interface PaymentOptions;
+
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+// Validation schemas
+const paymentIntentSchema = z.object({
+  clientSecret: z.string(),
+});
+
+export interface PaymentOptions {
+  idempotencyKey?: string;
+  description?: string;
+  metadata?: Record<string, string>;
+  receiptEmail?: string;
+}
+
+let stripePromise: Promise<Stripe | null> | null = null;
+
+/**
+ * Initialize and get the Stripe instance.
+ * @returns Stripe instance or null if initialization fails.
+ * @throws {ApiError} If Stripe publishable key is not set or initialization fails.
+ */
+export async function getStripe(): Promise<Stripe | null> {
+  if (!stripePromise) {
+    if (!STRIPE_PUBLISHABLE_KEY) {
+      throw new ApiError(
+        'Stripe publishable key is not set in environment variables',
+        'STRIPE_ERROR',
+        { context: 'Stripe Initialization' }
+      );
+    }
+    try {
+      stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+    } catch (error) {
+      throw ApiError.fromStripeError(error);
+    }
+  }
+  return stripePromise;
+}
+
+/**
+ * Create a payment intent.
+ * @param amount Amount to charge in dollars.
+ * @param options Additional payment options.
+ * @returns Client secret for the payment intent.
+ * @throws {ApiError} If payment intent creation fails or validation fails.
+ */
+export async function createPaymentIntent(
+  amount: number,
+  options: PaymentOptions = {}
+): Promise<string> {
+  return retryOperation(async () => {
+    try {
+      const response = await axios.post(
+        '/api/payments/create-intent',
+        {
+          amount: Math.round(amount * 100), // Convert to cents
+          currency: 'usd',
+        },
+        {
+          headers: {
+            'Idempotency-Key':
+              options.idempotencyKey ||
+              (typeof globalThis !== 'undefined'
+                ? globalThis.crypto.randomUUID()
+                : Math.random().toString(36).substring(2)),
+          },
+        }
+      );
+
+      const result = paymentIntentSchema.safeParse(response.data);
+      if (!result.success) {
+        throw new ApiError('Invalid payment intent response', 'STRIPE_VALIDATION_ERROR', {
+          context: 'Payment Intent Creation',
+        });
+      }
+
+      return result.data.clientSecret;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new ApiError(
+          error.response?.data?.message || 'Failed to create payment intent',
+          'STRIPE_ERROR',
+          { context: 'Payment Intent Creation' }
+        );
+      }
+      throw error;
+    }
+  }, 3);
+}
+
+/**
+ * Confirm a payment with Stripe.
+ * @param clientSecret The client secret from the PaymentIntent.
+ * @returns Confirmed payment intent.
+ * @throws {ApiError} If Stripe is not initialized or payment confirmation fails.
+ */
+export async function confirmPayment(clientSecret: string): Promise<Stripe.PaymentIntent> {
+  const stripe = await getStripe();
+  if (!stripe) {
+    throw new ApiError('Stripe not initialized', 'STRIPE_ERROR', {
+      context: 'Payment Confirmation',
+    });
+  }
+
+  try {
+    const { paymentIntent, error } = await stripe.confirmPayment({
+      clientSecret,
+      confirmParams: {
+        return_url: `${globalThis.location.origin}/payment-success`,
+      },
+    });
+
+    if (error) {
+      throw ApiError.fromStripeError(error);
+    }
+
+    if (!paymentIntent) {
+      throw new ApiError('Payment intent not found', 'STRIPE_ERROR', {
+        context: 'Payment Confirmation',
+      });
+    }
+
+    return paymentIntent;
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    throw ApiError.fromStripeError(error);
+  }
+}
+
+/**
+ * Handle successful payment.
+ * @param paymentIntentId The ID of the successful PaymentIntent.
+ * @returns Response data from the success handler.
+ * @throws {ApiError} If handling payment success fails.
+ */
+export async function handlePaymentSuccess(paymentIntentId: string): Promise<unknown> {
+  try {
+    const response = await axios.post('/api/payments/success', {
+      paymentIntentId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error handling payment success:', error);
+    throw handleApiError(error);
+  }
+}
+
+/**
+ * Handle failed payment.
+ * @param paymentIntentId The ID of the failed PaymentIntent.
+ * @param error The error that caused the failure.
+ * @throws {ApiError} If handling payment failure fails.
+ */
+export async function handlePaymentFailure(
+  paymentIntentId: string,
+  error: Stripe.StripeError
+): Promise<void> {
+  try {
+    await axios.post('/api/payments/failure', {
+      paymentIntentId,
+      error: { type: error.type },
+    });
+
+    // Log failure for analytics
+    console.error('Payment failed:', {
+      paymentIntentId,
+      errorType: error.type,
+    });
+
+    // Show appropriate error message to user
+    if (error.type === 'card_error') {
+      throw new ApiError('Your card was declined. Please try another card.', 'STRIPE_CARD_ERROR', {
+        context: 'Payment Processing',
+      });
+    } else if (error.type === 'validation_error') {
+      throw new ApiError(
+        'Please check your card details and try again.',
+        'STRIPE_VALIDATION_ERROR',
+        { context: 'Payment Processing' }
+      );
+    } else {
+      throw new ApiError('Payment failed. Please try again later.', 'STRIPE_ERROR', {
+        context: 'Payment Processing',
+      });
+    }
+  } catch (err) {
+    console.error('Error handling payment failure:', err);
+    throw handleApiError(err);
+  }
+}
+
+export type { Stripe };
+
+undefined.displayName = 'undefined';

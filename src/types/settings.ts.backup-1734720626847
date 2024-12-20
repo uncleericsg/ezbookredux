@@ -1,0 +1,363 @@
+import * as React from 'react';
+
+export interface RateLimit;
+
+export interface ChatGPTSettings;
+
+export interface FCMSettings;
+
+export interface StripeSettings;
+
+export interface RepairShoprSettings;
+
+export interface CypressSettings;
+
+export interface SecuritySettings;
+
+export interface NotificationSettings;
+
+export interface AppSettings;
+
+
+/**
+ * Rate limit settings
+ */
+
+  /**
+   * Time window in milliseconds for rate limiting
+   */
+  windowMs: number;
+}
+
+/**
+ * ChatGPT settings
+ */
+
+  /**
+   * Model to use for ChatGPT
+   */
+  model: string;
+  /**
+   * Whether ChatGPT is enabled
+   */
+  enabled: boolean;
+  /**
+   * Maximum number of tokens to generate
+   */
+  maxTokens: number;
+  /**
+   * Temperature for ChatGPT responses
+   */
+  temperature: number;
+  /**
+   * Rate limit settings for ChatGPT
+   */
+  rateLimit?: RateLimit;
+}
+
+/**
+ * FCM (Firebase Cloud Messaging) settings
+ */
+
+  /**
+   * Maximum number of tokens to generate
+   */
+  maxTokens: number;
+  /**
+   * Rate limit settings for FCM
+   */
+  rateLimit: RateLimit;
+}
+
+/**
+ * Stripe settings
+ */
+
+  /**
+   * Secret key for Stripe
+   */
+  secretKey: string;
+  /**
+   * Whether Stripe is enabled
+   */
+  enabled: boolean;
+  /**
+   * Webhook secret for Stripe
+   */
+  webhookSecret?: string;
+  /**
+   * Whether Stripe is in test mode
+   */
+  testMode?: boolean;
+}
+
+/**
+ * RepairShopr settings
+ */
+
+  /**
+   * Whether RepairShopr is enabled
+   */
+  enabled: boolean;
+  /**
+   * Subdomain for RepairShopr
+   */
+  subdomain?: string;
+  /**
+   * Webhook secret for RepairShopr
+   */
+  webhookSecret?: string;
+}
+
+/**
+ * Cypress settings
+ */
+
+  /**
+   * Whether Cypress is enabled
+   */
+  enabled: boolean;
+  /**
+   * Project ID for Cypress
+   */
+  projectId?: string;
+  /**
+   * Record key for Cypress
+   */
+  recordKey?: string;
+}
+
+/**
+ * Security settings
+ */
+
+  /**
+   * Duration of lockout after maximum login attempts
+   */
+  lockoutDuration: number;
+  /**
+   * Password policy settings
+   */
+  passwordPolicy: {
+    /**
+     * Minimum length of password
+     */
+    minLength: number;
+    /**
+     * Whether password requires uppercase letters
+     */
+    requireUppercase: boolean;
+    /**
+     * Whether password requires lowercase letters
+     */
+    requireLowercase: boolean;
+    /**
+     * Whether password requires numbers
+     */
+    requireNumbers: boolean;
+    /**
+     * Whether password requires special characters
+     */
+    requireSpecialChars: boolean;
+  };
+  /**
+   * Session timeout in seconds
+   */
+  sessionTimeout: number;
+}
+
+/**
+ * Notification settings
+ */
+
+    /**
+     * Email provider (smtp, sendgrid, or aws-ses)
+     */
+    provider: 'smtp' | 'sendgrid' | 'aws-ses';
+    /**
+     * From email address
+     */
+    from: string;
+    /**
+     * Reply-to email address
+     */
+    replyTo?: string;
+    /**
+     * Email templates
+     */
+    templates: {
+      /**
+       * Welcome email template
+       */
+      welcome: string;
+      /**
+       * Reset password email template
+       */
+      resetPassword: string;
+      /**
+       * Service confirmation email template
+       */
+      serviceConfirmation: string;
+    };
+  };
+  /**
+   * SMS notification settings
+   */
+  sms: {
+    /**
+     * Whether SMS notifications are enabled
+     */
+    enabled: boolean;
+    /**
+     * SMS provider (twilio or aws-sns)
+     */
+    provider: 'twilio' | 'aws-sns';
+    /**
+     * SMS templates
+     */
+    templates: {
+      /**
+       * Service reminder SMS template
+       */
+      serviceReminder: string;
+      /**
+       * Status update SMS template
+       */
+      statusUpdate: string;
+    };
+  };
+  /**
+   * Push notification settings
+   */
+  push: {
+    /**
+     * Whether push notifications are enabled
+     */
+    enabled: boolean;
+    /**
+     * VAPID keys for push notifications
+     */
+    vapidKeys?: {
+      /**
+       * Public VAPID key
+       */
+      public: string;
+      /**
+       * Private VAPID key
+       */
+      private: string;
+    };
+  };
+}
+
+/**
+ * Application settings
+ */
+
+  /**
+   * RepairShopr settings
+   */
+  repairShopr: RepairShoprSettings;
+  /**
+   * Stripe settings
+   */
+  stripe: StripeSettings;
+  /**
+   * ChatGPT settings
+   */
+  chatGPT: ChatGPTSettings;
+  /**
+   * Cypress settings
+   */
+  cypress: CypressSettings;
+  /**
+   * FCM settings
+   */
+  fcm: FCMSettings;
+  /**
+   * Security settings
+   */
+  security: SecuritySettings;
+  /**
+   * Notification settings
+   */
+  notifications: NotificationSettings;
+  /**
+   * Maintenance settings
+   */
+  maintenance?: {
+    /**
+     * Whether maintenance mode is enabled
+     */
+    enabled: boolean;
+    /**
+     * Maintenance message
+     */
+    message?: string;
+    /**
+     * Allowed IP addresses for maintenance mode
+     */
+    allowedIPs?: string[];
+  };
+  /**
+   * Feature settings
+   */
+  features: {
+    /**
+     * Whether booking is enabled
+     */
+    booking: boolean;
+    /**
+     * Whether payments are enabled
+     */
+    payments: boolean;
+    /**
+     * Whether chat is enabled
+     */
+    chat: boolean;
+    /**
+     * Whether reviews are enabled
+     */
+    reviews: boolean;
+    /**
+     * Whether analytics are enabled
+     */
+    analytics: boolean;
+  };
+  /**
+   * Customization settings
+   */
+  customization: {
+    /**
+     * Theme (light, dark, or system)
+     */
+    theme: 'light' | 'dark' | 'system';
+    /**
+     * Primary color
+     */
+    primaryColor: string;
+    /**
+     * Logo URL
+     */
+    logo?: string;
+    /**
+     * Company name
+     */
+    companyName: string;
+  };
+  /**
+   * Version number
+   */
+  version: string;
+  /**
+   * Last updated timestamp
+   */
+  lastUpdated: string;
+}
+
+const settings = () => {
+  return null;
+};
+
+export { AppSettings, RateLimit, ChatGPTSettings, FCMSettings, StripeSettings, RepairShoprSettings, CypressSettings, SecuritySettings, NotificationSettings };
+undefined.displayName = 'undefined';

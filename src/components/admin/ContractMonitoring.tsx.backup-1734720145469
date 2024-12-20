@@ -1,0 +1,168 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { AlertCircle, Calendar, FileText, User } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Progress } from '../ui/Progress';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "../ui/Table";
+
+import { ExpandablePanel } from './shared/ExpandablePanel';
+
+export interface Contract {
+  id: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'pending' | 'expired';
+  type: string;
+  progress: number;
+  alerts: number;
+}
+
+const statusColors = {
+  active: 'green',
+  pending: 'yellow',
+  expired: 'red'
+} as const;
+
+export interface ContractMonitoringProps extends React.HTMLAttributes<HTMLDivElement> {
+  contracts?: Contract[];
+}
+
+export const ContractMonitoring = ({
+  contracts = [],
+  ...props
+}: ContractMonitoringProps) => {
+  const mockContracts = [
+    {
+      id: '1',
+      customerName: 'John Doe',
+      startDate: '2022-01-01',
+      endDate: '2022-12-31',
+      status: 'active',
+      type: 'Type 1',
+      progress: 10,
+      alerts: 0
+    },
+    {
+      id: '2',
+      customerName: 'Jane Smith',
+      startDate: '2022-02-01',
+      endDate: '2023-01-31',
+      status: 'pending',
+      type: 'Type 2',
+      progress: 5,
+      alerts: 0
+    }
+  ];
+
+  const contractsList = contracts || mockContracts;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      {...props}
+    >
+      <ExpandablePanel
+        icon={<FileText className="h-5 w-5" />}
+        title="Contract Monitoring"
+        defaultExpanded
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="flex items-center space-x-4 rounded-lg border p-4">
+              <User className="h-8 w-8 text-blue-500" />
+              <div>
+                <p className="text-sm font-medium">Total Contracts</p>
+                <p className="text-2xl font-bold">{contractsList.length}</p>
+              </div>
+            </div>
+
+            {Object.entries(statusColors).map(([status, color]) => (
+              <div key={status} className="flex items-center space-x-4 rounded-lg border p-4">
+                <AlertCircle className={`h-8 w-8 text-${color}-500`} />
+                <div>
+                  <p className="text-sm font-medium capitalize">{status}</p>
+                  <p className="text-2xl font-bold">
+                    {contractsList.filter((c) => c.status === status).length}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Contract Type</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contractsList.map((contract) => (
+                <TableRow key={contract.id}>
+                  <TableCell>{contract.customerName}</TableCell>
+                  <TableCell>{contract.type}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {contract.startDate} - {contract.endDate}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={`bg-${statusColors[contract.status as keyof typeof statusColors]}-100 text-${
+                        statusColors[contract.status as keyof typeof statusColors]
+                      }-700`}
+                    >
+                      {contract.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <Progress
+                        value={(contract.progress / 12) * 100}
+                        className="h-2"
+                      />
+                      <p className="text-sm text-gray-500">
+                        {contract.progress} of 12 services completed
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </ExpandablePanel>
+    </motion.div>
+  );
+};
+
+ContractMonitoring.displayName = 'ContractMonitoring';
+
+export { ContractMonitoring };

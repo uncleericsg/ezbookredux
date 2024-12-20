@@ -1,0 +1,169 @@
+export interface EmailSuggestion;
+
+/**
+ * Email suggestion with corrected parts
+ */
+
+  /** Domain part of email address */
+  domain: string;
+  /** Complete email address */
+  full: string;
+}
+
+/** Common email domains */
+const commonDomains = [
+  'gmail.com',
+  'yahoo.com',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'icloud.com',
+  'msn.com',
+  'singnet.com.sg',
+  'yahoo.com.sg'
+] as const;
+
+/** Common second-level domains */
+const secondLevelDomains = [
+  'gmail',
+  'yahoo',
+  'hotmail',
+  'outlook',
+  'live',
+  'icloud',
+  'msn'
+] as const;
+
+/** Common top-level domains */
+const topLevelDomains = [
+  'com',
+  'net',
+  'org',
+  'edu',
+  'gov',
+  'mil',
+  'co',
+  'com.sg',
+  'sg'
+] as const;
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * @param a First string
+ * @param b Second string
+ * @returns Edit distance
+ */
+export function getEditDistance(a: string, b: string): number {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  const matrix: number[][] = [];
+
+  // Initialize matrix
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill matrix
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          Math.min(
+            matrix[i][j - 1] + 1, // insertion
+            matrix[i - 1][j] + 1 // deletion
+          )
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Find the closest matching string from a list of candidates
+ * @param str String to match
+ * @param candidates List of candidate strings
+ * @returns Closest matching string or null if no close match found
+ */
+export function findClosestString(str: string, candidates: readonly string[]): string | null {
+  if (!str || candidates.length === 0) {
+    return null;
+  }
+
+  let minDistance = Infinity;
+  let closest: string | null = null;
+
+  for (const candidate of candidates) {
+    const distance = getEditDistance(str.toLowerCase(), candidate.toLowerCase());
+    if (distance < minDistance && distance <= Math.ceil(candidate.length / 3)) {
+      minDistance = distance;
+      closest = candidate;
+    }
+  }
+
+  return closest;
+}
+
+/**
+ * Suggest a correction for a potentially misspelled email address
+ * @param email Email address to check
+ * @returns Suggested correction or null if no suggestion available
+ */
+export function suggestEmailCorrection(email: string): EmailSuggestion | null {
+  if (!email.includes('@')) {
+    return null;
+  }
+
+  const [address, domain] = email.toLowerCase().split('@');
+
+  // Check if domain is a common domain
+  const exactMatch = commonDomains.find(d => d === domain);
+  if (exactMatch) {
+    return {
+      address,
+      domain: exactMatch,
+      full: `${address}@${exactMatch}`
+    };
+  }
+
+  // If no direct match found, try to match parts
+  const domainParts = domain.split('.');
+  if (domainParts.length >= 2) {
+    const secondLevel = findClosestString(domainParts[0], secondLevelDomains);
+    const topLevel = findClosestString(domainParts.slice(1).join('.'), topLevelDomains);
+
+    if (secondLevel && topLevel) {
+      const suggestedDomain = `${secondLevel}.${topLevel}`;
+      return {
+        address,
+        domain: suggestedDomain,
+        full: `${address}@${suggestedDomain}`
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Validate email address format
+ * @param email Email address to validate
+ * @returns Whether the email address is valid
+ */
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+export type { EmailSuggestion };
+export { commonDomains, secondLevelDomains, topLevelDomains };
+
+undefined.displayName = 'undefined';

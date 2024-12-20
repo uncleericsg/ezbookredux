@@ -1,0 +1,139 @@
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import * as React from 'react';
+import { toast } from 'sonner';
+
+export interface ErrorBoundaryProps;
+export interface ErrorBoundaryState;
+
+export interface ErrorBoundaryProps;
+export interface ErrorBoundaryState;
+
+export interface ErrorBoundaryProps;
+export interface ErrorBoundaryState;
+
+export interface ErrorBoundaryProps;
+export interface ErrorBoundaryState;
+
+/**
+ * Props for the ErrorBoundary component
+ */
+interface ErrorBoundaryProps {
+  /** React children to be rendered */
+  children: React.ReactNode;
+  /** Optional fallback UI to display when an error occurs */
+  fallback?: React.ReactNode;
+}
+
+/**
+ * State for the ErrorBoundary component
+ */
+interface ErrorBoundaryState {
+  /** Whether an error has occurred */
+  hasError: boolean;
+  /** The error that occurred, if any */
+  error: Error | null;
+  /** Additional error information from React */
+  errorInfo: React.ErrorInfo | null;
+}
+
+/**
+ * A React error boundary component that catches JavaScript errors anywhere in its child
+ * component tree and displays a fallback UI instead of the component tree that crashed.
+ * 
+ * @example
+ * ```tsx
+ * <ErrorBoundary fallback={<CustomErrorUI />}>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ * ```
+ */
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public static displayName = 'ErrorBoundary';
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    };
+  }
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return {
+      hasError: true,
+      error,
+      errorInfo: null
+    };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    this.setState({
+      error,
+      errorInfo
+    });
+
+    // Log the error to an error reporting service
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    toast.error('An unexpected error occurred. Please try again.');
+  }
+
+  private handleReset = (): void => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+  };
+
+  public render(): React.ReactNode {
+    const { hasError, error } = this.state;
+    const { fallback, children } = this.props;
+
+    if (hasError) {
+      if (fallback) {
+        return fallback;
+      }
+
+      return (
+        <div 
+          className="p-4 rounded-md bg-red-50 border border-red-200"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" aria-hidden="true" />
+            <h3 className="text-sm font-medium text-red-800">
+              Something went wrong
+            </h3>
+          </div>
+          <div className="mt-2 text-sm text-red-700">
+            <p>
+              We encountered an unexpected error. Please try again or contact
+              support if the issue persists.
+            </p>
+            {error && (
+              <p className="mt-1 font-mono text-xs">
+                Error: {error.message}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={this.handleReset}
+            className="mt-3 inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            type="button"
+            aria-label="Try again"
+          >
+            <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return children;
+  }
+}
+export { ErrorBoundary };
+
+undefined.displayName = 'undefined';

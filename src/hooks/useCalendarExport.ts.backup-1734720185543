@@ -1,0 +1,64 @@
+ 
+import { format } from 'date-fns';
+import { useCallback } from 'react';
+
+interface CalendarEvent {
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+}
+
+interface UseCalendarExportReturn {
+  downloadCalendarFile: (event: CalendarEvent) => void;
+}
+
+export function useCalendarExport(): UseCalendarExportReturn {
+  const generateICS = useCallback((event: CalendarEvent): string => {
+    const formatDate = (date: string) => {
+      return format(new Date(date), "yyyyMMdd'T'HHmmss'Z'");
+    };
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//iAircon//Service Appointment//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `DTSTART:${formatDate(event.startTime)}`,
+      `DTEND:${formatDate(event.endTime)}`,
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.description}`,
+      `LOCATION:${event.location}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    return ics;
+  }, []);
+
+  const downloadCalendarFile = useCallback((event: CalendarEvent) => {
+    try {
+      const icsContent = generateICS(event);
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = 'service-appointment.ics';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Failed to download calendar file:', error);
+      throw new Error('Failed to download calendar file');
+    }
+  }, [generateICS]);
+
+  return {
+    downloadCalendarFile
+  };
+}
+
+export type { CalendarEvent };

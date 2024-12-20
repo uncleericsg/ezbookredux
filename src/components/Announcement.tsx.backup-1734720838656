@@ -1,0 +1,115 @@
+import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import type { Announcement as AnnouncementType } from '../types';
+
+export interface AnnouncementProps;
+
+
+/**
+ * Announcement component for the iAircon Easy Booking system
+ *
+ * @component Announcement
+ * @description Displays an announcement modal with a title, message, and dismiss button.
+ * The announcement can be dismissed and its state is persisted in local storage.
+ *
+ * @example
+ * ```tsx
+ * import { Announcement } from './components';
+ * 
+ * <Announcement 
+ *   announcement={{ id: '1', title: 'Welcome', message: 'Welcome to iAircon!' }}
+ *   onDismiss={() => console.log('Dismissed announcement')}
+ * />
+ * ```
+ */
+interface AnnouncementProps extends React.ComponentPropsWithoutRef<'div'> {
+  /** The announcement data */
+  announcement: AnnouncementType;
+  /** 
+   * Callback function when the announcement is dismissed
+   * @internal This parameter is unused in the current implementation
+   */
+  onDismiss: () => void;
+}
+
+/**
+ * Safely get an item from localStorage
+ * @param key The key to get from localStorage
+ * @returns The value from localStorage or null if not available
+ */
+const getLocalStorageItem = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Safely set an item in localStorage
+ * @param key The key to set in localStorage
+ * @param value The value to set
+ */
+const setLocalStorageItem = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+const Announcement: React.FC<AnnouncementProps> = ({ announcement, onDismiss }) => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const isDismissed = getLocalStorageItem(`announcement-${announcement.id}`);
+    if (isDismissed) {
+      setIsVisible(false);
+    }
+  }, [announcement.id]);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    setLocalStorageItem(`announcement-${announcement.id}`, 'true');
+    onDismiss();
+  };
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75">
+      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+        <div className="flex items-start justify-between mb-4">
+          <h2 className="text-xl font-semibold">{announcement.title}</h2>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+            aria-label="Dismiss announcement"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="text-gray-300 mb-6">{announcement.message}</p>
+        <button 
+          onClick={handleDismiss} 
+          className="w-full btn btn-primary"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+};
+
+Announcement.displayName = 'Announcement';
+export { AnnouncementProps, Announcement };
+
+undefined.displayName = 'undefined';

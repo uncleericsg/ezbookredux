@@ -1,0 +1,70 @@
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
+
+import {
+  BookingState,
+  createInitialState,
+  transition,
+  isBookingInProgress
+} from '../utils/bookingState';
+import { BookingError } from '../utils/errors';
+
+export interface UseBookingStateReturn;
+
+export type BookingAction;
+
+
+interface UseBookingStateReturn {
+  state: BookingState;
+  dispatch: (action: BookingAction) => void;
+  reset: () => void;
+  isInProgress: boolean;
+}
+
+type BookingAction = Parameters<typeof transition>[1];
+
+export function useBookingState(): UseBookingStateReturn {
+  const [state, setState] = useState<BookingState>(createInitialState());
+
+  const dispatch = useCallback((action: BookingAction) => {
+    setState(currentState => {
+      try {
+        const newState = transition(currentState, action);
+
+        // Show relevant toasts based on state changes
+        if (newState.status === 'failed' && newState.error) {
+          toast.error(newState.error);
+        }
+
+        if (newState.warnings.length > 0) {
+          newState.warnings.forEach(warning => toast.warning(warning));
+        }
+
+        if (newState.status === 'confirmed') {
+          toast.success('Booking confirmed successfully');
+        }
+
+        return newState;
+      } catch (error) {
+        if (error instanceof BookingError && error.toast) {
+          toast.error(error.message);
+        }
+        throw error;
+      }
+    });
+  }, []);
+
+  const reset = useCallback(() => {
+    setState(createInitialState());
+  }, []);
+
+  const isInProgress = isBookingInProgress(state);
+
+  return {
+    state,
+    dispatch,
+    reset,
+    isInProgress
+  };
+}
+undefined.displayName = 'undefined';

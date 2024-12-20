@@ -1,0 +1,86 @@
+'use client';
+
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
+import { Calendar, Gift } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+
+export interface Holiday;
+
+export interface Props;
+
+
+  date: string;
+  type: string;
+  description?: string;
+};
+
+HolidayItem.displayName = 'HolidayItem';
+interface Props {
+  holiday: Holiday;
+  onSchedule: (holiday: Holiday) => void;
+  style?: React.CSSProperties;
+}
+
+const HolidayItem: React.FC<Props> = ({
+  holiday,
+  onSchedule,
+  style
+}) => {
+  const formattedDate = format(new Date(holiday.date), 'MMMM d, yyyy');
+
+  return (
+    <motion.div
+      className="w-full transition-all hover:border border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      style={style}
+      role="listitem"
+    >
+      <Card>
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Gift className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">{holiday.name}</h3>
+                <Badge variant="outline">{holiday.type}</Badge>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>{formattedDate}</span>
+              </div>
+              {holiday.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {holiday.description}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSchedule(holiday)}
+              className="gap-2"
+            >
+              Schedule Greeting
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+};
+
+HolidayItem.displayName = 'HolidayItem';
+
+export { HolidayItem, Holiday };
+undefined.displayName = 'undefined';

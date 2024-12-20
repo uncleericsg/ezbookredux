@@ -1,0 +1,60 @@
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+
+import { useToast } from './useToast';
+
+export interface NotificationPreferences {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+  reminderDays: number;
+}
+
+export const useNotificationPreferences = () => {
+  const [preferences, setPreferences] = useState<NotificationPreferences>({
+    email: false,
+    sms: false,
+    push: false,
+    reminderDays: 7
+  });
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        // In a real app, this would fetch from an API
+        const savedPreferences = window.localStorage.getItem('notificationPreferences');
+        if (savedPreferences) {
+          setPreferences(JSON.parse(savedPreferences));
+        }
+      } catch (error) {
+        toast.showError('Failed to load notification preferences');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPreferences();
+  }, [toast]);
+
+  const updatePreferences = async (newPreferences: NotificationPreferences) => {
+    try {
+      setLoading(true);
+      // In a real app, this would be an API call
+      window.localStorage.setItem('notificationPreferences', JSON.stringify(newPreferences));
+      setPreferences(newPreferences);
+      toast.showSuccess('Notification preferences updated');
+    } catch (error) {
+      toast.showError('Failed to update preferences');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    preferences,
+    loading,
+    updatePreferences
+  };
+};

@@ -1,0 +1,216 @@
+import { signInAnonymously } from 'firebase/auth';
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
+
+import { ApiError } from '@/utils/apiErrors';
+
+import { auth, db } from './firebase';
+import { initGooglePlaces } from './googlePlaces';
+import { getStripe } from './stripe';
+
+export interface ServiceConfig;
+export interface ServiceStatus;
+export interface ServiceState;
+
+export interface ServiceConfig;
+export interface ServiceStatus;
+export interface ServiceState;
+
+export interface ServiceConfig;
+export interface ServiceStatus;
+export interface ServiceState;
+
+export interface ServiceConfig;
+export interface ServiceStatus;
+export interface ServiceState;
+
+/**
+ * Configuration for the ServiceManager.
+ */
+export interface ServiceConfig {
+  retryAttempts: number;
+  timeout: number;
+  features: Record<string, boolean>;
+}
+
+/**
+ * Status of a service.
+ */
+export interface ServiceStatus {
+  initialized: boolean;
+  error?: Error;
+  lastInitAttempt?: Date;
+}
+
+/**
+ * State of all services.
+ */
+export interface ServiceState {
+  [key: string]: ServiceStatus;
+}
+
+/**
+ * Manages service initialization and status tracking.
+ */
+export class ServiceManager {
+  private static instance: ServiceManager;
+  private initializationOrder: string[] = ['core', 'auth', 'firestore', 'stripe', 'googlePlaces'];
+
+  private config: ServiceConfig = {
+    retryAttempts: 3,
+    timeout: 30000,
+    features: {
+      anonymousAuth: false,
+    },
+  };
+
+  private state: ServiceState = {};
+
+  private constructor() {
+    this.initializeState();
+  }
+
+  /**
+   * Get the singleton instance of ServiceManager
+   */
+  public static getInstance(): ServiceManager {
+    if (!ServiceManager.instance) {
+      ServiceManager.instance = new ServiceManager();
+    }
+    return ServiceManager.instance;
+  }
+
+  /**
+   * Initialize the service state
+   */
+  private initializeState(): void {
+    this.initializationOrder.forEach((service) => {
+      this.state[service] = {
+        initialized: false,
+      };
+    });
+  }
+
+  /**
+   * Update service configuration
+   */
+  public updateConfig(config: Partial<ServiceConfig>): void {
+    this.config = {
+      ...this.config,
+      ...config,
+      features: {
+        ...this.config.features,
+        ...config.features,
+      },
+    };
+  }
+
+  /**
+   * Initialize all services
+   */
+  public async initializeServices(): Promise<void> {
+    for (const service of this.initializationOrder) {
+      try {
+        await this.initializeService(service);
+      } catch (error) {
+        console.error(`Failed to initialize ${service}:`, error);
+        throw new ApiError('SERVICE_INITIALIZATION_ERROR', `Failed to initialize ${service}`);
+      }
+    }
+  }
+
+  /**
+   * Initialize Firestore service
+   */
+  private async initializeFirestore(): Promise<void> {
+    const configDoc = doc(collection(db, 'config'), 'app');
+    const configSnapshot = await getDoc(configDoc);
+
+    if (!configSnapshot.exists()) {
+      await setDoc(configDoc, {
+        version: '1.0.0',
+        features: this.config.features,
+      });
+    }
+  }
+
+  /**
+   * Initialize a specific service
+   */
+  private async initializeService(service: string): Promise<void> {
+    const status = this.state[service];
+    if (!status) return;
+
+    status.lastInitAttempt = new Date();
+
+    try {
+      switch (service) {
+        case 'core':
+          // Core initialization logic
+          break;
+
+        case 'auth':
+          if (this.config.features.anonymousAuth) {
+            await signInAnonymously(auth);
+          }
+          break;
+
+        case 'firestore':
+          await this.initializeFirestore();
+          break;
+
+        case 'stripe':
+          await getStripe();
+          break;
+
+        case 'googlePlaces':
+          await initGooglePlaces();
+          break;
+
+        default:
+          throw new Error(`Unknown service: ${service}`);
+      }
+
+      status.initialized = true;
+      status.error = undefined;
+      toast.success(`${service} service initialized`);
+    } catch (error) {
+      status.error = error instanceof Error ? error : new Error(String(error));
+      status.initialized = false;
+      throw error;
+    }
+  }
+
+  /**
+   * Get the status of all services
+   */
+  public getServiceStatus(): ServiceState {
+    return { ...this.state };
+  }
+
+  /**
+   * Check if a specific service is initialized
+   */
+  public isServiceInitialized(service: string): boolean {
+    return this.state[service]?.initialized ?? false;
+  }
+
+  /**
+   * Check if all services are initialized
+   */
+  public areAllServicesInitialized(): boolean {
+    return this.initializationOrder.every((service) => this.isServiceInitialized(service));
+  }
+
+  /**
+   * Get the initialization order of services
+   */
+  public getInitializationOrder(): string[] {
+    return [...this.initializationOrder];
+  }
+}
+
+export const serviceManager = ServiceManager.getInstance();
+export type { ServiceConfig, ServiceStatus, ServiceState };
+
+undefined.displayName = 'undefined';

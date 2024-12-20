@@ -1,0 +1,468 @@
+'use client';
+
+import { 
+  Button as _Button, 
+  TextField as _TextField, 
+  Typography as _Typography, 
+  Box as _Box, 
+  CircularProgress as _CircularProgress 
+} from '@mui/material';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import React, { FC, useState, useEffect, useRef, HTMLAttributes } from 'react';
+import { 
+  FiUser as _FiUser, 
+  FiMail as _FiMail, 
+  FiPhone as _FiPhone, 
+  FiMapPin as _FiMapPin, 
+  FiHome as _FiHome, 
+  FiHash as _FiHash, 
+  FiBox as _FiBox, 
+  FiCheck as _FiCheck, 
+  FiX as _FiX 
+} from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+
+import { OTPInput as _OTPInput } from '@/components/common/OTPInput';
+import { supabase as _supabase } from '@/lib/supabase';
+import { BrevoService as _BrevoService } from '@/services/brevoService';
+import { bookingService as _bookingService } from '@/services/supabase/bookingService';
+import { profileService as _profileService } from '@/services/supabase/profileService';
+import { findEmailTypo as _findEmailTypo, type EmailSuggestion } from '@/utils/emailUtils';
+
+import './CustomerForm.css';
+
+export type EmailSuggestion } from '@/utils/emailUtils';
+
+export type CustomerFormData;
+
+export type ValidationState;
+
+export type FormValidation;
+
+export type CustomerFormSupabaseProps;
+
+export interface GoogleMapsWindow;
+
+export interface Window;
+
+
+// Export types at the top
+
+  lastName: string;
+  email: string;
+  mobile: string;
+  address: string;
+  postalCode: string;
+  unit: string;
+  buildingName: string;
+  lobbyTower: string;
+};
+
+  valid: boolean;
+  error?: string;
+};
+
+  lastName: ValidationState;
+  email: ValidationState;
+  mobile: ValidationState;
+  address: ValidationState;
+  postalCode: ValidationState;
+  unit: ValidationState;
+  buildingName: ValidationState;
+  lobbyTower: ValidationState;
+};
+
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    mobile: string;
+    addresses: Array<{
+      id: string;
+      floorUnit: string;
+      blockStreet: string;
+      postalCode: string;
+      condoName?: string;
+      lobbyTower?: string;
+      isDefault: boolean;
+    }>;
+    isAMC?: boolean;
+  };
+};
+
+) => {
+          addListener: (event: string, callback: () => void) => void;
+          getPlace: () => {
+            formatted_address: string;
+            address_components: Array<{
+              long_name: string;
+              short_name: string;
+              types: string[];
+            }>;
+          };
+        };
+      };
+    };
+  };
+  initMap: () => void;
+  isGoogleMapsLoaded: boolean;
+}
+
+declare global {
+  interface Window extends GoogleMapsWindow {}
+}
+
+// Component declaration as const
+const CustomerFormSupabase = ({
+  onSave,
+  initialData,
+  ...props
+}: CustomerFormSupabaseProps) => {
+  const _navigate = useNavigate();
+  const _supabaseClient = useSupabaseClient();
+  const _brevoService = new _BrevoService();
+
+  const [_formData, _setFormData] = useState<CustomerFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobile: '',
+    address: '',
+    postalCode: '',
+    unit: '',
+    buildingName: '',
+    lobbyTower: ''
+  });
+
+  const [_validation, _setValidation] = useState<FormValidation>({
+    firstName: { touched: false, valid: false, error: '' },
+    lastName: { touched: false, valid: false, error: '' },
+    email: { touched: false, valid: false, error: '' },
+    mobile: { touched: false, valid: false, error: '' },
+    address: { touched: false, valid: false, error: '' },
+    postalCode: { touched: false, valid: false, error: '' },
+    unit: { touched: false, valid: false, error: '' },
+    buildingName: { touched: false, valid: false, error: '' },
+    lobbyTower: { touched: false, valid: false, error: '' }
+  });
+
+  const [_isGoogleMapsLoaded, _setIsGoogleMapsLoaded] = useState(false);
+  const _autocompleteRef = useRef(null);
+  const _addressInputRef = useRef(null);
+  const _unitInputRef = useRef(null);
+
+  const [_showExistingUserModal, _setShowExistingUserModal] = useState(false);
+  const [_showVerifyButton, _setShowVerifyButton] = useState(false);
+  const [_emailSuggestion, _setEmailSuggestion] = useState<EmailSuggestion | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [verified, setVerified] = useState(false);
+
+  const _formatMobileNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    if (digits.length > 4) {
+      return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+    }
+    return digits;
+  };
+
+  const _validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        return { touched: true, valid: value.length > 0, error: '' };
+      case 'email': {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2}$/;
+        const isValidFormat = emailRegex.test(value);
+        return { touched: true, valid: isValidFormat, error: isValidFormat ? '' : 'Invalid email format' };
+      }
+      case 'mobile': {
+        const digitsOnly = value.replace(/\D/g, '');
+        const mobileRegex = /^(\+65|65)?[689][0-9]{7}$/;
+        return { touched: true, valid: mobileRegex.test(digitsOnly), error: mobileRegex.test(digitsOnly) ? '' : 'Invalid mobile number' };
+      }
+      case 'address':
+        return { touched: true, valid: value.length > 0, error: '' };
+      case 'postalCode': {
+        const postalRegex = /^[0-9]{6}$/;
+        return { touched: true, valid: postalRegex.test(value), error: postalRegex.test(value) ? '' : 'Invalid postal code' };
+      }
+      case 'unit':
+        return { touched: true, valid: value.length > 0, error: '' };
+      default:
+        return { touched: false, valid: false, error: '' };
+    }
+  };
+
+  const _handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+
+    if (name === 'mobile') {
+      formattedValue = _formatMobileNumber(value);
+    }
+
+    _setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    const validationResult = _validateField(name, formattedValue);
+    _setValidation(prev => ({ ...prev, [name]: validationResult }));
+
+    if (name === 'email' && validationResult.valid) {
+      const suggestion = await _findEmailTypo(value);
+      _setEmailSuggestion(suggestion);
+      _setShowVerifyButton(true);
+    }
+  };
+
+  const _handleVerifyEmail = async () => {
+    if (_formData.email) {
+      const success = await _brevoService.verifyEmail(_formData.email);
+      if (success) {
+        _setShowVerifyButton(false);
+      }
+    }
+  };
+
+  const _handleOTPComplete = async (otp: string) => {
+    const success = await _validateField('email', otp);
+    if (success) {
+      _setValidation(prev => ({ ...prev, email: { ...prev.email, valid: true } }));
+      if (_unitInputRef.current) {
+        _unitInputRef.current.focus();
+      }
+    }
+  };
+
+  const handleSendOTP = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const existingUser = await _supabaseClient.from('customers').select('id').eq('email', _formData.email).single();
+      if (existingUser) {
+        setError('This email is already registered. Please login or use a different email.');
+        return;
+      }
+
+      const otpCode = await _brevoService.generateOTP(_formData.email);
+      await _brevoService.sendOTPEmail(_formData.email, otpCode);
+      setOtpSent(true);
+    } catch (error) {
+      setError('Failed to send OTP. Please try again.');
+      console.error('OTP send error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const isValid = await _validateField('email', otp);
+      if (!isValid) {
+        setError('Invalid OTP. Please try again.');
+        return;
+      }
+
+      const newCustomer = await _supabaseClient.from('customers').insert([{ 
+        name: _formData.firstName + ' ' + _formData.lastName, 
+        unit_number: _formData.unit 
+      }]).select().single();
+
+      if (newCustomer.error) {
+        throw newCustomer.error;
+      }
+
+      await _brevoService.sendWelcomeEmail(_formData.email, _formData.firstName + ' ' + _formData.lastName);
+      setVerified(true);
+      onSave({ ..._formData, bookingId: newCustomer.data.id });
+    } catch (error) {
+      setError('Verification failed. Please try again.');
+      console.error('Verification error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await _supabaseClient.auth.signUp({ 
+        email: _formData.email, 
+        password: Math.random().toString(36).slice(-8), 
+        options: { 
+          data: { 
+            first_name: _formData.firstName 
+          } 
+        } 
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const user = data.user;
+      const address = await _supabaseClient.from('addresses').insert([{ 
+        user_id: user.id, 
+        is_default: true, 
+        ..._formData 
+      }]).select().single();
+
+      const booking = await _supabaseClient.from('bookings').insert([{ 
+        user_id: user.id, 
+        address_id: address.data.id 
+      }]).select().single();
+
+      onSave({ ..._formData, bookingId: booking.data.id });
+    } catch (error) {
+      console.error('Error creating user and booking:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (window.google && _addressInputRef.current && !_autocompleteRef.current) {
+      _autocompleteRef.current = new window.google.maps.places.Autocomplete(_addressInputRef.current, { 
+        componentRestrictions: { country: 'sg' } 
+      });
+
+      _autocompleteRef.current.addListener('place_changed', () => {
+        const place = _autocompleteRef.current.getPlace();
+        if (place.formatted_address) {
+          _setFormData(prev => ({ ...prev, address: place.formatted_address }));
+          _setValidation(prev => ({ ...prev, address: { touched: true, valid: true, error: '' } }));
+        }
+      });
+    }
+  }, [_isGoogleMapsLoaded]);
+
+  if (verified) {
+    return (
+      <_Box sx={{ textAlign: 'center', py: 2 }}>
+        <_Typography variant="h6" color="primary">
+          Verification Successful! ✓
+        </_Typography>
+        <_Typography variant="body1">
+          Welcome to iAircon! Your account has been created.
+        </_Typography>
+      </_Box>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6" {...props}>
+      <_Box component="form" sx={{ '& > :not(style)': { m: 1 } }}>
+        <_Typography variant="h6" gutterBottom>
+          Customer Information
+        </_Typography>
+        {error && (
+          <_Typography color="error" variant="body2">
+            {error}
+          </_Typography>
+        )}
+        <_TextField
+          fullWidth
+          label="Name"
+          name="firstName"
+          value={_formData.firstName}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Last Name"
+          name="lastName"
+          value={_formData.lastName}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Email"
+          name="email"
+          type="email"
+          value={_formData.email}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Phone"
+          name="mobile"
+          value={_formData.mobile}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Address"
+          name="address"
+          value={_formData.address}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Postal Code"
+          name="postalCode"
+          value={_formData.postalCode}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        <_TextField
+          fullWidth
+          label="Unit Number"
+          name="unit"
+          value={_formData.unit}
+          onChange={_handleChange}
+          disabled={otpSent}
+          required
+        />
+        {!otpSent ? (
+          <_Button
+            fullWidth
+            variant="contained"
+            onClick={handleSendOTP}
+            disabled={loading || !_formData.email || !_formData.firstName || !_formData.lastName}
+          >
+            {loading ? <_CircularProgress size={24} /> : 'Send Verification Code'}
+          </_Button>
+        ) : (
+          <>
+            <_TextField
+              fullWidth
+              label="Verification Code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+            <_Button
+              fullWidth
+              variant="contained"
+              onClick={handleVerifyOTP}
+              disabled={loading || !otp}
+            >
+              {loading ? <_CircularProgress size={24} /> : 'Verify'}
+            </_Button>
+          </>
+        )}
+      </_Box>
+    </form>
+  );
+};
+
+// Add displayName
+CustomerFormSupabase.displayName = 'CustomerFormSupabase';
+
+// Both named and default exports at the bottom
+export { CustomerFormSupabase };
+
+undefined.displayName = 'undefined';

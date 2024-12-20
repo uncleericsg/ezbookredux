@@ -1,0 +1,107 @@
+import { parseISO, isValid, addDays, startOfDay, isBefore, isAfter } from 'date-fns';
+import * as React from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
+
+import { updateHolidayGreeting, deleteHolidayGreeting } from '../services/notifications';
+import { fetchPublicHolidays } from '../services/publicHolidays';
+
+import type { HolidayGreeting } from '../types';
+
+
+const DAYS_AHEAD = 90;
+
+export const useNotificationTemplates = () => {
+  const [holidayGreetings, setHolidayGreetings] = useState<HolidayGreeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isMounted = useRef(true);
+
+  // Load holiday greetings
+  const loadGreetings = useCallback(async () => {
+    if (!isMounted.current) return;
+    try {
+      setLoading(true);
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+
+      // Fetch holidays for current and next year
+      const [currentYearHolidays, nextYearHolidays] = await Promise.all([
+        fetchPublicHolidays(currentYear),
+        fetchPublicHolidays(nextYear)
+      ]);
+
+      // Filter and transform holidays into greetings format
+      const today = startOfDay(new Date());
+      const futureDate = addDays(today, DAYS_AHEAD);
+      
+      const upcomingHolidays = [...currentYearHolidays, ...nextYearHolidays]
+        .filter(holiday => {
+          const holidayDate = parseISO(holiday.date);
+          return isValid(holidayDate) &&
+                 !isBefore(holidayDate, today) &&
+                 !isAfter(holidayDate, futureDate);
+        })
+        .map(holiday => ({
+          id: `${holiday.date}_${holiday.name}`,
+          date: holiday.date,
+          name: holiday.name,
+          sendTime: `${holiday.date}T09:00:00Z`,
+          message: `Happy ${holiday.name}!`
+        }));
+
+      if (isMounted.current) {
+        setHolidayGreetings(upcomingHolidays);
+      }
+    } catch (error) {
+      console.error('Failed to load holiday greetings:', error);
+      if (isMounted.current) {
+        toast.error('Failed to load holiday greetings');
+      }
+    } finally {
+      if (isMounted.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const updateGreeting = useCallback(async (id: string, updates: Partial<HolidayGreeting>) => {
+    try {
+      const updatedGreeting = await updateHolidayGreeting(id, updates);
+      setHolidayGreetings(prev => 
+        prev.map(greeting => greeting.id === id ? updatedGreeting : greeting)
+      );
+      toast.success('Holiday greeting updated');
+    } catch (error) {
+      console.error('Failed to update greeting:', error);
+      toast.error('Failed to update greeting');
+      throw error;
+    }
+  }, []);
+
+  const deleteGreeting = useCallback(async (id: string) => {
+    try {
+      await deleteHolidayGreeting(id);
+      setHolidayGreetings(prev => prev.filter(greeting => greeting.id !== id));
+      toast.success('Holiday greeting deleted');
+    } catch (error) {
+      console.error('Failed to delete greeting:', error);
+      toast.error('Failed to delete greeting');
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    loadGreetings();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadGreetings]);
+
+  return {
+    holidayGreetings,
+    loading,
+    updateGreeting,
+    deleteGreeting,
+    loadGreetings
+  };
+};

@@ -1,0 +1,148 @@
+import type { FC } from 'react';
+
+import {
+  People as PeopleIcon,
+  Build as BuildIcon,
+  AttachMoney as MoneyIcon,
+  Notifications as NotificationsIcon
+} from '@mui/icons-material';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
+
+import { QuickActions } from './components/QuickActions';
+import { RecentActivity } from './components/RecentActivity';
+import { StatCard } from './components/StatCard';
+
+export interface StatItem;
+
+export interface DashboardOverviewProps;
+
+
+interface StatItem {
+  id: string;
+  title: string;
+  value: string | number;
+  trend: number;
+  color: string;
+  icon: typeof PeopleIcon | typeof BuildIcon | typeof MoneyIcon | typeof NotificationsIcon;
+};
+
+DashboardOverview.displayName = 'DashboardOverview';
+const stats: StatItem[] = [
+  {
+    id: 'total-users',
+    title: 'Total Users',
+    value: '2,573',
+    trend: 12,
+    color: '#4CAF50',
+    icon: PeopleIcon
+  },
+  {
+    id: 'active-services',
+    title: 'Active Services',
+    value: '148',
+    trend: 8,
+    color: '#2196F3',
+    icon: BuildIcon
+  },
+  {
+    id: 'revenue',
+    title: 'Monthly Revenue',
+    value: '$45,678',
+    trend: 15,
+    color: '#FF9800',
+    icon: MoneyIcon
+  },
+  {
+    id: 'notifications',
+    title: 'New Notifications',
+    value: '24',
+    trend: -5,
+    color: '#F44336',
+    icon: NotificationsIcon
+  }
+];
+
+}
+
+const DashboardOverview: FC<DashboardOverviewProps> = ({ className }) => {
+  const theme = useTheme();
+
+  return (
+    <Box
+      className={className}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        p: 3
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          color: theme.palette.text.primary,
+          mb: 2
+        }}
+      >
+        Dashboard Overview
+      </Typography>
+
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 3,
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: '1fr 1fr',
+            md: 'repeat(4, 1fr)'
+          }
+        }}
+      >
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.id}
+            icon={<stat.icon sx={{ fontSize: 40 }} />}
+            title={stat.title}
+            value={stat.value}
+            trend={stat.trend}
+            color={stat.color}
+          />
+        ))}
+      </Box>
+
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 3,
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: '2fr 1fr'
+          }
+        }}
+      >
+        <Paper
+          sx={{
+            p: 3,
+            backgroundColor: theme.palette.background.paper
+          }}
+        >
+          <RecentActivity />
+        </Paper>
+
+        <Paper
+          sx={{
+            p: 3,
+            backgroundColor: theme.palette.background.paper
+          }}
+        >
+          <QuickActions />
+        </Paper>
+      </Box>
+    </Box>
+  );
+};
+
+DashboardOverview.displayName = 'DashboardOverview';
+
+export { DashboardOverview, DashboardOverviewProps };
+undefined.displayName = 'undefined';

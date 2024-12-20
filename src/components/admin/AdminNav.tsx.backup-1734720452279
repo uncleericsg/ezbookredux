@@ -1,0 +1,155 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  Users,
+  AlertCircle,
+  Shield,
+  BarChart3,
+  Settings,
+  Home,
+  Palette,
+  Users2,
+  PackageOpen
+} from 'lucide-react';
+import React from 'react';
+
+import { ROUTES } from '@/config/routes';
+import { cn } from '@/lib/utils';
+
+export interface NavigationItem;
+export interface NavigationGroup;
+export interface AdminNavProps;
+
+export interface NavigationItem;
+export interface NavigationGroup;
+export interface AdminNavProps;
+
+export interface NavigationItem;
+export interface NavigationGroup;
+export interface AdminNavProps;
+
+export interface NavigationItem;
+export interface NavigationGroup;
+export interface AdminNavProps;
+
+export interface NavigationItem {
+  id: string;
+  icon: React.FC<{ className?: string }>;
+  label: string;
+  path: string;
+}
+
+export interface NavigationGroup {
+  label: string;
+  items: NavigationItem[];
+}
+
+// Group navigation items by category
+export const navigationGroups: NavigationGroup[] = [
+  {
+    label: 'Overview',
+    items: [
+      { id: 'home', icon: Home, label: 'Home', path: ROUTES.HOME },
+      { id: 'analytics', icon: BarChart3, label: 'Analytics', path: ROUTES.ANALYTICS },
+      { id: 'alerts', icon: AlertCircle, label: 'Alerts', path: ROUTES.ALERTS }
+    ]
+  },
+  {
+    label: 'Management',
+    items: [
+      { id: 'users', icon: Users, label: 'Users', path: ROUTES.USERS },
+      { id: 'teams', icon: Users2, label: 'Teams', path: ROUTES.TEAMS },
+      { id: 'packages', icon: PackageOpen, label: 'Packages', path: ROUTES.PACKAGES }
+    ]
+  },
+  {
+    label: 'Settings',
+    items: [
+      { id: 'settings', icon: Settings, label: 'General', path: ROUTES.SETTINGS },
+      { id: 'appearance', icon: Palette, label: 'Appearance', path: ROUTES.APPEARANCE },
+      { id: 'security', icon: Shield, label: 'Security', path: ROUTES.SECURITY }
+    ]
+  }
+];
+
+// Flatten navigation items for routing
+export const tabs = navigationGroups.reduce<NavigationItem[]>(
+  (acc, group) => [...acc, ...group.items],
+  []
+);
+
+export interface AdminNavProps extends React.HTMLAttributes<HTMLDivElement> {
+  activeTab: number;
+  onTabChange: (index: number) => void;
+  collapsed?: boolean;
+}
+
+const getTabIndex = (groupIndex: number, itemIndex: number): number => {
+  let index = 0;
+  for (let i = 0; i <groupIndex; i++) {
+    index += navigationGroups[i].items.length;
+  }
+  return index + itemIndex;
+};
+
+export const AdminNav = React.memo(function AdminNav({
+  activeTab,
+  onTabChange,
+  collapsed = false,
+  className,
+  ...props
+}: AdminNavProps) {
+  return (
+    <nav className={cn('py-1', className)} {...props}>
+      {navigationGroups.map((group, groupIndex) => (
+        <div key={group.label} className="mb-2">
+          {!collapsed && (
+            <h3 className="mb-1 px-3 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+              {group.label}
+            </h3>
+          )}
+          <div className="space-y-0.5 px-1.5">
+            {group.items.map((tab, itemIndex) => {
+              const Icon = tab.icon;
+              const index = getTabIndex(groupIndex, itemIndex);
+              const isActive = index === activeTab;
+
+              return (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => onTabChange(index)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-150',
+                    'focus:outline-none focus:ring-2 focus:ring-primary',
+                    isActive
+                      ? 'bg-gray-100 text-primary dark:bg-gray-800'
+                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50'
+                  )}
+                  aria-label={tab.label}
+                  role="tab"
+                  aria-selected={isActive}
+                >
+                  <Icon
+                    className={cn(
+                      'flex-shrink-0 transition-all',
+                      collapsed ? 'h-5 w-5' : 'h-4 w-4'
+                    )}
+                  />
+                  {!collapsed && <span className="truncate text-xs font-medium">{tab.label}</span>}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+});
+
+AdminNav.displayName = 'AdminNav';
+
+
+undefined.displayName = 'undefined';

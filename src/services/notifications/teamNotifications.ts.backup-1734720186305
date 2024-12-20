@@ -1,0 +1,68 @@
+import * as React from 'react';
+
+import { db } from '../firebase';
+import { Team } from '../teams/types';
+
+export interface BookingNotification {
+    bookingId: string;
+    date: string;
+    location: string;
+    serviceType: string;
+    customerName: string;
+    // other relevant booking details
+}
+
+export const teamNotificationService = {
+    async notifyTeamAssignment(booking: BookingNotification, team: Team): Promise<void> {
+        // Send internal notification to admin dashboard
+        await this.sendAdminDashboardNotification(booking, team);
+        // Send email to team leader/admin
+        await this.sendTeamEmail(booking, team);
+    },
+
+    async sendAdminDashboardNotification(booking: BookingNotification, team: Team): Promise<void> {
+        // Implementation for admin dashboard notification
+        await db.collection('notifications').add({
+            type: 'TEAM_ASSIGNMENT',
+            title: `New Booking Assigned to ${team.name}`,
+            content: `Booking #${booking.bookingId} has been assigned to ${team.name}`,
+            bookingId: booking.bookingId,
+            teamId: team.id,
+            date: booking.date,
+            location: booking.location,
+            serviceType: booking.serviceType,
+            customerName: booking.customerName,
+            createdAt: new Date().toISOString(),
+            status: 'unread'
+        });
+    },
+
+    async sendTeamEmail(booking: BookingNotification, team: Team): Promise<void> {
+        if (!team.email) {
+            console.warn(`No email address found for team ${team.name}`);
+            return;
+        }
+
+        const emailData = {
+            to: team.email,
+            subject: `New Booking Assignment - ${booking.serviceType}`,
+            template: 'TEAM_ASSIGNMENT',
+            templateData: {
+                teamName: team.name,
+                bookingId: booking.bookingId,
+                date: booking.date,
+                location: booking.location,
+                serviceType: booking.serviceType,
+                customerName: booking.customerName
+            }
+        };
+
+        try {
+            // Assuming you have an email service implementation
+            await emailService.send(emailData);
+        } catch (error) {
+            console.error('Failed to send team assignment email:', error);
+            // Log the error but don't throw, as the dashboard notification is already sent
+        }
+    }
+};

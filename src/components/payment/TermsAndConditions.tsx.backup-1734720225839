@@ -1,0 +1,97 @@
+"use client";
+
+import { motion } from 'framer-motion';
+import React from 'react';
+import { FaLock } from 'react-icons/fa';
+import { SiStripe } from 'react-icons/si';
+
+import { cn } from '@/lib/utils';
+
+export interface TermsAndConditionsProps;
+
+export interface TermsAndConditionsProps
+  extends React.HTMLAttributes<React.ElementRef<'div'>> {
+  accepted: boolean;
+  onAccept: () => void;
+}
+
+const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({
+  accepted,
+  onAccept,
+  className,
+  ...props
+}) => {
+  const glowVariants = {
+    initial: {
+      boxShadow: 'none'
+    },
+    glow: {
+      boxShadow: [
+        '0 0 20px rgba(219, 39, 119, 0.3)',
+        '0 0 60px rgba(219, 39, 119, 0.5)',
+        '0 0 20px rgba(219, 39, 119, 0.3)'
+      ],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: 'reverse'
+      }
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg border border-gray-200 bg-white p-6 shadow-sm',
+        className
+      )}
+      {...props}
+    >
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900">Terms & Conditions</h2>
+        <div className="flex items-center space-x-2">
+          <FaLock className="text-green-500" />
+          <SiStripe className="h-6 w-auto text-blue-600" />
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4 text-sm text-gray-600">
+        <p>By proceeding with the payment, you agree to the following terms:</p>
+        <ul className="list-inside list-disc space-y-2">
+          <li>All payments are processed securely through Stripe</li>
+          <li>Cancellation policy applies as per our service agreement</li>
+          <li>Your personal data will be handled according to our privacy policy</li>
+          <li>Service scheduling is subject to availability</li>
+        </ul>
+      </div>
+
+      <motion.div
+        initial="initial"
+        animate={accepted ? 'initial' : 'glow'}
+        variants={glowVariants}
+      >
+        <button
+          onClick={onAccept}
+          disabled={accepted}
+          className={cn(
+            'w-full rounded-md px-4 py-2 text-sm font-medium transition-colors',
+            accepted
+              ? 'bg-green-100 text-green-800'
+              : 'bg-pink-600 text-white hover:bg-pink-700'
+          )}
+        >
+          {accepted ? 'Terms Accepted ✓' : 'Accept Terms & Conditions'}
+        </button>
+      </motion.div>
+
+      <p className="mt-4 text-center text-xs text-gray-500">
+        Protected by industry standard encryption
+      </p>
+    </div>
+  );
+
+TermsAndConditions.displayName = 'TermsAndConditions';
+};
+
+
+export { TermsAndConditions, TermsAndConditionsProps };

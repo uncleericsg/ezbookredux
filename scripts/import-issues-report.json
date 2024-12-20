@@ -1,0 +1,2070 @@
+{
+  "timestamp": "2024-12-17T10:47:41.103Z",
+  "summary": {
+    "filesWithDuplicateReactImports": 102,
+    "filesWithDuplicateIdentifiers": 10,
+    "filesWithMultipleImports": 109
+  },
+  "details": {
+    "duplicateReactImports": [
+      {
+        "file": "src\\components\\admin\\AMCPackageMapping.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\AMCPackageSettings.tsx",
+        "count": 2,
+        "imports": [
+          "import React, { useState, useEffect } from 'react';",
+          "import type { FC } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\BuildManager.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect, useCallback, useRef } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ComponentIntegration.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\CustomMessageScheduler.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\FCMTester.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\FloatingActionButton.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\HolidayGreetingForm.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\HomepageManager.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\IntegrationStatus.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { memo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\LogoUploader.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useCallback } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\PushManager.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useCallback } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\QuickSettings.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { memo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\RepairShoprMapping.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ScheduledNotifications.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { memo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\BatchOperations.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ContractExport.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ContractMonitoring.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useMemo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\Dashboard.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceMetrics.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';",
+          "import type { FC, ReactNode } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceQueue.tsx",
+        "count": 2,
+        "imports": [
+          "import { useState, useRef, useEffect, useMemo } from 'react';",
+          "import type { ReactNode } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceScheduler.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceQueue.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useMemo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\SettingsBackup.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\shared\\ExpandablePanel.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamAssignments.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamManagement.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamModal.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserImport.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserImportMapping.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserStatusToggle.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserTable.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useMemo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\auth\\ProtectedRoute.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { React } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\auth\\TestAuth.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\BrandSelection.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState, memo, useCallback, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\IssueCard.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\LazyLoadedSection.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { Suspense } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\OptimizedCard.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { memo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\ScrollToTopWrapper.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\CustomerForm.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect, useRef } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\CustomerFormSupabase.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect, useRef } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\index.ts",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\OptimizedBookingFlow.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { Suspense, lazy } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\OptimizedLocationProvider.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState, useEffect, useRef, useCallback } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\ScheduleStep.tsx",
+        "count": 2,
+        "imports": [
+          "import { useEffect, useState } from 'react';",
+          "import type { FC, ReactNode, HTMLAttributes } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\ServiceLimitations.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\utils\\validation.ts",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\VirtualizedTimeSlots.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useCallback, useRef, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\common\\OTPInput.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useRef, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\dev\\CacheInspector.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\ErrorBoundary.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import type { ReactNode, ErrorInfo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\CustomMessageScheduler.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\enhancers\\withTemplateFeatures.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\ErrorBoundary.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { Component, ErrorInfo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\HolidayGreetingModal.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\HolidayGreetings.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\MessagePreview.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useMemo, useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplateEditor.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect, useCallback, useMemo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplateList.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState, useMemo, useCallback } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplatePreview.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { useState, useMemo, useCallback } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\ScheduledMessagesList.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\TemplateItem.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { memo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\utils\\messageOptimization.ts",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\utils\\templateUtils.ts",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\__tests__\\withTemplateFeatures.test.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\organisms\\Dialog\\index.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\organisms\\Dialog.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\payment\\PaymentErrorBoundary.tsx",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n",
+          "import React, { Component, ErrorInfo, ReactNode } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\payment\\PaymentSummary.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\AddressManager.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\ProfileForm.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\UserProfile.tsx",
+        "count": 2,
+        "imports": [
+          "import React from 'react';\n",
+          "import React, { useState, useEffect } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\components\\ServiceScheduling.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AddressAutocomplete.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AddressConfirmationModal.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Alert.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AlertDialog.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Badge.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Button.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Calendar.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Card.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Checkbox.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\DateRangePicker.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Dialog.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\FormProgress.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Input.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Label.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\NotificationsPanel.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Pagination.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Popover.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Progress.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\ScrollArea.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Select.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Skeleton.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Table.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Tabs.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Textarea.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Toast.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Tooltip.tsx",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react';",
+          "import type { FC } from 'react';",
+          "import React from 'react';",
+          "import type { ReactNode, FC, Component } from 'react';\n"
+        ]
+      },
+      {
+        "file": "src\\hooks\\useUserTable.ts",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react';",
+          "import { useState, useCallback, useMemo } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\main.tsx",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react';",
+          "import { Suspense } from 'react';"
+        ]
+      },
+      {
+        "file": "src\\router.tsx",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react';",
+          "import { Suspense } from 'react';"
+        ]
+      }
+    ],
+    "duplicateIdentifiers": [
+      {
+        "file": "dist\\assets\\main-DvdijW8f.js",
+        "identifier": ""
+      },
+      {
+        "file": "dist\\assets\\main-DvdijW8f.js",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\admin\\AdminSettings.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\admin\\AdminSettings.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\admin\\Overview.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceHub.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceQueue.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\modals\\BookingSelectionModal.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\components\\modals\\BookingSelectionModal.tsx",
+        "identifier": ""
+      },
+      {
+        "file": "src\\hooks\\useUserRedux.ts",
+        "identifier": ""
+      }
+    ],
+    "multipleImportsFromSameModule": [
+      {
+        "file": "scripts\\autofix.js",
+        "module": "${imp}",
+        "count": 6,
+        "imports": [
+          "imports.some(imp => content.includes(`from '${imp}'",
+          "imports.some(imp => content.includes(`from '${imp}'",
+          "imports.some(imp => content.includes(`from '${imp}'",
+          "imports.some(imp => content.includes(`from '${imp}'",
+          "imports.some(imp => content.includes(`from '${imp}'",
+          "imports.some(imp => content.includes(`from '${imp}'"
+        ]
+      },
+      {
+        "file": "scripts\\migrateToRedux.ts",
+        "module": "@reduxjs/toolkit",
+        "count": 2,
+        "imports": [
+          "import { createSlice, PayloadAction } from '@reduxjs/toolkit'",
+          "import { configureStore } from '@reduxjs/toolkit'"
+        ]
+      },
+      {
+        "file": "scripts\\migration\\analyze.ts",
+        "module": "path",
+        "count": 2,
+        "imports": [
+          "import { dirname } from 'path'",
+          "import path from 'path'"
+        ]
+      },
+      {
+        "file": "scripts\\migration\\fix-imports.ts",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react'",
+          "import * as React from 'react'"
+        ]
+      },
+      {
+        "file": "scripts\\test-fixes.js",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import React from 'react'",
+          "import { useState } from 'react'",
+          "import type { FC } from 'react'",
+          "import { useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "scripts\\test-fixes.js",
+        "module": "@mui/material",
+        "count": 3,
+        "imports": [
+          "import { Button } from '@mui/material'",
+          "import { Box } from '@mui/material'",
+          "import type { ButtonProps } from '@mui/material'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\AdminPanels.tsx",
+        "module": "./AdminPanelLoader",
+        "count": 2,
+        "imports": [
+          "import AdminPanelLoader from './AdminPanelLoader'",
+          "import type { AdminPanelType } from './AdminPanelLoader'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\AMCPackageMapping.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\AMCPackageSettings.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React, { useState, useEffect } from 'react'",
+          "import type { FC } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\BuildManager.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect, useCallback, useRef } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ComponentIntegration.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\CustomMessageScheduler.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\FCMTester.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\FloatingActionButton.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\HolidayGreetingForm.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\HomepageManager.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\IntegrationStatus.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { memo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\LogoUploader.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useCallback } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\PushManager.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useCallback } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\QuickSettings.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { memo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\RepairShoprMapping.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ScheduledNotifications.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { memo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\BatchOperations.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ContractExport.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ContractMonitoring.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useMemo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\Dashboard.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceMetrics.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import type { FC, ReactNode } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceQueue.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import { useState, useRef, useEffect, useMemo } from 'react'",
+          "import type { ReactNode } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceHub\\ServiceScheduler.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\ServiceQueue.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useMemo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\SettingsBackup.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\shared\\ExpandablePanel.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamAssignments.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamManagement.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\teams\\TeamModal.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserImport.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserImportMapping.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserStatusToggle.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\admin\\UserTable.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useMemo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\auth\\ProtectedRoute.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { React } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\auth\\TestAuth.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\BrandSelection.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState, memo, useCallback, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\IssueCard.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\LazyLoadedSection.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { Suspense } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\OptimizedCard.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { memo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\components\\ScrollToTopWrapper.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\CustomerForm.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect, useRef } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\CustomerFormSupabase.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect, useRef } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\index.ts",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\OptimizedBookingFlow.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { Suspense, lazy } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\OptimizedLocationProvider.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState, useEffect, useRef, useCallback } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\ScheduleStep.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import { useEffect, useState } from 'react'",
+          "import type { FC, ReactNode, HTMLAttributes } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\ServiceLimitations.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\utils\\validation.ts",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\booking\\VirtualizedTimeSlots.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useCallback, useRef, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\common\\OTPInput.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useRef, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\dev\\CacheInspector.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ErrorBoundary.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import type { ReactNode, ErrorInfo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\CustomMessageScheduler.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\enhancers\\withTemplateFeatures.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\ErrorBoundary.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { Component, ErrorInfo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\HolidayGreetingModal.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\HolidayGreetings.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\MessagePreview.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useMemo, useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplateEditor.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect, useCallback, useMemo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplateList.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState, useMemo, useCallback } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\NotificationTemplatePreview.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { useState, useMemo, useCallback } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\ScheduledMessagesList.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\TemplateItem.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { memo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\utils\\messageOptimization.ts",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\utils\\templateUtils.ts",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\notifications\\__tests__\\withTemplateFeatures.test.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\organisms\\Dialog\\index.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\organisms\\Dialog.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\payment\\PaymentErrorBoundary.tsx",
+        "module": "react",
+        "count": 5,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'",
+          "import React, { Component, ErrorInfo, ReactNode } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\payment\\PaymentSummary.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\AddressManager.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\ProfileForm.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\profile\\UserProfile.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import React from 'react'",
+          "import React, { useState, useEffect } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ServiceScheduling.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AddressAutocomplete.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AddressConfirmationModal.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Alert.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\AlertDialog.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Badge.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Button.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Calendar.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Card.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Checkbox.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\DateRangePicker.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Dialog.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\FormProgress.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Input.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Label.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\NotificationsPanel.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Pagination.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Popover.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Progress.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\ScrollArea.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Select.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Skeleton.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Table.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Tabs.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Textarea.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Toast.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\components\\ui\\Tooltip.tsx",
+        "module": "react",
+        "count": 4,
+        "imports": [
+          "import type { ReactNode } from 'react'",
+          "import type { FC } from 'react'",
+          "import React from 'react'",
+          "import type { ReactNode, FC, Component } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\hooks\\useUserTable.ts",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react'",
+          "import { useState, useCallback, useMemo } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\main.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react'",
+          "import { Suspense } from 'react'"
+        ]
+      },
+      {
+        "file": "src\\router.tsx",
+        "module": "react",
+        "count": 2,
+        "imports": [
+          "import * as React from 'react'",
+          "import { Suspense } from 'react'"
+        ]
+      }
+    ]
+  }
+}

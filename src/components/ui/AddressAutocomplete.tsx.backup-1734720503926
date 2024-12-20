@@ -1,0 +1,128 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Loader2 } from 'lucide-react';
+import React, { useRef, useState, ChangeEvent, MouseEventHandler } from 'react';
+
+import { cn } from "@/lib/utils";
+
+import { useAddressAutocomplete } from '../../hooks/useAddressAutocomplete';
+
+import type { PlaceDetails } from '../../services/googlePlaces';
+
+export interface AddressAutocompleteProps;
+
+
+
+
+
+interface AddressAutocompleteProps {
+  className?: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSelect: (place: PlaceDetails) => void;
+  error?: string;
+  disabled?: boolean;
+}
+
+/**
+ * Address autocomplete component with Google Places integration
+ */
+function AddressAutocomplete({
+  className,
+  value,
+  onChange,
+  onSelect,
+  error,
+  disabled
+}: AddressAutocompleteProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const {
+    predictions,
+    loading,
+    fetchPredictions,
+    getPlaceDetails,
+    clearPredictions
+  } = useAddressAutocomplete();
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange?.(newValue);
+    fetchPredictions(newValue);
+  };
+
+  const handlePlaceSelect: MouseEventHandler<HTMLButtonElement> = async (e) => {
+    const placeId = (e.target as HTMLButtonElement).getAttribute('data-place-id');
+    if (placeId) {
+      const place = await getPlaceDetails(placeId);
+      if (place) {
+        onSelect?.(place);
+        clearPredictions();
+      }
+    }
+  };
+
+  return (
+    <div className="relative w-full">
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+          placeholder="Enter your address"
+          disabled={disabled}
+          className={cn(
+            "w-full bg-white border rounded-lg pl-10 pr-4 py-2",
+            error ? "border-red-500" : "border-gray-300",
+            disabled ? "bg-gray-100" : "hover:border-gray-400",
+            className
+          )}
+        />
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 animate-spin text-gray-400" />
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-1 text-sm text-red-500">{error}</p>
+      )}
+
+      <AnimatePresence>
+        {isFocused && predictions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+          >
+            {predictions.map((prediction) => (
+              <button
+                key={prediction.place_id}
+                data-place-id={prediction.place_id}
+                onClick={handlePlaceSelect}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+              >
+                <div className="flex items-center">
+                  <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                  <span>{prediction.description}</span>
+                </div>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+AddressAutocomplete.displayName = 'AddressAutocomplete';
+
+export type { AddressAutocompleteProps };
+export { AddressAutocomplete };
+
+
+undefined.displayName = 'undefined';

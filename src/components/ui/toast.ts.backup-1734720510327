@@ -1,0 +1,17 @@
+import * as React from 'react';
+
+export interface Toast;
+
+
+
+
+
+
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  duration?: number;
+  variant?: 'default' | 'success' | 'error' | 'warning';
+}
+
+undefined.displayName = 'undefined';

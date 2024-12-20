@@ -1,0 +1,56 @@
+import { useState, useCallback } from 'react';
+
+import { fetchServiceReports } from '../services/repairShopr';
+
+import type { ServiceVisit } from '../types';
+
+export interface ServiceHistoryState;
+
+interface ServiceHistoryState {
+  records: ServiceVisit[];
+  loading: boolean;
+  error: Error | null;
+}
+
+/**
+ * Hook to fetch and manage service history.
+ *
+ * @returns {ServiceHistoryState & { fetchHistory: (userId: string) => void }}
+ */
+export const useServiceHistory = () => {
+  const [state, setState] = useState<ServiceHistoryState>({
+    records: [],
+    loading: false,
+    error: null
+  });
+
+  /**
+   * Fetches service history for a given user ID.
+   *
+   * @param {string} userId - The ID of the user to fetch service history for.
+   */
+  const fetchHistory = useCallback(async (userId: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const reports = await fetchServiceReports(userId);
+      setState(prev => ({
+        ...prev,
+        records: reports,
+        loading: false
+      }));
+    } catch (err) {
+      console.error('Error fetching service history:', err);
+      setState(prev => ({
+        ...prev,
+        error: err instanceof Error ? err : new Error('Failed to fetch service history'),
+        loading: false
+      }));
+    }
+  }, []);
+
+  return {
+    ...state,
+    fetchHistory
+  };
+};
