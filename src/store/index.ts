@@ -5,6 +5,8 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import userReducer from './slices/userSlice';
 import authReducer from './slices/authSlice';
 import adminReducer from './slices/adminSlice';
+import technicianReducer from './slices/technicianSlice';
+import { mockAuthState, mockUserState, mockAdminState, mockTechnicianState } from '../mocks/data';
 
 // Action type for resetting the entire store
 export const RESET_STORE = 'RESET_STORE';
@@ -28,6 +30,9 @@ const initialState = {
     loading: false,
     error: null,
   },
+  technician: {
+    // Add initial state for technician
+  },
 } as const;
 
 // Define the app state type
@@ -35,6 +40,7 @@ export interface AppState {
   user: ReturnType<typeof userReducer>;
   auth: ReturnType<typeof authReducer>;
   admin: ReturnType<typeof adminReducer>;
+  technician: ReturnType<typeof technicianReducer>;
 }
 
 // Create individual reducers
@@ -42,6 +48,7 @@ const reducers = {
   user: userReducer,
   auth: authReducer,
   admin: adminReducer,
+  technician: technicianReducer,
 };
 
 // Create combined reducer
@@ -61,7 +68,12 @@ const rootReducer: Reducer = (state: AppState | undefined, action: AnyAction): A
 // Configure store with middleware
 export const store = configureStore({
   reducer: rootReducer,
-  preloadedState: initialState,
+  preloadedState: {
+    auth: mockAuthState,
+    user: mockUserState,
+    admin: mockAdminState,
+    technician: mockTechnicianState,
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
