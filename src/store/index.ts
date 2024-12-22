@@ -6,6 +6,7 @@ import userReducer from './slices/userSlice';
 import authReducer from './slices/authSlice';
 import adminReducer from './slices/adminSlice';
 import technicianReducer from './slices/technicianSlice';
+import bookingReducer from './slices/bookingSlice';
 import { mockAuthState, mockUserState, mockAdminState, mockTechnicianState } from '../mocks/data';
 
 // Action type for resetting the entire store
@@ -33,6 +34,9 @@ const initialState = {
   technician: {
     // Add initial state for technician
   },
+  booking: {
+    // Add initial state for booking
+  },
 } as const;
 
 // Define the app state type
@@ -41,6 +45,7 @@ export interface AppState {
   auth: ReturnType<typeof authReducer>;
   admin: ReturnType<typeof adminReducer>;
   technician: ReturnType<typeof technicianReducer>;
+  booking: ReturnType<typeof bookingReducer>;
 }
 
 // Create individual reducers
@@ -49,6 +54,7 @@ const reducers = {
   auth: authReducer,
   admin: adminReducer,
   technician: technicianReducer,
+  booking: bookingReducer,
 };
 
 // Create combined reducer
@@ -73,6 +79,7 @@ export const store = configureStore({
     user: mockUserState,
     admin: mockAdminState,
     technician: mockTechnicianState,
+    booking: {}, // Add initial state for booking
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
