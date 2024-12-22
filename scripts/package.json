@@ -1,0 +1,9 @@
+{
+  "name": "import-fix-scripts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from '../store';
-import { setAuthenticated, setToken, setLoading } from '../store/slices/authSlice';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
 import { setUser } from '../store/slices/userSlice';
 
 /**
@@ -11,8 +11,6 @@ export const useInitializeAuth = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(setLoading(true));
-
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
 
@@ -31,7 +29,5 @@ export const useInitializeAuth = () => {
         localStorage.removeItem('user_data');
       }
     }
-
-    dispatch(setLoading(false));
   }, []); // Run only once on mount
 };

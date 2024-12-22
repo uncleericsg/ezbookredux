@@ -1,280 +1,109 @@
-/*
- * @ai-protection - DO NOT MODIFY THIS FILE
- * This is a stable version of the payment step component that handles:
- * 1. Stripe payment integration
- * 2. Payment processing and validation
- * 3. Booking reference generation
- * 4. User account creation
- * 5. Service queue management
- * 
- * Critical Features:
- * - Secure payment processing
- * - PCI compliance
- * - Booking reference generation
- * - User data management
- * - Service queue integration
- * - Terms and conditions acceptance
- * 
- * Integration Points:
- * - Stripe API for payments
- * - User authentication service
- * - Booking management system
- * - Service queue system
- * - Navigation service
- * 
- * @ai-visual-protection: The payment form UI and styling must remain consistent
- * @ai-flow-protection: The payment and booking flow must not be altered
- * @ai-state-protection: The payment state management is optimized and secure
- * @ai-security-protection: All payment and user data handling must maintain PCI compliance
- * 
- * Any modifications to this component could affect:
- * 1. Payment processing security
- * 2. Booking system integrity
- * 3. User account creation
- * 4. Service scheduling
- * 5. Data compliance
- * 
- * If changes are needed:
- * 1. Document security implications
- * 2. Verify PCI compliance
- * 3. Test payment scenarios
- * 4. Validate booking flow
- * 5. Ensure data protection
- */
-
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Elements } from '@stripe/react-stripe-js';
-import { format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { initializeStripe, createPaymentIntent, addToServiceQueue } from '../../services/paymentService';
-import PaymentForm from '../PaymentForm';
-import PaymentSummary from '../PaymentSummary';
-import PaymentErrorBoundary from '../payment/PaymentErrorBoundary';
-import PasswordCreationModal from '../auth/PasswordCreationModal';
-import { User } from '../../types';
-import TermsAndConditions from '../payment/TermsAndConditions';
-import BookingConfirmation from './BookingConfirmation';
-import { toast } from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
-import { login as loginAction, setUser, setPaymentStatus, setError } from '../../store/slices/userSlice';
+import React from 'react';
+import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { toast } from 'sonner';
+import { FiCreditCard, FiLock } from 'react-icons/fi';
 
 interface PaymentStepProps {
-  readonly bookingData: any;
-  readonly onComplete: () => void;
-  readonly onBack: () => void;
-  readonly onSuccess?: () => void;
-  readonly onError?: (error: any) => void;
+  onPaymentSuccess: (paymentIntentId: string) => void;
+  onPaymentError: (error: string) => void;
+  amount: number;
+  currency?: string;
 }
 
-const PAYMENT_STATES = Object.freeze({
-  INITIAL: 'initial',
-  PROCESSING: 'processing',
-  SUCCESS: 'success',
-  ERROR: 'error',
-  COMPLETE: 'complete'
-});
+export const PaymentStep: React.FC<PaymentStepProps> = ({
+  onPaymentSuccess,
+  onPaymentError,
+  amount,
+  currency = 'SGD'
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
-const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBack, onSuccess, onError }) => {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
-  const paymentState = useAppSelector((state) => state.payment);
-  const [stripePromise, setStripePromise] = React.useState(() => initializeStripe());
-  const [loading, setLoading] = useState(true);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [tipAmount, setTipAmount] = useState(0);
-  const [isPaymentComplete, setIsPaymentComplete] = useState(false);
-  const [bookingReference, setBookingReference] = useState('');
-  const [booking, setBooking] = useState({});
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-  const initialState = Object.freeze({
-    amount: (bookingData.selectedService?.price || 0) + tipAmount,
-    status: PAYMENT_STATES.INITIAL,
-    error: null,
-    termsAccepted: false,
-  });
+    if (!stripe || !elements) {
+      return;
+    }
 
-  useEffect(() => {
-    const initializePayment = async () => {
-      try {
-        setLoading(true);
-        const { clientSecret } = await createPaymentIntent({
-          amount: initialState.amount,
-          currency: 'sgd',
-          description: `${bookingData.selectedService?.name} - ${format(bookingData.selectedDate, 'PPP')}`,
-          metadata: {
-            serviceId: bookingData.selectedService?.id,
-            appointmentDate: bookingData.selectedDate.toISOString(),
-            userEmail: bookingData.email
-          }
-        });
-        setClientSecret(clientSecret);
-      } catch (error) {
-        console.error('Error initializing payment:', error);
-        onError?.(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setIsProcessing(true);
 
-    initializePayment();
-  }, [bookingData, initialState.amount]);
-
-  const handlePaymentComplete = async (paymentIntent: any) => {
     try {
-      setIsPaymentComplete(true);
-      
-      // Generate booking reference
-      const reference = `BK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setBookingReference(reference);
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        throw submitError;
+      }
 
-      // Create booking record
-      const newBooking = {
-        id: reference,
-        serviceType: bookingData.selectedService?.name,
-        date: format(bookingData.selectedDate, 'yyyy-MM-dd'),
-        time: format(bookingData.selectedDate, 'HH:mm'),
-        status: 'Upcoming',
-        amount: initialState.amount,
-        paymentMethod: 'card',
-        address: bookingData.address
-      };
-      setBooking(newBooking);
-
-      // Add to service queue
-      await addToServiceQueue({
-        bookingReference: reference,
-        serviceType: bookingData.selectedService?.id,
-        scheduledDate: bookingData.selectedDate,
-        customerEmail: bookingData.email,
-        address: bookingData.address,
-        paymentIntentId: paymentIntent.id
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/booking/confirmation`,
+        },
+        redirect: 'if_required',
       });
 
-      // Update payment state
-      dispatch(setPaymentStatus('success'));
-      
-      // Show success message
-      toast.success('Payment successful! Your booking is confirmed.');
-      
-      // Trigger success callback
-      onSuccess?.();
-      
-      // Show password creation modal for new users
-      if (!currentUser) {
-        setShowPasswordModal(true);
+      if (confirmError) {
+        throw confirmError;
       }
-      
+
+      if (paymentIntent.status === 'succeeded') {
+        onPaymentSuccess(paymentIntent.id);
+        toast.success('Payment successful!');
+      }
     } catch (error) {
-      console.error('Error completing payment:', error);
-      dispatch(setError(error.message));
-      onError?.(error);
+      const errorMessage = error instanceof Error ? error.message : 'Payment failed';
+      onPaymentError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsProcessing(false);
     }
   };
-
-  const handlePasswordSubmit = async (password: string): Promise<boolean> => {
-    try {
-      // Create user account
-      const userData: Partial<User> = {
-        email: bookingData.email,
-        firstName: bookingData.firstName,
-        lastName: bookingData.lastName,
-        phone: bookingData.phone,
-        bookings: [booking]
-      };
-
-      // Dispatch login action
-      await dispatch(loginAction({ email: bookingData.email, password })).unwrap();
-      
-      // Update user data
-      dispatch(setUser(userData));
-
-      // Navigate to confirmation
-      navigate('/booking/confirmation', { 
-        state: { 
-          booking,
-          email: bookingData.email
-        }
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error creating account:', error);
-      toast.error('Failed to create account. Please try again.');
-      return false;
-    }
-  };
-
-  if (loading || !clientSecret) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#FFD700]" />
-      </div>
-    );
-  }
 
   return (
-    <PaymentErrorBoundary>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Payment Form */}
-          <div className="space-y-6">
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentForm
-                clientSecret={clientSecret}
-                onComplete={handlePaymentComplete}
-                amount={initialState.amount}
-                onError={(error) => {
-                  dispatch(setError(error.message));
-                  onError?.(error);
-                }}
-              />
-            </Elements>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <FiCreditCard className="h-5 w-5 text-gray-400" />
+            <h3 className="text-lg font-medium text-white">Payment Details</h3>
           </div>
-
-          {/* Order Summary */}
-          <div>
-            <PaymentSummary
-              service={bookingData.selectedService}
-              date={bookingData.selectedDate}
-              tipAmount={tipAmount}
-              onTipChange={setTipAmount}
-            />
-            <TermsAndConditions
-              accepted={paymentState.termsAccepted}
-              onAccept={() => dispatch(setPaymentStatus('termsAccepted'))}
-            />
+          <div className="flex items-center space-x-1 text-gray-400">
+            <FiLock className="h-4 w-4" />
+            <span className="text-sm">Secure Payment</span>
           </div>
         </div>
 
-        {/* Password Creation Modal */}
-        {showPasswordModal && (
-          <PasswordCreationModal
-            isOpen={showPasswordModal}
-            onClose={() => setShowPasswordModal(false)}
-            onSubmit={handlePasswordSubmit}
-          />
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={onBack}
-            className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
-            disabled={isPaymentComplete}
-          >
-            Back
-          </button>
+        <div className="mb-6">
+          <PaymentElement />
         </div>
-      </motion.div>
-    </PaymentErrorBoundary>
+
+        <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+          <span>Amount to Pay:</span>
+          <span className="font-medium text-white">
+            {new Intl.NumberFormat('en-SG', {
+              style: 'currency',
+              currency: currency,
+            }).format(amount)}
+          </span>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!stripe || isProcessing}
+          className="w-full py-2 px-4 rounded-lg font-medium
+                   bg-gradient-to-r from-blue-500 to-blue-600
+                   text-white shadow-lg
+                   hover:shadow-blue-500/30
+                   transform hover:scale-[1.02]
+                   transition-all duration-200
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   disabled:transform-none"
+        >
+          {isProcessing ? 'Processing...' : 'Pay Now'}
+        </button>
+      </div>
+    </form>
   );
 };
 

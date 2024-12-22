@@ -1,0 +1,237 @@
+{
+  "lastScan": "2024-12-18T03:20:13+08:00",
+  "fixes": {
+    "reactImports": {
+      "status": "in_progress",
+      "totalFiles": 103,
+      "fixedFiles": [
+        "src/main.tsx",
+        "src/components/AdminRoutes.tsx",
+        "src/App.tsx",
+        "src/api/dashboard.ts",
+        "src/api/stripe.ts",
+        "src/components/notifications/NotificationTemplatePreview.tsx",
+        "src/components/notifications/MessagePreview.tsx",
+        "src/components/notifications/NotificationTemplateEditor.tsx",
+        "src/components/notifications/CustomMessageScheduler.tsx",
+        "src/components/notifications/utils/templateUtils.ts",
+        "src/components/notifications/__tests__/withTemplateFeatures.test.tsx",
+        "src/components/notifications/ErrorBoundary.tsx",
+        "src/components/payment/PaymentErrorBoundary.tsx",
+        "src/components/organisms/Dialog/index.tsx",
+        "src/components/organisms/Dialog.tsx",
+        "src/components/ErrorBoundary.tsx",
+        "src/store/index.ts",
+        "src/router.tsx",
+        "src/store/slices/authSlice.ts",
+        "src/components/LoadingScreen.tsx",
+        "src/store/slices/userSlice.ts",
+        "src/store/slices/adminSlice.ts",
+        "src/components/auth/ProtectedRoute.tsx",
+        "src/config/routes.ts",
+        "src/contexts/AdminViewContext.tsx",
+        "src/components/booking/ReturnCustomerBooking.tsx",
+        "src/components/notifications/ErrorDisplay.tsx",
+        "src/hooks/useInitializeAuth.ts",
+        "src/components/notifications/HolidayGreetingModal.tsx",
+        "src/services/auth.ts",
+        "src/components/ui/Spinner.tsx",
+        "src/hooks/useServiceManager.ts",
+        "src/components/booking/PriceSelectionPage.tsx",
+        "src/components/booking/FirstTimeBookingFlow.tsx",
+        "src/components/notifications/HolidayGreetings.tsx",
+        "src/components/notifications/ScheduledMessagesList.tsx",
+        "src/components/UserProfile.tsx",
+        "src/components/ServiceCategorySelection.tsx",
+        "src/hooks/useServiceHistory.ts",
+        "src/components/PublicRoute.tsx",
+        "src/components/admin/ServiceHub/ServiceQueue.tsx",
+        "src/services/repairShopr.ts",
+        "src/hooks/useAnnouncements.ts",
+        "src/services/announcements.ts",
+        "src/components/AMCSignup.tsx",
+        "src/components/ui/Button.tsx",
+        "src/services/serviceManager.ts",
+        "src/components/admin/ContractMonitoring.tsx",
+        "src/components/booking/ReturnCustomerSchedule.tsx",
+        "src/components/auth/PasswordCreationModal.tsx",
+        "src/components/modals/BookingSelectionModal.tsx",
+        "src/contexts/UserContext.tsx",
+        "src/components/ServicePricingSelection.tsx",
+        "src/components/booking/ScheduleStep.tsx",
+        "src/hooks/useUserRedux.ts",
+        "src/components/ui/Select.tsx"
+      ],
+      "remainingFiles": [
+        "src/components/notifications/**/*",
+        "src/components/profile/**/*",
+        "src/components/booking/**/*",
+        "src/components/auth/**/*",
+        "src/components/NotFound.tsx",
+        "src/components/TrustIndicators.tsx",
+        "src/components/RatingsDisplay.tsx",
+        "src/components/PWAInstallBanner.tsx"
+      ],
+      "errors": []
+    },
+    "duplicateIdentifiers": {
+      "status": "in_progress",
+      "totalFiles": 13,
+      "fixedFiles": [
+        "src/components/notifications/NotificationTemplatePreview.tsx",
+        "src/components/notifications/MessagePreview.tsx",
+        "src/components/notifications/utils/templateUtils.ts",
+        "src/components/notifications/__tests__/withTemplateFeatures.test.tsx",
+        "src/components/notifications/ErrorBoundary.tsx",
+        "src/components/payment/PaymentErrorBoundary.tsx",
+        "src/components/organisms/Dialog/index.tsx",
+        "src/components/organisms/Dialog.tsx",
+        "src/components/ErrorBoundary.tsx",
+        "src/store/index.ts",
+        "src/router.tsx",
+        "src/store/slices/authSlice.ts",
+        "src/components/LoadingScreen.tsx",
+        "src/store/slices/userSlice.ts",
+        "src/store/slices/adminSlice.ts",
+        "src/components/auth/ProtectedRoute.tsx",
+        "src/config/routes.ts",
+        "src/contexts/AdminViewContext.tsx"
+      ],
+      "remainingFiles": [],
+      "errors": []
+    },
+    "multipleImports": {
+      "status": "in_progress",
+      "totalFiles": 117,
+      "fixedFiles": [
+        "src/components/notifications/NotificationTemplatePreview.tsx",
+        "src/components/notifications/MessagePreview.tsx",
+        "src/components/notifications/NotificationTemplateEditor.tsx",
+        "src/components/notifications/CustomMessageScheduler.tsx",
+        "src/components/notifications/utils/templateUtils.ts",
+        "src/store/index.ts",
+        "src/router.tsx",
+        "src/store/slices/authSlice.ts",
+        "src/components/LoadingScreen.tsx",
+        "src/store/slices/userSlice.ts",
+        "src/store/slices/adminSlice.ts",
+        "src/components/auth/ProtectedRoute.tsx",
+        "src/config/routes.ts",
+        "src/contexts/AdminViewContext.tsx"
+      ],
+      "remainingFiles": [],
+      "errors": []
+    },
+    "typescriptTypes": {
+      "status": "in_progress",
+      "totalFiles": 117,
+      "fixedFiles": [
+        "src/api/stripe.ts",
+        "src/components/notifications/HolidayGreetings.tsx",
+        "src/components/notifications/ScheduledMessagesList.tsx",
+        "src/components/UserProfile.tsx",
+        "src/components/ServiceCategorySelection.tsx",
+        "src/hooks/useServiceHistory.ts",
+        "src/api/stripe.ts"
+      ],
+      "remainingFiles": [
+        "src/components/**/*.tsx",
+        "src/api/**/*.ts"
+      ],
+      "errors": []
+    },
+    "environmentVariables": {
+      "status": "in_progress",
+      "totalFiles": 117,
+      "fixedFiles": [
+        "src/api/stripe.ts",
+        "src/api/dashboard.ts",
+        "src/components/notifications/utils/templateUtils.ts",
+        "src/store/index.ts",
+        "src/router.tsx",
+        "src/store/slices/authSlice.ts",
+        "src/components/LoadingScreen.tsx",
+        "src/store/slices/userSlice.ts",
+        "src/store/slices/adminSlice.ts",
+        "src/components/auth/ProtectedRoute.tsx",
+        "src/config/routes.ts",
+        "src/contexts/AdminViewContext.tsx"
+      ],
+      "remainingFiles": [
+        "src/components/**/*.tsx",
+        "src/api/**/*.ts"
+      ],
+      "errors": []
+    }
+  },
+  "verification": {
+    "eslint": {
+      "status": "in_progress",
+      "lastRun": "2024-12-18T04:38:25+08:00",
+      "errors": [],
+      "fixedFiles": [
+        "src/services/bookingService.ts",
+        "src/components/ui/Button.tsx",
+        "src/services/serviceManager.ts",
+        "src/components/admin/ContractMonitoring.tsx",
+        "src/components/booking/ReturnCustomerSchedule.tsx",
+        "src/components/auth/PasswordCreationModal.tsx",
+        "src/components/modals/BookingSelectionModal.tsx",
+        "src/contexts/UserContext.tsx",
+        "src/components/ServicePricingSelection.tsx",
+        "src/components/booking/ScheduleStep.tsx",
+        "src/hooks/useUserRedux.ts",
+        "src/components/ui/Select.tsx"
+      ]
+    },
+    "prettier": {
+      "status": "pending",
+      "lastRun": "",
+      "errors": []
+    }
+  },
+  "src/components/PublicRoute.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T01:25:04+08:00"
+  },
+  "src/components/auth/ProtectedRoute.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T01:27:43+08:00"
+  },
+  "src/components/admin/ContractMonitoring.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T02:58:49+08:00"
+  },
+  "src/components/booking/ReturnCustomerSchedule.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:01:06+08:00"
+  },
+  "src/components/auth/PasswordCreationModal.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:05:54+08:00"
+  },
+  "src/components/modals/BookingSelectionModal.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:07:11+08:00"
+  },
+  "src/contexts/UserContext.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:08:53+08:00"
+  },
+  "src/components/ServicePricingSelection.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:11:37+08:00"
+  },
+  "src/components/booking/ScheduleStep.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:15:04+08:00"
+  },
+  "src/hooks/useUserRedux.ts": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:18:13+08:00"
+  },
+  "src/components/ui/Select.tsx": {
+    "status": "fixed",
+    "timestamp": "2024-12-18T03:20:13+08:00"
+  }
+}

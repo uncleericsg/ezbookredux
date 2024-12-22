@@ -17,6 +17,8 @@ import { motion } from 'framer-motion';
 import { BUSINESS_RULES } from '../constants';
 import '../styles/home.css';
 import CountUp from 'react-countup';
+import styles from './ServiceCategorySelection.module.css';
+import FloatingButtons from './FloatingButtons';
 
 interface PricingTier {
   units: string;
@@ -148,27 +150,23 @@ const ServiceCategorySelection: React.FC = () => {
   ];
 
   // Event handlers and business logic
-  const handleCategorySelect = (categoryId: string, price: number | null) => {
-    if (currentUser) {
-      const appointmentType = categoryMapper.getAppointmentTypeDetails(categoryId);
-      if (!appointmentType) {
-        toast.error('Invalid service type');
-        return;
-      }
-
-      navigate('/schedule', { 
-        state: { 
-          categoryId, 
-          price: appointmentType.price,
-          duration: appointmentType.duration,
-          isAmcService: categoryId === 'amc'
-        }
-      });
-    } else {
-      navigate('/booking', {
-        state: { categoryId, price }
-      });
+  const handleCategorySelect = (categoryId: string, price: number | null, duration: string | undefined, isAmcService: boolean) => {
+    // Extract numeric duration from the duration string (e.g., "30-90 minutes" -> 90)
+    const maxDuration = duration ? parseInt(duration.split('-')[1]) : 0;
+    
+    if (!categoryId || (!price && !isAmcService) || !maxDuration) {
+      toast.error('Invalid service type selected');
+      return;
     }
+    
+    navigate('/service-pricing', { 
+      state: { 
+        categoryId, 
+        price: price || 0, // Use 0 for AMC service
+        duration: maxDuration,
+        isAmcService 
+      } 
+    });
   };
 
   const handleRatingClick = () => {
@@ -211,20 +209,21 @@ const ServiceCategorySelection: React.FC = () => {
   }, [hasAnimated]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <div className="max-w-7xl mx-auto">
+    <div className={`${styles.serviceCategoryContainer} min-h-screen bg-gray-900 text-white relative`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Service Categories Design */}
-        <div className="mb-36">
-          <div className="text-center mb-16">
+        <div className="mb-24">
+          <div className="text-center mb-20">
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700]">
-              Welcome to iAircon.sg
+              iAircon
             </h2>
-            <p className="mt-3 text-lg text-gray-300">
+            <p className="mt-4 text-lg text-gray-300">
               Singapore's No.1 PowerJet Experts
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Service Categories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
             {categories.map((category) => (
               <motion.div
                 key={category.id}
@@ -244,7 +243,7 @@ const ServiceCategorySelection: React.FC = () => {
                 )}
                 
                 <motion.button
-                  onClick={() => handleCategorySelect(category.id, category.price)}
+                  onClick={() => handleCategorySelect(category.id, category.price, category.duration, category.type === 'amc')}
                   className="w-full h-full bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 hover:border-[#FFD700]/30 transition-all duration-300 shadow-lg hover:shadow-[#FFD700]/5 flex flex-col"
                   whileTap={{ scale: 0.98 }}
                 >
@@ -288,7 +287,7 @@ const ServiceCategorySelection: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-lg p-4 md:p-6 border border-blue-500/20 mt-4 mb-8 md:mb-12"
+            className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-lg p-6 md:p-8 border border-blue-500/20 mt-8 mb-24"
           >
             <div className="flex items-start space-x-4">
               <div className="bg-blue-500/20 p-3 rounded-lg">
@@ -375,14 +374,14 @@ const ServiceCategorySelection: React.FC = () => {
         )}
 
         {/* Trust Indicators Section */}
-        <div className="mt-16 mb-12 md:mb-16">
+        <div className="mt-24 mb-24">
           <TrustIndicators />
         </div>
 
         {/* Testimonials Section */}
-        <div className="py-6 md:py-12">
+        <div className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {testimonials.map((testimonial) => (
                 <div
                   key={testimonial.id}
@@ -418,6 +417,10 @@ const ServiceCategorySelection: React.FC = () => {
           />
         )}
       </div>
+      <FloatingButtons />
+      {showRating && (
+        <ServiceRating onSubmit={handleRatingSubmit} onClose={() => setShowRating(false)} />
+      )}
     </div>
   );
 };

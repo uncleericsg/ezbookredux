@@ -1,10 +1,13 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
 import { setUser, setLoading, setError, updateUserProfile, clearUser } from '../store/slices/userSlice';
-import { setAuthenticated, setToken, logout as logoutAuth } from '../store/slices/authSlice';
+import { setAuthenticated, setToken, resetAuth } from '../store/slices/authSlice';
 import { authenticateUser } from '../services/auth';
 import { toast } from 'sonner';
 import type { User, Booking } from '../types/user';
+import { useNavigate } from 'react-router-dom';
+import { RESET_STORE } from '../store';
+import { signOut } from '../services/firebase';
 
 /**
  * Hook to handle user state management with Redux
@@ -12,6 +15,7 @@ import type { User, Booking } from '../types/user';
  */
 export const useUserRedux = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   
   // Select state from Redux store
   const user = useAppSelector(state => state.user.currentUser);
@@ -49,22 +53,42 @@ export const useUserRedux = () => {
   }, [dispatch]);
 
   // Logout handler
-  const logout = useCallback(() => {
-    // First clear localStorage
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('authToken');
+  const logout = useCallback(async () => {
+    try {
+      // First sign out from Firebase
+      const { success, error } = await signOut();
+      if (!success) {
+        throw error;
+      }
 
-    // Then clear Redux state
-    Promise.resolve().then(() => {
-      dispatch(setToken(null));
-      dispatch(setUser(null));
-      dispatch(setAuthenticated(false));
-    });
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
 
-    // Finally redirect
-    window.location.href = '/login';
-  }, [dispatch]);
+      // Reset individual slices first
+      dispatch(clearUser());
+      dispatch(resetAuth());
+
+      // Then reset the entire store
+      dispatch({ type: RESET_STORE });
+
+      // Force a re-render of the app
+      window.dispatchEvent(new Event('storage'));
+
+      // Show success message
+      toast.success('Successfully logged out');
+
+      // Navigate to home page since it's public
+      navigate('/', { 
+        replace: true,
+        state: {} // Clear navigation state
+      });
+
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error during logout');
+    }
+  }, [dispatch, navigate]);
 
   // Update user profile
   const updateProfile = useCallback((updates: Partial<User>) => {

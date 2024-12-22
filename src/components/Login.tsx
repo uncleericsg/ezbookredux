@@ -169,7 +169,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start pt-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-6 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#000000] to-[#030812]">
       {/* Logo and Welcome Text */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -212,7 +212,7 @@ const Login: React.FC = () => {
                   ease: "easeInOut"
                 }}
                 whileTap={{ y: 1 }}
-                onClick={() => navigate('/booking/price-selection')}
+                onClick={() => navigate('/booking/price-selection', { state: { isFirstTimeCustomer: true } })}
                 className="w-full inline-flex items-center justify-center px-6 py-2 text-base font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 focus:ring-offset-gray-900 group shadow-lg shadow-green-500/20 border border-green-500/30 transition-all duration-200"
               >
                 <span>Enjoy First Time Customer Offer</span>
@@ -228,7 +228,7 @@ const Login: React.FC = () => {
               </motion.button>
               <motion.button
                 whileTap={{ y: 1 }}
-                onClick={() => navigate('/amc/packages')}
+                onClick={() => navigate('/amc/signup')}
                 className="w-full inline-flex items-center justify-center px-6 py-2 text-base font-medium rounded-lg text-white bg-gradient-to-r from-[#FFD700] to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 focus:ring-offset-gray-900 group shadow-lg shadow-yellow-500/20 border border-yellow-600/30 transition-all duration-200"
               >
                 <span>Sign up for AMC Package</span>

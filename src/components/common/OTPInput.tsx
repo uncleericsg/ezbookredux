@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface OTPInputProps {
   length?: number;
@@ -14,35 +14,40 @@ export const OTPInput: React.FC<OTPInputProps> = ({
   isLoading 
 }) => {
   const [otp, setOtp] = useState('');
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const submitRef = useRef(false);
 
-  useEffect(() => {
-    if (otp.length === length && !hasSubmitted && !isLoading) {
-      setHasSubmitted(true);
-      onComplete(otp);
-    } else if (otp.length < length) {
-      setHasSubmitted(false);
+  const handleSubmit = (value: string) => {
+    if (value.length === length && !submitRef.current && !isLoading) {
+      submitRef.current = true;
+      onComplete(value);
     }
-  }, [otp, length, onComplete, isLoading, hasSubmitted]);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && otp.length === length && !hasSubmitted && !isLoading) {
-      setHasSubmitted(true);
-      onComplete(otp);
+    if (e.key === 'Enter') {
+      handleSubmit(otp);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, length);
     setOtp(value);
+    if (value.length === length) {
+      handleSubmit(value);
+    } else {
+      submitRef.current = false;
+    }
   };
 
   const handleVerifyClick = () => {
-    if (otp.length === length && !hasSubmitted && !isLoading) {
-      setHasSubmitted(true);
-      onComplete(otp);
-    }
+    handleSubmit(otp);
   };
+
+  useEffect(() => {
+    if (isLoading) {
+      submitRef.current = false;
+    }
+  }, [isLoading]);
 
   return (
     <div className="space-y-4">
@@ -51,12 +56,13 @@ export const OTPInput: React.FC<OTPInputProps> = ({
           type="tel"
           inputMode="numeric"
           pattern="[0-9]*"
-          maxLength={length}
           value={otp}
           onChange={handleChange}
           onKeyPress={handleKeyPress}
           placeholder={`Enter ${length}-digit OTP`}
+          disabled={isLoading}
           className="w-full px-4 py-2 bg-gray-800/50 rounded-lg border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50 focus:border-transparent"
+          maxLength={length}
           autoFocus
         />
         {error && <div className="text-red-500 text-sm">{error}</div>}
@@ -65,10 +71,14 @@ export const OTPInput: React.FC<OTPInputProps> = ({
       <button
         type="button"
         onClick={handleVerifyClick}
-        disabled={otp.length !== length || isLoading || hasSubmitted}
-        className="w-full py-2 px-4 bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+        disabled={otp.length !== length || isLoading}
+        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors
+          ${otp.length === length && !isLoading
+            ? 'bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] text-black'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
+          } hover:opacity-90`}
       >
-        {isLoading ? 'Verifying...' : hasSubmitted ? 'Verified' : 'Verify OTP'}
+        {isLoading ? 'Verifying...' : 'Verify OTP'}
       </button>
 
       <p className="text-sm text-gray-400 text-center">
@@ -77,3 +87,6 @@ export const OTPInput: React.FC<OTPInputProps> = ({
     </div>
   );
 };
+
+// Also export as default for backward compatibility
+export default OTPInput;

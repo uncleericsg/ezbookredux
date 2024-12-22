@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { useUserRedux } from '../../hooks/useUserRedux';
 import ServicePricingSelection from '../ServicePricingSelection';
 import ReturnCustomerSchedule from './ReturnCustomerSchedule';
@@ -68,6 +70,8 @@ interface ServicePricing {
   promoLabel?: string;
   isSignature?: boolean;
 }
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const ReturnCustomerBooking: React.FC = () => {
   const navigate = useNavigate();
@@ -179,13 +183,15 @@ const ReturnCustomerBooking: React.FC = () => {
       case 'payment':
         if (!customerInfo || !selectedService || !selectedDateTime) return null;
         return (
-          <PaymentStep
-            customerInfo={customerInfo}
-            selectedService={selectedService}
-            scheduledDate={selectedDateTime}
-            timeSlot={selectedTimeSlot}
-            onBack={() => setStep('schedule')}
-          />
+          <Elements stripe={stripePromise}>
+            <PaymentStep
+              customerInfo={customerInfo}
+              selectedService={selectedService}
+              scheduledDate={selectedDateTime}
+              timeSlot={selectedTimeSlot}
+              onBack={() => setStep('schedule')}
+            />
+          </Elements>
         );
       default:
         return null;
