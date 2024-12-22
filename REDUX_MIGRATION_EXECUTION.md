@@ -10,7 +10,7 @@
 
 ## 1. Project Setup
 
-### Copy Project
+### Copy Project (Required)
 ```
 From: project/
 To:   project-redux/
@@ -19,73 +19,80 @@ Skip these files:
 - src/contexts/* (All context files)
 ```
 
-### Install Redux
-```bash
-npm install @reduxjs/toolkit react-redux
+## 2. Existing Redux Setup
+
+### Current Store Structure
+```typescript
+// Store and slices already implemented:
+src/store/
+  index.ts         # Main store configuration
+  hooks.ts         # Type-safe hooks
+  slices/
+    - authSlice.ts     # Authentication state
+    - userSlice.ts     # User management
+    - adminSlice.ts    # Admin features
+    - technicianSlice.ts # Technician management
+    - bookingSlice.ts  # Booking system
 ```
 
-## 2. Files to Rebuild
+### Implemented Features
+- ✅ Store configuration with TypeScript
+- ✅ Development tools and middleware
+- ✅ Type-safe hooks (useAppDispatch, useAppSelector)
+- ✅ Mock data integration
+- ✅ Store reset functionality
 
-### Context Files (Remove)
+## 3. Migration Tasks
+
+### Context Files to Remove
 ```
 src/contexts/
-  - AuthContext.tsx
-  - UserContext.tsx
-  - AdminViewContext.tsx
+  - AuthContext.tsx    → Using authSlice
+  - UserContext.tsx    → Using userSlice
+  - AdminViewContext.tsx → Using adminSlice
 ```
 
-### Components (Rebuild with Redux)
+### Components to Update
 ```
 src/components/
   auth/
-    - LoginForm.tsx     # Login/logout (same UI, new state)
-    - ProtectedRoute.tsx # Auth check (same routing, new state)
+    - LoginForm.tsx     # Switch to useAppDispatch/useAppSelector
+    - ProtectedRoute.tsx # Use Redux auth state
   
   user/
-    - UserProfile.tsx   # Profile management (same UI, new state)
-    - BookingForm.tsx   # Create bookings (same form, new state)
-    - BookingList.tsx   # View bookings (same list, new state)
+    - UserProfile.tsx   # Use Redux user state
+    - BookingForm.tsx   # Use Redux booking state
+    - BookingList.tsx   # Use Redux booking state
   
   admin/
-    - AdminDashboard.tsx # Admin views (same layout, new state)
-```
-
-## 3. New Redux Structure
-
-### Store Setup
-```
-src/store/
-  - index.ts         # Redux store
-  - authSlice.ts     # Auth state
-  - userSlice.ts     # User state
-  - adminSlice.ts    # Admin state
+    - AdminDashboard.tsx # Use Redux admin state
 ```
 
 ## 4. Migration Steps
 
-1. **Copy Project & Setup**
-   - Copy project excluding context files
-   - Install Redux packages
-   - Create store files
+1. **Project Copy**
+   - Copy entire project to new directory
+   - Skip all context files
+   - Verify Redux setup in new location
 
-2. **Create Redux Store**
-   - Set up store with slices
-   - Add basic error handling
-   - Keep it simple, only what we need
-
-3. **Rebuild Components**
-   - Start with auth (login/logout)
+2. **Component Migration**
+   - Start with auth components
    - Then user features
    - Finally admin features
-   - Preserve all UI/visuals during updates
+   - Keep all UI/visuals unchanged
+
+3. **Context Cleanup**
+   - Remove context providers after components are migrated
+   - Verify no context imports remain
+   - Clean up unused context files
 
 ## 5. Testing Checklist
 
-Basic Features (All with existing UI preserved):
-- [ ] Login works (same form, new state)
-- [ ] User profile loads (same layout, new state)
-- [ ] Can create bookings (same form, new state)
-- [ ] Admin features work (same dashboard, new state)
+Basic Features:
+- [ ] Login/logout with Redux state
+- [ ] User profile with Redux state
+- [ ] Booking system with Redux state
+- [ ] Admin features with Redux state
 
 ## 6. UI Preservation Checklist
 
@@ -97,7 +104,17 @@ Verify these remain unchanged:
 - [ ] All user flows
 - [ ] All responsive behaviors
 
-That's it! Keep it focused on what we actually need.
+## 7. Migration Progress Tracking
+
+Current Status:
+- ✅ Redux store setup
+- ✅ Slice creation
+- ✅ Type system
+- ⏳ Project copy
+- ⏳ Component migration
+- ⏳ Context removal
+- ⏳ Testing
+- ⏳ Final verification
 
 ---
 See also:

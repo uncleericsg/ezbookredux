@@ -4,7 +4,8 @@
     "type": "web_application",
     "framework": "react",
     "bundler": "vite",
-    "node_version": ">=18"
+    "node_version": ">=18",
+    "path": "c:/Users/djxpi/CascadeProjects/project-redux"
   },
   "architecture": {
     "routing": {
@@ -88,9 +89,17 @@
     "authorization": "role_based"
   },
   "testing": {
-    "framework": "jest",
-    "e2e": "cypress",
-    "coverage_threshold": 80
+    "framework": "vitest",
+    "runner": "vitest",
+    "ui": "@vitest/ui",
+    "coverage": {
+      "provider": "v8",
+      "threshold": 80
+    },
+    "setup": {
+      "environment": "jsdom",
+      "utilities": ["@testing-library/react", "@testing-library/user-event"]
+    }
   },
   "migrations": {
     "mui_implementation": {
@@ -105,6 +114,38 @@
           "/src/pages/**/*"
         ],
         "reason": "These paths contain frontend components that should remain using Tailwind"
+      }
+    },
+    "redux_migration": {
+      "status": "in_progress",
+      "source": "context_api",
+      "target": "redux_toolkit",
+      "current_phase": "component_migration",
+      "completed": {
+        "store_setup": true,
+        "slices": ["auth", "user", "admin", "technician", "booking"],
+        "components": []
+      },
+      "pending": {
+        "contexts": [
+          "AuthContext",
+          "UserContext",
+          "AdminViewContext",
+          "BasicUserContext",
+          "CombinedUserContext"
+        ],
+        "components": [
+          "/src/components/auth/*",
+          "/src/components/admin/*",
+          "/src/components/booking/*"
+        ]
+      },
+      "protected_paths": {
+        "do_not_modify": [
+          "/src/components/public/**/*",
+          "/src/components/shared/**/*"
+        ],
+        "reason": "These components should maintain their current UI and functionality"
       }
     }
   },
