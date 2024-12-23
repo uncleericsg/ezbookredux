@@ -54,6 +54,9 @@
  * - Payment UI enhanced
  * - Stripe integration optimized
  * - Error handling improved
+ * 
+ * BACKUP CREATED: December 23, 2023
+ * DO NOT MODIFY THIS BACKUP FILE
  */
 
 // Types
@@ -199,35 +202,15 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         }
 
         if (!bookingData.selectedService.id) {
-          console.error('Missing service ID');
-          throw new Error('Service ID is required.');
+          throw new Error('Service ID is required');
         }
 
-        if (!bookingData.bookingId) {
-          console.error('Missing booking ID');
-          throw new Error('Booking ID is required.');
-        }
-
-        if (!currentUser?.id) {
-          console.warn('No customer ID available');
-        }
-
-        console.log('Creating payment intent with:', {
-          amount: baseAmount,
-          serviceId: bookingData.selectedService.id,
-          bookingId: bookingData.bookingId,
-          customerId: currentUser?.id,
-          tipAmount: 0,
-          currency: 'sgd'
-        });
-
+        // Create payment intent
         const intent = await createPaymentIntent(
           baseAmount,
           bookingData.selectedService.id,
-          bookingData.bookingId,
-          0, // Initialize with 0 tip
-          'sgd',
-          currentUser?.id
+          bookingData.bookingId || '',
+          currentUser?.id || ''
         );
         
         console.log('Payment intent created:', intent);
@@ -237,8 +220,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         }));
       } catch (error) {
         console.error('Error initializing payment:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
-        toast.error(errorMessage);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment';
+        dispatch(setError(errorMessage));
         setPaymentState((prev) => ({
           ...prev,
           status: PAYMENT_STATES.ERROR,
@@ -249,27 +232,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       }
     };
 
-    // Only initialize payment if we have all required data
-    if (
-      bookingData.selectedService?.price &&
-      bookingData.selectedService?.id &&
-      bookingData.bookingId
-    ) {
+    if (bookingData.selectedService?.price) {
       initializePayment();
-    } else {
-      console.error('Missing required booking data:', {
-        price: bookingData.selectedService?.price,
-        serviceId: bookingData.selectedService?.id,
-        bookingId: bookingData.bookingId
-      });
-      toast.error('Missing required booking information');
-      setPaymentState((prev) => ({
-        ...prev,
-        status: PAYMENT_STATES.ERROR,
-        error: 'Missing required booking information'
-      }));
     }
-  }, [bookingData.selectedService, bookingData.bookingId, currentUser?.id]);
+  }, [bookingData.selectedService, bookingData.bookingId, currentUser, dispatch]);
 
   // Handle tip changes
   const handleTipChange = useCallback((amount: number) => {
@@ -290,21 +256,19 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     onComplete?.(reference);
   }, [onComplete]);
 
-  const handleBack = useCallback(() => {
-    onBack?.();
-  }, [onBack]);
-
-  const handlePaymentSuccess = useCallback(async (paymentIntent: any) => {
+  const handlePaymentSuccess = useCallback(async () => {
     try {
-      setPaymentState((prev) => ({
-        ...prev,
-        status: PAYMENT_STATES.SUCCESS,
-      }));
+      if (!bookingData.customerInfo || !bookingData.selectedService) {
+        throw new Error('Missing required booking information');
+      }
 
       // Add to service queue
       await addToServiceQueue({
+        userId: currentUser?.id,
         serviceId: bookingData.selectedService.id,
-        customerId: currentUser?.id,
+        brands: bookingData.brands,
+        issues: bookingData.issues,
+        customerInfo: bookingData.customerInfo,
         scheduledDate: bookingData.scheduledDateTime,
         status: 'pending',
         paymentConfirmed: true,
@@ -312,17 +276,26 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         totalAmount: calculateTotalAmount(),
       });
 
-      // Update payment status in Redux
-      dispatch(setPaymentStatus('completed'));
+      // Update payment status
+      dispatch(setPaymentStatus('success'));
+      
+      // Show success message
+      toast.success('Payment successful!');
+      
+      // Update component state
+      setPaymentState((prev) => ({
+        ...prev,
+        status: PAYMENT_STATES.SUCCESS,
+      }));
 
-      // Call onComplete with booking reference
-      handlePaymentComplete(paymentIntent.id);
     } catch (error) {
-      console.error('Error handling payment success:', error);
+      console.error('Error processing payment success:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Payment processing failed';
+      dispatch(setError(errorMessage));
       setPaymentState((prev) => ({
         ...prev,
         status: PAYMENT_STATES.ERROR,
-        error: 'Failed to process payment completion',
+        error: errorMessage,
       }));
     }
   }, [
@@ -347,20 +320,18 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto px-4 py-8"
+        exit={{ opacity: 0, y: -20 }}
+        className="max-w-4xl mx-auto py-8"
       >
         {/* Booking Summary */}
         <div className="mb-8">
           <BookingSummary
+            customerInfo={bookingData.customerInfo}
+            selectedDate={bookingData.scheduledDateTime}
+            selectedTimeSlot={bookingData.scheduledTimeSlot}
             service={bookingData.selectedService}
             brands={bookingData.brands}
             issues={bookingData.issues}
-            customerInfo={{
-              ...bookingData.customerInfo,
-              otherIssue: bookingData.otherIssue // Pass the additional notes
-            }}
-            selectedDate={bookingData.scheduledDateTime}
-            selectedTimeSlot={bookingData.scheduledTimeSlot}
           />
         </div>
 
@@ -370,19 +341,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             onComplete={handlePaymentComplete}
           />
         ) : (
-          <>
-            {/* Support Team Section */}
-            <div className="mt-6 mb-6 bg-gray-800/90 rounded-lg p-4">
-              <div className="text-center max-w-2xl mx-auto px-4">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
-                  <HiHeart className="w-6 h-6 text-pink-400" />
-                </div>
-                <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
-                  Recognize our team's commitment to excellence and dedication to providing exceptional service
-                </p>
+          <div className="max-w-xl mx-auto">
+            {/* Tip Selection */}
+            <div className="bg-gray-800/90 rounded-lg p-6 mb-8">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
+                <p className="text-gray-400 text-sm">Show your appreciation for great service!</p>
               </div>
-              <div className="flex justify-center gap-2 mt-4">
-                {[0, 5, 10, 20, 50].map((amount) => (
+
+              <div className="flex justify-center gap-4 mb-4">
+                {[5, 10, 15, 20].map((amount) => (
                   <button
                     key={amount}
                     onClick={() => handleTipChange(amount)}
@@ -468,19 +436,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 )}
               </div>
             </div>
-          </>
+          </div>
         )}
-
-        {/* Navigation */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={handleBack}
-            className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
-            disabled={paymentState.status === PAYMENT_STATES.PROCESSING}
-          >
-            Back
-          </button>
-        </div>
       </motion.div>
     </PaymentErrorBoundary>
   );

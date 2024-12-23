@@ -1,0 +1,31 @@
+.container {
+  @apply w-full rounded-lg bg-white p-6 shadow-sm;
+}
+
+.section {
+  @apply mb-6 last:mb-0;
+}
+
+.sectionTitle {
+  @apply mb-4 text-lg font-semibold text-gray-900;
+}
+
+.content {
+  @apply space-y-3;
+}
+
+.row {
+  @apply flex items-start justify-between text-sm;
+}
+
+.label {
+  @apply text-gray-500;
+}
+
+.value {
+  @apply text-gray-900 font-medium text-right;
+}
+
+.description {
+  @apply mt-2 text-sm text-gray-600 border-t border-gray-100 pt-2;
+}

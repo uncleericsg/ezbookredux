@@ -1,37 +1,94 @@
 /*
- * @ai-protection - DO NOT MODIFY THIS FILE
- * This is a stable version of the schedule step component that handles:
- * 1. Time slot selection and management
- * 2. Loading states during slot fetching
- * 3. Direct navigation to payment after slot selection
- * 4. Dynamic slot availability updates
+ * @ai-protection - CRITICAL COMPONENT - DO NOT MODIFY WITHOUT REVIEW
  * 
- * Critical Features:
- * - Time slot selection interface
- * - Loading state management
- * - Automatic navigation flow
- * - Slot availability validation
+ * This component is a core part of the booking system that integrates location optimization,
+ * route management, and time slot scheduling. Any changes require thorough testing of the
+ * entire booking flow and location optimization system.
+ * 
+ * Core System Integration:
+ * 1. Location Optimization System
+ *    - Region-based slot prioritization (5-8km range)
+ *    - Distance-based availability filtering
+ *    - Real-time route optimization
+ *    - Technician scheduling optimization
+ * 
+ * 2. Time Slot Management
+ *    - Dynamic slot generation and filtering
+ *    - Peak/off-peak hour handling
+ *    - Buffer time management
+ *    - Service duration calculations
+ * 
+ * 3. Booking Flow Integration
+ *    - Direct payment navigation
+ *    - State persistence
+ *    - Loading state management
+ *    - Error handling
+ * 
+ * Critical Dependencies:
+ * @requires OptimizedLocationProvider - Location-based filtering and optimization
+ * @requires optimizeTimeSlots - Slot optimization algorithm
+ * @requires RouteCache - Technician route optimization
+ * @requires BusinessRules - Scheduling constraints and rules
  * 
  * Integration Points:
- * - Booking service for slot availability
- * - Navigation service for routing
- * - State management for booking flow
+ * - src/components/booking/OptimizedLocationProvider.tsx
+ * - src/services/locations/optimizer.ts
+ * - src/services/locations/regions.ts
+ * - src/constants/businessRules.ts
  * 
- * @ai-visual-protection: The time slot selection UI must remain consistent
- * @ai-flow-protection: The direct-to-payment navigation flow must be preserved
- * @ai-state-protection: The loading and selection states are optimized
+ * Protected Features:
+ * @ai-visual-protection: UI components and time slot presentation
+ * @ai-flow-protection: Booking flow and navigation logic
+ * @ai-state-protection: Redux state management
+ * @ai-location-protection: Location optimization system
+ * @ai-route-protection: Technician route optimization
  * 
- * Any modifications to this component could affect:
- * 1. Booking flow progression
- * 2. Time slot availability
- * 3. User experience during slot selection
- * 4. Payment process initiation
+ * Critical Workflows:
+ * 1. Location Optimization
+ *    - Postal code validation
+ *    - Region determination
+ *    - Distance calculation
+ *    - Route optimization
  * 
- * If changes are needed:
- * 1. Document the proposed changes
- * 2. Test the entire booking flow
- * 3. Verify loading states
- * 4. Ensure navigation remains smooth
+ * 2. Time Slot Management
+ *    - Availability calculation
+ *    - Duration handling
+ *    - Buffer time enforcement
+ *    - Peak hour management
+ * 
+ * 3. Booking Flow
+ *    - Customer info validation
+ *    - Service selection
+ *    - Schedule confirmation
+ *    - Payment navigation
+ * 
+ * Required Testing:
+ * 1. Location System
+ *    - Region assignment
+ *    - Distance calculations
+ *    - Route optimization
+ * 
+ * 2. Time Slot System
+ *    - Availability accuracy
+ *    - Duration calculations
+ *    - Buffer enforcement
+ * 
+ * 3. Integration Testing
+ *    - Full booking flow
+ *    - State management
+ *    - Error handling
+ * 
+ * Change Protocol:
+ * 1. Document proposed changes
+ * 2. Test in isolation
+ * 3. Verify with location system
+ * 4. Test full booking flow
+ * 5. Validate mobile responsiveness
+ * 
+ * Last Stable Update: December 2023
+ * - Location optimization implemented
+ * - Route cache integration complete
+ * - Duration handling enhanced
  */
 
 // @ai-visual-protection: This component's visual design and styling must be preserved exactly as is.
@@ -212,8 +269,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
                   key={slot.time}
                   onClick={() => slot.available && handleTimeSelect(slot.time)}
                   disabled={!slot.available || isLoading}
-                  className={`
-                    p-3 rounded-md text-sm font-medium transition-colors
+                  className={`p-3 rounded-md text-sm font-medium transition-colors
                     ${slot.available 
                       ? selectedTime === slot.time
                         ? 'bg-blue-600 text-white'

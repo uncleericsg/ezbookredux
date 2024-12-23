@@ -28,19 +28,49 @@ export const initializeStripe = async (): Promise<Stripe | null> => {
   return stripeInstance;
 };
 
-export const createPaymentIntent = async (amount: number): Promise<{ clientSecret: string; id: string }> => {
+export const createPaymentIntent = async (
+  amount: number,
+  serviceId: string,
+  bookingId: string,
+  tipAmount: number = 0,
+  currency: string = 'sgd',
+  customerId?: string,
+): Promise<{ clientSecret: string; id: string }> => {
   try {
-    console.log('Creating payment intent for amount:', amount);
+    console.log('Creating payment intent with full details:', { 
+      amount, 
+      serviceId, 
+      bookingId, 
+      tipAmount, 
+      currency, 
+      customerId,
+      baseUrl: axios.defaults.baseURL,
+      headers: axios.defaults.headers
+    });
     
     if (!amount || amount <= 0) {
       console.error('Invalid amount:', amount);
       throw new Error('Invalid payment amount');
     }
 
-    const response = await axios.post('/api/payments/create-payment-intent', {
+    if (!serviceId || !bookingId) {
+      console.error('Missing required parameters:', { serviceId, bookingId });
+      throw new Error('Service ID and Booking ID are required');
+    }
+
+    const paymentData = {
       amount,
-      currency: 'sgd',
-    });
+      serviceId,
+      bookingId,
+      tipAmount,
+      currency,
+      customerId,
+    };
+
+    console.log('Sending payment request to:', '/api/payments/create-payment-intent');
+    console.log('Payment request data:', paymentData);
+
+    const response = await axios.post('/api/payments/create-payment-intent', paymentData);
 
     console.log('Payment intent response:', response.data);
 
@@ -55,10 +85,20 @@ export const createPaymentIntent = async (amount: number): Promise<{ clientSecre
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('Axios error details:', {
+      console.error('Detailed Axios error:', {
         message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
+        response: {
+          data: error.response?.data,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+        },
+        request: {
+          method: error.config?.method,
+          url: error.config?.url,
+          data: error.config?.data,
+          headers: error.config?.headers,
+        }
       });
       const errorMessage = error.response?.data?.error || error.message || 'Failed to initialize payment';
       throw new Error(errorMessage);
