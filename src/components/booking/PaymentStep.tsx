@@ -347,20 +347,18 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto px-4 py-8"
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
       >
         {/* Booking Summary */}
-        <div className="mb-8">
+        <div className="mb-2 sm:mb-8">
           <BookingSummary
+            customerInfo={bookingData.customerInfo}
+            selectedDate={bookingData.scheduledDateTime}
+            selectedTimeSlot={bookingData.scheduledTimeSlot}
             service={bookingData.selectedService}
             brands={bookingData.brands}
             issues={bookingData.issues}
-            customerInfo={{
-              ...bookingData.customerInfo,
-              otherIssue: bookingData.otherIssue // Pass the additional notes
-            }}
-            selectedDate={bookingData.scheduledDateTime}
-            selectedTimeSlot={bookingData.scheduledTimeSlot}
           />
         </div>
 
@@ -370,24 +368,24 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             onComplete={handlePaymentComplete}
           />
         ) : (
-          <>
-            {/* Support Team Section */}
-            <div className="mt-6 mb-6 bg-gray-800/90 rounded-lg p-4">
-              <div className="text-center max-w-2xl mx-auto px-4">
+          <div className="w-full sm:max-w-xl mx-auto">
+            {/* Tip Selection */}
+            <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
+              <div className="text-center sm:max-w-2xl mx-auto px-1 sm:px-4">
                 <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
                   <HiHeart className="w-6 h-6 text-pink-400" />
                 </div>
-                <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
-                  Recognize our team's commitment to excellence and dedication to providing exceptional service
-                </p>
+                <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
+                <p className="text-gray-400 text-sm">Show your appreciation for great service!</p>
               </div>
-              <div className="flex justify-center gap-2 mt-4">
-                {[0, 5, 10, 20, 50].map((amount) => (
+
+              <div className="flex justify-center gap-2 sm:gap-4 mb-4 mt-4">
+                {[5, 10, 15, 20].map((amount) => (
                   <button
                     key={amount}
                     onClick={() => handleTipChange(amount)}
                     className={cn(
-                      'px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
+                      'px-2 sm:px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
                       paymentState.tipAmount === amount
                         ? 'bg-gray-700 text-pink-400 border border-pink-400/50'
                         : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/80'
@@ -399,9 +397,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               </div>
               {paymentState.tipAmount > 0 && (
                 <div className="mt-4 text-center text-sm text-gray-300">
-                  <div className="flex justify-center items-center gap-4">
-                    <span>Service Amount: ${bookingData.selectedService?.price || 0}</span>
-                    <span>Tip Amount: ${paymentState.tipAmount}</span>
+                  <div className="flex justify-center items-center gap-2 sm:gap-4 flex-wrap">
+                    <span>Service: ${bookingData.selectedService?.price || 0}</span>
+                    <span>Tip: ${paymentState.tipAmount}</span>
                     <span className="font-medium text-white">Total: ${calculateTotalAmount()}</span>
                   </div>
                 </div>
@@ -409,9 +407,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             </div>
 
             {/* Payment Elements */}
-            <div className="bg-gray-800/90 rounded-lg p-6 mb-8">
+            <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
               {/* Total Amount Display */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-4 sm:mb-8">
                 <h3 className="text-gray-400 mb-2">Amount to Pay</h3>
                 <p className="text-3xl font-semibold text-yellow-400">
                   ${calculateTotalAmount().toFixed(2)}
@@ -459,16 +457,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             </div>
 
             {/* Payment Form */}
-            <div className="grid grid-cols-1 gap-8">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-2 sm:gap-8">
+              <div className="space-y-4 sm:space-y-6">
                 {paymentState.error && (
-                  <div className="p-4 bg-red-50 text-red-700 rounded-md">
+                  <div className="p-2 sm:p-4 bg-red-50 text-red-700 rounded-md">
                     {paymentState.error}
                   </div>
                 )}
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Navigation */}

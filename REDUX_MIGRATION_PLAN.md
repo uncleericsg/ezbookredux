@@ -1,222 +1,229 @@
-# Redux Migration Plan - Simple and Effective
+# Redux Migration Plan for Admin Components
 
-## Overview
-Simple plan to implement Redux in our iAircon EasyBooking web app, focusing on core features and clean implementation.
+## Current Context Usage in Admin Section
 
-## 0. Context Files to Migrate
+### Files Using Context API
 
-### Authentication
-- `src/contexts/AuthContext.tsx`
-  - Handles login/logout
-  - User authentication state
+1. **Core Admin Context Files:**
+   - `/src/contexts/AdminViewContext.tsx` - Main admin view context
+   - `/src/contexts/UserContext.tsx` - User context used in admin components
 
-### User Management
-- `src/contexts/BasicUserContext.tsx`
-  - Basic user data
-- `src/contexts/UserContext.tsx`
-  - Extended user features
-- `src/contexts/CombinedUserContext.tsx`
-  - Combined user management
+2. **Admin Components Using Context:**
+   - `/src/components/admin/AdminDashboard.tsx` - Uses UserContext for auth
+   - `/src/components/admin/AdminViewToggle.tsx` - Uses AdminViewContext
+   - `/src/components/admin/UserManagement.tsx` - Uses UserContext
+   - `/src/components/admin/ServiceHub/ServiceHub.tsx` - Uses context for service management
 
-### Admin Features
-- `src/contexts/AdminViewContext.tsx`
-  - Admin view toggle
-  - Admin-specific features
+3. **Admin-Related Hooks Using Context:**
+   - `/src/hooks/useAdminDashboard.ts`
+   - `/src/hooks/useUserTable.ts`
+   - `/src/hooks/useUsers.ts`
 
-## 1. Project Setup (Day 1)
+## Pre-requisites for Successful Migration
 
-### Install Dependencies
-```bash
-npm install @reduxjs/toolkit react-redux
-```
+1. **Environment Setup**
+   - [x] Redux Toolkit installed
+   - [x] Redux DevTools configured
+   - [x] TypeScript types for Redux configured
 
-### Basic Folder Structure
-```
-/src
-  /store
-    index.ts         # Main store setup
-  /slices
-    authSlice.ts     # Login/logout
-    userSlice.ts     # User data
-    adminSlice.ts    # Admin features
-```
+2. **State Management Audit**
+   - [ ] Document all current state management patterns
+   - [ ] Identify state dependencies between components
+   - [ ] Map out state update flows
 
-## 2. Implementation Plan (2 Weeks)
+3. **Testing Environment**
+   - [ ] Set up unit tests for Redux actions and reducers
+   - [ ] Configure integration tests for connected components
+   - [ ] Establish E2E tests for critical admin flows
 
-### Week 1: Core Implementation
+4. **Backup Strategy**
+   - [ ] Create backups of all context files
+   - [ ] Document current state shapes
+   - [ ] Version control checkpoint
 
-#### Day 1-2: Redux Setup & Auth
-```typescript
-// Basic auth slice (replacing AuthContext.tsx)
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  error: string | null;
-}
+## Migration Steps
 
-// Main actions
-- login
-- logout
-- clearError
-```
+### Phase 1: Redux Infrastructure Setup
 
-#### Day 3-4: User Features
-```typescript
-// User slice (replacing BasicUserContext.tsx, UserContext.tsx, CombinedUserContext.tsx)
-interface UserState {
-  userData: User | null;
-  bookings: Booking[];
-  error: string | null;
-}
+1. **Create Admin Redux Structure**
+   ```typescript
+   // src/store/slices/adminViewSlice.ts
+   interface AdminViewState {
+     isAdminView: boolean;
+     currentView: string;
+     permissions: string[];
+     settings: AdminSettings;
+   }
+   ```
 
-// Main actions
-- updateProfile
-- fetchBookings
-- createBooking
-```
+2. **Define Action Types**
+   ```typescript
+   // src/store/types/admin.types.ts
+   export const adminActionTypes = {
+     SET_ADMIN_VIEW: 'admin/setAdminView',
+     TOGGLE_ADMIN_VIEW: 'admin/toggleAdminView',
+     UPDATE_SETTINGS: 'admin/updateSettings',
+     // ... other actions
+   };
+   ```
 
-#### Day 5: Admin Features
-```typescript
-// Admin slice (replacing AdminViewContext.tsx)
-interface AdminState {
-  isAdmin: boolean;
-  adminView: boolean;
-}
+### Phase 2: Component Migration (Priority Order)
 
-// Main actions
-- toggleAdminView
-- manageUsers
-```
+1. **AdminViewContext Migration**
+   - Create adminViewSlice
+   - Migrate state and actions
+   - Update components using AdminViewContext
 
-### Week 2: Testing & Cleanup
+2. **User Management Migration**
+   - Enhance userSlice for admin features
+   - Migrate UserManagement component
+   - Update UserTable component
 
-#### Day 1-3: Testing Core Features
-- Test login/logout
-- Test user operations
-- Test admin features
+3. **Service Management Migration**
+   - Create serviceManagementSlice
+   - Migrate ServiceHub components
+   - Update related utilities
 
-#### Day 4-5: Cleanup
-- Remove old context files:
-  1. AuthContext.tsx
-  2. BasicUserContext.tsx
-  3. UserContext.tsx
-  4. CombinedUserContext.tsx
-  5. AdminViewContext.tsx
-- Final testing
-- Documentation update
+### Phase 3: Testing and Validation
 
-## 3. Migration Steps
+1. **Unit Testing**
+   ```typescript
+   describe('adminViewSlice', () => {
+     it('should handle initial state');
+     it('should handle setAdminView');
+     it('should handle toggleAdminView');
+   });
+   ```
 
-### Step 1: Auth Migration
-1. Create auth slice
-2. Move login/logout logic from AuthContext.tsx
-3. Update auth components
-4. Test auth flow
+2. **Integration Testing**
+   - Test component interactions
+   - Verify state updates
+   - Check performance impact
 
-### Step 2: User Migration
-1. Create user slice
-2. Move user data from BasicUserContext.tsx and UserContext.tsx
-3. Consolidate CombinedUserContext.tsx functionality
-4. Update user components
-5. Test user features
+## Migration Checklist
 
-### Step 3: Admin Migration
-1. Create admin slice
-2. Move admin features from AdminViewContext.tsx
-3. Update admin components
-4. Test admin functionality
+### For Each Component
 
-## 4. Success Checklist
+- [ ] Create corresponding Redux slice
+- [ ] Migrate state to Redux
+- [ ] Update component to use Redux hooks
+- [ ] Add TypeScript types
+- [ ] Add unit tests
+- [ ] Verify no context imports remain
+- [ ] Test performance
+- [ ] Update documentation
 
-### Auth Features
-- [ ] Login works
-- [ ] Logout works
-- [ ] Auth state persists
-- [ ] Protected routes work
+### Global Checks
 
-### User Features
-- [ ] Profile view/edit works
-- [ ] Bookings display works
-- [ ] User data persists
-- [ ] Error handling works
+- [ ] Verify all context providers removed
+- [ ] Check for memory leaks
+- [ ] Validate state persistence
+- [ ] Test error boundaries
+- [ ] Update dev tools configuration
 
-### Admin Features
-- [ ] Admin view toggle works
-- [ ] User management works
-- [ ] Admin controls work
+## Best Practices During Migration
 
-## 5. Simple Testing Plan
+1. **State Management**
+   - Keep state normalized
+   - Use selectors for derived state
+   - Implement proper error handling
 
-### Auth Testing
-```typescript
-// Example test
-test('login success', () => {
-  const store = configureStore({ reducer: authReducer });
-  store.dispatch(login(credentials));
-  expect(store.getState().isAuthenticated).toBe(true);
-});
-```
+2. **Performance**
+   - Use memoization where needed
+   - Implement proper selector patterns
+   - Monitor re-render frequency
 
-### User Testing
-```typescript
-// Example test
-test('update profile', () => {
-  const store = configureStore({ reducer: userReducer });
-  store.dispatch(updateProfile(userData));
-  expect(store.getState().userData).toEqual(userData);
-});
-```
+3. **Code Organization**
+   - Follow Redux Toolkit patterns
+   - Maintain consistent file structure
+   - Document complex state logic
 
-## 6. Rollback Plan
+## Rollback Plan
 
-### Quick Rollback Steps
-1. Keep context files until fully tested
-2. Can switch back to context if needed
-3. Both systems can run parallel
+1. **Before Each Migration**
+   - Create component backup
+   - Document current behavior
+   - Set up feature flags
 
-## 7. Timeline Overview
-- Week 1: Core Implementation
-  - Day 1-2: Redux & Auth
-  - Day 3-4: User Features
-  - Day 5: Admin Features
+2. **Rollback Triggers**
+   - Performance degradation
+   - Unexpected behavior
+   - Critical bugs
 
-- Week 2: Testing & Cleanup
-  - Day 1-3: Testing
-  - Day 4-5: Cleanup & Docs
+3. **Rollback Process**
+   - Revert to context version
+   - Disable feature flags
+   - Run validation tests
 
-## 8. Key Points for Success
+## Post-Migration Tasks
 
-### Must-Haves
-1. Working auth flow
-2. User data persistence
-3. Admin functionality
-4. Error handling
+1. **Cleanup**
+   - Remove unused context files
+   - Update dependencies
+   - Clean up imports
 
-### Nice-to-Haves
-1. Loading states
-2. Error messages
-3. Form validation
+2. **Documentation**
+   - Update component docs
+   - Document new state patterns
+   - Update contributor guide
 
-## 9. Daily Checklist
+3. **Monitoring**
+   - Set up performance monitoring
+   - Track state usage patterns
+   - Monitor error rates
 
-### Development
-- [ ] Features working
-- [ ] No console errors
-- [ ] Basic tests pass
+## Timeline and Milestones
 
-### Testing
-- [ ] Login/logout works
-- [ ] User features work
-- [ ] Admin features work
-- [ ] No regressions
+1. **Week 1: Setup and Planning**
+   - Complete infrastructure setup
+   - Finalize migration plan
+   - Set up testing environment
 
-## Next Steps
-1. Set up Redux store
-2. Start with auth slice
-3. Test auth flow
-4. Continue with user features
+2. **Week 2: Core Migration**
+   - Migrate AdminViewContext
+   - Update core components
+   - Initial testing phase
 
----
-Last Updated: 2024-12-22
-Status: Ready for Implementation
-Version: 1.1
+3. **Week 3: Feature Migration**
+   - Migrate user management
+   - Migrate service management
+   - Integration testing
+
+4. **Week 4: Cleanup and Validation**
+   - Remove context code
+   - Final testing
+   - Documentation updates
+
+## Success Metrics
+
+1. **Performance**
+   - Reduced component re-renders
+   - Improved state update time
+   - Better memory usage
+
+2. **Code Quality**
+   - 100% TypeScript coverage
+   - Passing test suite
+   - No context references
+
+3. **Developer Experience**
+   - Simplified state management
+   - Better debugging capabilities
+   - Clearer data flow
+
+## Support and Resources
+
+1. **Documentation**
+   - Redux Toolkit docs
+   - Migration guides
+   - Internal wiki updates
+
+2. **Team Support**
+   - Code review process
+   - Pair programming sessions
+   - Technical debt tracking
+
+3. **Monitoring**
+   - Error tracking
+   - Performance monitoring
+   - Usage analytics
