@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiUsers, FiX, FiPhone, FiArrowRight, FiMapPin, FiEdit2, FiCheck } from 'react-icons/fi';
-import { useUser } from '../../contexts/UserContext';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import { setUser as setReduxUser } from '../../store/slices/userSlice';
 import { toast } from 'sonner';
 import { OTPInput } from '../common/OTPInput';
@@ -55,7 +55,7 @@ const BookingSelectionModal: React.FC<BookingSelectionModalProps> = ({
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.user);
   const dispatch = useDispatch();
   const mobileInputRef = useRef<HTMLInputElement>(null);
 

@@ -172,4 +172,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   );
 };
 
+BookingConfirmation.displayName = 'BookingConfirmation';
+
+export { BookingConfirmation };
 export default BookingConfirmation;

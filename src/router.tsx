@@ -25,8 +25,8 @@ import NotFound from './components/NotFound';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
 import { AdminViewProvider } from './contexts/AdminViewContext';
-import ServicePricingSelection from './components/ServicePricingSelection';
-import ServicePricingSelectionWrapper from './components/ServicePricingSelectionWrapper';
+import PriceSelectionPage from './components/booking/PriceSelectionPage';
+import FirstTimeBookingFlow from './components/booking/FirstTimeBookingFlow';
 import ReturnCustomerBooking from './components/booking/ReturnCustomerBooking';
 
 const RouterComponent: React.FC = () => {
@@ -37,6 +37,7 @@ const RouterComponent: React.FC = () => {
           <AdminViewProvider>
             <Routes>
               <Route path="/" element={<App />}>
+                {/* Routes with Layout (Navbar & Footer) */}
                 <Route element={<Layout />}>
                   <Route index element={<ServiceCategorySelection />} />
                   <Route path="returncustomer" element={<ReturnCustomerBooking />} />
@@ -57,8 +58,16 @@ const RouterComponent: React.FC = () => {
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="*" element={<NotFound />} />
                 </Route>
+
+                {/* Routes without Layout (No Navbar & Footer) */}
+                <Route path="booking">
+                  <Route path="price-selection" element={<PriceSelectionPage />} />
+                  <Route path="first-time/*" element={<FirstTimeBookingFlow />} />
+                </Route>
+
+                {/* 404 Route */}
+                <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </AdminViewProvider>

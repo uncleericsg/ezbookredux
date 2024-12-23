@@ -61,8 +61,9 @@ interface BookingData {
   customerInfo: CustomerFormData | null;
   scheduledDateTime?: Date;
   scheduledTimeSlot?: string;
-  selectedService?: ServiceOption;
+  selectedService: ServiceOption | null;
   bookingId?: string;
+  otherIssue?: string;
 }
 
 const FirstTimeBookingFlow: React.FC = () => {
@@ -73,7 +74,7 @@ const FirstTimeBookingFlow: React.FC = () => {
     brands: [],
     issues: [],
     customerInfo: null,
-    selectedService: location.state?.selectedService
+    selectedService: null
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,18 +82,21 @@ const FirstTimeBookingFlow: React.FC = () => {
     console.log('Location state:', location.state);
     console.log('Selected service:', bookingData.selectedService);
     
-    // If no service is selected and we didn't come from price selection, redirect to price selection
-    if (!bookingData.selectedService && !location.state?.fromPriceSelection) {
-      navigate('/booking/price-selection');
-      return;
-    }
-    
-    // Update service if it was passed from price selection
-    if (location.state?.selectedService) {
+    // Validate service data from location state
+    const serviceFromState = location.state?.selectedService;
+    if (serviceFromState && 
+        typeof serviceFromState === 'object' && 
+        'id' in serviceFromState && 
+        'title' in serviceFromState && 
+        'price' in serviceFromState) {
       setBookingData(prev => ({
         ...prev,
-        selectedService: location.state.selectedService
+        selectedService: serviceFromState as ServiceOption
       }));
+    } else if (!bookingData.selectedService) {
+      // If no valid service is selected, redirect to price selection
+      navigate('/booking/price-selection');
+      return;
     }
   }, [location.state, navigate]);
 
@@ -130,14 +134,14 @@ const FirstTimeBookingFlow: React.FC = () => {
     setBookingData(prev => ({
       ...prev,
       issues,
-      otherIssue
+      otherIssue // Store the additional notes
     }));
 
     if (bookingData.bookingId) {
       try {
         await updateBooking(bookingData.bookingId, { 
           issues,
-          otherIssue
+          otherIssue // Include in the booking update
         });
       } catch (error) {
         console.error('Error updating issues:', error);
@@ -149,20 +153,38 @@ const FirstTimeBookingFlow: React.FC = () => {
   };
 
   const handleCustomerSave = (formData: CustomerFormData & { bookingId: string }) => {
-    setBookingData(prev => ({
-      ...prev,
-      customerInfo: formData,
-      bookingId: formData.bookingId // Store the bookingId for later use
-    }));
+    console.log('Customer form data saved:', formData);
+    
+    setBookingData(prev => {
+      const updatedData = {
+        ...prev,
+        customerInfo: {
+          ...formData,
+          // Map buildingName to condoName
+          condoName: formData.buildingName || undefined,
+          lobbyTower: formData.lobbyTower || undefined
+        },
+        bookingId: formData.bookingId
+      };
+      console.log('Updated booking data:', updatedData);
+      return updatedData;
+    });
+    
     setCurrentStep(3);
   };
 
   const handleScheduleSelect = async (date: Date, timeSlot: string) => {
-    setBookingData(prev => ({
-      ...prev,
-      scheduledDateTime: date,
-      scheduledTimeSlot: timeSlot
-    }));
+    console.log('Schedule selected with customer info:', bookingData.customerInfo);
+    
+    setBookingData(prev => {
+      const updatedData = {
+        ...prev,
+        scheduledDateTime: date,
+        scheduledTimeSlot: timeSlot
+      };
+      console.log('Updated booking data after schedule:', updatedData);
+      return updatedData;
+    });
 
     if (bookingData.bookingId) {
       try {
@@ -204,8 +226,24 @@ const FirstTimeBookingFlow: React.FC = () => {
     });
   };
 
+  const renderScheduleStep = () => {
+    if (!bookingData.selectedService) {
+      console.error('No service selected when trying to render ScheduleStep');
+      navigate('/booking/price-selection');
+      return null;
+    }
+
+    return (
+      <ScheduleStep
+        customerInfo={bookingData.customerInfo!}
+        selectedService={bookingData.selectedService}
+        onScheduleSelect={handleScheduleSelect}
+      />
+    );
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-8">
+    <div className="max-w-4xl mx-auto pt-8 pb-12 px-4">
       <BookingProgress steps={steps} currentStep={currentStep} />
 
       <AnimatePresence mode="wait">
@@ -271,10 +309,7 @@ const FirstTimeBookingFlow: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
               >
-                <ScheduleStep
-                  customerInfo={bookingData.customerInfo!}
-                  onScheduleSelect={handleScheduleSelect}
-                />
+                {renderScheduleStep()}
                 <button
                   onClick={handleBack}
                   className="mt-4 text-[#f7f7f7] hover:text-[#FFD700] transition-colors"

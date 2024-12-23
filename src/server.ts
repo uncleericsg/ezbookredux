@@ -8,12 +8,23 @@ import express from 'express';
 import { config } from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import stripeRoutes from './api/stripe';
 
 config(); // Load environment variables
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply rate limiting to payment routes
+app.use('/api/payments', limiter);
 
 // Serve static files from public directory
 app.use(express.static('public'));
@@ -31,8 +42,14 @@ app.use(express.json());
 const corsOptions = {
   origin: ['https://localhost:5173', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'stripe-signature',
+    'X-Requested-With'
+  ],
   credentials: true,
+  maxAge: 86400 // 24 hours
 };
 
 app.use(cors(corsOptions));
@@ -46,16 +63,68 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "https://*.stripe.com", "https://*.google.com", "https://pay.google.com"],
-        frameSrc: ["'self'", "https://*.stripe.com", "https://*.google.com", "https://pay.google.com"],
-        childSrc: ["'self'", "https://*.stripe.com", "https://*.google.com", "https://pay.google.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.stripe.com", "https://*.google.com", "https://pay.google.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://*.stripe.com", "https://*.google.com"],
-        fontSrc: ["'self'", "data:", "https://*.stripe.com", "https://*.google.com", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "https://*.stripe.com", "data:", "https:", "http:"],
-        workerSrc: ["'self'", "blob:", "https://*.stripe.com"],
+        connectSrc: [
+          "'self'", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://pay.google.com",
+          "wss://localhost:*"
+        ],
+        frameSrc: [
+          "'self'", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://pay.google.com"
+        ],
+        childSrc: [
+          "'self'", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://pay.google.com",
+          "blob:"
+        ],
+        scriptSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "'unsafe-eval'", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://pay.google.com",
+          "https://js.stripe.com",
+          "https://checkout.stripe.com"
+        ],
+        styleSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "https://*.stripe.com", 
+          "https://*.google.com"
+        ],
+        fontSrc: [
+          "'self'", 
+          "data:", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://fonts.gstatic.com"
+        ],
+        imgSrc: [
+          "'self'", 
+          "https://*.stripe.com", 
+          "data:", 
+          "https:", 
+          "http:"
+        ],
+        workerSrc: [
+          "'self'", 
+          "blob:", 
+          "https://*.stripe.com"
+        ],
         frameAncestors: ["'self'"],
-        formAction: ["'self'", "https://*.stripe.com", "https://*.google.com", "https://pay.google.com"],
+        formAction: [
+          "'self'", 
+          "https://*.stripe.com", 
+          "https://*.google.com", 
+          "https://pay.google.com"
+        ],
       },
     },
     crossOriginEmbedderPolicy: false
