@@ -149,9 +149,23 @@ const initialPaymentState: PaymentState = {
   tipAmount: 0
 };
 
+// Enhanced logging for mobile debugging
 const logPaymentEvent = (event: string, data?: any) => {
   const timestamp = new Date().toISOString();
-  console.log(`[PaymentStep ${timestamp}] ${event}`, data ? data : '');
+  const deviceInfo = {
+    type: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+    userAgent: navigator.userAgent,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight
+    },
+    online: navigator.onLine
+  };
+
+  console.log(`[PaymentStep ${timestamp}] ${event}`, {
+    ...data,
+    device: deviceInfo
+  });
 };
 
 // Utility functions
@@ -199,20 +213,40 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const [paymentState, setPaymentState] = useState(initialPaymentState);
   const [stripePromise] = useState(getStripe);
 
-  // Component mount logging
+  // Add initialization timing tracking
+  const initStartTime = useRef<number>(0);
+  const mountTime = useRef<number>(Date.now());
+  const stagesCompleted = useRef<string[]>([]);
+
+  // Enhanced component mount logging
   useEffect(() => {
+    mountTime.current = Date.now();
     logPaymentEvent('Component mounted', {
       hasClientSecret: !!paymentState.clientSecret,
       bookingId: bookingData?.bookingId,
       serviceId: bookingData?.selectedService?.id,
       price: bookingData?.selectedService?.price,
-      status: paymentState.status
+      status: paymentState.status,
+      mountTime: mountTime.current
     });
 
     return () => {
-      logPaymentEvent('Component unmounting');
+      logPaymentEvent('Component unmounting', {
+        mountDuration: Date.now() - mountTime.current,
+        completedStages: stagesCompleted.current
+      });
     };
   }, []);
+
+  // Track payment state changes
+  useEffect(() => {
+    logPaymentEvent('Payment state changed', {
+      previousStages: stagesCompleted.current,
+      currentStatus: paymentState.status,
+      hasError: !!paymentState.error,
+      timeSinceMount: Date.now() - mountTime.current
+    });
+  }, [paymentState.status]);
 
   // Prevent duplicate payment intents with ref tracking
   const paymentInitializedRef = useRef(false);
@@ -237,18 +271,28 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
     const initializePayment = async () => {
       try {
-        paymentInitializedRef.current = true;  // Mark initialization as in progress
+        initStartTime.current = Date.now();
+        logPaymentEvent('Payment initialization started', {
+          initStartTime: initStartTime.current,
+          timeSinceMount: initStartTime.current - mountTime.current
+        });
+
+        paymentInitializedRef.current = true;
         setIsLoading(true);
+        stagesCompleted.current.push('initialization_started');
 
         try {
           // Get the actual service UUID from Supabase
+          logPaymentEvent('Fetching service details');
           const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);
+          stagesCompleted.current.push('service_details_fetched');
           
           if (!serviceDetails) {
             throw new Error('Service not found');
           }
           
-          // First, create or get Supabase booking
+          // Create booking details
+          logPaymentEvent('Creating booking details');
           const bookingDetails: BookingDetails = {
             service_id: serviceDetails.id, // Use the UUID from Supabase
             service_title: bookingData.selectedService?.title || '',
@@ -295,16 +339,19 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           };
 
           // Create the booking in Supabase
+          logPaymentEvent('Creating Supabase booking');
           const supabaseBookingId = await createBooking(bookingDetails);
-          
-          logPaymentEvent('Initializing payment', {
-            amount: calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount),
+          stagesCompleted.current.push('booking_created');
+
+          // Create payment intent
+          const total = calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount);
+          logPaymentEvent('Creating payment intent', {
+            amount: total,
             serviceId: serviceDetails.id,
             bookingId: supabaseBookingId,
-            customerId: currentUser?.id
+            timeSinceInit: Date.now() - initStartTime.current
           });
 
-          const total = calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount);
           const intent = await createPaymentIntent(
             total, // Pass the raw amount, service will convert to cents
             serviceDetails.id,
@@ -313,11 +360,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             'sgd',
             currentUser?.id
           );
+          stagesCompleted.current.push('payment_intent_created');
 
           logPaymentEvent('Payment intent created', {
             intentId: intent.id,
             amount: total,
-            status: intent.status
+            status: intent.status,
+            timeSinceInit: Date.now() - initStartTime.current
           });
           
           setPaymentState((prev) => ({
@@ -325,10 +374,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             clientSecret: intent.clientSecret,
             status: PAYMENT_STATES.READY
           }));
+          stagesCompleted.current.push('state_updated_ready');
+
         } catch (error) {
           paymentInitializedRef.current = false;  // Reset on error
           const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
-          logPaymentEvent('Payment initialization error', { error: errorMessage });
+          logPaymentEvent('Payment initialization error', {
+            error: errorMessage,
+            stage: stagesCompleted.current[stagesCompleted.current.length - 1],
+            timeSinceInit: Date.now() - initStartTime.current
+          });
           toast.error(errorMessage);
           setPaymentState((prev) => ({
             ...prev,
@@ -337,9 +392,19 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           }));
         } finally {
           setIsLoading(false);
+          logPaymentEvent('Initialization complete', {
+            success: !paymentState.error,
+            stages: stagesCompleted.current,
+            totalTime: Date.now() - initStartTime.current
+          });
         }
       } catch (error) {
         console.error('Error initializing payment:', error);
+        logPaymentEvent('Critical initialization error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stage: 'initialization',
+          timeSinceMount: Date.now() - mountTime.current
+        });
       }
     };
 
