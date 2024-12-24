@@ -1,8 +1,8 @@
 import express from 'express';
 import Stripe from 'stripe';
-import { config } from 'dotenv';
-import { supabase } from '../lib/supabase.server';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase.server';
+import { config } from 'dotenv';
 
 config(); // Load environment variables
 
@@ -12,7 +12,6 @@ if (!process.env.VITE_STRIPE_SECRET_KEY) {
 
 const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
-  typescript: true,
 });
 
 const router = express.Router();
@@ -34,7 +33,7 @@ router.post('/create-payment-intent', async (req, res) => {
     const { 
       amount, 
       tipAmount = 0,
-      currency = 'SGD',
+      currency = 'sgd',
       serviceId,
       customerId,
       bookingId 
@@ -50,67 +49,98 @@ router.post('/create-payment-intent', async (req, res) => {
       });
     }
 
+    const { clientSecret, id } = await createPaymentIntent(amount, serviceId, bookingId, tipAmount, currency, customerId);
+
+    // Return successful response
+    res.json({
+      clientSecret,
+      intentId: id
+    });
+
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({
+      error: {
+        message: error instanceof Error ? error.message : 'Failed to create payment intent',
+        code: 'PAYMENT_INTENT_FAILED'
+      }
+    });
+  }
+});
+
+export const createPaymentIntent = async (
+  amount: number,
+  serviceId: string,
+  bookingId: string,
+  tipAmount: number = 0,
+  currency: string = 'sgd',
+  customerId?: string,
+): Promise<{ clientSecret: string; id: string }> => {
+  try {
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount + tipAmount), // amount should already be in cents
+      amount: Math.round((amount + tipAmount) * 100),
       currency: currency.toLowerCase(),
       automatic_payment_methods: {
         enabled: true,
       },
-      metadata: {
-        serviceId,
-        bookingId,
-        customerId: customerId || '',
-        tipAmount: tipAmount.toString(),
-        baseAmount: amount.toString(),
-        firebase_booking_id: bookingId // Store Firebase ID in metadata
-      }
     });
 
-    // Log success before database operation
     console.log('Created payment intent:', paymentIntent.id);
 
     try {
       // Generate a UUID for the payment record
       const paymentUuid = uuidv4();
 
-      // Attempt to create payment record in Supabase
+      // Validate UUIDs
+      const isValidUUID = (str: string) => {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+      };
+
+      // Create payment record
       const { error: dbError } = await supabase
         .from('payments')
         .insert([{
           id: paymentUuid,
           payment_intent_id: paymentIntent.id,
-          amount: Math.round(amount + tipAmount),
+          amount: Math.round(amount),
+          tip_amount: Math.round(tipAmount),
           currency: currency.toLowerCase(),
           status: 'pending',
-          customer_id: customerId || null,
-          service_id: serviceId
+          service_id: serviceId,
+          customer_id: customerId && isValidUUID(customerId) ? customerId : null,
+          booking_id: bookingId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }]);
 
       if (dbError) {
-        // Log database error but don't fail the request
         console.error('Database error creating payment:', dbError);
+        throw new Error(`Error creating payment record: ${dbError.message}`);
       }
-    } catch (dbError) {
-      // Log any other database errors but don't fail the request
-      console.error('Unexpected database error:', dbError);
+
+      console.log('Payment record created successfully:', {
+        id: paymentUuid,
+        payment_intent_id: paymentIntent.id,
+        booking_id: bookingId
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret as string,
+        id: paymentIntent.id
+      };
+
+    } catch (error) {
+      console.error('Error creating payment record:', error);
+      throw error;
     }
 
-    // Return successful response
-    res.json({
-      clientSecret: paymentIntent.client_secret,
-      id: paymentIntent.id
-    });
   } catch (error) {
-    console.error('Error creating payment intent:', error);
-    res.status(500).json({ 
-      error: {
-        message: error instanceof Error ? error.message : 'Internal server error',
-        code: 'STRIPE_ERROR'
-      }
-    });
+    console.error('Payment creation failed:', error);
+    throw error;
   }
-});
+};
 
 // Stripe webhook handler
 router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {

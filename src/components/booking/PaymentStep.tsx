@@ -130,8 +130,10 @@ import { cn } from '../../lib/utils';
 import {
   createPaymentIntent,
   addToServiceQueue,
+  createBooking
 } from '../../services/paymentService';
 import { getStripe } from '../../services/stripe';
+import { getServiceByAppointmentType } from '../../services/serviceUtils';
 
 const initialPaymentState: PaymentState = {
   status: PAYMENT_STATES.INITIALIZING,
@@ -140,15 +142,25 @@ const initialPaymentState: PaymentState = {
   tipAmount: 0
 };
 
-const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBack }) => {
-  const dispatch = useAppDispatch();
+const logPaymentEvent = (event: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[PaymentStep ${timestamp}] ${event}`, data ? data : '');
+};
+
+const PaymentStep: React.FC<PaymentStepProps> = ({
+  bookingData,
+  onComplete,
+  onBack,
+}: PaymentStepProps) => {
   const navigate = useNavigate();
-  const { userError } = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
+  const { currentUser, error: userError } = useAppSelector((state) => state.user);
   const { currentBooking } = useAppSelector((state) => state.booking);
 
   // Clear any existing errors on mount
   useEffect(() => {
     if (userError) {
+      logPaymentEvent('Clearing existing user error');
       dispatch(setError(null));
     }
   }, [dispatch, userError]);
@@ -156,7 +168,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
   // Ensure booking data is in Redux store
   useEffect(() => {
     if (bookingData && (!currentBooking || currentBooking.id !== bookingData.bookingId)) {
-      console.log('Setting current booking in Redux', bookingData);
+      logPaymentEvent('Setting current booking in Redux', bookingData);
       dispatch(setCurrentBooking({
         id: bookingData.bookingId,
         serviceType: bookingData.selectedService?.title || '',
@@ -170,46 +182,165 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
   }, [bookingData, currentBooking, dispatch]);
 
   // State management
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
+  const [isLoading, setIsLoading] = useState(false);  // Start with false to prevent UI flicker
+  const [paymentState, setPaymentState] = useState(initialPaymentState);
   const [stripePromise] = useState(getStripe);
 
-  // Initialize payment intent only if we don't have a client secret
+  // Component mount logging
   useEffect(() => {
-    if (paymentState.clientSecret) return;
-    if (!bookingData?.selectedService?.appointmentTypeId || !bookingData?.bookingId) return;
+    logPaymentEvent('Component mounted', {
+      hasClientSecret: !!paymentState.clientSecret,
+      bookingId: bookingData?.bookingId,
+      serviceId: bookingData?.selectedService?.id,
+      price: bookingData?.selectedService?.price,
+      status: paymentState.status
+    });
 
-    setIsLoading(true);
-    createPaymentIntent(
-      Math.round(bookingData.selectedService.price * 100),
-      bookingData.selectedService.appointmentTypeId,
-      bookingData.bookingId,
-      0,
-      'sgd'
-    )
-      .then(intent => {
-        setPaymentState(prev => ({
-          ...prev,
-          clientSecret: intent.clientSecret,
-          status: PAYMENT_STATES.READY
-        }));
-      })
-      .catch(error => {
-        console.error('Payment initialization failed:', error);
-        setPaymentState(prev => ({
-          ...prev,
-          status: PAYMENT_STATES.ERROR,
-          error: error.message || 'Payment initialization failed'
-        }));
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    return () => {
+      logPaymentEvent('Component unmounting');
+    };
   }, []);
+
+  // Prevent duplicate payment intents with ref tracking
+  const paymentInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // Guard clauses to prevent unnecessary processing
+    if (paymentState.clientSecret || paymentInitializedRef.current) {
+      logPaymentEvent('Payment intent already exists or initialization in progress, skipping', {
+        hasClientSecret: !!paymentState.clientSecret,
+        isInitialized: paymentInitializedRef.current
+      });
+      return;
+    }
+
+    if (!bookingData?.selectedService?.id || !bookingData?.bookingId) {
+      logPaymentEvent('Missing required booking data, skipping payment initialization', {
+        serviceId: bookingData?.selectedService?.id,
+        bookingId: bookingData?.bookingId
+      });
+      return;
+    }
+
+    const initializePayment = async () => {
+      try {
+        paymentInitializedRef.current = true;  // Mark initialization as in progress
+        setIsLoading(true);
+
+        try {
+          // Get the actual service UUID from Supabase
+          const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);
+          
+          if (!serviceDetails) {
+            throw new Error('Service not found');
+          }
+          
+          // First, create or get Supabase booking
+          const bookingDetails: BookingDetails = {
+            service_id: serviceDetails.id, // Use the UUID from Supabase
+            service_title: bookingData.selectedService?.title || '',
+            service_price: bookingData.selectedService?.price || 0,
+            service_duration: bookingData.selectedService?.duration || '',
+            service_description: bookingData.selectedService?.description,
+            
+            // Customer information
+            customer_info: {
+              first_name: bookingData.customerInfo?.firstName || '',
+              last_name: bookingData.customerInfo?.lastName || '',
+              email: bookingData.customerInfo?.email || '',
+              mobile: bookingData.customerInfo?.mobile || '',
+              floor_unit: bookingData.customerInfo?.floorUnit || '',
+              block_street: bookingData.customerInfo?.blockStreet || '',
+              postal_code: bookingData.customerInfo?.postalCode || '',
+              condo_name: bookingData.customerInfo?.condoName,
+              lobby_tower: bookingData.customerInfo?.lobbyTower,
+              special_instructions: bookingData.customerInfo?.specialInstructions
+            },
+            
+            // Booking details
+            brands: bookingData.brands || [],
+            issues: bookingData.issues || [],
+            other_issue: bookingData.otherIssue,
+            is_amc: false,
+            
+            // Schedule
+            scheduled_datetime: bookingData.scheduledDateTime || new Date(),
+            scheduled_timeslot: bookingData.scheduledTimeSlot || '',
+            
+            // Status
+            status: 'pending',
+            payment_status: 'pending',
+            total_amount: bookingData.selectedService?.price || 0,
+            tip_amount: 0,
+            
+            // Metadata
+            metadata: {
+              source: 'web',
+              version: '1.0',
+              isFirstTimeFlow: bookingData.isFirstTimeFlow
+            }
+          };
+
+          // Create the booking in Supabase
+          const supabaseBookingId = await createBooking(bookingDetails);
+          
+          logPaymentEvent('Initializing payment', {
+            amount: bookingData.selectedService?.price,
+            serviceId: serviceDetails.id,
+            bookingId: supabaseBookingId,
+            customerId: currentUser?.id
+          });
+
+          const intent = await createPaymentIntent(
+            bookingData.selectedService?.price || 0,
+            serviceDetails.id,
+            supabaseBookingId,
+            0,
+            'sgd',
+            currentUser?.id
+          );
+
+          logPaymentEvent('Payment intent created', {
+            intentId: intent.id,
+            amount: bookingData.selectedService?.price,
+            status: intent.status
+          });
+          
+          setPaymentState((prev) => ({
+            ...prev,
+            clientSecret: intent.clientSecret,
+            status: PAYMENT_STATES.READY
+          }));
+        } catch (error) {
+          paymentInitializedRef.current = false;  // Reset on error
+          const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
+          logPaymentEvent('Payment initialization error', { error: errorMessage });
+          toast.error(errorMessage);
+          setPaymentState((prev) => ({
+            ...prev,
+            status: PAYMENT_STATES.ERROR,
+            error: errorMessage,
+          }));
+        } finally {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing payment:', error);
+      }
+    };
+
+    initializePayment();
+  }, [
+    bookingData?.selectedService?.id,
+    bookingData?.selectedService?.price,
+    bookingData?.bookingId,
+    paymentState.clientSecret,
+    currentUser?.id
+  ]);
 
   // Log initial booking data
   useEffect(() => {
-    console.log('PaymentStep mounted with booking data:', {
+    logPaymentEvent('PaymentStep mounted with booking data:', {
       customerInfo: bookingData.customerInfo,
       bookingId: bookingData.bookingId,
       selectedService: bookingData.selectedService,
@@ -243,9 +374,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
 
   const handlePaymentSuccess = useCallback(async (paymentIntent: any) => {
     try {
-      console.log('Payment success handler started', { paymentIntent });
+      logPaymentEvent('Payment success handler started', { 
+        intentId: paymentIntent.id,
+        bookingId: bookingData.bookingId,
+        amount: paymentIntent.amount
+      });
       
-      // Update payment status to processing
       await dispatch(setPaymentStatus('processing'));
       
       setPaymentState((prev) => ({
@@ -253,114 +387,54 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
         status: PAYMENT_STATES.SUCCESS,
       }));
 
-      // Add to service queue
-      try {
-        await addToServiceQueue({
-          serviceId: bookingData.selectedService?.id || '',
-          customerId: bookingData.customerInfo?.id,
-          scheduledDate: bookingData.scheduledDateTime,
-          status: 'pending',
-          paymentConfirmed: true,
-          tipAmount: paymentState.tipAmount,
-          totalAmount: calculateTotalAmount(),
-        });
-      } catch (queueError) {
-        console.error('Error adding to service queue:', queueError);
-        // Continue with the flow even if queue fails
-      }
-
       // Update booking status in Redux
       if (bookingData.bookingId) {
-        try {
-          await dispatch(updateBooking({
-            id: bookingData.bookingId,
-            status: 'Confirmed',
-            paymentStatus: 'Completed',
-            paymentId: paymentIntent.id,
-            updatedAt: new Date().toISOString()
-          }));
-        } catch (updateError) {
-          console.error('Error updating booking:', updateError);
-          // Continue with the flow even if update fails
-        }
+        logPaymentEvent('Updating booking status', {
+          bookingId: bookingData.bookingId,
+          status: 'Confirmed',
+          paymentId: paymentIntent.id
+        });
+
+        await dispatch(updateBooking({
+          id: bookingData.bookingId,
+          status: 'Confirmed',
+          paymentStatus: 'Completed',
+          paymentId: paymentIntent.id,
+          updatedAt: new Date().toISOString()
+        }));
       }
 
-      // Update Redux store payment status
-      try {
-        await dispatch(setPaymentStatus('success'));
-      } catch (statusError) {
-        console.error('Error updating payment status:', statusError);
-        // Continue with the flow even if status update fails
-      }
-
-      // Generate a unique booking reference
-      const bookingReference = bookingData.bookingId || paymentIntent.id;
-      
-      console.log('Payment completed successfully. Booking data:', {
-        bookingReference,
-        serviceType: bookingData.selectedService?.title,
-        date: bookingData.scheduledDateTime,
-        timeSlot: bookingData.scheduledTimeSlot
+      logPaymentEvent('Payment flow completed successfully', {
+        intentId: paymentIntent.id,
+        bookingId: bookingData.bookingId
       });
 
-      // Call onComplete with payment intent ID
+      // Complete the payment
       await handlePaymentComplete(paymentIntent.id);
-
-      // Only navigate if we're not in FirstTimeBookingFlow
-      if (!bookingData.isFirstTimeFlow) {
-        navigate(`/booking/confirmation/${bookingReference}`, {
-          state: { 
-            booking: {
-              id: bookingReference,
-              serviceType: bookingData.selectedService?.title || '',
-              date: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
-              time: bookingData.scheduledTimeSlot || '',
-              status: 'Upcoming',
-              amount: calculateTotalAmount(),
-              paymentMethod: 'Credit Card',
-              customerInfo: bookingData.customerInfo || null,
-              address: bookingData.customerInfo ? 
-                `${bookingData.customerInfo.blockStreet}, ${bookingData.customerInfo.floorUnit}, Singapore ${bookingData.customerInfo.postalCode}` :
-                ''
-            }
-          },
-          replace: true
-        });
-      }
     } catch (error) {
-      console.error('Error in payment success handler:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Detailed error:', { error, errorMessage });
-      
-      dispatch(setPaymentStatus('error'));
-      toast.error('Payment completed but booking confirmation failed. Please contact support with reference: ' + (bookingData.bookingId || paymentIntent?.id));
-      
-      setPaymentState((prev) => ({
-        ...prev,
-        status: PAYMENT_STATES.ERROR,
-        error: 'Failed to process payment completion: ' + errorMessage,
-      }));
+      logPaymentEvent('Payment success handler error', { error: errorMessage });
+      console.error('Error in payment success handler:', error);
+      toast.error('Error completing payment. Please contact support.');
     }
-  }, [
-    bookingData,
-    dispatch,
-    handlePaymentComplete,
-    paymentState.tipAmount,
-    calculateTotalAmount,
-    navigate
-  ]);
+  }, [bookingData.bookingId, dispatch, handlePaymentComplete]);
 
   const PaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
     const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
-      if (!stripe || !elements) return;
+      if (!stripe || !elements || !mounted) return;
 
       setIsLoading(true);
       try {
-        console.log('Starting payment submission...');
+        logPaymentEvent('Starting payment submission...');
         
         const { error: submitError } = await elements.submit();
         if (submitError) {
@@ -383,6 +457,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
                 }
               },
             },
+            return_url: window.location.origin + '/payment-success',
           },
           redirect: 'if_required',
         });
@@ -393,7 +468,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
         }
 
         if (paymentIntent) {
-          console.log('Payment successful:', paymentIntent);
+          logPaymentEvent('Payment successful:', paymentIntent);
           handlePaymentSuccess(paymentIntent);
           toast.success('Payment successful!');
         }
@@ -407,10 +482,17 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
       }
     };
 
+    if (!mounted) return null;
+
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="p-2 sm:p-6">
-          <PaymentElement id="payment-element" />
+          <PaymentElement 
+            id="payment-element"
+            options={{
+              layout: 'tabs'
+            }}
+          />
           
           <button
             type="submit"
@@ -433,10 +515,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
                 <span>Processing...</span>
               </>
             ) : (
-              <>
-                <HiHeart className="h-5 w-5" />
-                <span>Pay Securely</span>
-              </>
+              'Pay Now'
             )}
           </button>
         </div>
@@ -444,7 +523,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
     );
   };
 
-  // Render loading state
+  // Render the main component
   if (isLoading || !paymentState.clientSecret) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center">
@@ -458,7 +537,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
     );
   }
 
-  // Render error state
   if (paymentState.status === PAYMENT_STATES.ERROR) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center">
@@ -479,7 +557,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
     );
   }
 
-  // Render payment form when ready
   if (paymentState.status === PAYMENT_STATES.READY && paymentState.clientSecret) {
     return (
       <PaymentErrorBoundary>
@@ -516,6 +593,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
                     fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                   },
                 },
+                loader: 'auto',
               }}
             >
               {/* Tip Selection */}
@@ -558,7 +636,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
               </div>
 
               {/* Payment Form */}
-              <div className="bg-gray-800/90 rounded-lg">
+              <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6">
                 <PaymentForm />
               </div>
 
@@ -585,7 +663,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({ bookingData, onComplete, onBa
     );
   }
 
-  // Render success state
   if (paymentState.status === PAYMENT_STATES.SUCCESS) {
     return (
       <PaymentErrorBoundary>

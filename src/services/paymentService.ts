@@ -4,6 +4,8 @@ import { ServiceRequest } from '../types/service';
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
 import { ApiError } from '../utils/apiErrors';
+import { createBooking as createSupabaseBooking } from './supabaseBookingService';
+import type { BookingDetails } from './supabaseBookingService';
 
 // Initialize Stripe instance
 let stripeInstance: Stripe | null = null;
@@ -30,6 +32,8 @@ export const initializeStripe = async (): Promise<Stripe | null> => {
   return stripeInstance;
 };
 
+export const createBooking = createSupabaseBooking;
+
 export const createPaymentIntent = async (
   amount: number,
   serviceId: string,
@@ -38,68 +42,73 @@ export const createPaymentIntent = async (
   currency: string = 'sgd',
   customerId?: string,
 ): Promise<{ clientSecret: string; id: string }> => {
+  console.log('Creating payment intent with:', { 
+    amount, 
+    serviceId, 
+    bookingId, 
+    tipAmount, 
+    currency, 
+    customerId 
+  });
+
+  const baseUrl = 'https://localhost:3001';
+  console.log('Making request to:', `${baseUrl}/api/payments/create-payment-intent`);
+
   try {
-    console.log('Creating payment intent with:', { 
-      amount, 
-      serviceId, 
-      bookingId, 
-      tipAmount, 
-      currency, 
-      customerId 
+    // Create custom axios instance for HTTPS
+    const axiosInstance = axios.create({
+      baseURL: baseUrl,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // Handle self-signed certificates
+      httpsAgent: new axios.create().defaults.httpsAgent
     });
 
-    const baseUrl = 'https://localhost:3001';
-    console.log('Making request to:', `${baseUrl}/api/payments/create-payment-intent`);
-
-    try {
-      const response = await axios.post(`${baseUrl}/api/payments/create-payment-intent`, {
-        amount: amount, // Server expects amount in cents
-        tipAmount: Math.round(tipAmount * 100), // Convert tip to cents
-        currency,
-        serviceId,
-        customerId,
-        bookingId
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000 // 10 second timeout
-      });
-
-      if (!response.data || !response.data.clientSecret) {
-        console.error('Invalid response from payment server:', response.data);
-        throw new Error('Invalid response from payment server');
-      }
-
-      console.log('Payment intent created successfully:', response.data);
-
-      return {
-        clientSecret: response.data.clientSecret,
-        id: response.data.id
-      };
-    } catch (networkError) {
-      if (axios.isAxiosError(networkError)) {
-        if (networkError.code === 'ECONNREFUSED') {
-          console.error('Could not connect to payment server. Is it running?');
-          throw new Error('Payment server is not running');
-        }
-        if (networkError.code === 'ECONNABORTED') {
-          console.error('Request timed out');
-          throw new Error('Payment request timed out');
-        }
-        console.error('Network error details:', {
-          status: networkError.response?.status,
-          data: networkError.response?.data,
-          message: networkError.message,
-          code: networkError.code
+    // Configure axios to not throw on non-2xx status codes
+    axiosInstance.interceptors.response.use(
+      response => response,
+      error => {
+        console.error('Axios error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+          code: error.code
         });
-        throw new Error(`Payment server error: ${networkError.message}`);
+        throw error;
       }
-      throw networkError;
+    );
+
+    const response = await axiosInstance.post('/api/payments/create-payment-intent', {
+      amount: Math.round(amount * 100), // Convert to cents
+      tipAmount: Math.round(tipAmount * 100), // Convert tip to cents
+      currency,
+      serviceId,
+      customerId,
+      bookingId
+    });
+
+    if (!response.data || !response.data.clientSecret) {
+      console.error('Invalid response from payment server:', response.data);
+      throw new Error('Invalid response from payment server');
     }
+
+    console.log('Payment intent created successfully:', response.data);
+
+    return {
+      clientSecret: response.data.clientSecret,
+      id: response.data.intentId
+    };
+
   } catch (error) {
-    console.error('Payment intent creation failed:', error);
-    throw error;
+    console.error('Network error details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code
+    });
+    throw new Error(`Payment server error: ${error.message}`);
   }
 };
 
@@ -160,17 +169,31 @@ interface PaymentOptions {
   currency?: string;
 }
 
-interface PaymentReceipt {
-  id: string;
+export interface PaymentDetails {
+  id: string;  // UUID
+  payment_intent_id: string;
   amount: number;
   currency: string;
   status: string;
-  createdAt: Date;
-  paymentIntentId: string;
-  bookingId: string;
-  customerId?: string;
-  serviceId: string;
-  tipAmount: number;
+  created_at?: string;
+  updated_at?: string;
+  booking_id: string;  // UUID
+  customer_id?: string | null;  // UUID
+  service_id: string;  // UUID
+  tip_amount?: number;
+}
+
+export interface PaymentError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+export interface TransactionRecord {
+  id: string;
+  amount: number;
+  status: string;
+  created_at: string;
 }
 
 interface ServiceRequest {
@@ -212,14 +235,14 @@ export const addToServiceQueue = async (serviceRequest: ServiceRequest): Promise
 };
 
 export interface PaymentService {
-  createPayment: (amount: number, options: PaymentOptions) => Promise<PaymentReceipt>;
+  createPayment: (amount: number, options: PaymentOptions) => Promise<PaymentDetails>;
   updatePaymentStatus: (paymentIntentId: string, status: string) => Promise<void>;
-  getPaymentByIntent: (paymentIntentId: string) => Promise<PaymentReceipt | null>;
+  getPaymentByIntent: (paymentIntentId: string) => Promise<PaymentDetails | null>;
   updatePaymentIntent: (paymentId: string, paymentIntentId: string) => Promise<void>;
 }
 
 export const paymentService: PaymentService = {
-  createPayment: async (amount: number, options: PaymentOptions): Promise<PaymentReceipt> => {
+  createPayment: async (amount: number, options: PaymentOptions): Promise<PaymentDetails> => {
     try {
       const { data, error } = await supabase
         .from('payments')
@@ -273,7 +296,7 @@ export const paymentService: PaymentService = {
     }
   },
 
-  getPaymentByIntent: async (paymentIntentId: string): Promise<PaymentReceipt | null> => {
+  getPaymentByIntent: async (paymentIntentId: string): Promise<PaymentDetails | null> => {
     try {
       const { data, error } = await supabase
         .from('payments')
