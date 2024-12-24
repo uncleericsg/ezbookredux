@@ -1,180 +1,161 @@
 # ScheduleStep Component Integration Plan
+**Last Updated: 2024-12-25 07:33:41 GMT+8**
 
 ## Overview
-This document outlines the plan for enhancing the existing ScheduleStep component with improved location optimization and route caching features.
+This document outlines the simplified implementation plan for optimizing the ScheduleStep component with location-based slot suggestions and business rule integration.
 
-## Pre-Implementation Requirements
+## Core Business Rules
 
-### 1. Current Codebase Analysis
-- [x] Review current ScheduleStep implementation
-- [x] Document existing dependencies
-- [x] Identify integration points
-- [x] Map current data flow
+### 1. Location Rules
+- Region-based booking
+- 5-8km distance rule between bookings
+- Natural travel optimization through region grouping
 
-### 2. Existing Components to Modify
-- [ ] src/services/locations/optimizer.ts
-- [ ] src/hooks/useLocationOptimizer.ts
-- [ ] src/components/booking/OptimizedLocationProvider.tsx
-- [ ] src/components/booking/ScheduleStep.tsx
+### 2. Time Rules
+- Operating hours: 9 AM - 6 PM
+- No bookings on Sundays
+- No bookings on public holidays
+- Proper padding time between bookings (service-specific)
 
-### 3. Type Updates Required
+### 3. Search Configuration
 ```typescript
-// In src/services/locations/optimizer.ts
-interface RouteCache {
-  regionCapacity: Record<Region, number>;
-  travelTimes: Record<string, number>;
-  techniciansAvailable: number;
-  peakHourAdjustments: Record<number, number>;
-}
-
-// In src/hooks/useLocationOptimizer.ts
-interface LocationOptimizerProps {
-  address: string;
-  date: Date;
-  slots: TimeSlot[];
-  existingBookings?: Booking[];
-  isAMC: boolean;
-  useRouteCache?: boolean;
-}
-
-// In src/components/booking/ScheduleStep.tsx
-interface ScheduleStepProps {
-  customerInfo: CustomerInfo;
-  selectedService: PricingOption & {
-    duration: number; // Changed from string
-  };
-  onScheduleSelect: (date: Date, timeSlot: string, duration: number) => void;
-}
-```
-
-## Implementation Phases
-
-### Phase 1: Location Optimizer Service Enhancement
-#### File: src/services/locations/optimizer.ts
-- [ ] Add RouteCache interface
-- [ ] Update optimizeTimeSlots parameters
-- [ ] Add route-based optimization logic
-- [ ] Update unit tests
-
-```typescript
-export const optimizeTimeSlots = (
-  date: Date,
-  slots: TimeSlot[],
-  region: Region,
-  existingBookings: Booking[],
-  options: {
-    routeCache?: RouteCache;
-    isAMC?: boolean;
-    maxSlotsPerRegion?: number;
+const BOOKING_CONFIG = {
+  search: {
+    INITIAL_DAYS: 10,    // First check 10 days
+    MAX_DAYS: 95,        // Up to ~3 months ahead
+    INCREMENT: 20,       // Check in 20-day chunks
   }
-): TimeSlot[]
+};
 ```
 
-### Phase 2: Location Hook Enhancement
-#### File: src/hooks/useLocationOptimizer.ts
-- [ ] Add route cache state management
-- [ ] Update hook parameters
-- [ ] Add route cache fetching logic
-- [ ] Update error handling
+## Implementation Components
 
+### 1. Core Types
 ```typescript
-const useLocationOptimizer = ({
-  address,
-  date,
-  slots,
-  existingBookings,
-  isAMC,
-  useRouteCache
-}: LocationOptimizerProps): LocationOptimizerResult
-```
+interface Location {
+  lat: number;
+  lng: number;
+  postalCode: string;
+  region: string;
+}
 
-### Phase 3: Location Provider Updates
-#### File: src/components/booking/OptimizedLocationProvider.tsx
-- [ ] Add route cache context
-- [ ] Implement route cache fetching
-- [ ] Add cache update mechanisms
-- [ ] Update error boundary handling
+interface ServiceTiming {
+  duration: number;     // in minutes
+  paddingBefore: number;
+  paddingAfter: number;
+}
 
-```typescript
-interface OptimizedLocationContext {
-  routeCache: RouteCache | null;
-  updateRouteCache: (cache: RouteCache) => void;
+interface BookingSlot {
+  startTime: Date;
+  endTime: Date;
+  isAvailable: boolean;
+  isPeakHour: boolean;
 }
 ```
 
-### Phase 4: ScheduleStep Integration
-#### File: src/components/booking/ScheduleStep.tsx
-- [ ] Update component props
-- [ ] Integrate route cache
-- [ ] Update time slot handling
-- [ ] Enhance error states
+### 2. Slot Optimizer Hook
+```typescript
+const useSlotOptimizer = () => {
+  const findNextAvailableSlots = async ({
+    location,
+    serviceTiming,
+  }) => {
+    // Progressive slot search
+    // Business day filtering
+    // Distance-based filtering
+    // Return available slots
+  };
 
-## Testing Requirements
+  return {
+    findNextAvailableSlots,
+    findAvailableSlots
+  };
+};
+```
 
-### 1. Unit Tests
-#### Location Optimizer (optimizer.ts)
-- [ ] Route cache integration
-- [ ] Optimization algorithm
-- [ ] Cache update mechanism
+## Integration Flow
 
-#### Location Hook (useLocationOptimizer.ts)
-- [ ] Cache state management
-- [ ] Error handling
-- [ ] Address validation
+### 1. Address Selection (CustomerForm)
+```typescript
+const handleAddressSelect = async (place) => {
+  const location = extractLocation(place);
+  const slots = await findNextAvailableSlots({
+    location,
+    serviceTiming: selectedService
+  });
+  dispatch(setPreCalculatedSlots(slots));
+};
+```
 
-#### Location Provider (OptimizedLocationProvider.tsx)
-- [ ] Context updates
-- [ ] Cache propagation
-- [ ] Error boundaries
+### 2. Schedule Step
+```typescript
+const ScheduleStep = ({
+  location,
+  serviceTiming,
+  preCalculatedSlots
+}) => {
+  // Use pre-calculated slots
+  // Handle date changes
+  // Show availability status
+};
+```
 
-#### ScheduleStep Component
-- [ ] Props validation
-- [ ] Time slot selection
-- [ ] Duration handling
+## File Structure
+```
+/src
+  /hooks
+    useSlotOptimizer.ts      // Core optimization logic
+  /config
+    businessDays.ts          // Business rules
+    bookingConfig.ts         // Search configuration
+  /components
+    /booking
+      CustomerForm.tsx       // Address selection
+      ScheduleStep.tsx       // Slot selection
+```
 
-### 2. Integration Tests
-- [ ] Complete booking flow
-- [ ] Location optimization
-- [ ] Route cache updates
-- [ ] Error handling
+## Implementation Benefits
 
-### 3. Performance Tests
-- [ ] Cache response time
-- [ ] Optimization speed
-- [ ] UI responsiveness
+1. **Optimization**
+   - Natural travel optimization through region grouping
+   - Efficient slot searching
+   - Pre-calculation for better UX
 
-## Deployment Strategy
+2. **Maintainability**
+   - Single source of optimization logic
+   - Simple, focused components
+   - Clear business rules
 
-### 1. Staged Rollout
-- [ ] Deploy backend changes first
-- [ ] Update frontend in phases
-- [ ] Enable feature flags
+3. **Reusability**
+   - Works across all booking types
+   - Consistent behavior
+   - Configurable parameters
 
-### 2. Monitoring
-- [ ] Track optimization metrics
-- [ ] Monitor error rates
-- [ ] Measure performance impact
+4. **User Experience**
+   - Progressive slot search
+   - Clear feedback
+   - Graceful fallbacks
 
-## Rollback Plan
-1. Disable route cache feature flag
-2. Revert to previous optimizer version
-3. Roll back frontend changes
+## Next Steps
 
-## Dependencies
-- Current implementation files
-- Existing test suites
-- Type definitions
-- Business rules
+1. **Implementation Priority**
+   - Core slot optimizer hook
+   - Business day filtering
+   - Address selection integration
+   - Schedule step updates
 
-## Sign-off Requirements
-- [ ] Frontend Lead Review
-- [ ] Backend Lead Review
-- [ ] QA Verification
-- [ ] Performance Testing
-- [ ] Security Review
+2. **Testing Requirements**
+   - Business rule validation
+   - Slot availability accuracy
+   - Performance testing
+   - User flow testing
 
 ## Notes
 - All changes must maintain existing functionality
-- Performance impact must be monitored
-- Error handling must be comprehensive
-- Documentation must be updated
+- Focus on simplicity and maintainability
+- Ensure consistent behavior across booking types
+- Monitor performance impact
+
+---
+
+**Note**: This implementation focuses on practical improvements without over-engineering. The core functionality is built around business rules and user experience.
