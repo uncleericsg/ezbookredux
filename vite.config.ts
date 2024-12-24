@@ -21,11 +21,13 @@ export default defineConfig(({ mode }) => {
         fastRefresh: true,
       }),
       googleMapsPlugin(env.VITE_GOOGLE_PLACES_API_KEY),
-      mkcert(),
+      // Temporarily disable HTTPS for development
+      // mkcert(),
       dts()
     ],
     server: {
-      https: true,
+      // Disable HTTPS for development
+      https: false,
       port: 5173,
       host: true,
       proxy: {

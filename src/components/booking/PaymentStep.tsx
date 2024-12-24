@@ -173,6 +173,17 @@ const calculateTotalAmount = (baseAmount: number, tipAmount: number = 0) => {
   return baseAmount + tipAmount;
 };
 
+// Add network utility functions
+const checkNetworkConnection = () => {
+  return {
+    online: navigator.onLine,
+    type: (navigator as any).connection?.type || 'unknown',
+    effectiveType: (navigator as any).connection?.effectiveType || 'unknown'
+  };
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Main Payment Step Component - Handles initialization and Elements wrapping
 const PaymentStep: React.FC<PaymentStepProps> = ({
   bookingData,
@@ -269,13 +280,20 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       return;
     }
 
-    const initializePayment = async () => {
+    const initializePayment = async (retryCount = 3) => {
       try {
         initStartTime.current = Date.now();
+        const networkStatus = checkNetworkConnection();
+        
         logPaymentEvent('Payment initialization started', {
           initStartTime: initStartTime.current,
-          timeSinceMount: initStartTime.current - mountTime.current
+          timeSinceMount: initStartTime.current - mountTime.current,
+          networkStatus
         });
+
+        if (!networkStatus.online) {
+          throw new Error('No network connection available');
+        }
 
         paymentInitializedRef.current = true;
         setIsLoading(true);
@@ -343,46 +361,76 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           const supabaseBookingId = await createBooking(bookingDetails);
           stagesCompleted.current.push('booking_created');
 
-          // Create payment intent
+          // Create payment intent with retry mechanism
           const total = calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount);
-          logPaymentEvent('Creating payment intent', {
-            amount: total,
-            serviceId: serviceDetails.id,
-            bookingId: supabaseBookingId,
-            timeSinceInit: Date.now() - initStartTime.current
-          });
+          
+          let paymentIntent;
+          let attemptCount = 0;
+          
+          while (attemptCount < retryCount) {
+            try {
+              logPaymentEvent('Creating payment intent', {
+                attempt: attemptCount + 1,
+                amount: total,
+                serviceId: serviceDetails.id,
+                bookingId: supabaseBookingId,
+                timeSinceInit: Date.now() - initStartTime.current,
+                networkStatus: checkNetworkConnection()
+              });
 
-          const intent = await createPaymentIntent(
-            total, // Pass the raw amount, service will convert to cents
-            serviceDetails.id,
-            supabaseBookingId,
-            paymentState.tipAmount,
-            'sgd',
-            currentUser?.id
-          );
+              paymentIntent = await createPaymentIntent(
+                total, // Pass the raw amount, service will convert to cents
+                serviceDetails.id,
+                supabaseBookingId,
+                paymentState.tipAmount,
+                'sgd',
+                currentUser?.id
+              );
+              
+              break; // Success, exit retry loop
+            } catch (error) {
+              attemptCount++;
+              if (attemptCount === retryCount || !(error instanceof Error && error.message === 'Network Error')) {
+                throw error; // Rethrow if max retries reached or not a network error
+              }
+              logPaymentEvent('Payment intent creation failed, retrying', {
+                attempt: attemptCount,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                nextRetryIn: 1000 * attemptCount
+              });
+              await delay(1000 * attemptCount); // Exponential backoff
+            }
+          }
+
+          if (!paymentIntent) {
+            throw new Error('Failed to create payment intent after retries');
+          }
+
           stagesCompleted.current.push('payment_intent_created');
 
           logPaymentEvent('Payment intent created', {
-            intentId: intent.id,
+            intentId: paymentIntent.id,
             amount: total,
-            status: intent.status,
-            timeSinceInit: Date.now() - initStartTime.current
+            status: paymentIntent.status,
+            timeSinceInit: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
           });
-          
+
           setPaymentState((prev) => ({
             ...prev,
-            clientSecret: intent.clientSecret,
+            clientSecret: paymentIntent.clientSecret,
             status: PAYMENT_STATES.READY
           }));
           stagesCompleted.current.push('state_updated_ready');
 
         } catch (error) {
-          paymentInitializedRef.current = false;  // Reset on error
+          paymentInitializedRef.current = false;
           const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
           logPaymentEvent('Payment initialization error', {
             error: errorMessage,
             stage: stagesCompleted.current[stagesCompleted.current.length - 1],
-            timeSinceInit: Date.now() - initStartTime.current
+            timeSinceInit: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
           });
           toast.error(errorMessage);
           setPaymentState((prev) => ({
@@ -395,7 +443,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           logPaymentEvent('Initialization complete', {
             success: !paymentState.error,
             stages: stagesCompleted.current,
-            totalTime: Date.now() - initStartTime.current
+            totalTime: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
           });
         }
       } catch (error) {
@@ -403,7 +452,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         logPaymentEvent('Critical initialization error', {
           error: error instanceof Error ? error.message : 'Unknown error',
           stage: 'initialization',
-          timeSinceMount: Date.now() - mountTime.current
+          timeSinceMount: Date.now() - mountTime.current,
+          networkStatus: checkNetworkConnection()
         });
       }
     };

@@ -34,6 +34,19 @@ export const initializeStripe = async (): Promise<Stripe | null> => {
 
 export const createBooking = createSupabaseBooking;
 
+// Get API URL from environment
+const getApiBaseUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    console.warn('VITE_API_URL not set, falling back to default');
+    // In development, use the local network IP instead of localhost for mobile testing
+    return process.env.NODE_ENV === 'development' 
+      ? 'http://192.168.4.118:3001'  // Use HTTP in development
+      : window.location.origin;
+  }
+  return apiUrl;
+};
+
 export const createPaymentIntent = async (
   amount: number,
   serviceId: string,
@@ -51,30 +64,51 @@ export const createPaymentIntent = async (
     customerId 
   });
 
-  const baseUrl = 'https://localhost:3001';
+  const baseUrl = getApiBaseUrl();
   console.log('Making request to:', `${baseUrl}/api/payments/create-payment-intent`);
 
   try {
-    // Create custom axios instance for HTTPS
+    // Create custom axios instance
     const axiosInstance = axios.create({
       baseURL: baseUrl,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json'
-      },
-      // Handle self-signed certificates
-      httpsAgent: new axios.create().defaults.httpsAgent
+      }
+    });
+
+    // Add request interceptor for debugging
+    axiosInstance.interceptors.request.use(request => {
+      console.log('Request details:', {
+        url: request.url,
+        method: request.method,
+        headers: request.headers,
+        data: request.data
+      });
+      return request;
     });
 
     // Configure axios to not throw on non-2xx status codes
     axiosInstance.interceptors.response.use(
-      response => response,
+      response => {
+        console.log('Response received:', {
+          status: response.status,
+          data: response.data,
+          headers: response.headers
+        });
+        return response;
+      },
       error => {
         console.error('Axios error:', {
           status: error.response?.status,
           data: error.response?.data,
           message: error.message,
-          code: error.code
+          code: error.code,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            headers: error.config?.headers
+          }
         });
         throw error;
       }
@@ -153,7 +187,8 @@ export const formatCurrency = (amount: number): string => {
 
 export const getPaymentReceipt = async (paymentIntentId: string): Promise<string> => {
   try {
-    const response = await axios.get(`/api/payments/${paymentIntentId}/generate-receipt`);
+    const baseUrl = getApiBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/payments/${paymentIntentId}/generate-receipt`);
     return response.data.receiptUrl;
   } catch (error) {
     console.error('Error getting receipt:', error);

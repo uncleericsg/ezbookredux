@@ -14,7 +14,12 @@ const port = process.env.PORT || 3001;
 
 // Basic middleware
 app.use(cors({
-  origin: ['https://localhost:5173', 'http://localhost:5173'], // Allow both HTTP and HTTPS
+  origin: [
+    'https://localhost:5173', 
+    'http://localhost:5173',
+    'http://192.168.4.118:5173',
+    'https://192.168.4.118:5173'
+  ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -45,14 +50,20 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(err.status || 500).json({ error });
 });
 
-// Start server with HTTPS
-const options = {
-  key: fs.readFileSync(path.join(process.cwd(), 'localhost+1-key.pem')),
-  cert: fs.readFileSync(path.join(process.cwd(), 'localhost+1.pem')),
-  requestCert: false,
-  rejectUnauthorized: false // Allow self-signed certificates
-};
-
-https.createServer(options, app).listen(port, () => {
-  console.log(`HTTPS Server running on port ${port}`);
-});
+// Start server
+if (process.env.NODE_ENV === 'development') {
+  // Use HTTP in development
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+} else {
+  // Use HTTPS in production
+  const options = {
+    key: fs.readFileSync(path.join(process.cwd(), 'localhost+1-key.pem')),
+    cert: fs.readFileSync(path.join(process.cwd(), 'localhost+1.pem')),
+  };
+  
+  https.createServer(options, app).listen(port, () => {
+    console.log(`Server running on https://localhost:${port}`);
+  });
+}
