@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import type { AcuitySettings as AcuitySettingsType } from '../../types/settings';
-import { Dialog } from '@components/organisms/Dialog';
-import { Tooltip } from '@components/atoms/Tooltip';
+import { Dialog } from '../ui/Dialog';
+import { Tooltip } from '../ui/Tooltip';
 import { useState } from 'react';
 
 const settingsSchema = z.object({
@@ -237,4 +237,7 @@ const AcuitySettings: React.FC<AcuitySettingsProps> = ({
   );
 };
 
+AcuitySettings.displayName = 'AcuitySettings';
+
+export { AcuitySettings };
 export default AcuitySettings;

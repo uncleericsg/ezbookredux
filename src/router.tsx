@@ -28,6 +28,17 @@ import { AdminViewProvider } from './contexts/AdminViewContext';
 import PriceSelectionPage from './components/booking/PriceSelectionPage';
 import FirstTimeBookingFlow from './components/booking/FirstTimeBookingFlow';
 import ReturnCustomerBooking from './components/booking/ReturnCustomerBooking';
+import ServicePricingSelection from './components/ServicePricingSelection';
+import BookingConfirmation from './components/booking/BookingConfirmation';
+import { ROUTES } from './config/routes';
+import SupabaseTest from './components/test/SupabaseTest';
+
+// Admin components
+import AdminDashboard from './components/admin/AdminDashboard';
+import AdminSettings from './components/admin/AdminSettings';
+import UserManagement from './components/admin/UserManagement';
+import AdminBookings from './components/admin/AdminBookings';
+import ServiceHub from './components/admin/ServiceHub/ServiceHub';
 
 const RouterComponent: React.FC = () => {
   return (
@@ -39,9 +50,12 @@ const RouterComponent: React.FC = () => {
               <Route path="/" element={<App />}>
                 {/* Routes with Layout (Navbar & Footer) */}
                 <Route element={<Layout />}>
+                  {/* Public Routes */}
                   <Route index element={<ServiceCategorySelection />} />
-                  <Route path="returncustomer" element={<ReturnCustomerBooking />} />
-                  <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
+                  <Route path="pricing" element={<ServicePricingSelection />} />
+                  <Route path="test/supabase" element={<SupabaseTest />} />
+                  
+                  {/* Protected Routes */}
                   <Route
                     path="profile"
                     element={
@@ -58,15 +72,36 @@ const RouterComponent: React.FC = () => {
                       </ProtectedRoute>
                     }
                   />
+
+                  {/* Admin Routes */}
+                  <Route
+                    path="admin"
+                    element={
+                      <ProtectedRoute requiresAdmin>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route index element={<Navigate to={ROUTES.ADMIN.SERVICES} replace />} />
+                    <Route path="services" element={<ServiceHub />} />
+                    <Route path="bookings" element={<AdminBookings />} />
+                    <Route path="users" element={<UserManagement />} />
+                    <Route path="settings" element={<AdminSettings />} />
+                  </Route>
                 </Route>
 
                 {/* Routes without Layout (No Navbar & Footer) */}
+                <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
+                
+                {/* Booking Flow Routes - No Layout */}
                 <Route path="booking">
                   <Route path="price-selection" element={<PriceSelectionPage />} />
                   <Route path="first-time/*" element={<FirstTimeBookingFlow />} />
+                  <Route path="return-customer" element={<ReturnCustomerBooking />} />
+                  <Route path="confirmation/:bookingId" element={<BookingConfirmation />} />
                 </Route>
 
-                {/* 404 Route */}
+                {/* 404 Page - No Layout */}
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>

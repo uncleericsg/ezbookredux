@@ -24,6 +24,9 @@ export const ROUTES = {
   BOOKING: {
     FIRST_TIME: '/booking/first-time',
     SERVICE: '/booking/service',
+    CONFIRMATION: '/booking/confirmation/:bookingId',
+    RETURN_CUSTOMER: '/booking/return-customer',
+    PRICE_SELECTION: '/booking/price-selection'
   },
   AMC: {
     PACKAGES: '/amc/packages',

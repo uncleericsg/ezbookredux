@@ -62,4 +62,5 @@ const AdminNav = memo<AdminNavProps>(({ activeTab, onTabChange, collapsed = fals
 
 AdminNav.displayName = 'AdminNav';
 
+export { AdminNav };
 export default AdminNav;

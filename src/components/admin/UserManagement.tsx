@@ -104,4 +104,7 @@ const UserManagement: React.FC = () => {
   );
 };
 
+UserManagement.displayName = 'UserManagement';
+
+export { UserManagement };
 export default UserManagement;

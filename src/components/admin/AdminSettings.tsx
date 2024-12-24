@@ -204,4 +204,7 @@ const AdminSettings: React.FC = () => {
   );
 };
 
+AdminSettings.displayName = 'AdminSettings';
+
+export { AdminSettings };
 export default AdminSettings;

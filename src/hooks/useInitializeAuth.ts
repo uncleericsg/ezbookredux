@@ -14,20 +14,35 @@ export const useInitializeAuth = () => {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
 
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        // Remove token from user data if it exists
-        const { token: _, ...userWithoutToken } = parsedUser;
-        
-        dispatch(setToken(token));
-        dispatch(setUser(userWithoutToken));
-        dispatch(setAuthenticated(true));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
-      }
+    // Clear any invalid state
+    if (!token || !userData) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      dispatch(setToken(null));
+      dispatch(setUser(null));
+      dispatch(setAuthenticated(false));
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData);
+      // Make sure role is preserved
+      const userWithRole = {
+        ...parsedUser,
+        role: parsedUser.role || 'user' // Default to 'user' if no role
+      };
+      
+      dispatch(setToken(token));
+      dispatch(setUser(userWithRole));
+      dispatch(setAuthenticated(true));
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      // Clear invalid state
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      dispatch(setToken(null));
+      dispatch(setUser(null));
+      dispatch(setAuthenticated(false));
     }
   }, []); // Run only once on mount
 };

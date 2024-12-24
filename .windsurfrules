@@ -1,8 +1,18 @@
 Always read the .cascade-config.json file first and ensure all changes follow the project conventions.
 
-Always follow the .cascade-config.json from: c:\Users\djxpi\OneDrive\Documents\2024_iAircon_EasyBooking_WINDSURF\CascadeProjects\windsurf-project\project
+File in root directory of project.
 
-Do not damage any of the UI features and components while working at all times
+## PROJECT DETAILS ##
+THIS IS WEB APP, FOR IAIRCON EASY BOOKING. AN EASY APPONTMENT BOOKING PLATFORM, FOR USERS, CUSTOMERS, AND TECHNICIANS. WE ARE BUIDLING A USER FRIENDLY PLATFORM THAT WILL EASE THE PROCESS OF BOOKING APPOINTMENTS WITH THE COMPANY. 
+
+BACKEND FEATURES FOR ADMINISTRATORS TO MANAGE THE COMPANY'S CUSTOMERS, TECHNICIANS, AND SERVICES. WE ARE FOCUSED ON SIMPLICITY AND USER FRIENDLY DESIGN, WITH A DARK MODE ONLY DESIGN, OPTIMIZED FOR MOBILE DEVICES, AND ADHERING TO THE LATEST INDUSTRY STANDARDS. 
+
+DATABASE AND AUTH ARE SUPABASE, AND ALL DATA IS STORED IN THE DATABASE, REDUX INTEGRATION, FIREBASE OTP VERIFICATION, AND FIREBASE CLOUD MESSAGING, STRIPE PAYMENTS, CHATGPT API AND FULL CRM SYSTEM. 
+
+## IMPORTANT RULES ##
+whenever I asked you on a questionm, never assume and never oversight and over complicate matters. always analyze and think before making any changes or give any solutions, refer back to our project objectives and details for a sutiable solution or provide a proper plan.
+
+Do not damage any of the UI features and components while working at all times unless given consent.
 
 always read the @ai protection policy on page if available and do not break any visual, remove any current UI features or create any new ones without consent.
 

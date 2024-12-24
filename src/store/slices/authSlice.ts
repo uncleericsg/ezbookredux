@@ -1,14 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Define the initial state
-export const initialState = {
-  isAuthenticated: false,
-  token: null as string | null,
-  loading: false,
-  error: null as string | null,
-};
+interface AuthState {
+  isAuthenticated: boolean;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+}
 
-export type AuthState = typeof initialState;
+const initialState: AuthState = {
+  isAuthenticated: false,
+  token: null,
+  loading: false,
+  error: null,
+};
 
 const authSlice = createSlice({
   name: 'auth',
@@ -16,6 +20,9 @@ const authSlice = createSlice({
   reducers: {
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload;
+      if (!action.payload) {
+        state.token = null;
+      }
     },
     setToken: (state, action: PayloadAction<string | null>) => {
       state.token = action.payload;
@@ -25,14 +32,12 @@ const authSlice = createSlice({
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
-      state.loading = false;
     },
-    resetAuth: (state) => {
-      // Reset to initial state
+    clearAuth: (state) => {
       return initialState;
     },
   },
 });
 
-export const { setAuthenticated, setToken, setLoading, setError, resetAuth } = authSlice.actions;
+export const { setAuthenticated, setToken, setLoading, setError, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

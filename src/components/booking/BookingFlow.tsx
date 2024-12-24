@@ -34,6 +34,15 @@ interface BookingData {
   otherIssue?: string;
   scheduledDateTime?: Date;
   scheduledTimeSlot?: string;
+  bookingId?: string;
+  selectedService?: {
+    id: string;
+    title: string;
+    price: number;
+    duration: string;
+    description?: string;
+  };
+  isAMC?: boolean;
 }
 
 const BOOKING_TIMEOUT = 900; // 15 minutes in seconds
@@ -42,6 +51,7 @@ const BookingFlow: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isFeatureVisible } = useAdminView();
+  const dispatch = useAppDispatch();
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -67,7 +77,9 @@ const BookingFlow: React.FC = () => {
   const [bookingData, setBookingData] = useState<BookingData>({
     brands: [],
     issues: [],
-    customerInfo: null
+    customerInfo: null,
+    selectedService: undefined,
+    isAMC: false
   });
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -75,6 +87,7 @@ const BookingFlow: React.FC = () => {
   const [previousBookingDetails, setPreviousBookingDetails] = useState<BookingDetails | null>(null);
   const [timeoutWarningOpen, setTimeoutWarningOpen] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(BOOKING_TIMEOUT);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Define steps including the new schedule step
   const steps = [
@@ -102,7 +115,7 @@ const BookingFlow: React.FC = () => {
     }
   }, [user, isFeatureVisible]);
 
-  const handleCustomerSave = (formData: CustomerFormData) => {
+  const handleCustomerFormSave = async (formData: CustomerFormData) => {
     setBookingData(prev => ({
       ...prev,
       customerInfo: formData
@@ -110,16 +123,55 @@ const BookingFlow: React.FC = () => {
     setCurrentStep(prev => prev + 1);
   };
 
-  const handleScheduleSelect = (date: Date, timeSlot: string) => {
-    setBookingData(prev => ({
-      ...prev,
-      scheduledDateTime: date,
-      scheduledTimeSlot: timeSlot
-    }));
-    if (isFeatureVisible('booking-payment')) {
+  const handleScheduleComplete = async (dateTime: Date, timeSlot: string) => {
+    try {
+      if (!bookingData.customerInfo || !bookingData.selectedService) {
+        throw new Error('Missing customer info or service selection');
+      }
+
+      setIsLoading(true);
+
+      // Create booking only after schedule is selected
+      const bookingId = await createBooking({
+        brands: bookingData.brands,
+        issues: bookingData.issues,
+        customerInfo: bookingData.customerInfo,
+        scheduledDateTime: dateTime,
+        scheduledTimeSlot: timeSlot,
+        selectedService: bookingData.selectedService,
+        otherIssue: bookingData.otherIssue,
+        isAMC: bookingData.isAMC || false
+      });
+
+      console.log('Created booking with ID:', bookingId);
+
+      // Update booking data with the new booking ID and schedule
+      const updatedBookingData = {
+        ...bookingData,
+        bookingId,
+        scheduledDateTime: dateTime,
+        scheduledTimeSlot: timeSlot
+      };
+
+      // Ensure Redux store is updated with the new booking
+      dispatch(setCurrentBooking({
+        id: bookingId,
+        serviceType: bookingData.selectedService.title,
+        date: format(dateTime, 'PP'),
+        time: timeSlot,
+        status: 'Pending',
+        amount: bookingData.selectedService.price,
+        customerInfo: bookingData.customerInfo,
+        selectedService: bookingData.selectedService
+      }));
+
+      setBookingData(updatedBookingData);
       setCurrentStep(prev => prev + 1);
-    } else {
-      handleBookingSubmit();
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast.error('Failed to create booking. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -169,7 +221,7 @@ const BookingFlow: React.FC = () => {
     lastName: user.lastName,
     email: user.email,
     mobile: user.phone || '',
-    addresses: [{
+    addresses: [/*{
       id: '1',
       floorUnit: previousBookingDetails?.customerInfo.floorUnit || user.address || '',
       blockStreet: previousBookingDetails?.customerInfo.blockStreet || '',
@@ -177,8 +229,33 @@ const BookingFlow: React.FC = () => {
       condoName: previousBookingDetails?.customerInfo.condoName || user.condoName,
       lobbyTower: previousBookingDetails?.customerInfo.lobbyTower || user.lobbyTower,
       isDefault: true
-    }]
+    }*/]
   } : undefined;
+
+  const renderPaymentStep = () => {
+    if (!bookingData.bookingId || !bookingData.selectedService) {
+      console.error('Missing required booking data:', {
+        bookingId: bookingData.bookingId,
+        selectedService: bookingData.selectedService
+      });
+      return null;
+    }
+
+    return (
+      <motion.div
+        key="payment"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <PaymentStep 
+          bookingData={bookingData}
+          onComplete={handleBookingSubmit}
+          onBack={() => setCurrentStep(prev => prev - 1)}
+        />
+      </motion.div>
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -231,7 +308,7 @@ const BookingFlow: React.FC = () => {
             exit={{ opacity: 0 }}
           >
             <CustomerForm
-              onSave={handleCustomerSave}
+              onSave={handleCustomerFormSave}
               user={transformedUser}
               isAMC={isFeatureVisible('amc-features')}
             />
@@ -247,24 +324,13 @@ const BookingFlow: React.FC = () => {
           >
             <ScheduleStep
               customerInfo={bookingData.customerInfo}
-              onScheduleSelect={handleScheduleSelect}
+              selectedService={bookingData.selectedService}
+              onScheduleSelect={handleScheduleComplete}
             />
           </motion.div>
         )}
 
-        {currentStep === 4 && !isFeatureVisible('amc-features') && (
-          <motion.div
-            key="payment"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <PaymentStep 
-              bookingData={bookingData}
-              onComplete={handleBookingSubmit} 
-            />
-          </motion.div>
-        )}
+        {currentStep === 4 && !isFeatureVisible('amc-features') && renderPaymentStep()}
       </AnimatePresence>
 
       <Dialog

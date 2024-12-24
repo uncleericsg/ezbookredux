@@ -141,12 +141,15 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
   selectedService,
   onScheduleSelect 
 }) => {
-  console.log('ScheduleStep - Component mounted with:', { 
-    customerInfo, 
-    selectedService,
-    customerAddress: customerInfo?.address,
-    serviceTitle: selectedService?.title
-  });
+  useEffect(() => {
+    console.log('ScheduleStep - Component mounted with:', { 
+      customerInfo, 
+      selectedService,
+      customerAddress: customerInfo?.address,
+      serviceTitle: selectedService?.title
+    });
+  }, []); // Empty deps since we only want this on mount
+
   const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
@@ -175,8 +178,12 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
 
   // Simulate fetching available time slots based on location
   useEffect(() => {
-    console.log('ScheduleStep - Fetching slots for date:', selectedDate);
+    let mounted = true;
+    let abortController = new AbortController();
+    
     const fetchAvailableSlots = async () => {
+      if (!mounted) return;
+      
       setIsLoading(true);
       try {
         // TODO: Replace with actual API call
@@ -189,17 +196,31 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
           available: Math.random() > (slot.isPeakHour ? 0.4 : 0.2) // Less availability during peak hours
         }));
 
-        console.log('ScheduleStep - Slots generated:', optimizedSlots.length);
-        setAvailableSlots(optimizedSlots);
+        if (mounted && !abortController.signal.aborted) {
+          setAvailableSlots(optimizedSlots);
+          console.log('ScheduleStep - Slots generated:', optimizedSlots.length);
+        }
       } catch (error) {
-        console.error('Error fetching available slots:', error);
+        if (!abortController.signal.aborted) {
+          console.error('Error fetching available slots:', error);
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted && !abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchAvailableSlots();
-  }, [selectedDate]);
+    if (mounted) {
+      console.log('ScheduleStep - Fetching slots for date:', selectedDate);
+      fetchAvailableSlots();
+    }
+    
+    return () => {
+      mounted = false;
+      abortController.abort();
+    };
+  }, [selectedDate]); // Only re-run when date changes
 
   const handleDateSelect = (date: Date) => {
     console.log('ScheduleStep - Date selected:', date);
@@ -262,19 +283,22 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
                 <p className="text-sm text-gray-400">Processing your selection...</p>
               </div>
             </div>
+          ) : availableSlots.filter(slot => slot.available).length === 0 ? (
+            <div className="flex items-center justify-center min-h-[300px]">
+              <p className="text-gray-400">No available time slots for this date</p>
+            </div>
           ) : (
             <div className={styles.timeSlotGrid}>
-              {availableSlots.map((slot) => (
+              {availableSlots
+                .filter(slot => slot.available)
+                .map((slot) => (
                 <button
                   key={slot.time}
-                  onClick={() => slot.available && handleTimeSelect(slot.time)}
-                  disabled={!slot.available || isLoading}
+                  onClick={() => handleTimeSelect(slot.time)}
                   className={`p-3 rounded-md text-sm font-medium transition-colors
-                    ${slot.available 
-                      ? selectedTime === slot.time
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-white hover:bg-gray-700'
-                      : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    ${selectedTime === slot.time
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-800 text-white hover:bg-gray-700'
                     }
                   `}
                 >
@@ -304,6 +328,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
               <p>Best time for punctual service</p>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
             <div>

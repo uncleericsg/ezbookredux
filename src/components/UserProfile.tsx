@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, LogOut, AlertTriangle } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../store';
-import { resetAuth } from '../store/slices/authSlice';
-import { setUser } from '../store/slices/userSlice';
+import { clearAuth } from '../store/slices/authSlice';
+import { resetUser } from '../store/slices/userSlice';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -32,8 +32,8 @@ const UserProfile: React.FC = () => {
 
   const handleLogout = () => {
     try {
-      dispatch(resetAuth());
-      dispatch(setUser(null));
+      dispatch(clearAuth());
+      dispatch(resetUser());
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
       toast.success('Logged out successfully');

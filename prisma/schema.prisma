@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Payment {
+  id              String      @id @default(uuid()) @db.Uuid
+  paymentIntentId String      @unique @map("payment_intent_id")
+  amount          Int
+  currency        String
+  status          String
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  bookingId       String      @map("booking_id") @db.Uuid
+  customerId      String?     @map("customer_id") @db.Uuid
+  serviceId       String      @map("service_id") @db.Uuid
+  booking         Booking     @relation(fields: [bookingId], references: [id])
+  customer        User?       @relation(fields: [customerId], references: [id])
+  service         Service     @relation(fields: [serviceId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id          String      @id @default(uuid()) @db.Uuid
+  rating      Int
+  comment     String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  bookingId   String      @map("booking_id") @db.Uuid
+  customerId  String      @map("customer_id") @db.Uuid
+  booking     Booking     @relation(fields: [bookingId], references: [id])
+  customer    User        @relation(fields: [customerId], references: [id])
+
+  @@map("reviews")
+}
+
+model Booking {
+  id              String      @id @default(uuid()) @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  scheduledAt     DateTime    @map("scheduled_at")
+  status          String
+  customerId      String      @map("customer_id") @db.Uuid
+  serviceId       String      @map("service_id") @db.Uuid
+  customer        User        @relation(fields: [customerId], references: [id])
+  service         Service     @relation(fields: [serviceId], references: [id])
+  payment         Payment[]
+  reviews         Review[]
+
+  @@map("bookings")
+}
+
+model User {
+  id              String      @id @default(uuid()) @db.Uuid
+  email           String      @unique
+  firstName       String      @map("first_name")
+  lastName        String      @map("last_name")
+  mobile          String?
+  bookings        Booking[]
+  payments        Payment[]
+  reviews         Review[]
+
+  @@map("users")
+}
+
+model Service {
+  id              String      @id @default(uuid()) @db.Uuid
+  title           String
+  description     String
+  price           Int
+  duration        String
+  bookings        Booking[]
+  payments        Payment[]
+
+  @@map("services")
+}

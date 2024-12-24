@@ -82,7 +82,7 @@ const Layout: React.FC = () => {
         />
       )}
       {isAuthenticated && <ServiceDueBanner />}
-      <main className="flex-grow">
+      <main className="flex-grow pt-16">
         <Outlet />
       </main>
       {shouldShowNavbar && <Footer />}

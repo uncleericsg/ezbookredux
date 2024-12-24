@@ -1,23 +1,43 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Define the initial state
-export const initialState = {
-  isAdmin: false,
-  adminData: null as any,
-  loading: false,
-  error: null as string | null,
-};
+interface AdminData {
+  totalUsers?: number;
+  activeBookings?: number;
+  pendingBookings?: number;
+  completedBookings?: number;
+  recentActivities?: Array<{
+    id: string;
+    type: string;
+    userId: string;
+    timestamp: string;
+  }>;
+}
 
-export type AdminState = typeof initialState;
+interface AdminState {
+  isAdmin: boolean;
+  adminData: AdminData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AdminState = {
+  isAdmin: false,
+  adminData: null,
+  loading: false,
+  error: null,
+};
 
 const adminSlice = createSlice({
   name: 'admin',
   initialState,
   reducers: {
-    setAdmin: (state, action: PayloadAction<boolean>) => {
+    setIsAdmin: (state, action: PayloadAction<boolean>) => {
       state.isAdmin = action.payload;
+      if (!action.payload) {
+        state.adminData = null;
+      }
     },
-    setAdminData: (state, action: PayloadAction<any>) => {
+    setAdminData: (state, action: PayloadAction<AdminData | null>) => {
       state.adminData = action.payload;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -28,12 +48,10 @@ const adminSlice = createSlice({
       state.loading = false;
     },
     resetAdmin: (state) => {
-      // Reset to initial state
       return initialState;
     },
   },
 });
 
-export const { setAdmin, setAdminData, setLoading, setError, resetAdmin } = adminSlice.actions;
-
+export const { setIsAdmin, setAdminData, setLoading, setError, resetAdmin } = adminSlice.actions;
 export default adminSlice.reducer;

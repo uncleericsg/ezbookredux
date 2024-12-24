@@ -15,20 +15,20 @@ const ServiceMetrics: React.FC = () => {
       title: 'Completion Rate',
       value: '94%',
       trend: 2.5,
-      icon: <CheckCircle className="h-5 w-5" />,
+      icon: <CheckCircle />,
       color: 'text-green-400',
     },
     {
       title: 'Average Response Time',
       value: '2.5 hrs',
       trend: -0.5,
-      icon: <Clock className="h-5 w-5" />,
+      icon: <Clock />,
       color: 'text-blue-400',
     },
     {
       title: 'Pending Services',
       value: 15,
-      icon: <AlertTriangle className="h-5 w-5" />,
+      icon: <AlertTriangle />,
       color: 'text-yellow-400',
     },
   ];
@@ -44,28 +44,28 @@ const ServiceMetrics: React.FC = () => {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {metrics.map((metric, index) => (
-          <div key={index} className="bg-gray-700/50 rounded-lg p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-400">{metric.title}</p>
-                <div className="flex items-center space-x-2 mt-1">
-                  <p className="text-2xl font-semibold">{metric.value}</p>
-                  {metric.trend && (
-                    <div className={`flex items-center text-sm ${metric.trend > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      <TrendingUp className={`h-4 w-4 ${metric.trend > 0 ? '' : 'transform rotate-180'}`} />
-                      <span>{Math.abs(metric.trend)}%</span>
-                    </div>
-                  )}
+          <div
+            key={index}
+            className="bg-gray-800 rounded-lg px-4 py-3 border border-gray-700"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className={`p-1.5 rounded bg-opacity-10 ${metric.color} bg-current`}>
+                  {React.cloneElement(metric.icon as React.ReactElement, {
+                    className: `h-4 w-4 ${metric.color}`,
+                  })}
                 </div>
+                <h3 className="text-sm font-medium text-gray-400">{metric.title}</h3>
               </div>
-              <div className={`p-2 rounded-lg bg-opacity-10 ${metric.color} bg-current`}>
-                {React.cloneElement(metric.icon as React.ReactElement, {
-                  className: `h-5 w-5 ${metric.color}`,
-                })}
-              </div>
+              {metric.trend && (
+                <span className={`text-xs font-medium ${metric.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {metric.trend > 0 ? '+' : ''}{metric.trend}%
+                </span>
+              )}
             </div>
+            <p className="text-lg font-semibold text-white mt-2">{metric.value}</p>
           </div>
         ))}
       </div>
