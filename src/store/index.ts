@@ -7,7 +7,6 @@ import type { TypedUseSelectorHook, PreloadedState } from 'react-redux';
 import userReducer from '@store/slices/userSlice';
 import authReducer from '@store/slices/authSlice';
 import adminReducer from '@store/slices/adminSlice';
-import { adminViewReducer } from '@store/slices/adminView.slice';
 import technicianReducer from '@store/slices/technicianSlice';
 import bookingReducer from '@store/slices/bookingSlice';
 
@@ -32,12 +31,10 @@ const initialState = {
   },
   admin: {
     isAdmin: false,
+    currentView: 'regular',
     adminData: null,
     loading: false,
     error: null,
-  },
-  adminView: {
-    currentView: 'regular',
   },
   technician: {
     currentTechnician: null,
@@ -60,7 +57,6 @@ interface AppState {
   user: ReturnType<typeof userReducer>;
   auth: ReturnType<typeof authReducer>;
   admin: ReturnType<typeof adminReducer>;
-  adminView: ReturnType<typeof adminViewReducer>;
   technician: ReturnType<typeof technicianReducer>;
   booking: ReturnType<typeof bookingReducer>;
 }
@@ -70,7 +66,6 @@ const reducers = {
   user: userReducer,
   auth: authReducer,
   admin: adminReducer,
-  adminView: adminViewReducer,
   technician: technicianReducer,
   booking: bookingReducer,
 };
