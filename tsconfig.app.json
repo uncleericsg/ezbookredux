@@ -12,8 +12,7 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -28,7 +27,6 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "verbatimModuleSyntax": true,
 
     /* Path Aliases */
     "baseUrl": ".",
@@ -42,12 +40,9 @@
       "@components/*": ["src/components/*"],
       "@config/*": ["src/config/*"],
       "@constants/*": ["src/constants/*"],
-      "@contexts/*": ["src/contexts/*"],
       "@data/*": ["src/data/*"],
       "@dev/*": ["src/components/dev/*"],
       "@error-boundary/*": ["src/components/error-boundary/*"],
-      "@features/*": ["src/features/*"],
-      "@frontend/*": ["src/components/frontend/*"],
       "@google/*": ["src/services/google/*"],
       "@hooks/*": ["src/hooks/*"],
       "@icons/*": ["src/components/icons/*"],

@@ -1,10 +1,10 @@
 import { 
-  getAuth, 
   fetchSignInMethodsForEmail,
   PhoneAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber
 } from 'firebase/auth';
+import { auth } from '../firebase';
 import { store } from '../../store';
 import { setAuthenticated, setToken } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
@@ -22,7 +22,7 @@ export interface OTPVerificationResult {
 }
 
 class FirebaseValidationService {
-  private auth = getAuth();
+  private auth = auth;  // Use existing auth instance
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
   // Initialize recaptcha verifier

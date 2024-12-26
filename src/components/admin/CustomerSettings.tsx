@@ -1,6 +1,5 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Save, Loader2, User, Mail, Phone, Shield } from 'lucide-react';
 import React, { useState } from 'react';
@@ -95,10 +94,10 @@ const CustomerSettings = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
+    <div className="w-full">
+      <h1 className="text-2xl font-semibold mb-4 text-gray-100">
         Customer Settings
-      </Typography>
+      </h1>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -514,7 +513,7 @@ const CustomerSettings = () => {
           </button>
         </div>
       </motion.div>
-    </Box>
+    </div>
   );
 };
 

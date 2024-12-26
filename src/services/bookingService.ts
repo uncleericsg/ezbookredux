@@ -1,4 +1,4 @@
-import { db } from '@/config/firebase';
+import { db } from '../services/firebase';
 import { collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, doc } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
 

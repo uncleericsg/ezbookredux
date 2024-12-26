@@ -1,3 +1,17 @@
+/**
+ * @file Firebase Configuration and Initialization
+ * 
+ * IMPORTANT: This is the ONLY file that should initialize Firebase in the entire application.
+ * DO NOT create additional Firebase initialization files to prevent duplicate app errors.
+ * 
+ * Features included:
+ * - Firebase Authentication with persistence
+ * - Firestore Database
+ * - Firebase Cloud Messaging
+ * 
+ * @singleton This file exports a singleton instance of Firebase app and services
+ */
+
 // @firebase-integration Firebase configuration and initialization
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';

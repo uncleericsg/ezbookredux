@@ -2,8 +2,7 @@
 export default {
   content: [
     './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-    '!./src/**/BookingContext.{js,ts,jsx,tsx}'  // Explicitly exclude BookingContext files
+    './src/**/*.{js,ts,jsx,tsx}'
   ],
   safelist: [
     'animate-spin',
