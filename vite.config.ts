@@ -203,6 +203,12 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       target: 'es2020',
       rollupOptions: {
+        external: [],
+        output: {
+          manualChunks: {
+            vendor: ['jszip']
+          }
+        },
         input: {
           main: path.resolve(__dirname, 'index.html')
         }
