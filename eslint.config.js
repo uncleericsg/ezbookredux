@@ -81,6 +81,12 @@ export default [
       'no-var': 'error',
       'prefer-const': 'error',
       'eqeqeq': ['error', 'always'],
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@mui/*'],
+          message: 'MUI has been deprecated in this project. Please use Tailwind CSS for styling.'
+        }]
+      }],
       
       // React rules
       'react/jsx-uses-react': 'error',
