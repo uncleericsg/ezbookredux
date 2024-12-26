@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { toast } from 'sonner';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import type { User } from '../types';
 
 export const backupSettings = async (): Promise<Blob> => {
