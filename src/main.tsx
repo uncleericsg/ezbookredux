@@ -7,6 +7,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { store } from './store';
 import RouterComponent from './router';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
 // Create a client
@@ -30,6 +31,7 @@ ReactDOM.createRoot(rootElement).render(
           <Suspense fallback={<LoadingScreen />}>
             <RouterComponent />
             <SpeedInsights />
+            <Analytics />
           </Suspense>
         </QueryClientProvider>
       </Provider>
