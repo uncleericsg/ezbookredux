@@ -1,10 +1,12 @@
-import React from 'react';
-import { Save, Loader2, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ColorPicker from '../ColorPicker';
-import LogoUploader from './LogoUploader';
-import { useBrandingSettings } from '../../hooks/useBrandingSettings';
+import { Save, Loader2, Palette } from 'lucide-react';
+import React from 'react';
+
+import { useBrandingSettings } from '@hooks/useBrandingSettings';
+import ColorPicker from '@components/ColorPicker';
+
 import BrandingPreview from './BrandingPreview';
+import LogoUploader from './LogoUploader';
 
 const BrandingSettings: React.FC = () => {
   const {

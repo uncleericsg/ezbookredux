@@ -1,8 +1,8 @@
 import React from 'react';
-import { format, isToday, isSameDay, addMonths, subMonths, startOfMonth, addDays } from 'date-fns';
+import { format, addDays, isBefore, isAfter, isToday, isSameDay, addMonths, subMonths, startOfMonth } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { usePublicHolidays } from '../hooks/usePublicHolidays';
-import type { Holiday } from '../types';
+import { usePublicHolidays } from '@hooks/usePublicHolidays';
+import type { Holiday } from '@types';
 
 interface CalendarProps {
   selectedDate: Date | null;
@@ -49,8 +49,8 @@ const ServiceSchedulingCalendar: React.FC<CalendarProps> = ({
     const dateStr = format(date, 'yyyy-MM-dd');
     const isHoliday = holidays.has(dateStr);
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-    const isTooEarly = minDate && date < minDate;
-    const isTooLate = maxDate && date > maxDate;
+    const isTooEarly = minDate && isBefore(date, minDate);
+    const isTooLate = maxDate && isAfter(date, maxDate);
     const isTooFarInFuture = new Date(date) > addMonths(today, 3);
 
     return !isBlocked && !isHoliday && !isWeekend && !isTooEarly && !isTooLate && date >= today && !isTooFarInFuture;

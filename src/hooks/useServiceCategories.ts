@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { fetchServiceCategories } from '../services/acuity';
-import { useToast } from './useToast';
-import type { ServiceCategory } from '../types';
+import { fetchServiceCategories } from '@services/acuity';
+import { useToast } from '@hooks/useToast';
+import type { ServiceCategory } from '@types';
 
 export const useServiceCategories = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);

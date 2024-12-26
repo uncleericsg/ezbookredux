@@ -1,7 +1,8 @@
-import React from 'react';
-import { Save, Loader2, AlertTriangle } from 'lucide-react';
-import type { AppSettings } from '../../types/appSettings';
 import { motion } from 'framer-motion';
+import { Save, Loader2, AlertTriangle } from 'lucide-react';
+import React from 'react';
+
+import type { AppSettings } from '@types/appSettings';
 
 interface LoginScreenSettingsProps {
   settings: AppSettings;

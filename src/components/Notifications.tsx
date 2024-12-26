@@ -1,7 +1,7 @@
 import React from 'react';
-import { useAppSelector } from '../store';
-import { useNotifications } from '../hooks/useNotifications';
-import NotificationList from './NotificationList';
+import { useAppSelector } from '@store';
+import { useNotifications } from '@hooks/useNotifications';
+import NotificationList from '@components/NotificationList';
 import { Loader2 } from 'lucide-react';
 
 const Notifications: React.FC = () => {

@@ -5,8 +5,8 @@ import {
   createInitialState, 
   transition, 
   isBookingInProgress 
-} from '../utils/bookingState';
-import { BookingError } from '../utils/errors';
+} from '@utils/bookingState';
+import { BookingError } from '@utils/errors';
 
 export const useBookingState = () => {
   const [state, setState] = useState<BookingState>(createInitialState());

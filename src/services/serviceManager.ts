@@ -5,8 +5,9 @@ import { initGooglePlaces } from './googlePlaces';
 import { toast } from 'sonner';
 import { signInAnonymously } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import type { PricingOption } from '@types/booking';
 
-export interface ServiceInitOptions {
+interface ServiceInitOptions {
   retryAttempts?: number;
   timeout?: number;
   features?: Record<string, boolean>;
@@ -18,7 +19,23 @@ interface ServiceStatus {
   lastInitAttempt?: Date;
 }
 
-export class ServiceManager {
+// Function to get service pricing
+async function getServicePricing(): Promise<PricingOption[]> {
+  try {
+    const pricingRef = collection(db, 'pricing');
+    const snapshot = await getDocs(pricingRef);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PricingOption));
+  } catch (error) {
+    console.error('Error fetching service pricing:', error);
+    throw new ApiError(
+      'Failed to fetch service pricing',
+      'PRICING_ERROR',
+      { context: 'Pricing Fetch' }
+    );
+  }
+}
+
+class ServiceManager {
   private static instance: ServiceManager;
   private initializationOrder: string[] = [
     'core',
@@ -238,3 +255,7 @@ export class ServiceManager {
     await this.initializeService(serviceName, 3, 30000);
   }
 }
+
+// Export types and values
+export type { ServiceInitOptions };
+export { getServicePricing, ServiceManager };

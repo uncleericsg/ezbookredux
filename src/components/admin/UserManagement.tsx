@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { Search, Save, X, Loader2 } from 'lucide-react';
-import { useUserTable } from '../../hooks/useUserTable';
-import UserImport from './UserImport';
-import { updateUser } from '../../services/admin';
-import { toast } from 'sonner';
-import type { User } from '../../types';
-import UserTable from './UserTable';
 import { motion } from 'framer-motion';
+import { Search, Save, X, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+import { useUserTable } from '../../hooks/useUserTable';
+import { updateUser } from '../../services/admin';
+
+import UserImport from './UserImport';
+import UserTable from './UserTable';
+
+import type { User } from '../../types';
 
 const UserManagement: React.FC = () => {
   const {
@@ -104,4 +107,7 @@ const UserManagement: React.FC = () => {
   );
 };
 
+UserManagement.displayName = 'UserManagement';
+
+export { UserManagement };
 export default UserManagement;

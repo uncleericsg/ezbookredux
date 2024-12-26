@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Loader2 } from 'lucide-react';
-import { useAddressAutocomplete } from '../../hooks/useAddressAutocomplete';
-import type { PlaceDetails } from '../../services/googlePlaces';
+import { useAddressAutocomplete } from '@hooks/useAddressAutocomplete';
+import type { PlaceDetails } from '@services/googlePlaces';
 
 interface AddressAutocompleteProps {
   onSelect: (details: PlaceDetails) => void;

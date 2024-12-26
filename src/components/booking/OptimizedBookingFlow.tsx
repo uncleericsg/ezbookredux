@@ -3,9 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load components
-const BrandSelection = lazy(() => import('./BrandSelection'));
-const IssueSelection = lazy(() => import('./IssueSelection'));
-const CustomerForm = lazy(() => import('./CustomerForm'));
+const BrandSelection = lazy(() => import('@components/booking/BrandSelection'));
+const IssueSelection = lazy(() => import('@components/booking/IssueSelection'));
+const CustomerForm = lazy(() => import('@components/booking/CustomerForm'));
 
 interface BookingFlowProps {
   currentStep: number;

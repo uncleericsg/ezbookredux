@@ -1,22 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; 
-import { useUser } from '../contexts/UserContext';
-import { useAcuitySettings } from '../hooks/useAcuitySettings';
-import { useTimeSlots } from '../hooks/useTimeSlots';
-import { BUSINESS_RULES } from '../constants';
-import PaymentFlow from './PaymentFlow';
-import { useAppointments } from '../hooks/useAppointments';
-import { useBookingState } from '../hooks/useBookingState';
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useUser } from '@contexts/UserContext';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import { useTimeSlots } from '@hooks/useTimeSlots';
+import { BUSINESS_RULES } from '@constants';
+import PaymentFlow from '@components/PaymentFlow';
+import { useAppointments } from '@hooks/useAppointments';
+import { useBookingState } from '@hooks/useBookingState';
 import { toast } from 'sonner';
-import { validateBookingDetails } from '../utils/bookingValidation';
 import { format } from 'date-fns';
-import ErrorBoundary from './ErrorBoundary';
-import { LoadingScreen } from './LoadingScreen';
+import ErrorBoundary from '@components/ErrorBoundary';
+import { LoadingScreen } from '@components/LoadingScreen';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { AcuityAppointmentType } from '../services/acuityIntegration';
-import ServiceSchedulingCalendar from './ServiceSchedulingCalendar';
-import TimeSlotPicker from './TimeSlotPicker';
-import ServiceSummary from './ServiceSummary';
+import type { AcuityAppointmentType } from '@services/acuityIntegration';
+import ServiceSchedulingCalendar from '@components/ServiceSchedulingCalendar';
+import TimeSlotPicker from '@components/TimeSlotPicker';
+import ServiceSummary from '@components/ServiceSummary';
+
+// Services
+import { getAvailableTimeSlots, createAppointment } from '@services/acuity';
+import { validateScheduling, validateBookingDetails } from '@services/validation';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
 
 const BookingErrorFallback: React.FC<{ error: string; onRetry: () => void }> = ({ error, onRetry }) => (
   <div className="text-center py-8">

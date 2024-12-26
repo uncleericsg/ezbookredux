@@ -1,7 +1,7 @@
 import React from 'react';
-import CustomMessageScheduler from './CustomMessageScheduler';
-import { Card, CardContent, CardHeader, CardTitle } from '@components/molecules/card';
-import { cn } from '@/lib/utils';
+import CustomMessageScheduler from '~/components/notifications/CustomMessageScheduler';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/molecules/card';
+import { cn } from '@utils/cn';
 
 interface NotificationTemplatesProps {
   className?: string;

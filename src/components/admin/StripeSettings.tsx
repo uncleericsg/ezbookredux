@@ -1,5 +1,6 @@
-import React from 'react';
 import { Key, Loader2, Save } from 'lucide-react';
+import React from 'react';
+
 import type { AcuitySettings } from '../../types/settings';
 
 interface StripeSettingsProps {

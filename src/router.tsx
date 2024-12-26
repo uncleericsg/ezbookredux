@@ -13,68 +13,85 @@ import {
   BrowserRouter
 } from 'react-router-dom';
 import { startTransition, Suspense } from 'react';
-import App from './App';
-import Layout from './components/Layout';
-import ServiceCategorySelection from './components/ServiceCategorySelection';
-import UserProfile from './components/UserProfile';
-import Login from './components/Login';
-import Notifications from './components/Notifications';
-import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute';
-import NotFound from './components/NotFound';
-import { LoadingScreen } from './components/LoadingScreen';
-import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
-import { AdminViewProvider } from './contexts/AdminViewContext';
-import PriceSelectionPage from './components/booking/PriceSelectionPage';
-import FirstTimeBookingFlow from './components/booking/FirstTimeBookingFlow';
-import ReturnCustomerBooking from './components/booking/ReturnCustomerBooking';
+import App from '@/App';
+import { ROUTES } from '@config/routes';
+import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
+import { LoadingScreen } from '@components/LoadingScreen';
 
-const RouterComponent: React.FC = () => {
+// Core Components
+import Layout from '@components/Layout';
+import Login from '@components/Login';
+import NotFound from '@components/NotFound';
+import Notifications from '@components/Notifications';
+import ProtectedRoute from '@components/ProtectedRoute';
+import PublicRoute from '@components/PublicRoute';
+import ServiceCategorySelection from '@components/ServiceCategorySelection';
+import ServicePricingSelection from '@components/ServicePricingSelection';
+import UserProfile from '@components/UserProfile';
+import AMCSignup from '@components/AMCSignup';
+
+// Booking Components
+import BookingConfirmation from '@booking/BookingConfirmation';
+import FirstTimeBookingFlow from '@booking/FirstTimeBookingFlow';
+import PriceSelectionPage from '@booking/PriceSelectionPage';
+import ReturnCustomerBooking from '@booking/ReturnCustomerBooking';
+
+// Admin Components
+import AdminBookings from '@admin/AdminBookings';
+import AdminDashboard from '@admin/AdminDashboard';
+import AdminSettings from '@admin/AdminSettings';
+import ServiceHub from '@admin/ServiceHub/ServiceHub';
+import UserManagement from '@admin/UserManagement';
+
+// Test Components
+import SupabaseTest from '@components/test/SupabaseTest';
+
+const RouterComponent = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
         <Suspense fallback={<LoadingScreen />}>
-          <AdminViewProvider>
-            <Routes>
-              <Route path="/" element={<App />}>
-                {/* Routes with Layout (Navbar & Footer) */}
-                <Route element={<Layout />}>
-                  <Route index element={<ServiceCategorySelection />} />
-                  <Route path="returncustomer" element={<ReturnCustomerBooking />} />
-                  <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
-                  <Route
-                    path="profile"
-                    element={
-                      <ProtectedRoute>
-                        <UserProfile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="notifications"
-                    element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Route>
-
-                {/* Routes without Layout (No Navbar & Footer) */}
-                <Route path="booking">
-                  <Route path="price-selection" element={<PriceSelectionPage />} />
-                  <Route path="first-time/*" element={<FirstTimeBookingFlow />} />
-                </Route>
-
-                {/* 404 Route */}
-                <Route path="*" element={<NotFound />} />
+          <Routes>
+            <Route path="/" element={<App />}>
+              {/* Routes WITH Layout */}
+              <Route element={<Layout />}>
+                <Route index element={<ServiceCategorySelection />} />
+                <Route path={ROUTES.HOME} element={<ServiceCategorySelection />} />
+                <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
+                <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               </Route>
-            </Routes>
-          </AdminViewProvider>
+
+              {/* Routes WITHOUT Layout */}
+              <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
+              <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
+              <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
+              <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
+              <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
+              <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
+
+              {/* Admin Routes - All WITHOUT Layout */}
+              <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.BOOKINGS} element={<ProtectedRoute adminOnly><AdminBookings /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute adminOnly><ServiceHub /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute adminOnly><AdminSettings /></ProtectedRoute>} />
+
+              {/* Test Routes */}
+              {process.env.NODE_ENV === 'development' && (
+                <Route path="/test/supabase" element={<SupabaseTest />} />
+              )}
+
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
         </Suspense>
       </ErrorBoundary>
     </BrowserRouter>
   );
 };
+
+RouterComponent.displayName = 'RouterComponent';
 
 export default RouterComponent;

@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { 
     Users2, 
     CheckCircle2, 
@@ -7,11 +6,16 @@ import {
     RefreshCw,
     Plus
 } from 'lucide-react';
-import TeamList from './TeamList';
+import React, { useState } from 'react';
+
+import { mockTeams } from '@data/teams';
+
 import TeamAssignments from './TeamAssignments';
+import TeamList from './TeamList';
 import TeamModal from './TeamModal';
-import { Team } from '../../../types/teams';
-import { mockTeams } from '../../../data/teams';
+
+import type { Team } from '@types/teams';
+
 
 const TeamManagement: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>(mockTeams);

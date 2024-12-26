@@ -1,14 +1,12 @@
 import React from 'react';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
-import TikTokIcon from './icons/TikTokIcon';
-import { useSocialLinks } from '../hooks/useSocialLinks';
-import RatingsDisplay from './RatingsDisplay';
-import AdminViewToggle from './admin/AdminViewToggle';
-import { useAdminView } from '../contexts/AdminViewContext';
+import TikTokIcon from '@components/icons/TikTokIcon';
+import { useSocialLinks } from '@hooks/useSocialLinks';
+import RatingsDisplay from '@components/RatingsDisplay';
+import { useAppSelector } from '@store/hooks';
 
-const Footer: React.FC = () => {
+const Footer = () => {
   const { socialLinks, loading } = useSocialLinks();
-  const { currentView, setCurrentView } = useAdminView();
 
   return (
     <footer className="bg-gray-800 border-t border-gray-700 py-14">
@@ -62,26 +60,16 @@ const Footer: React.FC = () => {
               )}
             </div>
           )}
-          
-          <div className="flex flex-col items-center space-y-4">
-            {/* Temporarily disabled admin view toggle
-            {process.env.NODE_ENV !== 'production' && (
-              <div className="mb-4">
-                <AdminViewToggle
-                  currentView={currentView}
-                  onViewChange={setCurrentView}
-                />
-              </div>
-            )}
-            */}
-            <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} iAircon Easy Booking. All rights reserved.
-            </p>
+
+          <div className="text-gray-400 text-sm text-center">
+            <p>&copy; {new Date().getFullYear()} iAircon Easy Booking. All rights reserved.</p>
           </div>
         </div>
       </div>
     </footer>
   );
 };
+
+Footer.displayName = 'Footer';
 
 export default Footer;

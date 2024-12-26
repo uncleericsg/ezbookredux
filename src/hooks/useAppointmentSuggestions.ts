@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { addDays, startOfDay, format, isSameDay } from 'date-fns';
 import { useUserRedux } from './useUserRedux';
 import { usePublicHolidays } from './usePublicHolidays';
-import { fetchServiceReports } from '../services/repairShopr';
-import { fetchNearbyBookings, determineRegion } from '../services/locations';
-import { fetchAvailableSlots, fetchBlockedTimes } from '../services/acuity';
+import { fetchServiceReports } from '@services/repairShopr';
+import { fetchNearbyBookings, determineRegion } from '@services/locations';
+import { fetchAvailableSlots, fetchBlockedTimes } from '@services/acuity';
 import { useToast } from './useToast';
 
 export const useAppointmentSuggestions = () => {

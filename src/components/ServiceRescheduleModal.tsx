@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import { format, addDays, isBefore } from 'date-fns';
-import { useTimeSlots } from '../hooks/useTimeSlots';
-import { useToast } from '../hooks/useToast';
-import TimeSlotPicker from './TimeSlotPicker';
+import { useTimeSlots } from '@hooks/useTimeSlots';
+import { useToast } from '@hooks/useToast';
+import TimeSlotPicker from '@components/TimeSlotPicker';
 
 interface ServiceRescheduleModalProps {
   isOpen: boolean;

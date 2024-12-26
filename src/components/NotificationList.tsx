@@ -2,10 +2,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Shield, AlertTriangle, ChevronRight } from 'lucide-react';
-import { LoadingScreen } from './LoadingScreen';
-import NotificationActions from './NotificationActions';
+import { LoadingScreen } from '@components/LoadingScreen';
+import NotificationActions from '@components/NotificationActions';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Notification } from '../types';
+import type { Notification } from '@types';
 
 interface NotificationListProps {
   notifications: Notification[];

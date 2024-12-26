@@ -1,13 +1,17 @@
 import express from 'express';
 import Stripe from 'stripe';
-import cors from 'cors';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase.server';
 import { config } from 'dotenv';
 
 config(); // Load environment variables
 
-const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY!, {
+if (!process.env.VITE_STRIPE_SECRET_KEY) {
+  throw new Error('Missing Stripe secret key');
+}
+
+const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
-  typescript: true,
 });
 
 const router = express.Router();
@@ -21,14 +25,7 @@ interface CreatePaymentIntentRequest {
   bookingId: string;
 }
 
-// Enable CORS for your frontend domain
-router.use(cors({
-  origin: process.env.VITE_APP_URL || 'http://localhost:5173',
-  methods: ['POST', 'GET'],
-  credentials: true,
-}));
-
-// Create payment intent
+// Create payment intent endpoint
 router.post('/create-payment-intent', async (req, res) => {
   try {
     console.log('Received payment intent request:', req.body);
@@ -36,256 +33,188 @@ router.post('/create-payment-intent', async (req, res) => {
     const { 
       amount, 
       tipAmount = 0,
-      currency = 'SGD',
+      currency = 'sgd',
       serviceId,
       customerId,
       bookingId 
     } = req.body as CreatePaymentIntentRequest;
 
+    // Validate required fields
     if (!amount || !serviceId || !bookingId) {
-      console.error('Missing required parameters:', { amount, serviceId, bookingId });
-      return res.status(400).json({
-        error: 'Missing required parameters',
-        details: { amount, serviceId, bookingId }
-      });
-    }
-
-    const totalAmount = Math.round((amount + tipAmount) * 100);
-    console.log('Creating payment intent:', {
-      totalAmount,
-      currency: currency.toLowerCase(),
-      serviceId,
-      customerId,
-      bookingId
-    });
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalAmount,
-      currency: currency.toLowerCase(),
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always'
-      },
-      payment_method_options: {
-        card: {
-          request_three_d_secure: 'automatic',
-          setup_future_usage: 'off_session'
+      return res.status(400).json({ 
+        error: {
+          message: 'Missing required fields',
+          code: 'MISSING_FIELDS'
         }
-      },
-      metadata: {
-        serviceId,
-        customerId,
-        bookingId,
-        baseAmount: amount,
-        tipAmount,
-        createdAt: new Date().toISOString()
-      }
-    });
-
-    console.log('Payment intent created successfully:', paymentIntent.id);
-    return res.status(200).json({
-      clientSecret: paymentIntent.client_secret,
-      id: paymentIntent.id
-    });
-  } catch (err) {
-    console.error('Error creating payment intent:', err);
-    
-    if (err instanceof Stripe.errors.StripeError) {
-      return res.status(err.statusCode || 500).json({
-        error: err.message,
-        type: err.type,
-        code: err.code
       });
     }
-    
-    return res.status(500).json({
-      error: 'Failed to create payment intent',
-      details: err instanceof Error ? err.message : 'Unknown error'
+
+    const { clientSecret, id } = await createPaymentIntent(amount, serviceId, bookingId, tipAmount, currency, customerId);
+
+    // Return successful response
+    res.json({
+      clientSecret,
+      intentId: id
+    });
+
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({
+      error: {
+        message: error instanceof Error ? error.message : 'Failed to create payment intent',
+        code: 'PAYMENT_INTENT_FAILED'
+      }
     });
   }
 });
 
-// Webhook handling
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-
+export const createPaymentIntent = async (
+  amount: number,
+  serviceId: string,
+  bookingId: string,
+  tipAmount: number = 0,
+  currency: string = 'sgd',
+  customerId?: string,
+): Promise<{ clientSecret: string; id: string }> => {
   try {
-    if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-      throw new Error('Missing webhook signature or secret');
+    // Create Stripe payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round((amount + tipAmount) * 100),
+      currency: currency.toLowerCase(),
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    console.log('Created payment intent:', paymentIntent.id);
+
+    try {
+      // Generate a UUID for the payment record
+      const paymentUuid = uuidv4();
+
+      // Validate UUIDs
+      const isValidUUID = (str: string) => {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+      };
+
+      // Create payment record
+      const { error: dbError } = await supabase
+        .from('payments')
+        .insert([{
+          id: paymentUuid,
+          payment_intent_id: paymentIntent.id,
+          amount: Math.round(amount),
+          tip_amount: Math.round(tipAmount),
+          currency: currency.toLowerCase(),
+          status: 'pending',
+          service_id: serviceId,
+          customer_id: customerId && isValidUUID(customerId) ? customerId : null,
+          booking_id: bookingId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+
+      if (dbError) {
+        console.error('Database error creating payment:', dbError);
+        throw new Error(`Error creating payment record: ${dbError.message}`);
+      }
+
+      console.log('Payment record created successfully:', {
+        id: paymentUuid,
+        payment_intent_id: paymentIntent.id,
+        booking_id: bookingId
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret as string,
+        id: paymentIntent.id
+      };
+
+    } catch (error) {
+      console.error('Error creating payment record:', error);
+      throw error;
     }
 
+  } catch (error) {
+    console.error('Payment creation failed:', error);
+    throw error;
+  }
+};
+
+// Stripe webhook handler
+router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!sig || !webhookSecret) {
+    return res.status(400).json({ 
+      error: {
+        message: 'Missing signature or webhook secret',
+        code: 'INVALID_WEBHOOK'
+      }
+    });
+  }
+
+  try {
     const event = stripe.webhooks.constructEvent(
-      req.body,
+      (req as any).rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret
     );
 
     // Handle the event
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment succeeded:', paymentIntent.id);
-        // Handle successful payment
+        await handleSuccessfulPayment(paymentIntent);
         break;
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment failed:', failedPayment.id);
-        // Handle failed payment
+        await handleFailedPayment(failedPayment);
         break;
-      default:
-        console.log(`Unhandled event type ${event.type}`);
     }
 
     res.json({ received: true });
   } catch (err) {
     console.error('Webhook error:', err);
-    res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-  }
-});
-
-// Payment confirmation endpoint
-router.post('/confirm', async (req, res) => {
-  try {
-    const { paymentIntentId } = req.body;
-
-    if (!paymentIntentId) {
-      return res.status(400).json({
-        error: 'Missing payment intent ID'
-      });
-    }
-
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
-    if (paymentIntent.status === 'succeeded') {
-      return res.json({ 
-        success: true,
-        paymentIntent: {
-          id: paymentIntent.id,
-          amount: paymentIntent.amount,
-          status: paymentIntent.status,
-          metadata: paymentIntent.metadata
-        }
-      });
-    } else {
-      return res.json({
-        success: false,
-        status: paymentIntent.status
-      });
-    }
-  } catch (err) {
-    console.error('Error confirming payment:', err);
-    return res.status(500).json({
-      error: 'Failed to confirm payment'
+    res.status(400).json({ 
+      error: {
+        message: 'Webhook signature verification failed',
+        code: 'WEBHOOK_VERIFICATION_FAILED'
+      }
     });
   }
 });
 
-// Consolidated payment confirmation endpoint
-router.post('/confirm', async (req, res) => {
+// Handle successful payment
+const handleSuccessfulPayment = async (paymentIntent: Stripe.PaymentIntent) => {
   try {
-    const { paymentIntentId } = req.body;
+    const { data, error } = await supabase
+      .from('payments')
+      .update({ status: 'succeeded' })
+      .eq('payment_intent_id', paymentIntent.id);
 
-    if (!paymentIntentId) {
-      return res.status(400).json({
-        error: 'Missing payment intent ID'
-      });
-    }
-
-    // Retrieve and verify payment intent
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
-    if (paymentIntent.status === 'succeeded') {
-      // Payment successful, send confirmation with metadata
-      return res.json({ 
-        success: true,
-        paymentIntent: {
-          id: paymentIntent.id,
-          amount: paymentIntent.amount,
-          status: paymentIntent.status,
-          paymentMethod: paymentIntent.payment_method,
-          metadata: paymentIntent.metadata
-        }
-      });
-    } else {
-      // Payment not successful
-      return res.status(400).json({ 
-        error: 'Payment not successful',
-        status: paymentIntent.status 
-      });
-    }
+    if (error) throw error;
+    console.log('Payment success recorded:', paymentIntent.id);
   } catch (error) {
-    console.error('Error confirming payment:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Failed to confirm payment'
-    });
+    console.error('Error handling payment success:', error);
   }
-});
+};
 
-// Service queue endpoint
-router.post('/queue', async (req, res) => {
+// Handle failed payment
+const handleFailedPayment = async (paymentIntent: Stripe.PaymentIntent) => {
   try {
-    const { customerId, serviceId, scheduledDate, status, paymentConfirmed } = req.body;
+    const { data, error } = await supabase
+      .from('payments')
+      .update({ status: 'failed' })
+      .eq('payment_intent_id', paymentIntent.id);
 
-    // Log the received data
-    console.log('Queue request received:', req.body);
-
-    // More flexible validation
-    if (!serviceId) {
-      return res.status(400).json({
-        error: 'Missing service details',
-        details: 'serviceId is required'
-      });
-    }
-
-    // Create service request with available data
-    const serviceRequest = {
-      serviceId,
-      customerId: customerId || 'anonymous',
-      scheduledDate: scheduledDate || new Date().toISOString(),
-      status: status || 'pending',
-      paymentConfirmed: paymentConfirmed || true
-    };
-
-    // Here you would typically add the service request to your database
-    console.log('Adding service request to queue:', serviceRequest);
-
-    return res.json({ 
-      success: true,
-      message: 'Service request queued successfully',
-      serviceRequest
-    });
+    if (error) throw error;
+    console.log('Payment failure recorded:', paymentIntent.id);
   } catch (error) {
-    console.error('Error adding to service queue:', error);
-    return res.status(500).json({
-      error: 'Failed to add to service queue',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
+    console.error('Error handling payment failure:', error);
   }
-});
-
-// Payment error logging endpoint
-router.post('/error', async (req, res) => {
-  try {
-    const { error } = req.body;
-
-    if (!error) {
-      return res.status(400).json({
-        error: 'Missing error details'
-      });
-    }
-
-    // Here you would typically log the error to your database or logging service
-    // For now, we'll just return success
-    return res.json({ 
-      success: true,
-      message: 'Error logged successfully'
-    });
-  } catch (error) {
-    console.error('Error logging payment error:', error);
-    return res.status(500).json({
-      error: 'Failed to log payment error'
-    });
-  }
-});
+};
 
 export default router;

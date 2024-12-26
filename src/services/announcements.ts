@@ -1,4 +1,4 @@
-import type { Announcement } from '../types';
+import type { Announcement } from '@types';
 
 export const fetchAnnouncements = async (): Promise<Announcement[]> => {
   // In a real app, this would fetch from an API

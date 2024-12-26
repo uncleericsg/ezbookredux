@@ -1,16 +1,17 @@
-import { configureStore, combineReducers, AnyAction, Reducer } from '@reduxjs/toolkit';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import type { AnyAction, Reducer } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import type { TypedUseSelectorHook, PreloadedState } from 'react-redux';
 
 // Import reducers
-import userReducer from './slices/userSlice';
-import authReducer from './slices/authSlice';
-import adminReducer from './slices/adminSlice';
-import technicianReducer from './slices/technicianSlice';
-import bookingReducer from './slices/bookingSlice';
-import { mockAuthState, mockUserState, mockAdminState, mockTechnicianState } from '../mocks/data';
+import userReducer from '@store/slices/userSlice';
+import authReducer from '@store/slices/authSlice';
+import adminReducer from '@store/slices/adminSlice';
+import technicianReducer from '@store/slices/technicianSlice';
+import bookingReducer from '@store/slices/bookingSlice';
 
 // Action type for resetting the entire store
-export const RESET_STORE = 'RESET_STORE';
+const RESET_STORE = 'RESET_STORE';
 
 // Define the initial state with proper typing
 const initialState = {
@@ -18,6 +19,9 @@ const initialState = {
     currentUser: null,
     loading: false,
     error: null,
+    paymentStatus: 'idle',
+    verificationId: null,
+    phone: null,
   },
   auth: {
     isAuthenticated: false,
@@ -27,20 +31,29 @@ const initialState = {
   },
   admin: {
     isAdmin: false,
+    currentView: 'regular',
     adminData: null,
     loading: false,
     error: null,
   },
   technician: {
-    // Add initial state for technician
+    currentTechnician: null,
+    technicians: [],
+    schedules: [],
+    loading: false,
+    error: null,
   },
   booking: {
-    // Add initial state for booking
-  },
-} as const;
+    bookings: [],
+    currentBooking: null,
+    loading: false,
+    error: null,
+    filters: {}
+  }
+};
 
 // Define the app state type
-export interface AppState {
+interface AppState {
   user: ReturnType<typeof userReducer>;
   auth: ReturnType<typeof authReducer>;
   admin: ReturnType<typeof adminReducer>;
@@ -57,44 +70,41 @@ const reducers = {
   booking: bookingReducer,
 };
 
-// Create combined reducer
-const appReducer = combineReducers(reducers);
-
 // Root reducer that handles store reset
-const rootReducer: Reducer = (state: AppState | undefined, action: AnyAction): AppState => {
+const rootReducer = (state: AppState | undefined, action: AnyAction): AppState => {
   if (action.type === RESET_STORE) {
-    // Return a fresh copy of initial state
-    return JSON.parse(JSON.stringify(initialState));
+    return initialState as AppState;
   }
-
-  // Pass the state to the combined reducer
-  return appReducer(state, action);
+  return combineReducers(reducers)(state as any, action);
 };
 
 // Configure store with middleware
-export const store = configureStore({
+const store = configureStore({
   reducer: rootReducer,
-  preloadedState: {
-    auth: mockAuthState,
-    user: mockUserState,
-    admin: mockAdminState,
-    technician: mockTechnicianState,
-    booking: {}, // Add initial state for booking
-  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [RESET_STORE],
-        ignoredActionPaths: ['payload.createdAt', 'payload.updatedAt'],
-        ignoredPaths: ['user.currentUser.createdAt', 'user.currentUser.updatedAt'],
-      },
+      serializableCheck: false,
     }),
   devTools: process.env.NODE_ENV !== 'production',
+  preloadedState: initialState as PreloadedState<AppState>
 });
 
-// Export types and hooks
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+// Type declarations
+type RootState = ReturnType<typeof store.getState>;
+type AppDispatch = typeof store.dispatch;
 
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+// Hook declarations
+const useAppDispatch = () => useDispatch<AppDispatch>();
+const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+// Export types
+export type { AppState, RootState, AppDispatch };
+
+// Export values
+export { 
+  RESET_STORE, 
+  initialState, 
+  store, 
+  useAppDispatch, 
+  useAppSelector 
+};

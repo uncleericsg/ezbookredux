@@ -1,14 +1,11 @@
 'use client';
 
-import * as SwitchPrimitives from '@radix-ui/react-switch';
 import * as React from 'react';
-
-import { cn } from '@/lib/utils';
+import * as SwitchPrimitives from '@radix-ui/react-switch';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@utils/cn';
 
 export type SwitchProps;
-
-
-// Export types at the top
 
 /**
  * Switch component for toggling between two states

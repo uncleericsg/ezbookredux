@@ -1,55 +1,83 @@
-Always read the .cascade-config.json file first and ensure all changes follow the project conventions.
+1. Project Overview:
 
-Always follow the .cascade-config.json from: c:\Users\djxpi\OneDrive\Documents\2024_iAircon_EasyBooking_WINDSURF\CascadeProjects\windsurf-project\project
+- App Description: This is a web app for iAircon Easy Booking, an easy-to-use appointment booking platform designed for users, customers, and technicians.
+- Admin Backend: Includes features for managing customers, technicians, and services.
+Design: Focuses on simplicity and user-friendliness with a dark mode-only design, optimized for mobile devices, and adheres to the latest industry standards.
+- Technologies:
+- Database and auth: Supabase
+- Redux integration
+- Firebase OTP verification
+- Firebase Cloud Messaging
+- Stripe Payments
+- ChatGPT API
+- Full CRM system
 
-Do not damage any of the UI features and components while working at all times
+2. Rules for Changes and Modifications:
 
-always read the @ai protection policy on page if available and do not break any visual, remove any current UI features or create any new ones without consent.
+2.1 General Guidelines:
+- Always analyze and think before making any changes. Do not assume or overcomplicate matters.
+- Refer to the project objectives and details to provide a suitable solution or plan.
+- Always check the .cascade-config.json file first and ensure all changes follow the project conventions.
+- Do not damage any UI features and components unless given consent.
 
-All Component files, always verify:
-1. Types/interfaces are exported at the top
-2. Component is declared as a const
-3. displayName is added
-4. Both named and default exports are included at the bottom
-5. All files align with .cascade-config.json requirements
+2.2 UI & Visual Protection:
 
-Do not edit the eslint.config.js file without my consent.
+- Always read the @ai protection policy page (if available).
+- Do not break any visuals, remove current UI features, or create new ones without explicit consent.
 
-Before any major changes like UI library migrations, must provide a checklist.
+2.3 Component Files Verification:
 
-Before proceeding with any major changes, please:
-1. List all files that will be affected
-2. Provide a detailed and systematic plan
-3. Explain how you'll maintain consistency across the codebase
+- Verify the following for all component files:
+- Types/interfaces are exported at the top.
+- The component is declared as a constant (const).
+- The displayName is added.
+- Both named and default exports are included at the bottom.
+- Files align with the .cascade-config.json requirements.
 
-Systematic Changes Request When requesting changes that affect multiple files:
-Please make changes systematically:
-1. First show all files that need changes
-2. Explain the pattern you'll apply
-3. Make changes in small, verifiable batches
-4. Verify each batch before proceeding
+2.4 Sensitive Files:
 
-Framework Verification Before implementing features:
-Please verify:
-1. What routing library we're using
-2. What UI components we're using
-3. What state management we're using
-4. Show me the relevant imports before making changes
+- Do not edit the eslint.config.js file without explicit consent.
 
-Consistency Check After making changes:
-Please verify:
-1. All exports follow our project convention
-2. All imports match their corresponding exports
-3. No framework-specific code is mixed (e.g., Next.js with React Router)
-4. All component patterns are consistent
+3. Major Changes Protocol: 3.1 Before Major Changes (e.g., UI library migrations):
 
-Change Scope When making changes:
-Please:
-1. List all files you plan to modify
-2. Explain why each file needs changes
-3. Show the pattern you'll apply
-4. Make changes in small batches
-5. Test each batch before proceeding
+- Provide a checklist.
+- List all files that will be affected.
+- Provide a detailed and systematic plan.
+- Explain how you’ll maintain consistency across the codebase.
 
-ALWAYS CLARIFIY BEFORE EXECUTING ANY FILE CHANGES:
-Seek for clarifications before executing any file, UI and visual changes or adding new features, never overwrite and change any UI or visuals without my permission.
+3.2 Systematic Changes Request (affecting multiple files):
+
+- First, list all files that need changes.
+- Explain the pattern you will apply to each file.
+- Make changes in small, verifiable batches.
+- Verify each batch before proceeding.
+
+4. Framework Verification: 4.1 Before Implementing Features:
+
+Verify the following:
+- What routing library we’re using.
+- What UI components we’re using.
+- What state management we’re using.
+- Show relevant imports before making any changes.
+
+5. Consistency Check After Changes: 5.1 After Making Changes:
+
+Verify the following:
+- All exports follow the project convention.
+- All imports match their corresponding exports.
+- No framework-specific code is mixed (e.g., Next.js with React Router).
+- All component patterns are consistent.
+
+6. Change Scope and Execution: 
+
+6.1 When Making Changes:
+- List all files you plan to modify.
+- Explain why each file needs changes.
+- Show the pattern you’ll apply.
+- Make changes in small batches.
+- Test each batch before proceeding.
+
+6.2 Clarification Before Executing Changes:
+
+- Always seek clarification before executing any file changes, UI or visual changes, or adding new features.
+- Never overwrite or change UI/visuals without permission.

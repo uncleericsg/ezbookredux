@@ -1,7 +1,8 @@
 import React from 'react';
 import { CheckCircle, Calendar, Clock, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { useUser } from '../contexts/UserContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store';
 
 interface ServiceConfirmationProps {
   date: Date;
@@ -14,7 +15,7 @@ const ServiceConfirmation: React.FC<ServiceConfirmationProps> = ({
   time,
   isAMC,
 }) => {
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
 
   return (
     <div className="text-center py-8">

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
-import { Team } from '../../../types/teams';
-import { mockTeams } from '../../../data/teams';
+import React, { useState, useEffect } from 'react';
+
+import { mockTeams } from '@data/teams';
+
+import type { Team } from '@types/teams';
 
 interface TeamAssignmentsProps {
     teams: Team[];

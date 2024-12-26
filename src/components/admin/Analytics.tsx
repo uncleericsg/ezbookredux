@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useAnalytics } from '../../hooks/useAnalytics';
 import { Loader2, TrendingUp, Users, Star } from 'lucide-react';
+import React, { useEffect } from 'react';
+
+import { useAnalytics } from '@hooks/useAnalytics';
 
 const Analytics: React.FC = () => {
   const { data, loading, error } = useAnalytics();

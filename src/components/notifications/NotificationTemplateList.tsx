@@ -1,26 +1,26 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Search, Trash2 } from 'lucide-react';
-import TemplateItem from './TemplateItem';
-import { ITEMS_PER_PAGE, SORT_OPTIONS, TEST_IDS } from './constants/templateConstants';
-import type { TemplateListProps, NotificationTemplate } from '../../types/notifications';
-import { Button } from '@components/atoms/button';
+import TemplateItem from '~/components/notifications/TemplateItem';
+import { ITEMS_PER_PAGE, SORT_OPTIONS, TEST_IDS } from '~/components/notifications/constants/templateConstants';
+import type { TemplateListProps, NotificationTemplate } from '~/types/notifications';
+import { Button } from '~/components/atoms/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@components/molecules/Select';
-import { Input } from '@components/atoms/Input';
-import { ScrollArea } from '@components/molecules/ScrollArea';
-import { Skeleton } from '@components/atoms/Skeleton';
+} from '~/components/molecules/Select';
+import { Input } from '~/components/atoms/Input';
+import { ScrollArea } from '~/components/molecules/ScrollArea';
+import { Skeleton } from '~/components/atoms/Skeleton';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-} from '@components/atoms/Alert';
-import { useRetry } from '../../hooks/useRetry';
-import { cn } from '@/lib/utils';
+} from '~/components/atoms/Alert';
+import { useRetry } from '~/hooks/useRetry';
+import { cn } from '@utils/cn';
 
 /**
  * NotificationTemplateList Component

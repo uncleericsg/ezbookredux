@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Announcement } from '../types';
+import type { Announcement } from '@types';
+import { toast } from 'sonner';
 import { fetchAnnouncements } from '../services/announcements';
 
 export const useAnnouncements = () => {

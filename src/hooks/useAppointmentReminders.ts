@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { addDays } from 'date-fns';
-import { useUserRedux } from '../contexts/UserContext';
-import { scheduleServiceReminder } from '../services/notifications';
-import { useToast } from './useToast';
+import { useUserRedux } from '@contexts/UserContext';
+import { scheduleServiceReminder } from '@services/notifications';
+import { useToast } from '@hooks/useToast';
 
 export const useAppointmentReminders = (appointmentDate: string) => {
   const { user } = useUserRedux();

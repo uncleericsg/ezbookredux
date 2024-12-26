@@ -3,19 +3,18 @@
 import { Save } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { cn } from '@/lib/utils';
+import { Button } from '@components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/Card';
+import { Input } from '@components/ui/Input';
+import { Label } from '@components/ui/Label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/Select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/Tabs';
 
 export interface BillingSettingsData;
 
 export interface BillingSettingsProps;
-
 
 ;
   invoiceSettings: {
@@ -95,7 +94,7 @@ const BillingSettings = ({
   };
 
   return (
-    <Card className={cn('', className)} {...props}>
+    <Card className={className} {...props}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Billing Settings</span>

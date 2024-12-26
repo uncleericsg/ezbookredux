@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import axios from 'axios';
-import { hashPassword } from './auth';
 import type { User } from '../types';
 
 const userSchema = z.object({

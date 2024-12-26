@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { updateHolidayGreeting, deleteHolidayGreeting } from '../services/notifications';
-import { fetchPublicHolidays } from '../services/publicHolidays';
+import { updateHolidayGreeting, deleteHolidayGreeting } from '@services/notifications';
+import { fetchPublicHolidays } from '@services/publicHolidays';
 import { parseISO, isValid, addDays, startOfDay, isBefore, isAfter } from 'date-fns';
-import type { HolidayGreeting } from '../types';
+import type { HolidayGreeting } from '@types';
 import { toast } from 'sonner';
 
 const DAYS_AHEAD = 90;

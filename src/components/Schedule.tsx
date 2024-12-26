@@ -1,10 +1,12 @@
 import React from 'react';
-import ServiceScheduling from './ServiceScheduling';
-import ServiceReminder from './ServiceReminder';
-import { useUser } from '../contexts/UserContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store';
+import { useAppointments } from '@hooks/useAppointments';
+import ServiceScheduling from '@components/ServiceScheduling';
+import ServiceReminder from '@components/ServiceReminder';
 
 const Schedule: React.FC = () => {
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
 
   const handleSchedule = () => {
     document.getElementById('scheduling-form')?.scrollIntoView({ behavior: 'smooth' });

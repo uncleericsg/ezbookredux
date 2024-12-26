@@ -15,7 +15,7 @@
  * 
  * Protected Aspects:
  * @ai-visual-protection: The payment UI design and styling must be preserved exactly as is
- * @ai-flow-protection: The payment flow and validation sequence must not be altered
+ * @ai-flow-protection: The payment payment flow and validation sequence must not be altered
  * @ai-state-protection: The payment state management pattern is optimized and stable
  * @ai-stripe-protection: The Stripe integration must follow security best practices
  * 
@@ -87,50 +87,59 @@ export interface PaymentStepProps {
     };
     bookingId?: string;
     otherIssue?: string;
+    isFirstTimeFlow?: boolean;
   };
   onComplete: (reference: string) => void;
   onBack: () => void;
 }
 
-export interface PaymentState {
+interface PaymentState {
   status: string;
   clientSecret: string | null;
   error: string | null;
   tipAmount: number;
 }
 
+interface PaymentStepContentProps {
+  paymentState: PaymentState;
+  setPaymentState: React.Dispatch<React.SetStateAction<PaymentState>>;
+  bookingData: PaymentStepProps['bookingData'];
+  onBack: () => void;
+  onSuccess: () => void;
+}
+
 // React and hooks
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // External libraries
-import { Elements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import { motion } from 'framer-motion';
-import { HiHeart } from 'react-icons/hi2';
+import { FiCreditCard } from 'react-icons/fi';
 import { ImSpinner8 } from 'react-icons/im';
+import { HiHeart } from 'react-icons/hi2';
 import { format } from 'date-fns';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Components
-import { PaymentForm } from '../payment/PaymentForm';
-import { BookingSummary } from './BookingSummary';
-import { BookingConfirmation } from './BookingConfirmation';
-import { PaymentErrorBoundary } from '../payment/PaymentErrorBoundary';
+import { BookingSummary } from '@components/booking/BookingSummary';
+import { BookingConfirmation } from '@components/booking/BookingConfirmation';
+import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
 
 // Redux
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setError, setPaymentStatus } from '../../store/slices/userSlice';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { setError, setPaymentStatus } from '@store/slices/userSlice';
+import { setCurrentBooking, updateBooking } from '@store/slices/bookingSlice';
 
 // Constants and Utils
-import { PAYMENT_STATES } from '../../constants';
-import { cn } from '../../lib/utils';
+import { PAYMENT_STATES } from '@constants/payment';
 
 // Services
-import {
-  createPaymentIntent,
-  addToServiceQueue,
-} from '../../services/paymentService';
-import { getStripe } from '../../services/stripe';
+import { getStripe } from '@services/stripe';
+import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
+import { createBooking } from '@services/supabaseBookingService';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
 
 const initialPaymentState: PaymentState = {
   status: PAYMENT_STATES.INITIALIZING,
@@ -139,6 +148,42 @@ const initialPaymentState: PaymentState = {
   tipAmount: 0
 };
 
+// Enhanced logging for mobile debugging
+const logPaymentEvent = (event: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  const deviceInfo = {
+    type: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+    userAgent: navigator.userAgent,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight
+    },
+    online: navigator.onLine
+  };
+
+  console.log(`[PaymentStep ${timestamp}] ${event}`, {
+    ...data,
+    device: deviceInfo
+  });
+};
+
+// Utility functions
+const calculateTotalAmount = (baseAmount: number, tipAmount: number = 0) => {
+  return baseAmount + tipAmount;
+};
+
+// Add network utility functions
+const checkNetworkConnection = () => {
+  return {
+    online: navigator.onLine,
+    type: (navigator as any).connection?.type || 'unknown',
+    effectiveType: (navigator as any).connection?.effectiveType || 'unknown'
+  };
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Main Payment Step Component - Handles initialization and Elements wrapping
 const PaymentStep: React.FC<PaymentStepProps> = ({
   bookingData,
   onComplete,
@@ -146,11 +191,284 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 }: PaymentStepProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
+  const { currentUser, error: userError } = useAppSelector((state) => state.user);
+  const { currentBooking } = useAppSelector((state) => state.booking);
+
+  // Clear any existing errors on mount
+  useEffect(() => {
+    if (userError) {
+      logPaymentEvent('Clearing existing user error');
+      dispatch(setError(null));
+    }
+  }, [dispatch, userError]);
+
+  // Ensure booking data is in Redux store
+  useEffect(() => {
+    if (bookingData && (!currentBooking || currentBooking.id !== bookingData.bookingId)) {
+      logPaymentEvent('Setting current booking in Redux', bookingData);
+      dispatch(setCurrentBooking({
+        id: bookingData.bookingId,
+        serviceType: bookingData.selectedService?.title || '',
+        date: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
+        time: bookingData.scheduledTimeSlot || '',
+        status: 'Pending',
+        amount: bookingData.selectedService?.price || 0,
+        customerInfo: bookingData.customerInfo || null
+      }));
+    }
+  }, [bookingData, currentBooking, dispatch]);
+
+  // State management
+  const [isLoading, setIsLoading] = useState(false);  // Start with false to prevent UI flicker
+  const [paymentState, setPaymentState] = useState(initialPaymentState);
+  const [stripePromise] = useState(getStripe);
+
+  // Add initialization timing tracking
+  const initStartTime = useRef<number>(0);
+  const mountTime = useRef<number>(Date.now());
+  const stagesCompleted = useRef<string[]>([]);
+
+  // Enhanced component mount logging
+  useEffect(() => {
+    mountTime.current = Date.now();
+    logPaymentEvent('Component mounted', {
+      hasClientSecret: !!paymentState.clientSecret,
+      bookingId: bookingData?.bookingId,
+      serviceId: bookingData?.selectedService?.id,
+      price: bookingData?.selectedService?.price,
+      status: paymentState.status,
+      mountTime: mountTime.current
+    });
+
+    return () => {
+      logPaymentEvent('Component unmounting', {
+        mountDuration: Date.now() - mountTime.current,
+        completedStages: stagesCompleted.current
+      });
+    };
+  }, []);
+
+  // Track payment state changes
+  useEffect(() => {
+    logPaymentEvent('Payment state changed', {
+      previousStages: stagesCompleted.current,
+      currentStatus: paymentState.status,
+      hasError: !!paymentState.error,
+      timeSinceMount: Date.now() - mountTime.current
+    });
+  }, [paymentState.status]);
+
+  // Prevent duplicate payment intents with ref tracking
+  const paymentInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // Guard clauses to prevent unnecessary processing
+    if (paymentState.clientSecret || paymentInitializedRef.current) {
+      logPaymentEvent('Payment intent already exists or initialization in progress, skipping', {
+        hasClientSecret: !!paymentState.clientSecret,
+        isInitialized: paymentInitializedRef.current
+      });
+      return;
+    }
+
+    if (!bookingData?.selectedService?.id || !bookingData?.bookingId) {
+      logPaymentEvent('Missing required booking data, skipping payment initialization', {
+        serviceId: bookingData?.selectedService?.id,
+        bookingId: bookingData?.bookingId
+      });
+      return;
+    }
+
+    const initializePayment = async (retryCount = 3) => {
+      try {
+        initStartTime.current = Date.now();
+        const networkStatus = checkNetworkConnection();
+        
+        logPaymentEvent('Payment initialization started', {
+          initStartTime: initStartTime.current,
+          timeSinceMount: initStartTime.current - mountTime.current,
+          networkStatus
+        });
+
+        if (!networkStatus.online) {
+          throw new Error('No network connection available');
+        }
+
+        paymentInitializedRef.current = true;
+        setIsLoading(true);
+        stagesCompleted.current.push('initialization_started');
+
+        try {
+          // Get the actual service UUID from Supabase
+          logPaymentEvent('Fetching service details');
+          const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);
+          stagesCompleted.current.push('service_details_fetched');
+          
+          if (!serviceDetails) {
+            throw new Error('Service not found');
+          }
+          
+          // Create booking details
+          logPaymentEvent('Creating booking details');
+          const bookingDetails: BookingDetails = {
+            service_id: serviceDetails.id, // Use the UUID from Supabase
+            service_title: bookingData.selectedService?.title || '',
+            service_price: bookingData.selectedService?.price || 0,
+            service_duration: bookingData.selectedService?.duration || '',
+            service_description: bookingData.selectedService?.description,
+            
+            // Customer information
+            customer_info: {
+              first_name: bookingData.customerInfo?.firstName || '',
+              last_name: bookingData.customerInfo?.lastName || '',
+              email: bookingData.customerInfo?.email || '',
+              mobile: bookingData.customerInfo?.mobile || '',
+              floor_unit: bookingData.customerInfo?.floorUnit || '',
+              block_street: bookingData.customerInfo?.blockStreet || '',
+              postal_code: bookingData.customerInfo?.postalCode || '',
+              condo_name: bookingData.customerInfo?.condoName,
+              lobby_tower: bookingData.customerInfo?.lobbyTower,
+              special_instructions: bookingData.customerInfo?.specialInstructions
+            },
+            
+            // Booking details
+            brands: bookingData.brands || [],
+            issues: bookingData.issues || [],
+            other_issue: bookingData.otherIssue,
+            is_amc: false,
+            
+            // Schedule
+            scheduled_datetime: bookingData.scheduledDateTime || new Date(),
+            scheduled_timeslot: bookingData.scheduledTimeSlot || '',
+            
+            // Status
+            status: 'pending',
+            payment_status: 'pending',
+            total_amount: calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount),
+            tip_amount: paymentState.tipAmount,
+            
+            // Metadata
+            metadata: {
+              source: 'web',
+              version: '1.0',
+              isFirstTimeFlow: bookingData.isFirstTimeFlow
+            }
+          };
+
+          // Create the booking in Supabase
+          logPaymentEvent('Creating Supabase booking');
+          const supabaseBookingId = await createBooking(bookingDetails);
+          stagesCompleted.current.push('booking_created');
+
+          // Create payment intent with retry mechanism
+          const total = calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount);
+          
+          let paymentIntent;
+          let attemptCount = 0;
+          
+          while (attemptCount < retryCount) {
+            try {
+              logPaymentEvent('Creating payment intent', {
+                attempt: attemptCount + 1,
+                amount: total,
+                serviceId: serviceDetails.id,
+                bookingId: supabaseBookingId,
+                timeSinceInit: Date.now() - initStartTime.current,
+                networkStatus: checkNetworkConnection()
+              });
+
+              paymentIntent = await createPaymentIntent(
+                total, // Pass the raw amount, service will convert to cents
+                serviceDetails.id,
+                supabaseBookingId,
+                paymentState.tipAmount,
+                'sgd',
+                currentUser?.id
+              );
+              
+              break; // Success, exit retry loop
+            } catch (error) {
+              attemptCount++;
+              if (attemptCount === retryCount || !(error instanceof Error && error.message === 'Network Error')) {
+                throw error; // Rethrow if max retries reached or not a network error
+              }
+              logPaymentEvent('Payment intent creation failed, retrying', {
+                attempt: attemptCount,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                nextRetryIn: 1000 * attemptCount
+              });
+              await delay(1000 * attemptCount); // Exponential backoff
+            }
+          }
+
+          if (!paymentIntent) {
+            throw new Error('Failed to create payment intent after retries');
+          }
+
+          stagesCompleted.current.push('payment_intent_created');
+
+          logPaymentEvent('Payment intent created', {
+            intentId: paymentIntent.id,
+            amount: total,
+            status: paymentIntent.status,
+            timeSinceInit: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
+          });
+
+          setPaymentState((prev) => ({
+            ...prev,
+            clientSecret: paymentIntent.clientSecret,
+            status: PAYMENT_STATES.READY
+          }));
+          stagesCompleted.current.push('state_updated_ready');
+
+        } catch (error) {
+          paymentInitializedRef.current = false;
+          const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
+          logPaymentEvent('Payment initialization error', {
+            error: errorMessage,
+            stage: stagesCompleted.current[stagesCompleted.current.length - 1],
+            timeSinceInit: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
+          });
+          toast.error(errorMessage);
+          setPaymentState((prev) => ({
+            ...prev,
+            status: PAYMENT_STATES.ERROR,
+            error: errorMessage,
+          }));
+        } finally {
+          setIsLoading(false);
+          logPaymentEvent('Initialization complete', {
+            success: !paymentState.error,
+            stages: stagesCompleted.current,
+            totalTime: Date.now() - initStartTime.current,
+            networkStatus: checkNetworkConnection()
+          });
+        }
+      } catch (error) {
+        console.error('Error initializing payment:', error);
+        logPaymentEvent('Critical initialization error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stage: 'initialization',
+          timeSinceMount: Date.now() - mountTime.current,
+          networkStatus: checkNetworkConnection()
+        });
+      }
+    };
+
+    initializePayment();
+  }, [
+    bookingData?.selectedService?.id,
+    bookingData?.selectedService?.price,
+    bookingData?.bookingId,
+    paymentState.clientSecret,
+    currentUser?.id
+  ]);
 
   // Log initial booking data
   useEffect(() => {
-    console.log('PaymentStep mounted with booking data:', {
+    logPaymentEvent('PaymentStep mounted with booking data:', {
       customerInfo: bookingData.customerInfo,
       bookingId: bookingData.bookingId,
       selectedService: bookingData.selectedService,
@@ -159,118 +477,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     });
   }, [bookingData]);
 
-  // State management
-  const [isLoading, setIsLoading] = useState(true);
-  const [paymentState, setPaymentState] = useState(initialPaymentState);
-  const [stripePromise] = useState(getStripe);
-
-  // Initialize payment on component mount
-  useEffect(() => {
-    const initializePayment = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Log booking data to track customer info
-        console.log('PaymentStep - Full booking data:', {
-          customerInfo: bookingData.customerInfo,
-          brands: bookingData.brands,
-          issues: bookingData.issues,
-          selectedService: bookingData.selectedService,
-          bookingId: bookingData.bookingId
-        });
-        
-        // Validate all required data
-        console.log('Validating booking data:', {
-          selectedService: bookingData.selectedService,
-          bookingId: bookingData.bookingId,
-          currentUser: currentUser?.id
-        });
-
-        if (!bookingData.selectedService) {
-          throw new Error('Selected service is required');
-        }
-
-        const baseAmount = bookingData.selectedService.price;
-        
-        // Validate amount before proceeding
-        if (!baseAmount || baseAmount <= 0) {
-          console.error('Invalid amount:', baseAmount);
-          throw new Error('Invalid amount. Service price is required.');
-        }
-
-        if (!bookingData.selectedService.id) {
-          console.error('Missing service ID');
-          throw new Error('Service ID is required.');
-        }
-
-        if (!bookingData.bookingId) {
-          console.error('Missing booking ID');
-          throw new Error('Booking ID is required.');
-        }
-
-        if (!currentUser?.id) {
-          console.warn('No customer ID available');
-        }
-
-        console.log('Creating payment intent with:', {
-          amount: baseAmount,
-          serviceId: bookingData.selectedService.id,
-          bookingId: bookingData.bookingId,
-          customerId: currentUser?.id,
-          tipAmount: 0,
-          currency: 'sgd'
-        });
-
-        const intent = await createPaymentIntent(
-          baseAmount,
-          bookingData.selectedService.id,
-          bookingData.bookingId,
-          0, // Initialize with 0 tip
-          'sgd',
-          currentUser?.id
-        );
-        
-        console.log('Payment intent created:', intent);
-        setPaymentState((prev) => ({
-          ...prev,
-          clientSecret: intent.clientSecret,
-        }));
-      } catch (error) {
-        console.error('Error initializing payment:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
-        toast.error(errorMessage);
-        setPaymentState((prev) => ({
-          ...prev,
-          status: PAYMENT_STATES.ERROR,
-          error: errorMessage,
-        }));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Only initialize payment if we have all required data
-    if (
-      bookingData.selectedService?.price &&
-      bookingData.selectedService?.id &&
-      bookingData.bookingId
-    ) {
-      initializePayment();
-    } else {
-      console.error('Missing required booking data:', {
-        price: bookingData.selectedService?.price,
-        serviceId: bookingData.selectedService?.id,
-        bookingId: bookingData.bookingId
-      });
-      toast.error('Missing required booking information');
-      setPaymentState((prev) => ({
-        ...prev,
-        status: PAYMENT_STATES.ERROR,
-        error: 'Missing required booking information'
-      }));
-    }
-  }, [bookingData.selectedService, bookingData.bookingId, currentUser?.id]);
-
   // Handle tip changes
   const handleTipChange = useCallback((amount: number) => {
     setPaymentState((prev) => ({
@@ -278,12 +484,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       tipAmount: amount
     }));
   }, []);
-
-  // Calculate total amount including tip
-  const calculateTotalAmount = useCallback(() => {
-    const baseAmount = bookingData.selectedService?.price || 0;
-    return baseAmount + paymentState.tipAmount;
-  }, [bookingData.selectedService?.price, paymentState.tipAmount]);
 
   // Handlers
   const handlePaymentComplete = useCallback(async (reference: string) => {
@@ -296,194 +496,301 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   const handlePaymentSuccess = useCallback(async (paymentIntent: any) => {
     try {
+      logPaymentEvent('Payment success handler started', { 
+        intentId: paymentIntent.id,
+        bookingId: bookingData.bookingId,
+        amount: paymentIntent.amount
+      });
+      
+      await dispatch(setPaymentStatus('processing'));
+      
       setPaymentState((prev) => ({
         ...prev,
         status: PAYMENT_STATES.SUCCESS,
       }));
 
-      // Add to service queue
-      await addToServiceQueue({
-        serviceId: bookingData.selectedService.id,
-        customerId: currentUser?.id,
-        scheduledDate: bookingData.scheduledDateTime,
-        status: 'pending',
-        paymentConfirmed: true,
-        tipAmount: paymentState.tipAmount,
-        totalAmount: calculateTotalAmount(),
+      // Update booking status in Redux
+      if (bookingData.bookingId) {
+        logPaymentEvent('Updating booking status', {
+          bookingId: bookingData.bookingId,
+          status: 'Confirmed',
+          paymentId: paymentIntent.id
+        });
+
+        await dispatch(updateBooking({
+          id: bookingData.bookingId,
+          status: 'Confirmed',
+          paymentStatus: 'Completed',
+          paymentId: paymentIntent.id,
+          updatedAt: new Date().toISOString()
+        }));
+      }
+
+      logPaymentEvent('Payment flow completed successfully', {
+        intentId: paymentIntent.id,
+        bookingId: bookingData.bookingId
       });
 
-      // Update payment status in Redux
-      dispatch(setPaymentStatus('completed'));
-
-      // Call onComplete with booking reference
-      handlePaymentComplete(paymentIntent.id);
+      // Complete the payment
+      await handlePaymentComplete(paymentIntent.id);
     } catch (error) {
-      console.error('Error handling payment success:', error);
-      setPaymentState((prev) => ({
-        ...prev,
-        status: PAYMENT_STATES.ERROR,
-        error: 'Failed to process payment completion',
-      }));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logPaymentEvent('Payment success handler error', { error: errorMessage });
+      console.error('Error in payment success handler:', error);
+      toast.error('Error completing payment. Please contact support.');
     }
-  }, [
-    bookingData,
-    currentUser,
-    dispatch,
-    handlePaymentComplete,
-    paymentState.tipAmount,
-    calculateTotalAmount,
-  ]);
+  }, [bookingData.bookingId, dispatch, handlePaymentComplete]);
 
+  // Render loading state
   if (isLoading || !paymentState.clientSecret) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <ImSpinner8 className="w-8 h-8 animate-spin text-gold-600" />
+      <div className="min-h-[400px] flex flex-col items-center justify-center">
+        <div className="p-8 rounded-lg bg-gray-800/50 border border-gray-700/70 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4">
+            <ImSpinner8 className="w-8 h-8 animate-spin text-blue-500" />
+            <p className="text-gray-300">Initializing payment...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <PaymentErrorBoundary>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
-      >
-        {/* Booking Summary */}
-        <div className="mb-2 sm:mb-8">
-          <BookingSummary
-            customerInfo={bookingData.customerInfo}
-            selectedDate={bookingData.scheduledDateTime}
-            selectedTimeSlot={bookingData.scheduledTimeSlot}
-            service={bookingData.selectedService}
-            brands={bookingData.brands}
-            issues={bookingData.issues}
-          />
+  // Render error state
+  if (paymentState.status === PAYMENT_STATES.ERROR) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center">
+        <div className="p-8 rounded-lg bg-gray-800/50 border border-gray-700/70 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4 text-center">
+            <HiHeart className="w-12 h-12 text-red-500" />
+            <h3 className="text-xl font-semibold text-red-500">Payment Error</h3>
+            <p className="text-gray-300">{paymentState.error}</p>
+            <button
+              onClick={handleBack}
+              className="px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-600"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
+      </div>
+    );
+  }
 
-        {paymentState.status === PAYMENT_STATES.SUCCESS ? (
+  // Render payment form when ready
+  if (paymentState.status === PAYMENT_STATES.READY && paymentState.clientSecret) {
+    const stripePromise = getStripe();
+    return (
+      <ErrorBoundary>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
+        >
+          {/* Booking Summary */}
+          <div className="mb-2 sm:mb-8">
+            <BookingSummary
+              customerInfo={bookingData.customerInfo}
+              selectedDate={bookingData.scheduledDateTime}
+              selectedTimeSlot={bookingData.scheduledTimeSlot}
+              service={bookingData.selectedService}
+              brands={bookingData.brands}
+              issues={bookingData.issues}
+            />
+          </div>
+
+          <div className="w-full max-w-4xl mx-auto">
+            <Elements 
+              stripe={stripePromise} 
+              options={{
+                clientSecret: paymentState.clientSecret || '',
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#eab308',
+                    colorBackground: '#1e293b',
+                    colorText: '#f8fafc',
+                    colorDanger: '#ef4444',
+                    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                  },
+                },
+              }}
+            >
+              {/* Tip Selection */}
+              <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
+                <div className="text-center mx-auto px-1 sm:px-4">
+                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
+                    <HiHeart className="w-6 h-6 text-pink-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
+                  <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                    Motivate our service teams to go above and beyond!
+                  </p>
+                </div>
+
+                <div className="flex justify-center gap-2 sm:gap-4 mb-4 mt-4">
+                  {[5, 10, 15, 20, 30, 50].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => handleTipChange(amount)}
+                      className={cn(
+                        'px-2 sm:px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
+                        paymentState.tipAmount === amount
+                          ? 'bg-gray-700 text-pink-400 border border-pink-400/50'
+                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/80'
+                      )}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+                {paymentState.tipAmount > 0 && (
+                  <div className="mt-4 text-center text-sm text-gray-300">
+                    <div className="flex justify-center items-center gap-2 sm:gap-4 flex-wrap">
+                      <span>Service: ${bookingData.selectedService?.price || 0}</span>
+                      <span>Tip: ${paymentState.tipAmount}</span>
+                      <span className="font-medium text-white">Total: ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Form */}
+              <PaymentStepContent
+                bookingData={bookingData}
+                paymentState={paymentState}
+                setPaymentState={setPaymentState}
+                onBack={onBack}
+                onSuccess={() => {
+                  if (paymentState.clientSecret) {
+                    onComplete(paymentState.clientSecret);
+                  }
+                }}
+              />
+            </Elements>
+          </div>
+        </motion.div>
+      </ErrorBoundary>
+    );
+  }
+
+  // Render success state
+  if (paymentState.status === PAYMENT_STATES.SUCCESS) {
+    return (
+      <ErrorBoundary>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
+        >
           <BookingConfirmation
             reference={paymentState.clientSecret}
             onComplete={handlePaymentComplete}
           />
-        ) : (
-          <div className="w-full sm:max-w-xl mx-auto">
-            {/* Tip Selection */}
-            <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
-              <div className="text-center sm:max-w-2xl mx-auto px-1 sm:px-4">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
-                  <HiHeart className="w-6 h-6 text-pink-400" />
-                </div>
-                <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
-                <p className="text-gray-400 text-sm">Show your appreciation for great service!</p>
-              </div>
+        </motion.div>
+      </ErrorBoundary>
+    );
+  }
 
-              <div className="flex justify-center gap-2 sm:gap-4 mb-4 mt-4">
-                {[5, 10, 15, 20].map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleTipChange(amount)}
-                    className={cn(
-                      'px-2 sm:px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
-                      paymentState.tipAmount === amount
-                        ? 'bg-gray-700 text-pink-400 border border-pink-400/50'
-                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/80'
-                    )}
-                  >
-                    ${amount}
-                  </button>
-                ))}
-              </div>
-              {paymentState.tipAmount > 0 && (
-                <div className="mt-4 text-center text-sm text-gray-300">
-                  <div className="flex justify-center items-center gap-2 sm:gap-4 flex-wrap">
-                    <span>Service: ${bookingData.selectedService?.price || 0}</span>
-                    <span>Tip: ${paymentState.tipAmount}</span>
-                    <span className="font-medium text-white">Total: ${calculateTotalAmount()}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+  return null;
+};
 
-            {/* Payment Elements */}
-            <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
-              {/* Total Amount Display */}
-              <div className="text-center mb-4 sm:mb-8">
-                <h3 className="text-gray-400 mb-2">Amount to Pay</h3>
-                <p className="text-3xl font-semibold text-yellow-400">
-                  ${calculateTotalAmount().toFixed(2)}
-                </p>
-              </div>
+const PaymentStepContent = ({
+  bookingData,
+  paymentState,
+  setPaymentState,
+  onBack,
+  onSuccess
+}: PaymentStepContentProps) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
 
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret: paymentState.clientSecret,
-                  appearance: {
-                    theme: 'night',
-                    variables: {
-                      colorPrimary: '#FACC15',
-                      colorBackground: '#1E1E1E',
-                      colorText: '#D4D4D4',
-                      colorDanger: '#ef4444',
-                      fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-                      spacingUnit: '4px',
-                      borderRadius: '6px',
-                    },
-                    rules: {
-                      '.Input': {
-                        backgroundColor: '#2D2D2D',
-                        border: '1px solid #404040',
-                      },
-                      '.Input:focus': {
-                        border: '1px solid #FACC15',
-                      },
-                      '.Label': {
-                        color: '#A3A3A3',
-                      },
-                    },
-                  },
-                }}
-              >
-                <PaymentForm
-                  amount={calculateTotalAmount()}
-                  onSuccess={handlePaymentSuccess}
-                  onError={(error) => {
-                    dispatch(setError(error.message));
-                  }}
-                />
-              </Elements>
-            </div>
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements) {
+      console.error('Stripe or Elements not initialized');
+      return;
+    }
+    setIsLoading(true);
+    
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required'
+      });
 
-            {/* Payment Form */}
-            <div className="grid grid-cols-1 gap-2 sm:gap-8">
-              <div className="space-y-4 sm:space-y-6">
-                {paymentState.error && (
-                  <div className="p-2 sm:p-4 bg-red-50 text-red-700 rounded-md">
-                    {paymentState.error}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+      if (error) {
+        console.error('Payment confirmation error:', error);
+        setPaymentState(prev => ({
+          ...prev,
+          status: PAYMENT_STATES.ERROR,
+          error: error.message
+        }));
+        return;
+      }
+
+      setPaymentState(prev => ({
+        ...prev,
+        status: PAYMENT_STATES.SUCCESS
+      }));
+      
+      onSuccess?.();
+    } catch (error) {
+      console.error('Payment submission error:', error);
+      setPaymentState(prev => ({
+        ...prev,
+        status: PAYMENT_STATES.ERROR,
+        error: 'An unexpected error occurred during payment'
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-gray-800/90 rounded-lg p-2 sm:p-6">
+      <PaymentElement 
+        id="payment-element"
+        options={{
+          layout: 'tabs'
+        }}
+      />
+      
+      <button
+        type="submit"
+        disabled={!stripe || isLoading}
+        className={cn(
+          "mt-6 w-full py-3 px-4 rounded-lg font-medium",
+          "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600",
+          "text-gray-900 shadow-lg",
+          "hover:shadow-yellow-400/30",
+          "transform hover:scale-[1.02]",
+          "transition-all duration-200",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          "disabled:transform-none",
+          "flex items-center justify-center gap-2"
         )}
-
-        {/* Navigation */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={handleBack}
-            className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
-            disabled={paymentState.status === PAYMENT_STATES.PROCESSING}
-          >
-            Back
-          </button>
-        </div>
-      </motion.div>
-    </PaymentErrorBoundary>
+      >
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>Processing...</span>
+          </>
+        ) : (
+          <>
+            <FiCreditCard className="h-5 w-5" />
+            <span>Pay Now ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
+          </>
+        )}
+      </button>
+    </form>
   );
 };
 
 PaymentStep.displayName = 'PaymentStep';
 
+export { PaymentStep };
 export default PaymentStep;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAppSelector } from '../store';
+import { useAppSelector } from '@store';
 import { differenceInDays, isValid } from 'date-fns';
 
 const ServiceDueBanner: React.FC = () => {

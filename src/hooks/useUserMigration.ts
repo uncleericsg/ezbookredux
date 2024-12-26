@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { setUser, setLoading } from '../store/slices/userSlice';
-import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { RootState } from '@store';
+import { setUser, setLoading } from '@store/slices/userSlice';
+import { setAuthenticated, setToken } from '@store/slices/authSlice';
 
 /**
  * Hook to handle user authentication state

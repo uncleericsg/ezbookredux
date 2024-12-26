@@ -1,12 +1,14 @@
-import { Save, Loader2, Key, Info, TestTube2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from 'sonner';
-import type { AcuitySettings as AcuitySettingsType } from '../../types/settings';
-import { Dialog } from '@components/organisms/Dialog';
-import { Tooltip } from '@components/atoms/Tooltip';
+import { Save, Loader2, Key, Info, TestTube2 } from 'lucide-react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
+
+import { Dialog } from '@components/ui/Dialog';
+import { Tooltip } from '@components/ui/Tooltip';
+
+import type { AcuitySettings as AcuitySettingsType } from '@types/settings';
 
 const settingsSchema = z.object({
   apiKey: z.string().min(1, 'API Key is required'),
@@ -237,4 +239,7 @@ const AcuitySettings: React.FC<AcuitySettingsProps> = ({
   );
 };
 
+AcuitySettings.displayName = 'AcuitySettings';
+
+export { AcuitySettings };
 export default AcuitySettings;

@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiUsers, FiX, FiPhone, FiArrowRight, FiMapPin, FiEdit2, FiCheck } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import { setUser as setReduxUser } from '../../store/slices/userSlice';
+import { RootState } from '@store';
+import { setUser as setReduxUser } from '@store/slices/userSlice';
 import { toast } from 'sonner';
-import { OTPInput } from '../common/OTPInput';
+import { OTPInput } from '@components/common/OTPInput';
 
 interface SavedLocation {
   id: string;
@@ -361,4 +361,5 @@ const BookingSelectionModal: React.FC<BookingSelectionModalProps> = ({
   );
 };
 
+export { BookingSelectionModal };
 export default BookingSelectionModal;

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Edit, ChevronLeft, ChevronRight, Save, X, UserX } from 'lucide-react';
-import type { User } from '../../types';
-import UserStatusToggle from './UserStatusToggle';
+import React, { useState } from 'react';
+
+import UserStatusToggle from '@admin/UserStatusToggle';
+
+import type { User } from '@types/index';
 
 interface UserTableProps {
   users: User[];
@@ -116,13 +118,13 @@ const UserTable: React.FC<UserTableProps> = ({
                       {user.amcStatus}
                     </span>
                   </td>
-                  <td className="p-4">{format(new Date(), 'PP')}</td>
-                  <td className="p-4">{format(new Date(), 'PP p')}</td>
+                  <td className="p-4">{format(new Date(user.createdAt), 'PP')}</td>
+                  <td className="p-4">{format(new Date(user.lastLoginAt), 'PP p')}</td>
                   <td className="p-4">{user.role}</td>
                   <td className="p-4">
                     <div className="flex items-center space-x-2">
                       {editingUser === user.id ? (
-                        <>
+                        <React.Fragment>
                           <button
                             onClick={() => handleSave(user.id)}
                             className="btn-icon text-green-400"
@@ -137,23 +139,25 @@ const UserTable: React.FC<UserTableProps> = ({
                           >
                             <X className="h-4 w-4" />
                           </button>
-                        </>
+                        </React.Fragment>
                       ) : (
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="btn-icon"
-                          title="Edit user"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
+                        <React.Fragment>
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="btn-icon"
+                            title="Edit user"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <UserStatusToggle
+                            userId={user.id}
+                            isActive={user.amcStatus === 'active'}
+                            onToggle={async (id, newStatus) => {
+                              await onDeactivate(id);
+                            }}
+                          />
+                        </React.Fragment>
                       )}
-                      <UserStatusToggle
-                        userId={user.id}
-                        isActive={user.amcStatus === 'active'}
-                        onToggle={async (id, newStatus) => {
-                          await onDeactivate(id);
-                        }}
-                      />
                     </div>
                   </td>
                 </tr>
@@ -183,11 +187,11 @@ const UserTable: React.FC<UserTableProps> = ({
               <div className="text-sm text-gray-400 space-y-1">
                 <div className="flex justify-between">
                   <span>Registered:</span>
-                  <span>{format(new Date(), 'PP')}</span>
+                  <span>{format(new Date(user.createdAt), 'PP')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Last Login:</span>
-                  <span>{format(new Date(), 'PP p')}</span>
+                  <span>{format(new Date(user.lastLoginAt), 'PP p')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Role:</span>
@@ -197,7 +201,7 @@ const UserTable: React.FC<UserTableProps> = ({
               
               <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-600">
                 {editingUser === user.id ? (
-                  <>
+                  <React.Fragment>
                     <button
                       onClick={() => handleSave(user.id)}
                       className="btn-icon text-green-400"
@@ -212,9 +216,9 @@ const UserTable: React.FC<UserTableProps> = ({
                     >
                       <X className="h-5 w-5" />
                     </button>
-                  </>
+                  </React.Fragment>
                 ) : (
-                  <>
+                  <React.Fragment>
                     <button
                       onClick={() => onEdit(user)}
                       className="btn-icon"
@@ -229,7 +233,7 @@ const UserTable: React.FC<UserTableProps> = ({
                     >
                       <UserX className="h-5 w-5" />
                     </button>
-                  </>
+                  </React.Fragment>
                 )}
               </div>
             </div>

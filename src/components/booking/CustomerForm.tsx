@@ -41,10 +41,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import './CustomerForm.css';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiHome, FiHash, FiBox, FiCheck, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { useFirebaseValidation } from '../../hooks/useFirebaseValidation';
-import { OTPInput } from '../common/OTPInput';
-import { findEmailTypo, EmailSuggestion } from '../../utils/emailUtils';
-import { createBooking } from '../../services/bookingService';
+import { useFirebaseValidation } from '@hooks/useFirebaseValidation';
+import { OTPInput } from '@components/common/OTPInput';
+import { findEmailTypo, EmailSuggestion } from '@utils/emailUtils';
+import { createBooking } from '@services/bookingService';
 
 interface CustomerFormData {
   firstName: string;
@@ -147,6 +147,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
     resetValidation,
     resetEmailValidation 
   } = useFirebaseValidation();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatMobileNumber = (value: string): string => {
     const digits = value.replace(/\D/g, '').slice(0, 8);
@@ -291,13 +293,29 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
     try {
       const result = await verifyOTP(code);
       if (result.isValid) {
+        // Update form validation state
+        setValidation(prev => ({
+          ...prev,
+          mobile: { ...prev.mobile, valid: true }
+        }));
+
         // Focus on the next field after successful verification
         setTimeout(() => {
           addressInputRef.current?.focus();
         }, 100);
+      } else {
+        // Show error if OTP verification failed
+        setValidation(prev => ({
+          ...prev,
+          mobile: { touched: true, valid: false, error: result.error }
+        }));
       }
     } catch (error) {
       console.error('OTP verification error:', error);
+      setValidation(prev => ({
+        ...prev,
+        mobile: { touched: true, valid: false, error: 'Failed to verify OTP' }
+      }));
     }
   };
 
@@ -436,50 +454,47 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create booking data structure
-    const bookingDetails: BookingDetails = {
-      brands: [], // These will be filled in later steps
-      issues: [],
-      lastServiceDate: new Date().toISOString(),
-      customerInfo: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        mobile: formData.mobile,
-        floorUnit: formData.unit,
-        blockStreet: formData.address,
-        postalCode: formData.postalCode,
-        condoName: formData.buildingName,
-        lobbyTower: formData.lobbyTower
-      }
+    // Validate all required fields with correct field names
+    const requiredFields = {
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim(),
+      mobile: formData.mobile.trim(),
+      floorUnit: formData.unit.trim(), // Map unit to floorUnit
+      blockStreet: formData.address.trim(), // Map address to blockStreet
+      postalCode: formData.postalCode.trim()
     };
 
-    try {
-      const bookingId = await createBooking(bookingDetails);
-      console.log('Booking created with ID:', bookingId);
-      // Only call onSave with the bookingId
-      onSave({ ...formData, bookingId });
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      // Handle error appropriately
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      return;
     }
+
+    // Prepare form data with correct field names and only non-empty optional fields
+    const submitData = {
+      ...requiredFields,
+      ...(formData.buildingName?.trim() && { condoName: formData.buildingName.trim() }), // Map buildingName to condoName
+      ...(formData.lobbyTower?.trim() && { lobbyTower: formData.lobbyTower.trim() })
+    };
+
+    console.log('Submitting customer form data:', submitData);
+    onSave(submitData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <div className="form-header">Customer Information</div>
-      <div className="form-description">
-        Please fill in your details for the booking
-      </div>
-
-      <div className="form-section">
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="firstName" className="form-label">
+    <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="relative">
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-2">
               First Name
             </label>
             <div className="relative">
-              <FiUser className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 id="firstName"
@@ -488,21 +503,27 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
                 value={formData.firstName}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                  validation.firstName.touched
+                    ? validation.firstName.valid
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-600'
+                } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder="Enter your first name"
               />
-              {renderValidationIcon('firstName')}
-              {validation.firstName.touched && !validation.firstName.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.firstName.error}</div>
-              )}
             </div>
+            {validation.firstName.touched && !validation.firstName.valid && (
+              <p className="mt-2 text-sm text-red-500">{validation.firstName.error}</p>
+            )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="lastName" className="form-label">
+          <div className="relative">
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-2">
               Last Name
             </label>
             <div className="relative">
-              <FiUser className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 id="lastName"
@@ -511,21 +532,29 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
                 value={formData.lastName}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                  validation.lastName.touched
+                    ? validation.lastName.valid
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-600'
+                } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder="Enter your last name"
               />
-              {renderValidationIcon('lastName')}
-              {validation.lastName.touched && !validation.lastName.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.lastName.error}</div>
-              )}
             </div>
+            {validation.lastName.touched && !validation.lastName.valid && (
+              <p className="mt-2 text-sm text-red-500">{validation.lastName.error}</p>
+            )}
           </div>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email
+        <div className="space-y-8">
+          <div className="relative">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
+              Email Address
             </label>
             <div className="relative">
-              <FiMail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="email"
                 id="email"
@@ -534,43 +563,40 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
                 value={formData.email}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent ${
-                  validationState.emailError ? 'border-red-500' : validationState.isEmailVerified ? 'border-green-500' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                  validation.email.touched
+                    ? validation.email.valid
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-600'
+                } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder="Enter your email address"
               />
-              {renderValidationIcon('email')}
-              {emailSuggestion && (
-                <div className="text-yellow-400 text-sm mt-1">
-                  Did you mean{' '}
-                  <button
-                    type="button"
-                    onClick={handleSuggestionClick}
-                    className="underline hover:text-yellow-300 focus:outline-none"
-                  >
-                    {emailSuggestion.full}
-                  </button>
-                  ?
-                </div>
-              )}
-              {validationState.emailError ? (
-                <div className="text-red-500 text-xs mt-1">{validationState.emailError}</div>
-              ) : validationState.isEmailVerified ? (
-                <div className="text-green-500 text-sm mt-1 flex items-center gap-2">
-                  <FiCheck className="h-4 w-4" />
-                  Email verified
-                </div>
-              ) : validation.email.touched && !validation.email.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.email.error}</div>
-              )}
             </div>
+            {emailSuggestion && (
+              <div className="text-yellow-400 text-sm mt-1">
+                Did you mean{' '}
+                <button
+                  type="button"
+                  onClick={handleSuggestionClick}
+                  className="underline hover:text-yellow-300 focus:outline-none"
+                >
+                  {emailSuggestion.full}
+                </button>
+                ?
+              </div>
+            )}
+            {validation.email.touched && !validation.email.valid && (
+              <p className="mt-2 text-sm text-red-500">{validation.email.error}</p>
+            )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="mobile" className="form-label">
+          <div className="relative">
+            <label htmlFor="mobile" className="block text-sm font-medium text-gray-200 mb-2">
               Mobile Number
             </label>
             <div className="relative">
-              <FiPhone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+              <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="tel"
                 id="mobile"
@@ -585,13 +611,18 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
                     handleVerifyMobile(e as any);
                   }
                 }}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                  validation.mobile.touched
+                    ? validation.mobile.valid
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-600'
+                } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 disabled={validationState.showOTPInput || validationState.isMobileVerified}
               />
-              {renderValidationIcon('mobile')}
             </div>
             {validation.mobile.touched && !validation.mobile.valid && !validationState.showOTPInput && (
-              <div className="text-red-500 text-xs mt-1">{validation.mobile.error}</div>
+              <p className="mt-2 text-sm text-red-500">{validation.mobile.error}</p>
             )}
             {!validationState.showOTPInput && !validationState.isMobileVerified && validation.mobile.valid && (
               <button
@@ -614,23 +645,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
               <div className="mt-2">
                 <OTPInput
                   length={6}
-                  onComplete={async (code) => {
-                    try {
-                      const result = await verifyOTP(code);
-                      if (result.isValid) {
-                        // Focus on the next field after successful verification
-                        setTimeout(() => {
-                          addressInputRef.current?.focus();
-                        }, 100);
-                      }
-                    } catch (error) {
-                      console.error('OTP verification error:', error);
-                    }
-                  }}
+                  onComplete={handleVerifyOTP}
                   error={validationState.otpError}
                 />
                 {validationState.otpError && (
-                  <div className="text-red-500 text-xs mt-1">{validationState.otpError}</div>
+                  <p className="mt-2 text-sm text-red-500">{validationState.otpError}</p>
                 )}
               </div>
             )}
@@ -643,145 +662,184 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="address" className="form-label">
-            Address {!isGoogleMapsLoaded && <span className="text-xs text-gray-400">(Loading address search...)</span>}
-          </label>
+        <div className="space-y-8">
           <div className="relative">
-            <FiMapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-            <input
-              ref={(el) => {
-                inputRef.current = el;
-                addressInputRef.current = el;
-              }}
-              type="text"
-              id="address"
-              name="address"
-              required
-              value={formData.address}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
-              placeholder={!isGoogleMapsLoaded ? "Loading address search..." : ""}
-              disabled={!isGoogleMapsLoaded}
-            />
-            {renderValidationIcon('address')}
+            <label htmlFor="address" className="block text-sm font-medium text-gray-200 mb-2">
+              Street Address {!isGoogleMapsLoaded && <span className="text-xs text-gray-400">(Loading address search...)</span>}
+            </label>
+            <div className="relative">
+              <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                ref={(el) => {
+                  inputRef.current = el;
+                  addressInputRef.current = el;
+                }}
+                type="text"
+                id="address"
+                name="address"
+                required
+                value={formData.address}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                  validation.address.touched
+                    ? validation.address.valid
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-600'
+                } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder={!isGoogleMapsLoaded ? "Loading address search..." : ""}
+                disabled={!isGoogleMapsLoaded}
+              />
+            </div>
             {validation.address.touched && !validation.address.valid && (
-              <div className="text-red-500 text-xs mt-1">{validation.address.error}</div>
+              <p className="mt-2 text-sm text-red-500">{validation.address.error}</p>
             )}
           </div>
-        </div>
 
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="postalCode" className="form-label">
-              Postal Code
-            </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="relative">
-              <FiHome className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-              <input
-                type="text"
-                id="postalCode"
-                name="postalCode"
-                required
-                value={formData.postalCode}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
-                readOnly
-              />
-              {renderValidationIcon('postalCode')}
+              <label htmlFor="postalCode" className="block text-sm font-medium text-gray-200 mb-2">
+                Postal Code
+              </label>
+              <div className="relative">
+                <FiHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  id="postalCode"
+                  name="postalCode"
+                  required
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                    validation.postalCode.touched
+                      ? validation.postalCode.valid
+                        ? 'border-green-500'
+                        : 'border-red-500'
+                      : 'border-gray-600'
+                  } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  readOnly
+                />
+              </div>
               {validation.postalCode.touched && !validation.postalCode.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.postalCode.error}</div>
+                <p className="mt-2 text-sm text-red-500">{validation.postalCode.error}</p>
               )}
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="unit" className="form-label">
-              Unit Number (NA if none)
-            </label>
             <div className="relative">
-              <FiHash className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-              <input
-                ref={unitInputRef}
-                type="text"
-                id="unit"
-                name="unit"
-                required
-                value={formData.unit}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
-              />
-              {renderValidationIcon('unit')}
+              <label htmlFor="unit" className="block text-sm font-medium text-gray-200 mb-2">
+                Unit Number (NA if none)
+              </label>
+              <div className="relative">
+                <FiHash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  ref={unitInputRef}
+                  type="text"
+                  id="unit"
+                  name="unit"
+                  required
+                  value={formData.unit}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                    validation.unit.touched
+                      ? validation.unit.valid
+                        ? 'border-green-500'
+                        : 'border-red-500'
+                      : 'border-gray-600'
+                  } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
               {validation.unit.touched && !validation.unit.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.unit.error}</div>
+                <p className="mt-2 text-sm text-red-500">{validation.unit.error}</p>
               )}
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="buildingName" className="form-label">
-              Condo Name (Optional)
-            </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="relative">
-              <FiHome className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-              <input
-                type="text"
-                id="buildingName"
-                name="buildingName"
-                value={formData.buildingName}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
-              />
-              {renderValidationIcon('buildingName')}
+              <label htmlFor="buildingName" className="block text-sm font-medium text-gray-200 mb-2">
+                Building Name (Optional)
+              </label>
+              <div className="relative">
+                <FiHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  id="buildingName"
+                  name="buildingName"
+                  value={formData.buildingName}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                    validation.buildingName.touched
+                      ? validation.buildingName.valid
+                        ? 'border-green-500'
+                        : 'border-red-500'
+                      : 'border-gray-600'
+                  } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
               {validation.buildingName.touched && !validation.buildingName.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.buildingName.error}</div>
+                <p className="mt-2 text-sm text-red-500">{validation.buildingName.error}</p>
               )}
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="lobbyTower" className="form-label">
-              Lobby/Tower (Optional)
-            </label>
             <div className="relative">
-              <FiBox className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-              <input
-                type="text"
-                id="lobbyTower"
-                name="lobbyTower"
-                value={formData.lobbyTower}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`w-full pl-10 pr-10 py-2 bg-gray-700 rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent`}
-              />
-              {renderValidationIcon('lobbyTower')}
+              <label htmlFor="lobbyTower" className="block text-sm font-medium text-gray-200 mb-2">
+                Lobby/Tower (Optional)
+              </label>
+              <div className="relative">
+                <FiBox className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  id="lobbyTower"
+                  name="lobbyTower"
+                  value={formData.lobbyTower}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
+                    validation.lobbyTower.touched
+                      ? validation.lobbyTower.valid
+                        ? 'border-green-500'
+                        : 'border-red-500'
+                      : 'border-gray-600'
+                  } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
               {validation.lobbyTower.touched && !validation.lobbyTower.valid && (
-                <div className="text-red-500 text-xs mt-1">{validation.lobbyTower.error}</div>
+                <p className="mt-2 text-sm text-red-500">{validation.lobbyTower.error}</p>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="form-button-container">
-        <button
-          type="submit"
-          disabled={!isFormValid()}
-          className={`w-full py-4 px-6 rounded-lg font-medium text-base transition-all duration-300 ${
-            isFormValid()
-              ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-gray-900 shadow-lg hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] transform hover:-translate-y-0.5'
-              : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          Continue
-        </button>
-      </div>
-      <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
-    </form>
+        <div className="form-button-container">
+          <button
+            type="submit"
+            disabled={!isFormValid() || isSubmitting}
+            className={`w-full py-4 px-6 rounded-lg font-medium text-base transition-all duration-300 relative ${
+              isFormValid()
+                ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-gray-900 shadow-lg hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] transform hover:-translate-y-0.5'
+                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <span className={isSubmitting ? 'opacity-0' : 'opacity-100'}>
+              Continue
+            </span>
+            {isSubmitting && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="animate-spin h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            )}
+          </button>
+        </div>
+        <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
+      </form>
+    </div>
   );
 };
 

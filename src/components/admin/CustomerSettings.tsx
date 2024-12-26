@@ -1,18 +1,20 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Save, Loader2, User, Mail, Phone, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@utils/cn';
 
 export interface CustomerConfig;
 
 export interface CustomerSettingsProps;
 
-
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface CustomerConfig {
+  registration: {
+    requireEmail: boolean;
     requirePhone: boolean;
     requireAddress: boolean;
     verifyEmail: boolean;
@@ -66,6 +68,9 @@ const defaultConfig: CustomerConfig = {
   },
 };
 
+const CustomerSettings = () => {
+  const [config, setConfig] = useState(defaultConfig);
+
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -89,10 +94,10 @@ const defaultConfig: CustomerConfig = {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
+    <div className="w-full">
+      <h1 className="text-2xl font-semibold mb-4 text-gray-100">
         Customer Settings
-      </Typography>
+      </h1>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -508,7 +513,7 @@ const defaultConfig: CustomerConfig = {
           </button>
         </div>
       </motion.div>
-    </Box>
+    </div>
   );
 };
 

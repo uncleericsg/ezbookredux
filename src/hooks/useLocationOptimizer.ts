@@ -30,8 +30,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Region, TimeSlot } from '../types';
-import { determineRegion, filterSlotsByDistance, RegionResult } from '../services/locations/regions';
+import { Region, TimeSlot } from '@types';
+import { determineRegion, filterSlotsByDistance, RegionResult } from '@services/locations/regions';
 import { useGooglePlaces } from './useGooglePlaces';
 
 interface LocationOptimizerProps {

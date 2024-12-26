@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchUsers, deactivateUser as deactivateUserApi, updateUser as updateUserApi } from '../services/admin';
+import { fetchUsers, deactivateUser as deactivateUserApi, updateUser as updateUserApi } from '@services/admin';
 import { toast } from 'sonner';
-import type { User, AMCStatus } from '../types';
+import type { User, AMCStatus } from '@types';
 
 const validateUserData = (data: any): data is User[] => {
   if (!Array.isArray(data)) return false;

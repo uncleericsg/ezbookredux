@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createPaymentIntent, confirmPayment } from '../services/stripe';
+import { createPaymentIntent, confirmPayment } from '@services/stripe';
 import { toast } from 'sonner';
 
 export const usePayment = () => {

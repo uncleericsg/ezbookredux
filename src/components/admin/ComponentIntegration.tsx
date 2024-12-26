@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Book, ChevronDown, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Book, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
 
 const ComponentIntegration: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);

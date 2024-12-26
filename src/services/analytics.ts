@@ -1,4 +1,4 @@
-import { CustomerFormData } from '../components/booking/CustomerForm';
+import { CustomerFormData } from '@components/booking/CustomerForm';
 
 export interface BookingAnalytics {
   stepStarted: string;

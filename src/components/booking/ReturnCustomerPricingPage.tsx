@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import ServicePricingSelection from '../ServicePricingSelection';
-import type { PricingOption } from '../../types/booking';
+import { ServicePricingSelection } from '@components/ServicePricingSelection';
+import type { PricingOption } from '@types/booking';
 
 const ReturnCustomerPricingPage: React.FC = () => {
   const navigate = useNavigate();

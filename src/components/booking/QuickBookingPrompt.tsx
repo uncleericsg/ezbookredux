@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, History, Copy, MapPin, Calendar, Wrench } from 'lucide-react';
-import { BookingDetails } from '../../services/bookingService';
+import type { BookingDetails } from '@types/booking';
+
+// Services
+import { validateBookingDetails } from '@services/validation';
 
 interface QuickBookingPromptProps {
   previousBooking: BookingDetails;

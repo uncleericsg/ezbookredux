@@ -10,7 +10,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { usePublicHolidays } from '../hooks/usePublicHolidays';
+import { usePublicHolidays } from '@hooks/usePublicHolidays';
 
 // @ai-protection: These props are essential for the calendar's functionality
 // DO NOT remove or modify existing props without updating all consuming components

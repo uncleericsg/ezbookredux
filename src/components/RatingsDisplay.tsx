@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ServiceRating from './ServiceRating';
-import { useServiceRating } from '../hooks/useServiceRating';
+import ServiceRating from '@components/ServiceRating';
+import { useServiceRating } from '@hooks/useServiceRating';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
+import { RootState } from '@store';
 
 interface Rating {
   id: string;

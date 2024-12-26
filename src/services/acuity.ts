@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { addMinutes } from 'date-fns';
-import type { ServiceCategory, TimeSlot } from '../types';
-import { validateSlotAllocation } from '../utils/bookingValidation';
-import { BUSINESS_RULES } from '../constants/businessRules';
-import { BookingError } from '../utils/errors';
+import type { ServiceCategory, TimeSlot } from '@types';
+import { validateSlotAllocation } from '@utils/bookingValidation';
+import { BUSINESS_RULES } from '@constants/businessRules';
+import { BookingError } from '@utils/errors';
 import { toast } from 'sonner';
 
 interface BookingDetails {

@@ -1,7 +1,9 @@
-import React from 'react';
 import { Calendar, Webhook, RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
-import { useAcuityTesting } from '../../hooks/useAcuityTesting';
-import type { AcuitySettings } from '../../types/settings';
+import React from 'react';
+
+import { useAcuityTesting } from '@hooks/useAcuityTesting';
+
+import type { AcuitySettings } from '@types/settings';
 
 interface AcuityTesterProps {
   settings: AcuitySettings;

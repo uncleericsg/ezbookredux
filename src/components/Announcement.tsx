@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import type { Announcement as AnnouncementType } from '../types';
+import type { Announcement as AnnouncementType } from '@types';
 
 interface AnnouncementProps {
   announcement: AnnouncementType;

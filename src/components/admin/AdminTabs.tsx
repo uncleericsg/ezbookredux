@@ -1,20 +1,33 @@
-import React, { memo } from 'react';
-import { Users, Bell, Shield, BarChart3, Settings, Layout } from 'lucide-react';
 import classNames from 'classnames';
+import { 
+  BarChart3, 
+  Bell, 
+  Layout, 
+  Settings, 
+  Shield, 
+  Users 
+} from 'lucide-react';
+import React, { memo } from 'react';
+
+import type { AdminTabConfig } from '@admin/types';
+
+import { ROUTES } from '@config/routes';
 
 interface AdminTabsProps {
   activeTab: number;
   onTabChange: (index: number) => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-const tabs = [
-  { id: 'users', icon: Users, label: 'User Management' },
-  { id: 'homepage', icon: Layout, label: 'Homepage' },
-  { id: 'notifications', icon: Bell, label: 'Notifications' },
-  { id: 'amc', icon: Shield, label: 'AMC Packages' },
-  { id: 'analytics', icon: BarChart3, label: 'Analytics' },
-  { id: 'settings', icon: Settings, label: 'Settings' }
-];
+export const tabs: AdminTabConfig[] = [
+  { id: 'users', icon: Users, label: 'User Management', path: ROUTES.ADMIN.USERS },
+  { id: 'homepage', icon: Layout, label: 'Homepage', path: ROUTES.ADMIN.HOMEPAGE },
+  { id: 'notifications', icon: Bell, label: 'Notifications', path: ROUTES.ADMIN.NOTIFICATIONS },
+  { id: 'amc', icon: Shield, label: 'AMC Packages', path: ROUTES.ADMIN.AMC },
+  { id: 'analytics', icon: BarChart3, label: 'Analytics', path: ROUTES.ADMIN.ANALYTICS },
+  { id: 'settings', icon: Settings, label: 'Settings', path: ROUTES.ADMIN.SETTINGS }
+] as const;
 
 const AdminTabs = memo(({ activeTab, onTabChange, collapsed, onToggleCollapse }: AdminTabsProps) => {
   return (
@@ -43,26 +56,30 @@ const AdminTabs = memo(({ activeTab, onTabChange, collapsed, onToggleCollapse }:
               )}
             >
               <Icon className="h-5 w-5" />
-              {!collapsed && <span className="ml-3">{tab.label}</span>}
+              {!collapsed && (
+                <span className="ml-3">{tab.label}</span>
+              )}
             </button>
           );
         })}
       </div>
-      
-      {onToggleCollapse && (
+
+      <div className="mt-auto p-4 border-t border-gray-700">
         <button
           onClick={onToggleCollapse}
-          className="p-4 border-t border-gray-700 text-gray-400 hover:text-gray-300 transition-colors"
+          className="w-full flex items-center justify-center p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded-lg"
         >
-          <ChevronLeft className={`h-5 w-5 mx-auto transform transition-transform ${
-            collapsed ? 'rotate-180' : ''
-          }`} />
+          <span className="sr-only">
+            {collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          </span>
+          {/* Chevron icon here */}
         </button>
-      )}
+      </div>
     </div>
   );
 });
 
 AdminTabs.displayName = 'AdminTabs';
 
+export { AdminTabs };
 export default AdminTabs;

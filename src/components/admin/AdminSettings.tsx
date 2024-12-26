@@ -1,25 +1,35 @@
-import React from 'react';
-import AcuitySettings from './AcuitySettings';
-import LoginScreenSettings from './LoginScreenSettings';
-import ComponentIntegration from './ComponentIntegration';
-import RepairShoprSettings from './RepairShoprSettings';
-import StripeSettings from './StripeSettings';
-import ChatGPTSettings from './ChatGPTSettings';
-import FCMTester from './FCMTester';
-import CypressSettings from './CypressSettings';
-import BuildManager from './BuildManager';
-import SettingsBackup from './SettingsBackup';
-import { useCallback } from 'react';
-import { useSettingsForm } from '../../hooks/useSettingsForm';
-import { useSettingsSections, SECTION_IDS } from '../../hooks/useSettingsSections';
-import SettingsSection from './SettingsSection';
-import { defaultSettings } from '../../types/settings';
-import { defaultAppSettings } from '../../types/appSettings';
-import { updateAcuitySettings } from '../../services/admin';
-import { updateAppSettings } from '../../services/appSettings';
-import { fetchAppSettings } from '../../services/appSettings';
+import { 
+  Archive, 
+  Bell, 
+  Calendar, 
+  CreditCard, 
+  Key, 
+  MessageSquare, 
+  TestTube, 
+  Users 
+} from 'lucide-react';
+import React, { useCallback } from 'react';
 import { toast } from 'sonner';
-import { Settings, Book, Key, CreditCard, MessageSquare, Bell, TestTube, Archive, Save, Users, Calendar } from 'lucide-react';
+
+import AcuitySettings from '@admin/AcuitySettings';
+import BuildManager from '@admin/BuildManager';
+import ChatGPTSettings from '@admin/ChatGPTSettings';
+import CypressSettings from '@admin/CypressSettings';
+import FCMTester from '@admin/FCMTester';
+import LoginScreenSettings from '@admin/LoginScreenSettings';
+import RepairShoprSettings from '@admin/RepairShoprSettings';
+import SettingsBackup from '@admin/SettingsBackup';
+import SettingsSection from '@admin/SettingsSection';
+import StripeSettings from '@admin/StripeSettings';
+
+import { updateAcuitySettings } from '@services/admin';
+import { updateAppSettings, fetchAppSettings } from '@services/appSettings';
+
+import { useSettingsForm } from '@hooks/useSettingsForm';
+import { useSettingsSections, SECTION_IDS } from '@hooks/useSettingsSections';
+
+import { defaultAppSettings } from '@types/appSettings';
+import { defaultSettings } from '@types/settings';
 
 // Mock fetch functions for development
 const fetchAcuitySettings = async () => {
@@ -30,7 +40,7 @@ const fetchAcuitySettings = async () => {
   });
 };
 
-const AdminSettings: React.FC = () => {
+const AdminSettings = () => {
   const {
     settings: acuitySettings,
     loading: acuityLoading,
@@ -204,4 +214,7 @@ const AdminSettings: React.FC = () => {
   );
 };
 
+AdminSettings.displayName = 'AdminSettings';
+
+export { AdminSettings };
 export default AdminSettings;

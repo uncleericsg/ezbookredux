@@ -1,6 +1,6 @@
 import { FC } from 'react';
-import { cn } from '@/lib/utils';
-import { formatPrice } from '@/constants/serviceConfig';
+import { cn } from '@utils/cn';
+import { formatPrice } from '@constants/serviceConfig';
 import { format, addMinutes, addHours, parse } from 'date-fns';
 import { 
   HiOutlineClipboardDocument,
@@ -10,7 +10,7 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineClock
 } from 'react-icons/hi2';
-import { toPascalCase } from '../../utils/stringUtils';
+import { toPascalCase } from '@utils/stringUtils';
 
 const formatTimeSlot = (timeSlot: string, duration: string): string => {
   try {

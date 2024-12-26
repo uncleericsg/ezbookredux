@@ -47,13 +47,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../store';
-import { setUser, setError } from '../store/slices/userSlice';
-import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '@store';
+import { setUser, setError } from '@store/slices/userSlice';
+import { setAuthenticated, setToken } from '@store/slices/authSlice';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
-import { LoadingScreen } from './LoadingScreen';
+import { LoadingScreen } from '@components/LoadingScreen';
+
+// Services
+import { verifyOTP, sendOTP } from '@services/auth';
+import { validateMobileNumber } from '@services/validation';
 
 const Login: React.FC = () => {
   const [mobileNumber, setMobileNumber] = useState('');
@@ -61,10 +65,37 @@ const Login: React.FC = () => {
   const [loading, setLocalLoading] = useState(false);
   const [showOtpButton, setShowOtpButton] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useAppDispatch();
   const { isAuthenticated, loading: authLoading } = useAppSelector(state => state.auth);
+
+  // Get return URL and booking data from location state or session storage
+  const getReturnData = () => {
+    if (location.state) {
+      return location.state;
+    }
+    const storedBooking = sessionStorage.getItem('pendingBooking');
+    return storedBooking ? JSON.parse(storedBooking) : null;
+  };
+
+  const returnData = getReturnData();
+  const returnUrl = returnData?.returnUrl || '/';
+  const bookingData = returnData?.bookingData;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('User authenticated, returning to:', returnUrl);
+      if (bookingData) {
+        navigate(returnUrl, { 
+          state: { bookingData },
+          replace: true 
+        });
+      } else {
+        navigate(returnUrl, { replace: true });
+      }
+    }
+  }, [isAuthenticated, navigate, returnUrl, bookingData]);
 
   // Remove the initial navigation effect since we always want to go to home
   useEffect(() => {

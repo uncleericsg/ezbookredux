@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bell, Mail, Phone, Save, Loader2 } from 'lucide-react';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 
 interface NotificationPreferences {
   email: boolean;

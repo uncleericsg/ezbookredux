@@ -1,7 +1,7 @@
 // @integration-point Data service for Supabase operations
 // This file will contain all Supabase database operations
 
-import type { User } from '../types';
+import type { User } from '@types';
 
 // Mock data for development
 const mockBookings = [

@@ -1,10 +1,10 @@
-import { db } from '@/config/firebase';
-import { collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, doc, DocumentData } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, doc } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 
 export interface BookingDetails {
   brands: string[];
   issues: string[];
-  lastServiceDate: string;
   customerInfo: {
     firstName: string;
     lastName: string;
@@ -17,8 +17,19 @@ export interface BookingDetails {
     lobbyTower?: string;
     specialInstructions?: string;
   };
+  scheduledDateTime: Date;
+  scheduledTimeSlot: string;
+  selectedService: {
+    id: string;
+    title: string;
+    price: number;
+    duration: string;
+    description?: string;
+  };
   status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdAt?: string;
+  otherIssue?: string;
+  isAMC?: boolean;
 }
 
 export const createBooking = async (bookingDetails: BookingDetails): Promise<string> => {
@@ -26,6 +37,7 @@ export const createBooking = async (bookingDetails: BookingDetails): Promise<str
     const bookingCollection = collection(db, 'bookings');
     const docRef = await addDoc(bookingCollection, {
       ...bookingDetails,
+      scheduledDateTime: bookingDetails.scheduledDateTime.toISOString(),
       createdAt: new Date().toISOString(),
       status: 'pending'
     });

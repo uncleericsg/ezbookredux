@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
-import type { AcuitySettings } from '../../types/settings';
-import QuickSettings from './QuickSettings';
-import IntegrationStatus from './IntegrationStatus';
+
+import IntegrationStatus from '@admin/IntegrationStatus';
+import QuickSettings from '@admin/QuickSettings';
+
+import type { AcuitySettings } from '@types/settings';
 
 interface AdminHeaderProps {
   settings: AcuitySettings;
@@ -29,4 +31,5 @@ const AdminHeader = memo(({
 
 AdminHeader.displayName = 'AdminHeader';
 
+export { AdminHeader };
 export default AdminHeader;

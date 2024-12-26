@@ -2,8 +2,8 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { googleMapsPlugin } from './vite-plugin-google-maps';
-import mkcert from 'vite-plugin-mkcert';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig(({ mode }) => {
@@ -11,106 +11,217 @@ export default defineConfig(({ mode }) => {
   
   return {
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src')
-      }
+      alias: [
+        // Root alias
+        {
+          find: '@',
+          replacement: path.resolve(__dirname, './src')
+        },
+        // Component aliases
+        {
+          find: '@admin',
+          replacement: path.resolve(__dirname, './src/components/admin')
+        },
+        {
+          find: '@auth',
+          replacement: path.resolve(__dirname, './src/components/auth')
+        },
+        {
+          find: '@booking',
+          replacement: path.resolve(__dirname, './src/components/booking')
+        },
+        {
+          find: '@common',
+          replacement: path.resolve(__dirname, './src/components/common')
+        },
+        {
+          find: '@components',
+          replacement: path.resolve(__dirname, './src/components')
+        },
+        {
+          find: '@dev',
+          replacement: path.resolve(__dirname, './src/components/dev')
+        },
+        {
+          find: '@error-boundary',
+          replacement: path.resolve(__dirname, './src/components/error-boundary')
+        },
+        {
+          find: '@icons',
+          replacement: path.resolve(__dirname, './src/components/icons')
+        },
+        {
+          find: '@modals',
+          replacement: path.resolve(__dirname, './src/components/modals')
+        },
+        {
+          find: '@notifications',
+          replacement: path.resolve(__dirname, './src/components/notifications')
+        },
+        {
+          find: '@payment',
+          replacement: path.resolve(__dirname, './src/components/payment')
+        },
+        {
+          find: '@profile',
+          replacement: path.resolve(__dirname, './src/components/profile')
+        },
+        {
+          find: '@tech',
+          replacement: path.resolve(__dirname, './src/components/tech')
+        },
+        {
+          find: '@test',
+          replacement: path.resolve(__dirname, './src/components/test')
+        },
+        {
+          find: '@ui',
+          replacement: path.resolve(__dirname, './src/components/ui')
+        },
+        // Service aliases
+        {
+          find: '@api',
+          replacement: path.resolve(__dirname, './src/api')
+        },
+        {
+          find: '@config',
+          replacement: path.resolve(__dirname, './src/config')
+        },
+        {
+          find: '@constants',
+          replacement: path.resolve(__dirname, './src/constants')
+        },
+        {
+          find: '@data',
+          replacement: path.resolve(__dirname, './src/data')
+        },
+        {
+          find: '@google',
+          replacement: path.resolve(__dirname, './src/services/google')
+        },
+        {
+          find: '@hooks',
+          replacement: path.resolve(__dirname, './src/hooks')
+        },
+        {
+          find: '@lib',
+          replacement: path.resolve(__dirname, './src/lib')
+        },
+        {
+          find: '@locations',
+          replacement: path.resolve(__dirname, './src/services/locations')
+        },
+        {
+          find: '@mocks',
+          replacement: path.resolve(__dirname, './src/mocks')
+        },
+        {
+          find: '@onemap',
+          replacement: path.resolve(__dirname, './src/services/onemap')
+        },
+        {
+          find: '@pages',
+          replacement: path.resolve(__dirname, './src/pages')
+        },
+        {
+          find: '@redux-types',
+          replacement: path.resolve(__dirname, './src/store/types')
+        },
+        {
+          find: '@routes',
+          replacement: path.resolve(__dirname, './src/routes')
+        },
+        {
+          find: '@server',
+          replacement: path.resolve(__dirname, './src/server')
+        },
+        {
+          find: '@services',
+          replacement: path.resolve(__dirname, './src/services')
+        },
+        {
+          find: '@slices',
+          replacement: path.resolve(__dirname, './src/store/slices')
+        },
+        {
+          find: '@snapshots',
+          replacement: path.resolve(__dirname, './src/snapshots')
+        },
+        {
+          find: '@store',
+          replacement: path.resolve(__dirname, './src/store')
+        },
+        {
+          find: '@styles',
+          replacement: path.resolve(__dirname, './src/styles')
+        },
+        {
+          find: '@teams',
+          replacement: path.resolve(__dirname, './src/services/teams')
+        },
+        {
+          find: '@theme',
+          replacement: path.resolve(__dirname, './src/theme')
+        },
+        {
+          find: '@types',
+          replacement: path.resolve(__dirname, './src/types')
+        },
+        {
+          find: '@utils',
+          replacement: path.resolve(__dirname, './src/utils')
+        },
+        {
+          find: '@validation',
+          replacement: path.resolve(__dirname, './src/services/validation')
+        },
+        // Supabase browser polyfill (keep this last)
+        {
+          find: 'stream',
+          replacement: 'stream-browserify'
+        }
+      ]
     },
     plugins: [
       react({
         jsxRuntime: 'automatic',
         fastRefresh: true,
       }),
-      googleMapsPlugin(env.VITE_GOOGLE_PLACES_API_KEY),
-      mkcert(),
+      googleMapsPlugin(),
       dts()
     ],
-    server: {
-      https: true,
-      port: 5173,
-      host: true,
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          secure: false,
-          ws: true
-        },
-        '/onemap': {
-          target: 'https://developers.onemap.sg',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/onemap/, ''),
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.log('proxy error', err);
-            });
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('Sending Request to the Target:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('Received Response from the Target:', proxyRes.statusCode);
-            });
-          }
-        },
-        '/maps/api': {
-          target: 'https://maps.googleapis.com',
-          changeOrigin: true,
-          secure: true,
+    optimizeDeps: {
+      exclude: ['lucide-react'],
+      include: ['@supabase/supabase-js'],
+      esbuildOptions: {
+        define: {
+          global: 'globalThis'
         }
       }
     },
-    optimizeDeps: {
-      exclude: ['lucide-react'],
-      include: [
-        'react', 
-        'react-dom',
-        'firebase/app',
-        'firebase/auth',
-        'firebase/firestore',
-        'firebase/messaging',
-        '@googlemaps/js-api-loader'
-      ]
-    },
     build: {
-      outDir: 'dist',
       sourcemap: true,
-      minify: true,
-      chunkSizeWarningLimit: 1000,
-      target: 'esnext',
+      target: 'es2020',
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html')
-        },
-        output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'ui-vendor': ['framer-motion', '@hello-pangea/dnd'],
-            'firebase': [
-              'firebase/app',
-              'firebase/auth',
-              'firebase/firestore',
-              'firebase/messaging'
-            ],
-            'stripe': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
-            'utils': ['date-fns', 'zod', 'axios'],
-            'google-maps': ['@googlemaps/js-api-loader']
-          }
         }
       }
+    },
+    server: {
+      port: 5173,  // Development server port
+      host: true
     },
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./src/test/setup.ts'],
+      setupFiles: ['./src/setupTests.ts'],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
         exclude: [
           'node_modules/',
-          'src/test/',
-          '**/*.d.ts',
-          '**/*.test.{ts,tsx}',
-          '**/*.spec.{ts,tsx}',
-          '**/snapshots/*'
+          'src/setupTests.ts',
         ]
       }
     },

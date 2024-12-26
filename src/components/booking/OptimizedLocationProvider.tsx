@@ -28,8 +28,8 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocationOptimizer } from '../../hooks/useLocationOptimizer';
-import { Region, TimeSlot } from '../../types';
+import { useLocationOptimizer } from '@hooks/useLocationOptimizer';
+import { Region, TimeSlot } from '@types';
 import { ErrorBoundary } from 'react-error-boundary';
 
 interface OptimizedLocationProviderProps {

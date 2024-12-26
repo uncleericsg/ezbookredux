@@ -1,7 +1,8 @@
-import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { tabs } from './AdminNav';
-import AdminPanelLoader from './AdminPanelLoader';
+import React, { memo } from 'react';
+
+import { tabs } from '@admin/AdminNav';
+import AdminPanelLoader from '@admin/AdminPanelLoader';
 
 interface AdminPanelsProps {
   activeTab: number;
@@ -36,4 +37,5 @@ const AdminPanels = memo(({ activeTab }: AdminPanelsProps) => {
 
 AdminPanels.displayName = 'AdminPanels';
 
+export { AdminPanels };
 export default AdminPanels;

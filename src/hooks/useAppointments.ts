@@ -1,17 +1,18 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useUser } from '../contexts/UserContext';
-import { bookAppointment } from '../services/acuity';
-import { incrementVisitLabel } from '../services/repairShopr';
-import { validateBookingDetails } from '../utils/bookingValidation';
-import { BookingError } from '../utils/errors';
-import { validateBookingRequest } from '../utils/bookingValidation';
+import { useSelector } from 'react-redux';
+import { bookAppointment } from '@services/acuity';
+import { incrementVisitLabel } from '@services/repairShopr';
+import { validateBookingDetails } from '@utils/bookingValidation';
+import { BookingError } from '@utils/errors';
+import { validateBookingRequest } from '@utils/bookingValidation';
 import { toast } from 'sonner';
+import { RootState } from '@store';
 
 export const useAppointments = () => {
   const [loading, setLoading] = useState(false);
   const bookingInProgress = useRef(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
 
   const bookNewAppointment = async (datetime: string, categoryId: string): Promise<string> => {
     if (bookingInProgress.current) {

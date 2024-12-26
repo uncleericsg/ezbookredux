@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './useToast';
-import { renewAMC } from '../services/amc';
-import type { AMCPackage } from '../types';
+import { renewAMC } from '@services/amc';
+import type { AMCPackage } from '@types';
 
 export const useAMCRenewal = () => {
   const [loading, setLoading] = useState(false);

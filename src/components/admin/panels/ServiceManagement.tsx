@@ -1,5 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
+
 import ServiceHub from '../ServiceHub/ServiceHub';
 
 const ServiceManagement: React.FC = () => {

@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { BarChart } from 'lucide-react';
+import React from 'react';
 
 const Analytics: React.FC = () => {
   return (

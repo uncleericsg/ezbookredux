@@ -1,13 +1,21 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
-import { setUser, setLoading, setError, updateUserProfile, clearUser } from '../store/slices/userSlice';
-import { setAuthenticated, setToken, resetAuth } from '../store/slices/authSlice';
-import { authenticateUser } from '../services/auth';
+import { 
+  setUser, 
+  setLoading, 
+  setError, 
+  updateUserProfile,
+  requestOTP,
+  verifyUserOTP
+} from '../store/slices/userSlice';
+import { setAuthenticated, setToken, clearAuth } from '../store/slices/authSlice';
+import { sendOTP, verifyOTP } from '../services/auth';
 import { toast } from 'sonner';
 import type { User, Booking } from '../types/user';
 import { useNavigate } from 'react-router-dom';
 import { RESET_STORE } from '../store';
-import { signOut } from '../services/firebase';
+import { signOut } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 /**
  * Hook to handle user state management with Redux
@@ -23,28 +31,23 @@ export const useUserRedux = () => {
   const error = useAppSelector(state => state.user.error);
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const token = useAppSelector(state => state.auth.token);
+  const verificationId = useAppSelector(state => state.user.verificationId);
+  const phone = useAppSelector(state => state.user.phone);
 
-  // Login handler
-  const login = useCallback(async (email: string, password: string) => {
+  // Request OTP handler
+  const requestPhoneOTP = useCallback(async (phoneNumber: string) => {
     try {
       dispatch(setLoading(true));
-      const result = await authenticateUser(email, password);
-      
-      if (result.success) {
-        dispatch(setUser(result.user));
-        dispatch(setToken(result.token));
-        dispatch(setAuthenticated(true));
-        localStorage.setItem('authToken', result.token);
-        toast.success('Successfully logged in');
+      const result = await dispatch(requestOTP(phoneNumber)).unwrap();
+      if (result.verificationId) {
+        toast.success('OTP sent successfully');
         return true;
       } else {
-        dispatch(setError(result.error || 'Authentication failed'));
-        toast.error(result.error || 'Authentication failed');
+        toast.error('Failed to send OTP');
         return false;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
-      dispatch(setError(errorMessage));
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP';
       toast.error(errorMessage);
       return false;
     } finally {
@@ -52,68 +55,73 @@ export const useUserRedux = () => {
     }
   }, [dispatch]);
 
+  // Verify OTP handler
+  const verifyPhoneOTP = useCallback(async (code: string) => {
+    if (!verificationId || !phone) {
+      toast.error('Please request OTP first');
+      return false;
+    }
+
+    try {
+      dispatch(setLoading(true));
+      const user = await dispatch(verifyUserOTP({ 
+        code, 
+        verificationId, 
+        phone 
+      })).unwrap();
+      
+      if (user) {
+        dispatch(setAuthenticated(true));
+        toast.success('Successfully logged in');
+        return true;
+      } else {
+        toast.error('Invalid OTP');
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to verify OTP';
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch, verificationId, phone]);
+
   // Logout handler
   const logout = useCallback(async () => {
     try {
-      // First sign out from Firebase
-      const { success, error } = await signOut();
-      if (!success) {
-        throw error;
-      }
-
-      // Clear all storage
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // Reset individual slices first
-      dispatch(clearUser());
-      dispatch(resetAuth());
-
-      // Then reset the entire store
+      await signOut(auth);
+      dispatch(setUser(null));
+      dispatch(clearAuth());
       dispatch({ type: RESET_STORE });
-
-      // Force a re-render of the app
-      window.dispatchEvent(new Event('storage'));
-
-      // Show success message
+      localStorage.clear();
+      navigate('/login');
       toast.success('Successfully logged out');
-
-      // Navigate to home page since it's public
-      navigate('/', { 
-        replace: true,
-        state: {} // Clear navigation state
-      });
-
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Error during logout');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to logout';
+      toast.error(errorMessage);
     }
   }, [dispatch, navigate]);
 
-  // Update user profile
-  const updateProfile = useCallback((updates: Partial<User>) => {
-    dispatch(updateUserProfile(updates));
+  // Update profile handler
+  const updateProfile = useCallback(async (data: Partial<User>) => {
+    try {
+      dispatch(updateUserProfile(data));
+      toast.success('Profile updated successfully');
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(errorMessage);
+      return false;
+    }
   }, [dispatch]);
 
-  // Add booking
-  const addBooking = useCallback((booking: Booking) => {
+  // Update bookings handler
+  const updateBookings = useCallback((bookings: Booking[]) => {
     if (user) {
-      const updatedBookings = [...(user.bookings || []), booking];
-      dispatch(updateUserProfile({ bookings: updatedBookings }));
+      dispatch(updateUserProfile({ ...user, bookings }));
     }
-  }, [user, dispatch]);
-
-  // Update technician status
-  const updateTechStatus = useCallback((status: 'available' | 'busy' | 'offline') => {
-    if (user && user.role === 'tech') {
-      dispatch(updateUserProfile({
-        availability: {
-          status,
-          lastUpdated: new Date().toISOString()
-        }
-      }));
-    }
-  }, [user, dispatch]);
+  }, [dispatch, user]);
 
   return {
     user,
@@ -121,10 +129,12 @@ export const useUserRedux = () => {
     error,
     isAuthenticated,
     token,
-    login,
+    verificationId,
+    phone,
+    requestPhoneOTP,
+    verifyPhoneOTP,
     logout,
     updateProfile,
-    addBooking,
-    updateTechStatus
+    updateBookings
   };
 };

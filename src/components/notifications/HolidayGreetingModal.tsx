@@ -11,7 +11,7 @@ import {
   Gift,
   AlertTriangle,
 } from 'lucide-react';
-import type { Holiday, HolidayGreeting } from '../../types';
+import type { Holiday, HolidayGreeting } from '@types';
 
 import {
   Dialog,

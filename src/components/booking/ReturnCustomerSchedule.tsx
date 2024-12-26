@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { Calendar } from '../Calendar';
+import { Calendar } from '@components/Calendar';
 import { format, addMinutes, startOfDay } from 'date-fns';
-import { CustomerInfo, PricingOption, TimeSlot } from '../../types/booking';
-import { BUSINESS_RULES } from '../../constants/businessRules';
+import { CustomerInfo, PricingOption, TimeSlot } from '@types/booking';
+import { BUSINESS_RULES } from '@constants/businessRules';
 import styles from './ScheduleStep.module.css';
 
 interface ReturnCustomerScheduleProps {
@@ -191,4 +191,5 @@ const ReturnCustomerSchedule: React.FC<ReturnCustomerScheduleProps> = ({
   );
 };
 
+export { ReturnCustomerSchedule };
 export default ReturnCustomerSchedule;

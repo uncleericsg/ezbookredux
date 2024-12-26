@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { fcmService, type NotificationPayload } from '../services/fcm';
+import { fcmService, type NotificationPayload } from '@services/fcm';
 import { toast } from 'sonner';
 
 interface UseFCMOptions {

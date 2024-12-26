@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../store';
+import { useAppSelector } from '@store';
 
 interface PublicRouteProps {
   children: React.ReactNode;

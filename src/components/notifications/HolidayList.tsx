@@ -1,9 +1,9 @@
 import { useCallback, useState, useMemo } from 'react';
 import { RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useHolidayNotifications } from '../hooks/useHolidayNotifications';
+import { useHolidayNotifications } from '@hooks/useHolidayNotifications';
 import HolidayGreetingModal from './HolidayGreetingModal';
-import { useHolidayGreetings } from '../../hooks/useHolidayGreetings';
-import { useAcuitySettings } from '../../hooks/useAcuitySettings';
+import { useHolidayGreetings } from '@hooks/useHolidayGreetings';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
 import { toast } from 'sonner';
 import ErrorBoundary from './ErrorBoundary';
 import { Button } from '@components/atoms/button';

@@ -1,9 +1,9 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, Clock, AlertCircle, Star } from 'lucide-react';
-import type { ServiceVisit } from '../types';
-import ServiceRating from './ServiceRating';
-import { useServiceRating } from '../hooks/useServiceRating';
+import type { ServiceVisit } from '@types';
+import ServiceRating from '@components/ServiceRating';
+import { useServiceRating } from '@hooks/useServiceRating';
 
 interface ServiceVisitTimelineProps {
   visits: ServiceVisit[];
@@ -11,7 +11,7 @@ interface ServiceVisitTimelineProps {
 }
 
 const ServiceVisitTimeline: React.FC<ServiceVisitTimelineProps> = ({ visits, loading }) => {
-  const [ratingVisit, setRatingVisit] = useState<string | null>(null);
+  const [ratingVisit, setRatingVisit] = React.useState<string | null>(null);
   const { submitRating } = useServiceRating();
 
   if (loading) {

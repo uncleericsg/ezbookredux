@@ -1,6 +1,6 @@
 import { addDays, isBefore, startOfDay } from 'date-fns';
-import type { BookingValidation, TimeSlot } from '../types';
-import { validateBookingTime } from './validation';
+import type { BookingValidation, TimeSlot } from '@types';
+import { validateBookingTime } from '@utils/validation';
 import { toast } from 'sonner';
 
 export const validateTimeSlot = (

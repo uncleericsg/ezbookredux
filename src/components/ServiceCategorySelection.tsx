@@ -3,22 +3,21 @@ import {
   AirVent, Wrench, ShieldCheck, Star, Calendar, CheckCircle, 
   Shield, Clock, Timer, ThumbsUp, Users, BadgeCheck
 } from 'lucide-react';
-import { useAppSelector } from '../store';
-import { useServiceHistory } from '../hooks/useServiceHistory';
-import { differenceInDays } from 'date-fns';
-import { categoryMapper } from '../lib/categoryMapper';
-import { useAcuitySettings } from '../hooks/useAcuitySettings';
-import { toast } from 'sonner';
-import { useNavigate } from '../hooks/useRouterTransition';
-import { useServiceRating } from '../hooks/useServiceRating';
-import ServiceRating from './ServiceRating';
-import TrustIndicators from './TrustIndicators';
+import { useAppSelector } from '@store';
+import { useServiceHistory } from '@hooks/useServiceHistory';
+import { format } from 'date-fns';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import { useNavigate } from '@hooks/useRouterTransition';
+import { useServiceRating } from '@hooks/useServiceRating';
+import ServiceRating from '@components/ServiceRating';
+import TrustIndicators from '@components/TrustIndicators';
 import { motion } from 'framer-motion';
-import { BUSINESS_RULES } from '../constants';
-import '../styles/home.css';
+import { BUSINESS_RULES } from '@constants';
+import '@styles/home.css';
 import CountUp from 'react-countup';
 import styles from './ServiceCategorySelection.module.css';
-import FloatingButtons from './FloatingButtons';
+import FloatingButtons from '@components/FloatingButtons';
+import { toast } from 'sonner';
 
 interface PricingTier {
   units: string;
@@ -54,7 +53,7 @@ const ServiceCategorySelection: React.FC = () => {
     if (!currentUser?.nextServiceDate) return null;
     const nextService = new Date(currentUser.nextServiceDate);
     const today = new Date();
-    const days = differenceInDays(nextService, today);
+    const days = format(nextService, 'dd-MM-yyyy') > format(today, 'dd-MM-yyyy') ? format(nextService, 'dd-MM-yyyy') - format(today, 'dd-MM-yyyy') : null;
     return days > 0 ? days : null;
   };
   
@@ -74,24 +73,24 @@ const ServiceCategorySelection: React.FC = () => {
       popular: true
     },
     {
-      id: 'repair',
-      name: 'Repair Service',
-      description: 'Expert diagnosis and repair for any air conditioning problems',
-      type: 'repair',
-      price: 120,
+      id: 'powerjet-chemical',
+      name: 'PowerJet Chemical Wash',
+      description: 'Signature powerjet service with deep cleaning using coil chemicals',
+      type: 'maintenance',
+      price: 150,
       icon: Wrench,
-      duration: '2-4 hours',
+      duration: '1 hour 30 minutes',
       rating: 4.9,
       reviewCount: 850
     },
     {
       id: 'gas-leak',
-      name: 'Gas Leak Check & Troubleshooting',
-      description: 'Comprehensive gas leak detection and system pressure testing service',
+      name: 'Gas Check & Leakage Issues',
+      description: 'Frequent gas top-up & leakage issues inspection service',
       type: 'diagnostic',
-      price: 80,
+      price: 130,
       icon: ShieldCheck,
-      duration: '1-3 hours',
+      duration: '1 hour',
       rating: 4.9,
       reviewCount: 680
     }
@@ -156,6 +155,16 @@ const ServiceCategorySelection: React.FC = () => {
     
     if (!categoryId || (!price && !isAmcService) || !maxDuration) {
       toast.error('Invalid service type selected');
+      return;
+    }
+    
+    if (categoryId === 'regular') {
+      navigate('/booking/return-customer');
+      return;
+    }
+
+    if (categoryId === 'powerjet-chemical' || categoryId === 'gas-leak') {
+      toast.info('Service coming soon');
       return;
     }
     
@@ -244,22 +253,49 @@ const ServiceCategorySelection: React.FC = () => {
                 
                 <motion.button
                   onClick={() => handleCategorySelect(category.id, category.price, category.duration, category.type === 'amc')}
-                  className="w-full h-full bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 hover:border-[#FFD700]/30 transition-all duration-300 shadow-lg hover:shadow-[#FFD700]/5 flex flex-col"
+                  className={`w-full h-full backdrop-blur-xl rounded-2xl p-8 border transition-all duration-300 shadow-lg flex flex-col ${
+                    category.id === 'regular'
+                      ? 'bg-gradient-to-br from-yellow-900/40 to-slate-900/60 border-yellow-700/50 hover:border-yellow-500/70 hover:shadow-yellow-500/30'
+                    : category.id === 'powerjet-chemical'
+                      ? 'bg-gradient-to-br from-cyan-900/40 to-slate-900/60 border-cyan-700/50 hover:border-cyan-500/70 hover:shadow-cyan-500/30'
+                      : category.id === 'gas-leak'
+                      ? 'bg-gradient-to-br from-pink-900/40 to-slate-900/60 border-pink-700/50 hover:border-pink-500/70 hover:shadow-pink-500/30'
+                      : 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-gray-700/50 hover:border-[#FFD700]/30 hover:shadow-[#FFD700]/5'
+                  }`}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center mb-6">
-                    <div className="bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5 p-4 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                      <category.icon className="h-8 w-8 text-[#FFD700]" />
+                    <div className={`p-4 rounded-xl group-hover:scale-110 transition-transform duration-300 ${
+                      category.id === 'regular'
+                        ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-500/5'
+                      : category.id === 'powerjet-chemical'
+                        ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/5'
+                        : category.id === 'gas-leak'
+                        ? 'bg-gradient-to-br from-pink-500/20 to-pink-500/5'
+                        : 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5'
+                    }`}>
+                      <category.icon className={`h-8 w-8 ${
+                        category.id === 'regular'
+                          ? 'text-yellow-400'
+                        : category.id === 'powerjet-chemical'
+                          ? 'text-cyan-400'
+                        : category.id === 'gas-leak'
+                          ? 'text-pink-400'
+                          : 'text-[#FFD700]'
+                      }`} />
                     </div>
-                    {category.type === 'amc' && (
-                      <span className="ml-auto bg-gradient-to-r from-[#FFD700]/20 to-[#FFD700]/10 text-[#FFD700] px-4 py-2 rounded-lg text-sm font-medium">
-                        AMC Package
-                      </span>
-                    )}
                   </div>
                   
                   <div className="flex-grow">
-                    <h3 className="text-xl font-bold text-[#FFD700] mb-3 group-hover:text-[#FFD700] transition-colors">
+                    <h3 className={`text-xl font-bold mb-3 transition-colors ${
+                      category.id === 'regular'
+                        ? 'text-yellow-300'
+                      : category.id === 'powerjet-chemical'
+                        ? 'text-cyan-300'
+                        : category.id === 'gas-leak'
+                        ? 'text-pink-300'
+                        : 'text-[#FFD700]'
+                    }`}>
                       {category.name}
                     </h3>
                     
@@ -269,8 +305,24 @@ const ServiceCategorySelection: React.FC = () => {
                   </div>
                   
                   {category.rating && (
-                    <div className="flex items-center space-x-2 mt-6 pt-6 border-t border-gray-700/50">
-                      <Star className="h-4 w-4 text-[#FFD700]" />
+                    <div className={`flex items-center space-x-2 mt-6 pt-6 border-t ${
+                      category.id === 'regular'
+                        ? 'border-yellow-700/50'
+                      : category.id === 'powerjet-chemical'
+                        ? 'border-cyan-700/50'
+                        : category.id === 'gas-leak'
+                        ? 'border-pink-700/50'
+                        : 'border-gray-700/50'
+                    }`}>
+                      <Star className={`h-4 w-4 ${
+                        category.id === 'regular'
+                          ? 'text-yellow-400'
+                        : category.id === 'powerjet-chemical'
+                          ? 'text-cyan-400'
+                        : category.id === 'gas-leak'
+                          ? 'text-pink-400'
+                          : 'text-[#FFD700]'
+                      }`} />
                       <span className="text-sm text-gray-300">
                         {category.rating} ({category.reviewCount}+ reviews)
                       </span>
@@ -417,7 +469,7 @@ const ServiceCategorySelection: React.FC = () => {
           />
         )}
       </div>
-      <FloatingButtons />
+      <FloatingButtons />;
       {showRating && (
         <ServiceRating onSubmit={handleRatingSubmit} onClose={() => setShowRating(false)} />
       )}

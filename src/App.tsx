@@ -1,12 +1,11 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import ScrollToTop from './components/ScrollToTop';
-import { LoadingScreen } from './components/LoadingScreen';
-import { useServiceManager } from './hooks/useServiceManager';
-import { useInitializeAuth } from './hooks/useInitializeAuth';
-import { useAppSelector } from './store';
-import { AdminViewProvider } from './contexts/AdminViewContext';
+import { useAppSelector } from '@store/hooks';
+import { LoadingScreen } from '@components/LoadingScreen';
+import ScrollToTop from '@components/ScrollToTop';
+import { useServiceManager } from '@hooks/useServiceManager';
+import { useInitializeAuth } from '@hooks/useInitializeAuth';
 
 function App() {
   // Initialize auth state
@@ -43,12 +42,14 @@ function App() {
   }
 
   return (
-    <AdminViewProvider>
+    <>
       <ScrollToTop />
       <Outlet />
       <Toaster position="top-center" />
-    </AdminViewProvider>
+    </>
   );
 }
+
+App.displayName = 'App';
 
 export default App;

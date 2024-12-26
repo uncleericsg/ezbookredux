@@ -1,8 +1,22 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, Mail, Globe, Bell, Shield, Database } from 'lucide-react';
+import React, { memo } from 'react';
 
-const Settings: React.FC = () => {
+interface SettingItem {
+  icon: typeof SettingsIcon;
+  title: string;
+  description: string;
+}
+
+const settingItems: SettingItem[] = [
+  { icon: Mail, title: 'Email Settings', description: 'Configure SMTP and email templates' },
+  { icon: Globe, title: 'Site Settings', description: 'General website configuration' },
+  { icon: Bell, title: 'Notification Settings', description: 'Configure notification preferences' },
+  { icon: Shield, title: 'Security Settings', description: 'Security and authentication settings' },
+  { icon: Database, title: 'Backup Settings', description: 'Database backup configuration' }
+] as const;
+
+const Settings = memo(() => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -13,16 +27,14 @@ const Settings: React.FC = () => {
         <SettingsIcon className="h-6 w-6 text-blue-400" />
         <h2 className="text-xl font-semibold">System Settings</h2>
       </div>
+      
       <div className="bg-gray-800 rounded-lg p-6">
         <div className="grid gap-8">
-          {[
-            { icon: Mail, title: 'Email Settings', description: 'Configure SMTP and email templates' },
-            { icon: Globe, title: 'Site Settings', description: 'General website configuration' },
-            { icon: Bell, title: 'Notification Settings', description: 'Configure notification preferences' },
-            { icon: Shield, title: 'Security Settings', description: 'Security and authentication settings' },
-            { icon: Database, title: 'Backup Settings', description: 'Database backup configuration' }
-          ].map(({ icon: Icon, title, description }) => (
-            <div key={title} className="flex items-start space-x-4 p-4 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer">
+          {settingItems.map(({ icon: Icon, title, description }) => (
+            <div 
+              key={title} 
+              className="flex items-start space-x-4 p-4 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+            >
               <Icon className="h-5 w-5 text-blue-400 mt-1" />
               <div>
                 <h3 className="text-lg font-medium">{title}</h3>
@@ -34,6 +46,8 @@ const Settings: React.FC = () => {
       </div>
     </motion.div>
   );
-};
+});
+
+Settings.displayName = 'Settings';
 
 export default Settings;

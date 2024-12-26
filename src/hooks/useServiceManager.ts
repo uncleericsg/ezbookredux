@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ServiceManager, ServiceInitOptions } from '../services/serviceManager';
+import { ServiceManager, ServiceInitOptions } from '@services/serviceManager';
 
 export const useServiceManager = (options: ServiceInitOptions = {}) => {
   const [isInitializing, setIsInitializing] = useState(true);

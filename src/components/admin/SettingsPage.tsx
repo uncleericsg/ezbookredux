@@ -1,12 +1,15 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import AcuitySettings from './AcuitySettings';
-import CypressSettings from './CypressSettings';
-import BrandingSettings from './BrandingSettings';
-import BuildManager from './BuildManager';
-import FloatingSaveButton from './FloatingSaveButton';
+import React from 'react';
+
 import { useSettingsForm } from '../../hooks/useSettingsForm';
 import { updateAcuitySettings } from '../../services/admin';
+
+import AcuitySettings from './AcuitySettings';
+import BrandingSettings from './BrandingSettings';
+import BuildManager from './BuildManager';
+import CypressSettings from './CypressSettings';
+import FloatingSaveButton from './FloatingSaveButton';
+
 
 const SettingsPage: React.FC = () => {
   const {

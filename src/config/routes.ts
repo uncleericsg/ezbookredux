@@ -4,6 +4,7 @@
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  PRICING: '/service-pricing',
   ADMIN: {
     ROOT: '/admin',
     DASHBOARD: '/admin/dashboard',
@@ -22,12 +23,18 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   NOTIFICATIONS: '/notifications',
   BOOKING: {
+    ROOT: '/booking',
     FIRST_TIME: '/booking/first-time',
     SERVICE: '/booking/service',
+    CONFIRMATION: '/booking/confirmation/:bookingId',
+    RETURN_CUSTOMER: '/booking/return-customer',
+    PRICE_SELECTION: '/booking/price-selection',
+    NEW: '/booking/new'
   },
   AMC: {
     PACKAGES: '/amc/packages',
     SUBSCRIPTION: '/amc/subscription-flow',
+    SIGNUP: '/amc/signup'
   },
 } as const;
 
@@ -48,11 +55,19 @@ export const PROTECTED_ROUTES = [
   ROUTES.PROFILE,
   ROUTES.DASHBOARD,
   ROUTES.NOTIFICATIONS,
+  ROUTES.BOOKING.CONFIRMATION,
+  ROUTES.BOOKING.NEW
 ];
 
 // Routes that should not show the main navigation
 export const ROUTES_WITHOUT_NAVBAR = [
   ROUTES.LOGIN,
+  ROUTES.PRICING,
+  ROUTES.BOOKING.PRICE_SELECTION,
+  ROUTES.AMC.SIGNUP,
+  ROUTES.BOOKING.NEW,
+  ROUTES.BOOKING.CONFIRMATION,
+  ROUTES.BOOKING.RETURN_CUSTOMER,
   ROUTES.ADMIN.ROOT,
   ROUTES.ADMIN.DASHBOARD,
   ROUTES.ADMIN.USERS,
@@ -92,6 +107,18 @@ export const ROUTE_METADATA = {
   [ROUTES.HOME]: {
     title: 'Home',
     breadcrumb: 'Home',
+  },
+  [ROUTES.LOGIN]: {
+    title: 'Login',
+    breadcrumb: 'Login',
+  },
+  [ROUTES.BOOKING.PRICE_SELECTION]: {
+    title: 'Select Price',
+    breadcrumb: 'Price Selection',
+  },
+  [ROUTES.AMC.SIGNUP]: {
+    title: 'AMC Signup',
+    breadcrumb: 'AMC Signup',
   },
   [ROUTES.ADMIN.ROOT]: {
     title: 'Admin Dashboard',

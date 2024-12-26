@@ -1,6 +1,7 @@
-import React, { memo } from 'react';
 import { format, parseISO, isValid } from 'date-fns';
 import { Bell } from 'lucide-react';
+import React, { memo } from 'react';
+
 import type { HolidayGreeting } from '../../types';
 
 interface ScheduledNotificationsProps {

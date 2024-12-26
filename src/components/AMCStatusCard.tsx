@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import type { User } from '../types';
+import type { User } from '@types';
 
 interface AMCStatusCardProps {
   user: User;

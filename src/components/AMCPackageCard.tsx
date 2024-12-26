@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, CheckCircle, Loader2 } from 'lucide-react';
-import type { AMCPackage } from '../types';
+import type { AMCPackage } from '@types';
 
 interface AMCPackageCardProps {
   package: AMCPackage;

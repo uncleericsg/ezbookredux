@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import type { ServiceVisit } from '../types';
+import type { ServiceVisit } from '@types';
 
 interface ServiceStatsProps {
   visits: ServiceVisit[];

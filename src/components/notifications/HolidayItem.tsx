@@ -17,7 +17,7 @@ import {
 } from '@components/atoms/tooltip';
 import { Badge } from '@components/atoms/badge';
 import { HolidayItemProps } from './types';
-import { cn } from '../../lib/utils';
+import { motion } from 'framer-motion';
 
 const HolidayItem: React.FC<HolidayItemProps> = React.memo(({ holiday, onSchedule, style }) => {
   const formattedDate = format(parseISO(holiday.date), 'MMMM do, yyyy');

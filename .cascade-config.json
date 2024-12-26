@@ -1,169 +1,267 @@
 {
   "project": {
     "name": "iAircon EasyBooking",
+    "description": "Easy appointment booking platform for iAircon services",
     "type": "web_application",
-    "framework": "react",
-    "bundler": "vite",
-    "node_version": ">=18",
+    "environment": {
+      "framework": "react",
+      "bundler": "vite",
+      "node_version": ">=18",
+      "package_manager": "npm",
+      "platform": "windows",
+      "shell": {
+        "default": "powershell",
+        "file_actions": "cmd.exe",
+        "tsc_actions": "npx tsc"
+      },
+      "node_scripts": {
+        "type": "module",
+        "module_type": "esm",
+        "extension": ".mjs",
+        "run_command": "node --experimental-modules"
+      }
+    },
     "path": "c:/Users/djxpi/CascadeProjects/project-redux"
   },
-  "architecture": {
+
+  "core": {
+    "server": {
+      "development": {
+        "protocol": "http",
+        "port": 5173,
+        "host": "localhost"
+      },
+      "api": {
+        "protocol": "http",
+        "port": 3000,
+        "host": "localhost"
+      }
+    },
+    "build": {
+      "target": "es2020",
+      "sourcemap": true,
+      "minify": true
+    },
     "routing": {
       "library": "react-router",
-      "version": "^6.0.0",
+      "version": "^7.0.2",
       "implementation": "browser_router"
     },
-    "state_management": {
-      "primary": "redux_toolkit",
-      "secondary": "context_api",
-      "persistence": "local_storage"
+    "state": {
+      "library": "redux_toolkit",
+      "version": "^2.5.0",
+      "status": "completed",
+      "persistence": "local_storage",
+      "implementation": {
+        "store": "configureStore",
+        "slices": "createSlice",
+        "thunks": "createAsyncThunk",
+        "rtk_query": true
+      },
+      "migration": {
+        "status": "completed",
+        "source": "context_api",
+        "target": "redux_toolkit",
+        "current_phase": "completed",
+        "completed": {
+          "store_setup": true,
+          "slices": ["auth", "user", "admin", "technician", "booking"],
+          "components": []
+        },
+        "pending": {
+          "contexts": [],
+          "components": []
+        }
+      }
     }
   },
-  "ui_implementation": {
-    "admin": {
-      "library": "mui",
-      "version": "^5.0.0",
-      "status": "in_progress",
-      "scope": {
-        "include": ["/src/components/admin/**/*"],
-        "exclude": ["/src/components/admin/shared/**/*"]
-      },
-      "patterns": {
-        "layout": "mui_layout_components",
-        "forms": "mui_form_components",
-        "data_display": "mui_data_grid",
-        "navigation": "mui_navigation_components"
-      }
-    },
-    "frontend": {
-      "library": "tailwind",
-      "version": "^3.0.0",
-      "status": "stable",
-      "scope": {
-        "include": ["/src/components/**/*", "/src/pages/**/*"],
-        "exclude": ["/src/components/admin/**/*"]
-      },
-      "patterns": {
-        "layout": "flex_grid_system",
-        "forms": "custom_form_components",
-        "styling": "tailwind_classes"
-      }
-    },
-    "framework": "material_ui",
-    "theme": "custom_dark",
-    "responsive": true,
-    "accessibility": true
-  },
-  "code_conventions": {
-    "exports": {
-      "style": "named",
-      "components": {
-        "pattern": "both_named_and_default",
-        "example": "export { ComponentName }; export default ComponentName;"
-      }
-    },
-    "imports": {
-      "style": "named_imports",
-      "prefer_named": true,
-      "example": "import { ComponentName } from './ComponentName';"
+
+  "ui": {
+    "styling": {
+      "framework": "tailwind",
+      "version": "^3.3.0",
+      "config": "tailwind.config.js",
+      "postcss": true
     },
     "components": {
-      "file_naming": "PascalCase",
-      "function_style": "arrow_function",
-      "prop_types": "typescript_interfaces"
-    }
-  },
-  "command_execution": {
-    "shell": "powershell",
-    "node_scripts": {
-      "type": "module",
-      "extension": ".mjs",
-      "run_command": "node --experimental-modules"
-    },
-    "package_manager": "npm",
-    "environment": "windows"
-  },
-  "security": {
-    "api_keys": "environment_variables",
-    "authentication": "firebase",
-    "authorization": "role_based"
-  },
-  "testing": {
-    "framework": "vitest",
-    "runner": "vitest",
-    "ui": "@vitest/ui",
-    "coverage": {
-      "provider": "v8",
-      "threshold": 80
-    },
-    "setup": {
-      "environment": "jsdom",
-      "utilities": ["@testing-library/react", "@testing-library/user-event"]
-    }
-  },
-  "migrations": {
-    "mui_implementation": {
-      "status": "in_progress",
-      "scope": "admin_only",
-      "current_phase": "component_migration",
-      "affected_paths": ["/src/components/admin/*", "/src/components/admin/**/*"],
-      "protected_paths": {
-        "do_not_modify": [
-          "/src/components/public/**/*",
-          "/src/components/shared/**/*",
-          "/src/pages/**/*"
-        ],
-        "reason": "These paths contain frontend components that should remain using Tailwind"
-      }
-    },
-    "redux_migration": {
-      "status": "in_progress",
-      "source": "context_api",
-      "target": "redux_toolkit",
-      "current_phase": "component_migration",
-      "completed": {
-        "store_setup": true,
-        "slices": ["auth", "user", "admin", "technician", "booking"],
-        "components": []
+      "icons": {
+        "library": "lucide-react",
+        "version": "^0.294.0"
       },
-      "pending": {
-        "contexts": [
-          "AuthContext",
-          "UserContext",
-          "AdminViewContext",
-          "BasicUserContext",
-          "CombinedUserContext"
+      "forms": "react-hook-form",
+      "tables": "tanstack-table",
+      "modals": "custom_components",
+      "notifications": "sonner",
+      "dependencies": {
+        "core": [
+          "tailwindcss",
+          "@headlessui/react",
+          "lucide-react",
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-label",
+          "@radix-ui/react-scroll-area",
+          "@radix-ui/react-toast",
+          "@radix-ui/react-tooltip"
         ],
-        "components": [
-          "/src/components/auth/*",
-          "/src/components/admin/*",
-          "/src/components/booking/*"
+        "forms": [
+          "react-hook-form",
+          "@hookform/resolvers",
+          "zod"
+        ],
+        "data": [
+          "@tanstack/react-table",
+          "@tanstack/react-query"
         ]
-      },
-      "protected_paths": {
-        "do_not_modify": [
-          "/src/components/public/**/*",
-          "/src/components/shared/**/*"
-        ],
-        "reason": "These components should maintain their current UI and functionality"
       }
     }
   },
-  "dependencies": {
-    "ui": {
-      "admin": ["@mui/material", "@mui/icons-material", "@emotion/react", "@emotion/styled"],
-      "frontend": ["tailwindcss", "@headlessui/react", "@heroicons/react"]
+
+  "integrations": {
+    "maps": {
+      "provider": "google",
+      "libraries": [
+        "@googlemaps/js-api-loader",
+        "@react-google-maps/api"
+      ]
+    },
+    "authentication": {
+      "provider": "firebase",
+      "type": "role_based"
+    },
+    "database": {
+      "provider": "supabase",
+      "dependencies": ["@supabase/supabase-js"]
+    },
+    "payments": {
+      "provider": "stripe",
+      "libraries": [
+        "@stripe/react-stripe-js",
+        "@stripe/stripe-js"
+      ]
+    },
+    "api": {
+      "libraries": [
+        "@trpc/client",
+        "@trpc/react-query",
+        "@trpc/server"
+      ]
     }
   },
+
   "development": {
-    "strict_mode": true,
+    "vite": {
+      "plugins": [
+        "@vitejs/plugin-react",
+        "vite-plugin-dts",
+        "vite-plugin-google-maps"
+      ],
+      "optimizations": {
+        "exclude": ["lucide-react"],
+        "include": ["@supabase/supabase-js"]
+      }
+    },
     "typescript": {
       "strict": true,
       "target": "ES2020"
     },
-    "style_guide": {
+    "testing": {
+      "framework": "vitest",
+      "runner": "vitest",
+      "ui": "@vitest/ui",
+      "coverage": {
+        "provider": "v8",
+        "threshold": 80
+      },
+      "setup": {
+        "environment": "jsdom",
+        "utilities": [
+          "@testing-library/react",
+          "@testing-library/user-event"
+        ]
+      }
+    },
+    "code_style": {
       "prettier": true,
-      "eslint": true
+      "eslint": true,
+      "conventions": {
+        "exports": {
+          "style": "named",
+          "components": {
+            "pattern": "both_named_and_default",
+            "example": "export { ComponentName }; export default ComponentName;"
+          }
+        },
+        "imports": {
+          "style": "named_imports",
+          "prefer_named": true,
+          "example": "import { ComponentName } from './ComponentName';"
+        },
+        "components": {
+          "file_naming": "PascalCase",
+          "function_style": "arrow_function",
+          "prop_types": "typescript_interfaces"
+        }
+      }
+    },
+    "path_aliases": {
+      "base": "@",
+      "components": {
+        "@admin": "src/components/admin",
+        "@auth": "src/components/auth",
+        "@booking": "src/components/booking",
+        "@common": "src/components/common",
+        "@dev": "src/components/dev",
+        "@error-boundary": "src/components/error-boundary",
+        "@icons": "src/components/icons",
+        "@modals": "src/components/modals",
+        "@notifications": "src/components/notifications",
+        "@payment": "src/components/payment",
+        "@profile": "src/components/profile",
+        "@tech": "src/components/tech",
+        "@test": "src/components/test",
+        "@ui": "src/components/ui"
+      },
+      "services": {
+        "@google": "src/services/google",
+        "@locations": "src/services/locations",
+        "@onemap": "src/services/onemap",
+        "@teams": "src/services/teams",
+        "@validation": "src/services/validation"
+      },
+      "store": {
+        "@redux-types": "src/store/types",
+        "@slices": "src/store/slices",
+        "@store": "src/store"
+      },
+      "core": {
+        "@api": "src/api",
+        "@config": "src/config",
+        "@constants": "src/constants",
+        "@data": "src/data",
+        "@hooks": "src/hooks",
+        "@lib": "src/lib",
+        "@mocks": "src/mocks",
+        "@pages": "src/pages",
+        "@routes": "src/routes",
+        "@server": "src/server",
+        "@services": "src/services",
+        "@snapshots": "src/snapshots",
+        "@styles": "src/styles",
+        "@theme": "src/theme",
+        "@types": "src/types",
+        "@utils": "src/utils"
+      }
+    }
+  },
+
+  "security": {
+    "api_keys": "environment_variables",
+    "protected_paths": {
+      "do_not_modify": [
+        "/src/components/public/**/*",
+        "/src/components/shared/**/*"
+      ],
+      "reason": "These components should maintain their current UI and functionality"
     }
   }
 }

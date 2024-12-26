@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
 import { Save, X, MessageSquare, Globe, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+
 import { useHolidayGreetings } from '../../hooks/useHolidayGreetings';
+
 import type { HolidayGreeting } from '../../types';
 import type { ChatGPTSettings } from '../../types/settings';
 

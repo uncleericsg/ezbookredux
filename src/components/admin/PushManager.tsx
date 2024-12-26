@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Plus, Trash2, Loader2, GripVertical, Search, Bell, ToggleLeft, ToggleRight, Link } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
 import classNames from 'classnames';
-import type { PushTemplate } from '../../types/notifications';
+import { motion } from 'framer-motion';
+import { Plus, Trash2, Loader2, GripVertical, Search, Bell, ToggleLeft, ToggleRight, Link } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { toast } from 'sonner';
+
 import { validatePushTemplate } from '../../services/notifications';
+
+import type { PushTemplate } from '../../types/notifications';
 
 type DragEndResult = {
   destination?: {

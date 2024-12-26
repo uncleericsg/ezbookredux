@@ -1,9 +1,13 @@
 import { 
-  getAuth, 
   fetchSignInMethodsForEmail,
   PhoneAuthProvider,
-  RecaptchaVerifier
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from 'firebase/auth';
+import { auth } from '../firebase';
+import { store } from '../../store';
+import { setAuthenticated, setToken } from '../../store/slices/authSlice';
+import { setUser } from '../../store/slices/userSlice';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -14,10 +18,11 @@ export interface ValidationResult {
 export interface OTPVerificationResult {
   isValid: boolean;
   error?: string;
+  user?: any;
 }
 
 class FirebaseValidationService {
-  private auth = getAuth();
+  private auth = auth;  // Use existing auth instance
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
   // Initialize recaptcha verifier
@@ -105,10 +110,25 @@ class FirebaseValidationService {
       }
 
       // For test phone number in development
-      if (import.meta.env.DEV && verificationId === '+6591874498') {
+      if (verificationId === '+6591874498') {
         // In development, accept only '123456' as the test OTP
         if (code === '123456') {
-          return { isValid: true };
+          // Set authentication state in Redux for test user
+          store.dispatch(setAuthenticated(true));
+          store.dispatch(setToken('test-token-' + Date.now()));
+          store.dispatch(setUser({
+            id: 'test-user-id',
+            phone: '+6591874498',
+            isVerified: true
+          }));
+
+          return { 
+            isValid: true,
+            user: {
+              uid: 'test-user-id',
+              phoneNumber: '+6591874498'
+            }
+          };
         }
         return {
           isValid: false,
@@ -118,16 +138,30 @@ class FirebaseValidationService {
 
       // For real phone numbers in production
       const credential = PhoneAuthProvider.credential(verificationId, code);
-      await this.auth.signInWithCredential(credential);
+      const result = await this.auth.signInWithCredential(credential);
       
-      // If we reach here, the OTP was valid
-      // Sign out immediately since we don't want to keep the user signed in
-      await this.auth.signOut();
+      if (result.user) {
+        // Set authentication state in Redux
+        store.dispatch(setAuthenticated(true));
+        store.dispatch(setToken(await result.user.getIdToken()));
+        store.dispatch(setUser({
+          id: result.user.uid,
+          phone: result.user.phoneNumber,
+          isVerified: true
+        }));
+
+        return {
+          isValid: true,
+          user: result.user
+        };
+      }
       
       return {
-        isValid: true
+        isValid: false,
+        error: 'Failed to authenticate user'
       };
     } catch (error: any) {
+      console.error('OTP verification error:', error);
       let errorMessage = 'Invalid OTP code';
       if (error.code === 'auth/invalid-verification-code') {
         errorMessage = 'The verification code is incorrect';

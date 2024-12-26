@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar, AlertCircle, Search, ChevronLeft, ChevronRight, FileText, User, Mail, Phone, MapPin } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, AlertCircle, Search, ChevronLeft, ChevronRight, FileText, User, Mail, Phone, MapPin } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 
 interface ServiceContract {
   id: string;

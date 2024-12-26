@@ -1,173 +1,69 @@
-// Monkey-patch util._extend to use Object.assign
-import util from 'util';
-if (util._extend) {
-  (util as any)._extend = Object.assign;
-}
-
 import express from 'express';
-import { config } from 'dotenv';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import stripeRoutes from './api/stripe';
+import dotenv from 'dotenv';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import stripeRouter from '@api/stripe';
 
-config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
+// Basic middleware
+app.use(cors({
+  origin: [
+    'https://localhost:5173', 
+    'http://localhost:5173',
+    'http://192.168.4.118:5173',
+    'https://192.168.4.118:5173'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
-// Apply rate limiting to payment routes
-app.use('/api/payments', limiter);
+// Enable pre-flight requests
+app.options('*', cors());
 
-// Serve static files from public directory
-app.use(express.static('public'));
-
-// Serve fonts from local directory
-app.use('/fonts', express.static('public/fonts'));
-
-// Webhook handling needs raw body
-app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
-
-// Middleware for parsing JSON payloads
 app.use(express.json());
 
-// CORS configuration
-const corsOptions = {
-  origin: ['https://localhost:5173', 'http://localhost:5173'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'stripe-signature',
-    'X-Requested-With'
-  ],
-  credentials: true,
-  maxAge: 86400 // 24 hours
-};
-
-app.use(cors(corsOptions));
-
-// Use Stripe routes
-app.use('/api/payments', stripeRoutes);
-
-// Basic security headers
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        connectSrc: [
-          "'self'", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://pay.google.com",
-          "wss://localhost:*"
-        ],
-        frameSrc: [
-          "'self'", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://pay.google.com"
-        ],
-        childSrc: [
-          "'self'", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://pay.google.com",
-          "blob:"
-        ],
-        scriptSrc: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "'unsafe-eval'", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://pay.google.com",
-          "https://js.stripe.com",
-          "https://checkout.stripe.com"
-        ],
-        styleSrc: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "https://*.stripe.com", 
-          "https://*.google.com"
-        ],
-        fontSrc: [
-          "'self'", 
-          "data:", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://fonts.gstatic.com"
-        ],
-        imgSrc: [
-          "'self'", 
-          "https://*.stripe.com", 
-          "data:", 
-          "https:", 
-          "http:"
-        ],
-        workerSrc: [
-          "'self'", 
-          "blob:", 
-          "https://*.stripe.com"
-        ],
-        frameAncestors: ["'self'"],
-        formAction: [
-          "'self'", 
-          "https://*.stripe.com", 
-          "https://*.google.com", 
-          "https://pay.google.com"
-        ],
-      },
-    },
-    crossOriginEmbedderPolicy: false
-  })
-);
+// Routes
+app.use('/api/payments', stripeRouter);
 
 // Health check endpoint
-app.get('/health', (_req, res) => {
-  res.json({ status: 'healthy' });
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);
-  
-  // Create safe error response
-  const errorResponse = {
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message,
-    status: 'error',
-    ...(process.env.NODE_ENV !== 'production' && {
-      stack: err.stack,
-      path: req.path,
-      method: req.method
-    })
-  };
-
-  res.status(500).json(errorResponse);
+  // Send detailed error in development
+  const error = process.env.NODE_ENV === 'development' 
+    ? { message: err.message, stack: err.stack, details: err }
+    : { message: 'Internal server error' };
+    
+  res.status(err.status || 500).json({ error });
 });
 
 // Start server
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
+if (process.env.NODE_ENV === 'development') {
+  // Use HTTP in development
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
   });
-});
-
-export default app;
+} else {
+  // Use HTTPS in production
+  const options = {
+    key: fs.readFileSync(path.join(process.cwd(), 'localhost+1-key.pem')),
+    cert: fs.readFileSync(path.join(process.cwd(), 'localhost+1.pem')),
+  };
+  
+  https.createServer(options, app).listen(port, () => {
+    console.log(`Server running on https://localhost:${port}`);
+  });
+}
