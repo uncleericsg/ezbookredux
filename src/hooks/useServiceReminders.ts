@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { addDays, isBefore } from 'date-fns';
-import { useUser } from '../contexts/UserContext';
-import { scheduleServiceReminder } from '../services/notifications';
-import { useToast } from './useToast';
+import { useUser } from '@contexts/UserContext';
+import { scheduleServiceReminder } from '@services/notifications';
+import { useToast } from '@hooks/useToast';
 
 export const useServiceReminders = () => {
   const { user } = useUser();

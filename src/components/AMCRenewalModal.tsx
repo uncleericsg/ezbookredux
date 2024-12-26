@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Loader2 } from 'lucide-react';
-import type { AMCPackage } from '../types';
+import type { AMCPackage } from '@types';
 
 interface AMCRenewalModalProps {
   isOpen: boolean;

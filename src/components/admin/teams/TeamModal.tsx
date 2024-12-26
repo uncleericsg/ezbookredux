@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Trash2 } from 'lucide-react';
-import { Team, TeamMember } from '../../../types/teams';
+import React, { useState, useEffect } from 'react';
+
+import type { Team, TeamMember } from '@types/teams';
 
 interface TeamModalProps {
     isOpen: boolean;
@@ -106,14 +107,7 @@ const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose, onSave, team }) 
                                     checked={formData.active ?? true}
                                     onChange={(e) => setFormData({...formData, active: e.target.checked})}
                                 />
-                                <div className={`
-                                    w-11 h-6 rounded-full peer 
-                                    bg-gray-600 peer-checked:bg-blue-500/30
-                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-                                    after:bg-gray-400 after:rounded-full after:h-5 after:w-5 
-                                    after:transition-all peer-checked:after:translate-x-full 
-                                    peer-checked:after:bg-blue-400
-                                `}></div>
+                                <div className={`w-11 h-6 rounded-full peer bg-gray-600 peer-checked:bg-blue-500/30 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-blue-400`}></div>
                             </label>
                             <span className="text-sm font-medium text-gray-300">Active Status</span>
                         </div>

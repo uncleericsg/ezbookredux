@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Download, Upload, Loader2, AlertTriangle } from 'lucide-react';
-import { backupSettings, restoreSettings } from '../../services/admin';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Download, Upload, Loader2, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+import { backupSettings, restoreSettings } from '@services/admin';
 
 const SettingsBackup: React.FC = () => {
   const [loading, setLoading] = useState(false);

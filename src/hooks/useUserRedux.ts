@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import type { User, Booking } from '../types/user';
 import { useNavigate } from 'react-router-dom';
 import { RESET_STORE } from '../store';
-import { signOut } from '../services/firebase';
+import { signOut } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 /**
  * Hook to handle user state management with Redux
@@ -89,7 +90,7 @@ export const useUserRedux = () => {
   // Logout handler
   const logout = useCallback(async () => {
     try {
-      await signOut();
+      await signOut(auth);
       dispatch(setUser(null));
       dispatch(clearAuth());
       dispatch({ type: RESET_STORE });

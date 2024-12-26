@@ -1,14 +1,15 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { tabs } from './AdminNav';
 import classNames from 'classnames';
+import { motion } from 'framer-motion';
+import React from 'react';
+
+import { tabs } from '@admin/AdminNav';
 
 interface AdminGridMenuProps {
   activeTab: number;
   onTabChange: (index: number) => void;
 }
 
-const AdminGridMenu: React.FC<AdminGridMenuProps> = ({ activeTab, onTabChange }) => {
+const AdminGridMenu = ({ activeTab, onTabChange }: AdminGridMenuProps) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
       {tabs.map((tab, index) => {
@@ -42,4 +43,7 @@ const AdminGridMenu: React.FC<AdminGridMenuProps> = ({ activeTab, onTabChange })
   );
 };
 
+AdminGridMenu.displayName = 'AdminGridMenu';
+
+export { AdminGridMenu };
 export default AdminGridMenu;

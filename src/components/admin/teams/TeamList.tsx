@@ -1,6 +1,7 @@
-import React from 'react';
 import { Edit2, Trash2, UserPlus, Users2, Star, BarChart3 } from 'lucide-react';
-import { Team } from '../../../types/teams';
+import React from 'react';
+
+import type { Team } from '@types/teams';
 
 interface TeamListProps {
     teams: Team[];
@@ -122,7 +123,7 @@ const TeamList: React.FC<TeamListProps> = ({ teams, onEdit, onDelete, onUpdateTe
                                                         {type.split('_').join(' ').toLowerCase()} ({count})
                                                     </span>
                                                 </div>
-                                            ))
+                                            )))
                                         }
                                     </div>
                                 </div>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Calendar, Clock, ArrowUp, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../store';
-import ServiceHub from './admin/ServiceHub/ServiceHub';
+import { useAppSelector } from '@store';
+import ServiceHub from '@components/admin/ServiceHub/ServiceHub';
 
 interface ServiceRequest {
   id: string;

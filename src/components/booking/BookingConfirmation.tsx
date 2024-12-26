@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, CreditCard } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../../store';
-import PasswordCreationModal from '../auth/PasswordCreationModal';
-import { ROUTES } from '../../config/routes';
-import { getPaymentReceipt } from '../../services/paymentService';
+import { useAppSelector } from '@store';
+import PasswordCreationModal from '@components/auth/PasswordCreationModal';
+import { ROUTES } from '@config/routes';
+import { getPaymentReceipt } from '@services/paymentService';
 import { toast } from 'react-hot-toast';
 
 interface Booking {

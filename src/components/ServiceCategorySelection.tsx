@@ -3,22 +3,21 @@ import {
   AirVent, Wrench, ShieldCheck, Star, Calendar, CheckCircle, 
   Shield, Clock, Timer, ThumbsUp, Users, BadgeCheck
 } from 'lucide-react';
-import { useAppSelector } from '../store';
-import { useServiceHistory } from '../hooks/useServiceHistory';
-import { differenceInDays } from 'date-fns';
-import { categoryMapper } from '../lib/categoryMapper';
-import { useAcuitySettings } from '../hooks/useAcuitySettings';
-import { toast } from 'sonner';
-import { useNavigate } from '../hooks/useRouterTransition';
-import { useServiceRating } from '../hooks/useServiceRating';
-import ServiceRating from './ServiceRating';
-import TrustIndicators from './TrustIndicators';
+import { useAppSelector } from '@store';
+import { useServiceHistory } from '@hooks/useServiceHistory';
+import { format } from 'date-fns';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import { useNavigate } from '@hooks/useRouterTransition';
+import { useServiceRating } from '@hooks/useServiceRating';
+import ServiceRating from '@components/ServiceRating';
+import TrustIndicators from '@components/TrustIndicators';
 import { motion } from 'framer-motion';
-import { BUSINESS_RULES } from '../constants';
-import '../styles/home.css';
+import { BUSINESS_RULES } from '@constants';
+import '@styles/home.css';
 import CountUp from 'react-countup';
 import styles from './ServiceCategorySelection.module.css';
-import FloatingButtons from './FloatingButtons';
+import FloatingButtons from '@components/FloatingButtons';
+import { toast } from 'sonner';
 
 interface PricingTier {
   units: string;
@@ -54,7 +53,7 @@ const ServiceCategorySelection: React.FC = () => {
     if (!currentUser?.nextServiceDate) return null;
     const nextService = new Date(currentUser.nextServiceDate);
     const today = new Date();
-    const days = differenceInDays(nextService, today);
+    const days = format(nextService, 'dd-MM-yyyy') > format(today, 'dd-MM-yyyy') ? format(nextService, 'dd-MM-yyyy') - format(today, 'dd-MM-yyyy') : null;
     return days > 0 ? days : null;
   };
   
@@ -282,7 +281,7 @@ const ServiceCategorySelection: React.FC = () => {
                           ? 'text-cyan-400'
                         : category.id === 'gas-leak'
                           ? 'text-pink-400'
-                        : 'text-[#FFD700]'
+                          : 'text-[#FFD700]'
                       }`} />
                     </div>
                   </div>
@@ -322,7 +321,7 @@ const ServiceCategorySelection: React.FC = () => {
                           ? 'text-cyan-400'
                         : category.id === 'gas-leak'
                           ? 'text-pink-400'
-                        : 'text-[#FFD700]'
+                          : 'text-[#FFD700]'
                       }`} />
                       <span className="text-sm text-gray-300">
                         {category.rating} ({category.reviewCount}+ reviews)
@@ -470,7 +469,7 @@ const ServiceCategorySelection: React.FC = () => {
           />
         )}
       </div>
-      <FloatingButtons />
+      <FloatingButtons />;
       {showRating && (
         <ServiceRating onSubmit={handleRatingSubmit} onClose={() => setShowRating(false)} />
       )}

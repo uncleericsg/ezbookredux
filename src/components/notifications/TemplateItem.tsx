@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 import { Edit, Trash2, Mail, MessageSquare, Bell } from 'lucide-react';
-import type { NotificationTemplate } from '../../types/notifications';
+import type { NotificationTemplate } from '@types/notifications';
 import { getTemplateIcon } from './utils/templateUtils';
 import { TEST_IDS } from './constants/templateConstants';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '@hooks/usePermissions';
 import { Card, CardContent, CardHeader } from '@components/molecules/card';
 import { Button } from '@components/atoms/button';
 import { Badge } from '@components/atoms/badge';

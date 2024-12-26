@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Edit, Save, X, Calendar, MessageSquare, AlertTriangle, Loader2, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useHolidayList } from '../../hooks/useHolidayList';
-import { useAcuitySettings } from '../../hooks/useAcuitySettings';
-import { useHolidayGreetings } from '../../hooks/useHolidayGreetings';
+import { useHolidayList } from '@hooks/useHolidayList';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import { useHolidayGreetings } from '@hooks/useHolidayGreetings';
 import { toast } from 'sonner';
-import type { HolidayGreeting, Holiday } from '../../types';
+import type { HolidayGreeting, Holiday } from '@types';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardFooter } from '@components/molecules/card';
 import { Button } from '@components/atoms/button';

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { fetchAMCPackages, fetchServiceVisits, renewAMC } from '../services/amc';
-import { resetVisitLabels } from '../services/repairShopr';
-import type { AMCPackage, ServiceVisit } from '../types';
+import { fetchAMCPackages, fetchServiceVisits, renewAMC } from '@services/amc';
+import { resetVisitLabels } from '@services/repairShopr';
+import type { AMCPackage, ServiceVisit } from '@types';
 
 export const useAMC = (userId: string) => {
   const [packages, setPackages] = useState<AMCPackage[]>([]);

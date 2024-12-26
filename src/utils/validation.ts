@@ -166,3 +166,18 @@ export const validateServiceCategory = (
     warnings: warnings.length > 0 ? warnings : undefined
   };
 };
+
+// Export types
+export type { TimeSlotConstraints };
+
+// Export validation function
+export const validateCustomerData = (data: any): boolean => {
+  // Basic validation
+  if (!data) return false;
+  
+  const requiredFields = ['firstName', 'lastName', 'email', 'mobile', 'floorUnit', 'blockStreet', 'postalCode'];
+  return requiredFields.every(field => {
+    const value = data[field];
+    return value && typeof value === 'string' && value.trim().length > 0;
+  });
+};

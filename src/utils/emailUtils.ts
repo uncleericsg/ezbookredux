@@ -30,13 +30,13 @@ const topLevelDomains = [
   'com.sg'
 ];
 
-export interface EmailSuggestion {
+interface EmailSuggestion {
   address: string;
   domain: string;
   full: string;
 }
 
-export const findEmailTypo = (email: string): EmailSuggestion | null => {
+const findEmailTypo = (email: string): EmailSuggestion | null => {
   if (!email || !email.includes('@')) return null;
 
   const [address, domain] = email.toLowerCase().split('@');
@@ -119,3 +119,7 @@ const findClosestString = (str: string, candidates: string[]): string | null => 
 
   return closestMatch;
 };
+
+// Export types and functions
+export type { EmailSuggestion };
+export { findEmailTypo };

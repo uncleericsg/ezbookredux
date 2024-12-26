@@ -18,9 +18,9 @@
 import React, { useState, memo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Check, Info, ArrowRight, ChevronDown, Loader2, X } from 'lucide-react';
-import { OptimizedCard } from './components/OptimizedCard';
-import { useScrollToTop } from '../../hooks/useScrollToTop';
-import { usePreloadComponents } from '../../hooks/usePreloadComponents';
+import { OptimizedCard } from '@components/booking/components/OptimizedCard';
+import { useScrollToTop } from '@hooks/useScrollToTop';
+import { usePreloadComponents } from '@hooks/usePreloadComponents';
 import styles from './BrandSelection.module.css';
 
 interface BrandSelectionProps {

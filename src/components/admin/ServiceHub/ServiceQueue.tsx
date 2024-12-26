@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Clock, MapPin, User, Wrench, Search, ChevronLeft, ChevronRight, Mail, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ServiceRequest } from '../../../types/service';
+import { Clock, MapPin, User, Wrench, Search, ChevronLeft, ChevronRight, Mail, Phone } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+
+import type { ServiceRequest } from '@types/service';
 
 interface SearchSuggestion {
   type: 'name' | 'email' | 'phone' | 'address';

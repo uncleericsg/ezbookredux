@@ -13,103 +13,83 @@ import {
   BrowserRouter
 } from 'react-router-dom';
 import { startTransition, Suspense } from 'react';
-import App from './App';
-import Layout from './components/Layout';
-import ServiceCategorySelection from './components/ServiceCategorySelection';
-import UserProfile from './components/UserProfile';
-import Login from './components/Login';
-import Notifications from './components/Notifications';
-import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute';
-import NotFound from './components/NotFound';
-import { LoadingScreen } from './components/LoadingScreen';
-import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
-import { AdminViewProvider } from './contexts/AdminViewContext';
-import PriceSelectionPage from './components/booking/PriceSelectionPage';
-import FirstTimeBookingFlow from './components/booking/FirstTimeBookingFlow';
-import ReturnCustomerBooking from './components/booking/ReturnCustomerBooking';
-import ServicePricingSelection from './components/ServicePricingSelection';
-import BookingConfirmation from './components/booking/BookingConfirmation';
-import { ROUTES } from './config/routes';
-import SupabaseTest from './components/test/SupabaseTest';
+import App from '@/App';
+import { ROUTES } from '@config/routes';
+import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
+import { LoadingScreen } from '@components/LoadingScreen';
 
-// Admin components
-import AdminDashboard from './components/admin/AdminDashboard';
-import AdminSettings from './components/admin/AdminSettings';
-import UserManagement from './components/admin/UserManagement';
-import AdminBookings from './components/admin/AdminBookings';
-import ServiceHub from './components/admin/ServiceHub/ServiceHub';
+// Core Components
+import Layout from '@components/Layout';
+import Login from '@components/Login';
+import NotFound from '@components/NotFound';
+import Notifications from '@components/Notifications';
+import ProtectedRoute from '@components/ProtectedRoute';
+import PublicRoute from '@components/PublicRoute';
+import ServiceCategorySelection from '@components/ServiceCategorySelection';
+import ServicePricingSelection from '@components/ServicePricingSelection';
+import UserProfile from '@components/UserProfile';
 
-const RouterComponent: React.FC = () => {
+// Booking Components
+import BookingConfirmation from '@booking/BookingConfirmation';
+import FirstTimeBookingFlow from '@booking/FirstTimeBookingFlow';
+import PriceSelectionPage from '@booking/PriceSelectionPage';
+import ReturnCustomerBooking from '@booking/ReturnCustomerBooking';
+
+// Admin Components
+import AdminBookings from '@admin/AdminBookings';
+import AdminDashboard from '@admin/AdminDashboard';
+import AdminSettings from '@admin/AdminSettings';
+import ServiceHub from '@admin/ServiceHub/ServiceHub';
+import UserManagement from '@admin/UserManagement';
+
+// Test Components
+import SupabaseTest from '@components/test/SupabaseTest';
+
+const RouterComponent = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
         <Suspense fallback={<LoadingScreen />}>
-          <AdminViewProvider>
-            <Routes>
-              <Route path="/" element={<App />}>
-                {/* Routes with Layout (Navbar & Footer) */}
-                <Route element={<Layout />}>
-                  {/* Public Routes */}
-                  <Route index element={<ServiceCategorySelection />} />
-                  <Route path="pricing" element={<ServicePricingSelection />} />
-                  <Route path="test/supabase" element={<SupabaseTest />} />
-                  
-                  {/* Protected Routes */}
-                  <Route
-                    path="profile"
-                    element={
-                      <ProtectedRoute>
-                        <UserProfile />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="notifications"
-                    element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    }
-                  />
+          <Routes>
+            <Route path="/" element={<App />}>
+              <Route element={<Layout />}>
+                {/* Public Routes */}
+                <Route index element={<Navigate to={ROUTES.HOME} />} />
+                <Route path={ROUTES.HOME} element={<ServiceCategorySelection />} />
+                <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
+                <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
 
-                  {/* Admin Routes */}
-                  <Route
-                    path="admin"
-                    element={
-                      <ProtectedRoute requiresAdmin>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<Navigate to={ROUTES.ADMIN.SERVICES} replace />} />
-                    <Route path="services" element={<ServiceHub />} />
-                    <Route path="bookings" element={<AdminBookings />} />
-                    <Route path="users" element={<UserManagement />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                  </Route>
-                </Route>
+                {/* Protected Routes */}
+                <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                <Route path={ROUTES.BOOKING.NEW} element={<ProtectedRoute><FirstTimeBookingFlow /></ProtectedRoute>} />
+                <Route path={ROUTES.BOOKING.RETURN} element={<ProtectedRoute><ReturnCustomerBooking /></ProtectedRoute>} />
+                <Route path={ROUTES.BOOKING.PRICE} element={<ProtectedRoute><PriceSelectionPage /></ProtectedRoute>} />
+                <Route path={ROUTES.BOOKING.CONFIRM} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
 
-                {/* Routes without Layout (No Navbar & Footer) */}
-                <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
-                
-                {/* Booking Flow Routes - No Layout */}
-                <Route path="booking">
-                  <Route path="price-selection" element={<PriceSelectionPage />} />
-                  <Route path="first-time/*" element={<FirstTimeBookingFlow />} />
-                  <Route path="return-customer" element={<ReturnCustomerBooking />} />
-                  <Route path="confirmation/:bookingId" element={<BookingConfirmation />} />
-                </Route>
+                {/* Admin Routes */}
+                <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+                <Route path={ROUTES.ADMIN.BOOKINGS} element={<ProtectedRoute adminOnly><AdminBookings /></ProtectedRoute>} />
+                <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
+                <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute adminOnly><ServiceHub /></ProtectedRoute>} />
+                <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute adminOnly><AdminSettings /></ProtectedRoute>} />
 
-                {/* 404 Page - No Layout */}
+                {/* Test Routes */}
+                {process.env.NODE_ENV === 'development' && (
+                  <Route path="/test/supabase" element={<SupabaseTest />} />
+                )}
+
+                {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
               </Route>
-            </Routes>
-          </AdminViewProvider>
+            </Route>
+          </Routes>
         </Suspense>
       </ErrorBoundary>
     </BrowserRouter>
   );
 };
+
+RouterComponent.displayName = 'RouterComponent';
 
 export default RouterComponent;

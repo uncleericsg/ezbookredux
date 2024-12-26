@@ -1,4 +1,19 @@
-import type { User } from '../types';
+import type { User } from '@/types';
+import { auth } from '@services/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  PhoneAuthProvider,
+  signInWithCredential,
+} from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 // @integration-point Mock data for development
 // TODO: Replace with Firebase/Supabase data

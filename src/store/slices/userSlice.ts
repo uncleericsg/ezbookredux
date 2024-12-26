@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import type { User } from '../../types/user';
 import { sendOTP, verifyOTP } from '../../services/auth';
 import { setAuthenticated, setToken } from './authSlice';

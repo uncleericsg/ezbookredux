@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { BookingState, Booking } from '../../types/redux';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { BookingState, Booking } from '@types/redux';
 
 const initialState: BookingState = {
   bookings: [],

@@ -41,10 +41,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import './CustomerForm.css';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiHome, FiHash, FiBox, FiCheck, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { useFirebaseValidation } from '../../hooks/useFirebaseValidation';
-import { OTPInput } from '../common/OTPInput';
-import { findEmailTypo, EmailSuggestion } from '../../utils/emailUtils';
-import { createBooking } from '../../services/bookingService';
+import { useFirebaseValidation } from '@hooks/useFirebaseValidation';
+import { OTPInput } from '@components/common/OTPInput';
+import { findEmailTypo, EmailSuggestion } from '@utils/emailUtils';
+import { createBooking } from '@services/bookingService';
 
 interface CustomerFormData {
   firstName: string;

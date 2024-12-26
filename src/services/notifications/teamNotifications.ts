@@ -1,4 +1,4 @@
-import { Team } from '../teams/types';
+import { Team } from '@services/teams/types';
 
 interface BookingNotification {
     bookingId: string;

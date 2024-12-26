@@ -1,10 +1,32 @@
-import React, { memo } from 'react';
-import { Users, AlertCircle, Shield, BarChart3, Settings, Layout, Bell, Palette, Wrench, Users2 } from 'lucide-react';
 import classNames from 'classnames';
 import { motion } from 'framer-motion';
-import { ROUTES } from '../../config/routes';
+import { 
+  AlertCircle, 
+  BarChart3, 
+  Bell, 
+  Layout, 
+  Palette, 
+  Settings, 
+  Shield, 
+  Users, 
+  Users2, 
+  Wrench 
+} from 'lucide-react';
+import React, { memo } from 'react';
 
-export const tabs = Object.freeze([
+import type { AdminTabConfig } from '@admin/types';
+
+import { ROUTES } from '@config/routes';
+
+export interface AdminNavProps {
+  activeTab: number;
+  onTabChange: (index: number) => void;
+  collapsed?: boolean;
+}
+
+export type AdminTab = typeof tabs[number]['id'];
+
+export const tabs: AdminTabConfig[] = Object.freeze([
   { id: 'services', icon: Wrench, label: 'Services', path: ROUTES.ADMIN.SERVICES },
   { id: 'users', icon: Users, label: 'Users', path: ROUTES.ADMIN.USERS },
   { id: 'teams', icon: Users2, label: 'Teams', path: ROUTES.ADMIN.TEAMS },
@@ -15,15 +37,7 @@ export const tabs = Object.freeze([
   { id: 'push', icon: Bell, label: 'Push', path: ROUTES.ADMIN.PUSH },
   { id: 'settings', icon: Settings, label: 'Settings', path: ROUTES.ADMIN.SETTINGS },
   { id: 'homepage', icon: Layout, label: 'Homepage', path: ROUTES.ADMIN.HOMEPAGE }
-]);
-
-export interface AdminNavProps {
-  activeTab: number;
-  onTabChange: (index: number) => void;
-  collapsed?: boolean;
-}
-
-export type AdminTab = typeof tabs[number]['id'];
+] as const);
 
 const AdminNav = memo<AdminNavProps>(({ activeTab, onTabChange, collapsed = false }) => {
   return (
@@ -49,9 +63,7 @@ const AdminNav = memo<AdminNavProps>(({ activeTab, onTabChange, collapsed = fals
           >
             <Icon className="h-5 w-5 flex-shrink-0" />
             {!collapsed && (
-              <span className="text-sm font-medium truncate">
-                {tab.label}
-              </span>
+              <span className="text-sm font-medium truncate">{tab.label}</span>
             )}
           </motion.button>
         );

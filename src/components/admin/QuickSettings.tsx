@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import type { AcuitySettings } from '../../types/settings';
+
+import type { AcuitySettings } from '@types/settings';
 
 interface QuickSettingsProps {
   settings: AcuitySettings;

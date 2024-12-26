@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchPublicHolidays } from '../services/publicHolidays';
+import { fetchPublicHolidays } from '@services/publicHolidays';
 import { addDays, startOfDay, parseISO } from 'date-fns';
-import type { Holiday } from '../types';
+import type { Holiday } from '@types';
 import { toast } from 'sonner';
 
 export const useHolidayList = () => {

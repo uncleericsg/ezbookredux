@@ -53,9 +53,9 @@ import {
   ArrowRight,
   Loader2
 } from 'lucide-react';
-import { IssueCard } from './components/IssueCard';
-import { useScrollToTop } from '../../hooks/useScrollToTop';
-import { Spinner } from '@/components/ui/spinner';
+import { IssueCard } from '@components/booking/components/IssueCard';
+import { useScrollToTop } from '@hooks/useScrollToTop';
+import { Spinner } from '@components/ui/spinner';
 import styles from './IssueSelection.module.css';
 
 interface Issue {

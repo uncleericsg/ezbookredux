@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
+import React from 'react';
 
 const NotificationManager: React.FC = () => {
   return (

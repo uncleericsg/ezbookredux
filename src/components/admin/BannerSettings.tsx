@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Save, Loader2, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Save, Loader2, Eye } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import ColorPicker from '../ColorPicker';
+
+import ColorPicker from '@components/ColorPicker';
 
 interface BannerConfig {
   enabled: boolean;

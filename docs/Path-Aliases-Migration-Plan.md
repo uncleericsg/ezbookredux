@@ -1,168 +1,120 @@
 # Path Aliases Migration Plan
-**Created: December 25, 2024, 07:47:25 GMT+8**
+**Last Updated: December 26, 2024, 00:21 SGT**
 
-## Introduction
-This document outlines the implementation strategy for path aliases in the iAircon EasyBooking platform. The migration aims to improve code maintainability, prepare for future frontend/backend separation, and establish consistent import patterns across the codebase. This change affects only logical organization and import statements - no UI, visual elements, or styling will be modified.
+## Quick Stats
+- Overall Progress: 197/405 files (48.6%)
+- Components: 88/268 files (32.8%)
+- Hooks: 50/50 files (100%) 
+- Services: 40/40 files (100%) 
+- Utils: 8/15 files (53.3%)
+- Store: 7/14 files (50%)
+- Types: 4/18 files (22.2%)
 
-## Current Project Structure Analysis
-```
-src/
-├── components/
-│   ├── admin/       # MUI-based admin components
-│   └── frontend/    # Tailwind-based customer components
-├── features/        # Feature-based modules
-├── pages/          # Route components
-├── services/       # API and external service integrations
-├── store/          # Redux store configuration
-└── utils/          # Shared utilities
-```
+## Phase Overview
 
-## Path Alias Convention
+### Phase 1: Setup 
+- Path aliases defined and tested
+- Build system updated
+- Configuration files prepared
 
-### Base Aliases
-```typescript
-{
-  "@/*": ["src/*"],
-  "@components/*": ["src/components/*"],
-  "@features/*": ["src/features/*"],
-  "@pages/*": ["src/pages/*"],
-  "@services/*": ["src/services/*"],
-  "@store/*": ["src/store/*"],
-  "@utils/*": ["src/utils/*"]
-}
-```
+### Phase 2: Automated Updates 
+- Automated scripts developed and tested
+- Bulk updates completed
+- Validation checks passed
 
-### Feature-Specific Aliases
-```typescript
-{
-  "@admin/*": ["src/components/admin/*"],
-  "@frontend/*": ["src/components/frontend/*"],
-  "@api/*": ["src/services/api/*"],
-  "@hooks/*": ["src/hooks/*"],
-  "@types/*": ["src/types/*"]
-}
-```
+### Phase 3: Manual Fixes 
+#### Current Focus Areas
+1. **Hook Updates** (50/50 files - 100%) 
+   - Core hooks completed
+   - Auth hooks completed
+   - UI hooks completed
+   - No files remaining
 
-## Implementation Steps
+2. **Component Updates** (88/268 files - 32.8%)
+   - Root components completed
+   - Admin components started
+   - Booking components in progress
+   - UI components pending
 
-### Phase 1: Configuration Setup (1-2 hours)
-1. Update `vite.config.ts`:
+3. **Service Updates** (40/40 files - 100%) 
+   - All service imports completed
+   - All API integrations updated
+   - All utilities converted
+
+4. **Store Updates** (7/14 files - 50%)
+   - Slice imports updated
+   - Redux utilities pending
+   - Action creators in progress
+
+5. **Utils Updates** (8/15 files - 53.3%)
+   - Core utilities started
+   - Validation helpers pending
+   - Type guards pending
+
+6. **Types Updates** (4/18 files - 22.2%)
+   - Interface definitions started
+   - Type exports pending
+   - Enum declarations pending
+
+### Latest Updates (2024-12-26 00:21 SGT)
+- Corrected file counts in all directories
+- Utils: 15 total files identified
+- Store: 14 total files (2 root + 7 slices + 5 types)
+- Types: 18 total files found
+- Updated usePublicHolidays.ts (@services/publicHolidays)
+- Updated useBuildManager.ts (@services/admin, @types)
+- Verified useHolidayList.ts (already using correct path aliases)
+- Updated useNotificationPreferences.ts (@hooks/useToast)
+- Completed all hook file updates!
+
+### Next Steps
+1. Update remaining utils files (7 files)
+2. Complete store updates (7 files)
+3. Update type imports (14 files)
+4. Continue component updates in parallel
+
+## Migration Guidelines
+1. **Import Order**:
    ```typescript
-   import path from 'path'
-
-   export default defineConfig({
-     resolve: {
-       alias: {
-         '@': path.resolve(__dirname, './src'),
-         '@components': path.resolve(__dirname, './src/components'),
-         // ... other aliases
-       }
-     }
-   })
+   // 1. React and third-party imports
+   import React from 'react'
+   import { useNavigate } from 'react-router-dom'
+   
+   // 2. Store imports
+   import { useAppDispatch } from '@store'
+   import { setUser } from '@store/slices/userSlice'
+   
+   // 3. Service imports
+   import { fetchUser } from '@services/user'
+   
+   // 4. Component imports
+   import { Button } from '@components/ui'
+   
+   // 5. Type imports
+   import type { User } from '@types'
+   
+   // 6. Utility imports
+   import { validateUser } from '@utils/validation'
    ```
 
-2. Update `tsconfig.json`:
-   ```json
-   {
-     "compilerOptions": {
-       "baseUrl": ".",
-       "paths": {
-         "@/*": ["src/*"],
-         "@components/*": ["src/components/*"]
-         // ... other aliases
-       }
-     }
-   }
-   ```
+2. **Path Alias Usage**:
+   - @components: UI components
+   - @services: API and service functions
+   - @store: Redux store and slices
+   - @types: TypeScript types and interfaces
+   - @utils: Utility functions
+   - @hooks: Custom React hooks
+   - @constants: Constant values
 
-### Phase 2: ESLint Configuration (30 mins)
-1. Install required plugins:
-   ```bash
-   npm install -D eslint-plugin-import eslint-import-resolver-typescript
-   ```
-
-2. Update `.eslintrc.js`:
-   ```javascript
-   module.exports = {
-     settings: {
-       'import/resolver': {
-         typescript: {
-           alwaysTryTypes: true
-         }
-       }
-     },
-     rules: {
-       'import/order': ['error', {
-         groups: ['builtin', 'external', 'internal'],
-         pathGroups: [
-           { pattern: '@/**', group: 'internal' }
-         ]
-       }]
-     }
-   }
-   ```
-
-### Phase 3: Migration Strategy (2-3 days)
-
-#### Step 1: Component Imports
-- Start with shared components
-- Move to feature-specific components
-- Update imports systematically by feature
-
-#### Step 2: Service Layer
-- Update API service imports
-- Migrate external service integrations
-- Update authentication-related imports
-
-#### Step 3: State Management
-- Update Redux store imports
-- Migrate context-related imports
-- Update selector imports
-
-### Migration Rules
-1. **No Visual Changes**
-   - Only modify import statements
-   - No UI component modifications
-   - No style changes
-
-2. **Consistency Guidelines**
-   - Use `@components/` for all component imports
-   - Use `@services/` for all API/external service imports
-   - Use `@store/` for all Redux-related imports
-
-3. **Testing Requirements**
-   - Test each component after import updates
-   - Verify no visual regressions
-   - Ensure all functionality remains intact
-
-## Verification Checklist
-- [ ] All path aliases configured in build tools
-- [ ] ESLint rules properly enforcing import patterns
-- [ ] No visual or UI changes introduced
-- [ ] All tests passing
-- [ ] Build process successful
-- [ ] Development server running correctly
-- [ ] No console errors related to imports
-
-## Rollback Plan
-1. Maintain a branch with pre-migration state
-2. Keep backup of original import statements
-3. Document each batch of changes
-4. Test thoroughly before merging
-
-## Future Considerations
-1. **Frontend/Backend Split**
-   - Path aliases will facilitate clean separation
-   - Easy identification of cross-boundary dependencies
-   - Simplified deployment configuration
-
-2. **Scalability**
-   - Easy addition of new feature modules
-   - Clear import boundaries for new components
-   - Simplified dependency management
+3. **Verification Steps**:
+   - Run TypeScript compiler
+   - Check for circular dependencies
+   - Verify import resolution
+   - Test affected components
+   - Update related tests
 
 ## Notes
-- This migration affects only import/export statements
-- No changes to component logic or styling
-- All @ai protection policies and UI guidelines will be strictly followed
-- Changes will be made in small, verifiable batches
+- All services now using path aliases
+- Hook updates completed
+- Component updates need more focus
+- Utils directory next major focus

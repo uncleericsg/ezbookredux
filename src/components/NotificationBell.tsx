@@ -2,8 +2,8 @@ import React from 'react';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotifications } from '../hooks/useNotifications';
-import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '@hooks/useNotifications';
+import { useUser } from '@contexts/UserContext';
 
 interface NotificationBellProps {
   showCount?: boolean;

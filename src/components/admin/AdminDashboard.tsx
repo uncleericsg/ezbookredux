@@ -1,12 +1,12 @@
-import React, { memo, Suspense, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import AdminNav, { tabs } from './AdminNav';
-import AdminPanelLoader from './AdminPanelLoader';
-import { useAdminDashboard } from '../../hooks/useAdminDashboard';
-import { Menu, LogOut, ChevronLeft } from 'lucide-react';
-import { useUserRedux } from '../../hooks/useUserRedux';
-import { ROUTES } from '../../config/routes';
+import { Menu, LogOut } from 'lucide-react';
+import React, { memo, Suspense, useState, useEffect } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+
+import AdminNav, { tabs } from '@admin/AdminNav';
+
+import { useAdminDashboard } from '@hooks/useAdminDashboard';
+import { useUserRedux } from '@hooks/useUserRedux';
 
 const AdminDashboard = memo(() => {
   const { activeTab, setActiveTab } = useAdminDashboard();

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, Clock, MapPin, ArrowRight } from 'lucide-react';
-import DatePicker from './Calendar';
-import TimeSlotPicker from './TimeSlotPicker';
-import { useTimeSlots } from '../hooks/useTimeSlots';
-import { useToast } from '../hooks/useToast';
-import { useUser } from '../context/UserContext';
+import { useDispatch, useSelector } from 'react-redux';
+import DatePicker from '@components/Calendar';
+import TimeSlotPicker from '@components/TimeSlotPicker';
+import { useTimeSlots } from '@hooks/useTimeSlots';
+import { useToast } from '@hooks/useToast';
+import { RootState } from '@store';
 
 interface ServiceSchedulingWizardProps {
   categoryId: string;
@@ -25,7 +26,7 @@ const ServiceSchedulingWizard: React.FC<ServiceSchedulingWizardProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(suggestedDate || null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const { slots, loading: slotsLoading } = useTimeSlots(selectedDate, categoryId);
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
   const toast = useToast();
 
   const handleConfirm = async () => {

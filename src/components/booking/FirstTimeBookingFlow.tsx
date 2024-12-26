@@ -21,15 +21,20 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { useAppDispatch } from '../../store';
-import { setCurrentBooking } from '../../store/slices/bookingSlice';
-import CustomerForm from './CustomerForm';
-import BrandSelection from './BrandSelection';
-import IssueSelection from './IssueSelection';
-import BookingProgress from './BookingProgress';
-import ScheduleStep from './ScheduleStep';
-import PaymentStep from './PaymentStep';
-import { updateBooking, createBooking } from '../../services/bookingService';
+import { useAppDispatch } from '@store';
+import { setCurrentBooking } from '@store/slices/bookingSlice';
+import CustomerForm from '@components/booking/CustomerForm';
+import BrandSelection from '@components/booking/BrandSelection';
+import IssueSelection from '@components/booking/IssueSelection';
+import BookingProgress from '@components/booking/BookingProgress';
+import ScheduleStep from '@components/booking/ScheduleStep';
+import PaymentStep from '@components/booking/PaymentStep';
+
+// Services
+import { createBooking, updateBooking } from '@services/bookingService';
+import { validateBookingDetails, validateCustomerData } from '@utils/validation';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
+
 import { format } from 'date-fns';
 
 interface ServiceOption {

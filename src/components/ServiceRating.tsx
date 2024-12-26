@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Star, ExternalLink, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import RatingConfirmationModal from './RatingConfirmationModal';
+import RatingConfirmationModal from '@components/RatingConfirmationModal';
 
 interface ServiceRatingProps {
   serviceId: string;
@@ -168,10 +168,10 @@ const ServiceRating: React.FC<ServiceRatingProps> = ({ serviceId, onSubmit, onCl
                   {loading ? (
                     'Submitting...'
                   ) : (
-                    <>
+                    <React.Fragment>
                       <span>Submit Rating</span>
                       {rating >= 4 && <Star className="w-4 h-4" />}
-                    </>
+                    </React.Fragment>
                   )}
                 </motion.button>
               </div>

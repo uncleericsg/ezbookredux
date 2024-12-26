@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { addDays } from 'date-fns';
-import { scheduleServiceReminder } from '../services/notifications';
-import { useUser } from '../contexts/UserContext';
+import { scheduleServiceReminder } from '@services/notifications';
+import { useUser } from '@contexts/UserContext';
 
 export const useNotificationScheduler = () => {
   const { user } = useUser();

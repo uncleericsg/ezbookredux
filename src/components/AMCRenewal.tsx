@@ -1,6 +1,10 @@
 import React from 'react';
 import { Shield, CheckCircle, Loader2 } from 'lucide-react';
-import type { AMCPackage } from '../types';
+import type { AMCPackage } from '@types';
+
+// Services
+import { getAMCPackages, renewAMC } from '@services/amc';
+import { validateAMCRenewal } from '@services/validation';
 
 interface AMCRenewalProps {
   packages: AMCPackage[];

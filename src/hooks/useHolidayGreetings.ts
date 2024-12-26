@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { generateHolidayGreeting, scheduleHolidayGreetings, fetchHolidayGreetings, updateHolidayGreeting } from '../services/notifications';
-import type { HolidayGreeting } from '../types';
-import type { ChatGPTSettings } from '../types/settings';
+import { generateHolidayGreeting, scheduleHolidayGreetings, fetchHolidayGreetings, updateHolidayGreeting } from '@services/notifications';
+import type { HolidayGreeting } from '@types';
+import type { ChatGPTSettings } from '@types/settings';
 import { toast } from 'sonner';
 
 interface UseHolidayGreetingsOptions {

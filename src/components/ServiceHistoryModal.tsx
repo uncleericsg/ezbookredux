@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { ServiceVisit } from '../types';
+import type { ServiceVisit } from '@types';
 
 interface ServiceHistoryModalProps {
   isOpen: boolean;

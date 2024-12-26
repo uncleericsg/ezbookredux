@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, LogOut, AlertTriangle } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '../store';
-import { clearAuth } from '../store/slices/authSlice';
-import { resetUser } from '../store/slices/userSlice';
-import { toast } from 'sonner';
+import { useAppDispatch, useAppSelector } from '@store';
+import { clearAuth } from '@store/slices/authSlice';
+import { resetUser } from '@store/slices/userSlice';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import ServiceHistory from './ServiceHistory';
-import AddressManager from './profile/AddressManager';
-import ProfileForm from './profile/ProfileForm';
-import { LoadingScreen } from './LoadingScreen';
+import ServiceHistory from '@components/ServiceHistory';
+import AddressManager from '@components/profile/AddressManager';
+import ProfileForm from '@components/profile/ProfileForm';
+import { LoadingScreen } from '@components/LoadingScreen';
 
 const UserProfile: React.FC = () => {
   const { currentUser } = useAppSelector((state) => state.user);

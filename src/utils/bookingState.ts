@@ -1,4 +1,4 @@
-import { BookingError } from './errors';
+import { BookingError } from '@utils/errors';
 
 export type BookingStatus = 
   | 'idle' 

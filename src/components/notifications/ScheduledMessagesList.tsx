@@ -14,8 +14,8 @@ import {
   MoreVertical,
   ExternalLink
 } from 'lucide-react';
-import { useScheduledMessages } from '../../hooks/useScheduledMessages';
-import type { ScheduledMessage } from '../../types';
+import { useScheduledMessages } from '@hooks/useScheduledMessages';
+import type { ScheduledMessage } from '@types';
 
 import { Card } from '@components/molecules/card';
 import { Button } from '@components/atoms/button';

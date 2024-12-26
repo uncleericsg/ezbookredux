@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '@contexts/UserContext';
 
 // @ai-doc Custom hook that combines logout and navigation
 // @ai-doc This will be compatible with any auth provider (Firebase, Auth0, etc.)

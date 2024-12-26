@@ -6,14 +6,20 @@ import { Save, Loader2, Clock, Calendar, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@utils/cn';
 
 export interface BookingConfig;
 
 export interface BookingSettingsProps;
 
-
-;
+export interface BookingConfig {
+  timeSlots: {
+    enabled: boolean;
+    duration: number;
+    startTime: string;
+    endTime: string;
+    breakDuration: number;
+  };
   scheduling: {
     minAdvanceBooking: number;
     maxAdvanceBooking: number;

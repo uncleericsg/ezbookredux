@@ -1,5 +1,5 @@
-import React from 'react';
 import { Key, Loader2, Play, Save } from 'lucide-react';
+import React from 'react';
 import { toast } from 'sonner';
 
 interface CypressSettingsProps {

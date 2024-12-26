@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchPublicHolidays, updatePublicHolidays } from '../services/publicHolidays';
+import { fetchPublicHolidays, updatePublicHolidays } from '@services/publicHolidays';
 import { addDays, startOfDay, format } from 'date-fns';
 
 interface Holiday {

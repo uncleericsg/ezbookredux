@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { fetchServiceReports } from '../services/repairShopr';
-import type { ServiceVisit } from '../types';
+import { fetchServiceReports } from '@services/repairShopr';
+import type { ServiceVisit } from '@types';
 
 export const useServiceHistory = (userId: string) => {
   const [visits, setVisits] = useState<ServiceVisit[]>([]);

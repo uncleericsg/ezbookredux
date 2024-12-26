@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { fetchAnalytics } from '../services/admin';
 import { tabs } from '../components/admin/AdminNav';
+import { toast } from 'sonner';
 
 export const useAdminDashboard = () => {
   // Set initial tab to 0 (Services) instead of Users

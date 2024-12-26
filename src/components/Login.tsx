@@ -47,13 +47,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../store';
-import { setUser, setError } from '../store/slices/userSlice';
-import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '@store';
+import { setUser, setError } from '@store/slices/userSlice';
+import { setAuthenticated, setToken } from '@store/slices/authSlice';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
-import { LoadingScreen } from './LoadingScreen';
+import { LoadingScreen } from '@components/LoadingScreen';
+
+// Services
+import { verifyOTP, sendOTP } from '@services/auth';
+import { validateMobileNumber } from '@services/validation';
 
 const Login: React.FC = () => {
   const [mobileNumber, setMobileNumber] = useState('');

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Send, Users, Clock, AlertTriangle, Loader2, Bell } from 'lucide-react';
 import { getToken } from 'firebase/messaging';
-import { messaging } from '../../services/firebase';
+import { Send, Users, Clock, AlertTriangle, Loader2, Bell } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { useFCM } from '../../hooks/useFCM';
-import type { NotificationPayload } from '../../services/fcm';
+
+import { useFCM } from '@hooks/useFCM';
+import { messaging } from '@services/firebase';
+
+import type { NotificationPayload } from '@services/fcm';
 
 interface FCMTesterProps {
   className?: string;

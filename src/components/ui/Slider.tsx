@@ -3,25 +3,22 @@
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@utils/cn';
 
 export type SliderProps;
 
-
-// Export types at the top
-
-  /** Minimum value */
-  min?: number;
-  /** Maximum value */
-  max?: number;
-  /** Step value */
-  step?: number;
-  /** Default value */
-  defaultValue?: number[];
-  /** Value */
-  value?: number[];
-  /** Callback when value changes */
-  onValueChange?: (value: number[]) => void;
+/** Minimum value */
+min?: number;
+/** Maximum value */
+max?: number;
+/** Step value */
+step?: number;
+/** Default value */
+defaultValue?: number[];
+/** Value */
+value?: number[];
+/** Callback when value changes */
+onValueChange?: (value: number[]) => void;
 };
 
 /**

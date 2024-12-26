@@ -8,14 +8,14 @@ import { Bell, User, Shield, Settings, LogOut, LogIn } from 'lucide-react';
 import NotificationBadge from './NotificationBadge';
 import GuestNotificationModal from './GuestNotificationModal';
 import LoginModal from './LoginModal';
-import { useAppDispatch, useAppSelector } from '../store';
-import { setUser } from '../store/slices/userSlice';
-import { clearAuth, setAuthenticated, setToken } from '../store/slices/authSlice';
-import { resetAdmin } from '../store/slices/adminSlice';
-import { useNotifications } from '../hooks/useNotifications';
+import { useAppDispatch, useAppSelector } from '@store';
+import { setUser } from '@store/slices/userSlice';
+import { clearAuth, setAuthenticated, setToken } from '@store/slices/authSlice';
+import { resetAdmin } from '@store/slices/adminSlice';
+import { useNotifications } from '@hooks/useNotifications';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { RESET_STORE } from '../store';
+import { RESET_STORE } from '@store';
 
 // @ai-doc Main navigation component
 // @ai-doc Handles user navigation and authentication state

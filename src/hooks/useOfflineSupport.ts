@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TimeSlot } from '../types';
+import type { TimeSlot } from '@types';
 
 interface OfflineData {
   slots: TimeSlot[];

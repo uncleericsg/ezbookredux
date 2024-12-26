@@ -1,9 +1,10 @@
-import { useAppDispatch, useAppSelector } from '../store';
-import { setAdminView, toggleAdminView } from '../store/slices/adminView.slice';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAdminView, toggleAdminView } from './slices/adminView.slice';
 
 export const useAdminView = () => {
-  const dispatch = useAppDispatch();
-  const isAdminView = useAppSelector((state) => state.adminView.isAdminView);
+  const dispatch = useDispatch();
+  const isAdminView = useSelector((state) => state.adminView.isAdminView);
 
   return {
     isAdminView,

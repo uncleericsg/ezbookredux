@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react';
-import Calendar from './Calendar';
-import TimeSlotPicker from './TimeSlotPicker';
-import { useTimeSlots } from '../hooks/useTimeSlots';
-import { useUser } from '../context/UserContext';
+import Calendar from '@components/Calendar';
+import TimeSlotPicker from '@components/TimeSlotPicker';
+import { useTimeSlots } from '@hooks/useTimeSlots';
+import { useUser } from '@contexts/UserContext';
 
 interface ServiceSchedulingFormProps {
   onSchedule: (date: Date, time: string) => Promise<void>;

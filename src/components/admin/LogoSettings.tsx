@@ -1,8 +1,12 @@
-import React from 'react';
 import { Image, Save, Loader2 } from 'lucide-react';
-import LogoUploader from './LogoUploader';
-import useLogo from '../../hooks/useLogo';
+import React from 'react';
 import { toast } from 'sonner';
+
+import useLogo from '../../hooks/useLogo';
+
+import LogoUploader from './LogoUploader';
+
+
 
 const LogoSettings: React.FC = () => {
   const { uploadLogo, getLogo, loading } = useLogo({

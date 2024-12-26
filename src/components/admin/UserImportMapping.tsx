@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Save, Plus, Trash2, Loader2, ArrowRight, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Save, Plus, Trash2, Loader2, ArrowRight, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 

@@ -1,4 +1,4 @@
-export const PAYMENT_STATES = {
+const PAYMENT_STATES = {
   INITIAL: 'INITIAL',
   PROCESSING: 'PROCESSING',
   SUCCESS: 'SUCCESS',
@@ -6,4 +6,7 @@ export const PAYMENT_STATES = {
   CANCELLED: 'CANCELLED'
 } as const;
 
-export type PaymentState = typeof PAYMENT_STATES[keyof typeof PAYMENT_STATES];
+type PaymentState = typeof PAYMENT_STATES[keyof typeof PAYMENT_STATES];
+
+export { PAYMENT_STATES };
+export type { PaymentState };

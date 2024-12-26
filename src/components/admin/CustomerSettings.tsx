@@ -6,13 +6,16 @@ import { Save, Loader2, User, Mail, Phone, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@utils/cn';
 
 export interface CustomerConfig;
 
 export interface CustomerSettingsProps;
 
-
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface CustomerConfig {
+  registration: {
+    requireEmail: boolean;
     requirePhone: boolean;
     requireAddress: boolean;
     verifyEmail: boolean;
@@ -65,6 +68,9 @@ const defaultConfig: CustomerConfig = {
     minimumPointsRedemption: 1000,
   },
 };
+
+const CustomerSettings = () => {
+  const [config, setConfig] = useState(defaultConfig);
 
   const [loading, setLoading] = useState(false);
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Bell, AlertCircle } from 'lucide-react';
-import { useHolidayNotifications } from '../hooks/useHolidayNotifications';
+import { useHolidayNotifications } from '@hooks/useHolidayNotifications';
 
 const HolidayList: React.FC = () => {
   const { upcomingHolidays, loading, error } = useHolidayNotifications();

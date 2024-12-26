@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useCustomMessages } from '../../hooks/useCustomMessages';
-import { useAcuitySettings } from '../../hooks/useAcuitySettings';
-import type { CustomMessage } from '../../types';
+import { useCustomMessages } from '@hooks/useCustomMessages';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import type { CustomMessage } from '@types';
 
 import { Card } from '@components/molecules/card';
 import { Button } from '@components/atoms/button';

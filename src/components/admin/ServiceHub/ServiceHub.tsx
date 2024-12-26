@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
 import { Plus, Filter, RefreshCw, Maximize2, Minimize2 } from 'lucide-react';
-import ContractMonitoring from './ContractMonitoring';
-import ServiceQueue from './ServiceQueue';
-import ServiceMetrics from './ServiceMetrics';
+import React, { useState } from 'react';
+
+import ContractMonitoring from '@admin/ServiceHub/ContractMonitoring';
+import ServiceMetrics from '@admin/ServiceHub/ServiceMetrics';
+import ServiceQueue from '@admin/ServiceHub/ServiceQueue';
 
 const ServiceHub: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);

@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { errorReportingService } from './errorReporting';
+import { errorReportingService } from '@utils/errorReporting';
 
 export enum ApiErrorCode {
   // Authentication Errors

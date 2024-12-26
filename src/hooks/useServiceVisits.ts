@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '../contexts/UserContext';
-import { fetchServiceReports, updateServiceReport, incrementVisitLabel } from '../services/repairShopr';
-import { useToast } from './useToast';
-import type { ServiceVisit } from '../types';
+import { useUser } from '@contexts/UserContext';
+import { fetchServiceReports, updateServiceReport, incrementVisitLabel } from '@services/repairShopr';
+import { useToast } from '@hooks/useToast';
+import type { ServiceVisit } from '@types';
 
 export const useServiceVisits = () => {
   const { user } = useUser();

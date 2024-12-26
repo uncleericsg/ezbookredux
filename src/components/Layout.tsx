@@ -30,16 +30,16 @@
 
 import React, { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
-import Footer from './Footer';
-import Announcement from './Announcement';
-import AppInstallPrompt from './AppInstallPrompt';
-import ServiceDueBanner from './ServiceDueBanner';
-import FloatingButtons from './FloatingButtons';
-import { useAnnouncements } from '../hooks/useAnnouncements';
-import { useAppSelector } from '../store';
-import { LoadingScreen } from './LoadingScreen';
-import { PROTECTED_ROUTES, ROUTES_WITHOUT_NAVBAR, ROUTES } from '../config/routes';
+import Navbar from '@components/Navbar';
+import Footer from '@components/Footer';
+import Announcement from '@components/Announcement';
+import AppInstallPrompt from '@components/AppInstallPrompt';
+import ServiceDueBanner from '@components/ServiceDueBanner';
+import FloatingButtons from '@components/FloatingButtons';
+import { useAnnouncements } from '@hooks/useAnnouncements';
+import { useAppSelector } from '@store';
+import { LoadingScreen } from '@components/LoadingScreen';
+import { PROTECTED_ROUTES, ROUTES_WITHOUT_NAVBAR, ROUTES } from '@config/routes';
 
 const Layout: React.FC = () => {
   const { announcements, dismissAnnouncement } = useAnnouncements();

@@ -1,11 +1,12 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useUsers } from './useUsers';
-import { useUser } from '../contexts/UserContext';
+import { useAppSelector } from '@store';
 import { toast } from 'sonner';
-import type { User } from '../types';
+import type { User } from '@/types';
 
 export const useUserTable = () => {
   const { users, loading, error, deactivateUser } = useUsers();
+  const { user } = useAppSelector(state => state.user);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');

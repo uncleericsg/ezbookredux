@@ -1,4 +1,5 @@
-import { useNavigate as useRouterNavigate, useLocation, NavigateOptions } from 'react-router-dom';
+import { useNavigate as useRouterNavigate, useLocation } from 'react-router-dom';
+import type { NavigateOptions } from 'react-router-dom';
 import { startTransition, useCallback } from 'react';
 
 export function useNavigate() {

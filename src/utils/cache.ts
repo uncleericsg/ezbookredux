@@ -1,5 +1,5 @@
-import { Region } from '../services/locations/regions';
-import type { TimeSlot } from '../types';
+import { Region } from '@services/locations/regions';
+import type { TimeSlot } from '@types';
 
 interface CacheEntry {
   slots: TimeSlot[];

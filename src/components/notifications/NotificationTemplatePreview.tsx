@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Copy, AlertCircle, Smartphone, Monitor, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@hooks/useToast';
 import type { Template, EnhancedTemplate } from './types/templateTypes';
 import { PreviewData } from './types/messageTypes';
 import { TEST_IDS } from './constants/templateConstants';
@@ -130,15 +130,9 @@ const NotificationTemplatePreview: React.FC<TemplatePreviewProps> = ({
             data-testid={TEST_IDS.copyButton}
           >
             {isCopied ? (
-              <>
-                <Check className="h-4 w-4" />
-                Copied
-              </>
+              <><Check className="h-4 w-4" />Copied</>
             ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copy
-              </>
+              <><Copy className="h-4 w-4" />Copy</>
             )}
           </Button>
         </div>

@@ -1,5 +1,5 @@
-import React from 'react';
 import { AirVent } from 'lucide-react';
+import React from 'react';
 
 interface BrandingPreviewProps {
   primaryColor: string;

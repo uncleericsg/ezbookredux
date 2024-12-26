@@ -1,5 +1,6 @@
 import React from 'react';
-import type { UserViewType } from './AdminViewToggle';
+
+import type { UserViewType } from '@store/slices/adminSlice';
 
 interface ViewSelectorProps {
   currentView: UserViewType;

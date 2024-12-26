@@ -5,8 +5,8 @@ export const usePreloadComponents = () => {
     // Preload components in the background
     const preloadComponents = async () => {
       const components = [
-        import('../components/booking/IssueSelection'),
-        import('../components/booking/CustomerForm'),
+        import('@components/booking/IssueSelection'),
+        import('@components/booking/CustomerForm'),
       ];
       
       try {

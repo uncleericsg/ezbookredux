@@ -1,14 +1,4 @@
-import { supabase } from '../lib/supabase';
-
-export interface ServiceDetails {
-  id: string;
-  title: string;
-  price: number;
-  duration: string;
-  description: string;
-  usual_price?: number;
-  is_premium: boolean;
-}
+import { supabase } from '@lib/supabase';
 
 /**
  * Get service details from Supabase by appointment type ID
@@ -58,3 +48,13 @@ export const getServiceById = async (id: string): Promise<ServiceDetails | null>
     return null;
   }
 };
+
+export interface ServiceDetails {
+  id: string;
+  title: string;
+  price: number;
+  duration: string;
+  description: string;
+  usual_price?: number;
+  is_premium: boolean;
+}

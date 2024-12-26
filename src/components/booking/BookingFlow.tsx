@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
-import { useAdminView } from '../../contexts/AdminViewContext';
 import { useNavigate } from 'react-router-dom';
-import CustomerForm from './CustomerForm';
-import { QuickBookingPrompt } from './QuickBookingPrompt';
+
+import CustomerForm from '@components/booking/CustomerForm';
+import { QuickBookingPrompt } from '@components/booking/QuickBookingPrompt';
 import { RadixDialog as Dialog } from '@components/organisms/Dialog';
-import { fetchLastBooking, BookingDetails } from '../../services/bookingService';
-import BrandSelection from './BrandSelection';
-import IssueSelection from './IssueSelection';
-import { ServiceLimitations } from './ServiceLimitations';
-import BookingProgress from './BookingProgress';
-import PaymentStep from './PaymentStep';
-import ScheduleStep from './ScheduleStep';
+import BrandSelection from '@components/booking/BrandSelection';
+import IssueSelection from '@components/booking/IssueSelection';
+import { ServiceLimitations } from '@components/booking/ServiceLimitations';
+import BookingProgress from '@components/booking/BookingProgress';
+import PaymentStep from '@components/booking/PaymentStep';
+import ScheduleStep from '@components/booking/ScheduleStep';
+
+import { useAppSelector, useAppDispatch } from '@store/hooks';
+
+// Services
+import { fetchLastBooking, createBooking, updateBooking } from '@services/bookingService';
+import { validateBookingDetails, validateCustomerData } from '@services/validation';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
 
 export interface CustomerFormData {
   firstName: string;
@@ -47,10 +52,10 @@ interface BookingData {
 
 const BOOKING_TIMEOUT = 900; // 15 minutes in seconds
 
-const BookingFlow: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+const BookingFlow = () => {
+  const { user, loading: authLoading } = useAppSelector((state) => state.auth);
+  const { isFeatureVisible } = useAppSelector((state) => state.admin);
   const navigate = useNavigate();
-  const { isFeatureVisible } = useAdminView();
   const dispatch = useAppDispatch();
   
   // Redirect to login if not authenticated
@@ -354,5 +359,7 @@ const BookingFlow: React.FC = () => {
     </div>
   );
 };
+
+BookingFlow.displayName = 'BookingFlow';
 
 export default BookingFlow;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
-import { useUser } from '../contexts/UserContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store';
 
 interface TrustIndicator {
   value: number;
@@ -38,6 +39,7 @@ const trustIndicators: TrustIndicator[] = [
 ];
 
 const TrustIndicators: React.FC = () => {
+  const user = useSelector((state: RootState) => state.user.currentUser);
   const [hasAnimated, setHasAnimated] = useState(false);
   const counterRef = useRef<HTMLDivElement>(null);
 

@@ -114,33 +114,32 @@ import { useNavigate } from 'react-router-dom';
 
 // External libraries
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Stripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import { motion } from 'framer-motion';
 import { FiCreditCard } from 'react-icons/fi';
 import { ImSpinner8 } from 'react-icons/im';
 import { HiHeart } from 'react-icons/hi2';
 import { format } from 'date-fns';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Components
-import { BookingSummary } from './BookingSummary';
-import { BookingConfirmation } from './BookingConfirmation';
-import { ErrorBoundary } from '@/components/error-boundary/ErrorBoundary';
+import { BookingSummary } from '@components/booking/BookingSummary';
+import { BookingConfirmation } from '@components/booking/BookingConfirmation';
+import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
 
 // Redux
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setError, setPaymentStatus } from '@/store/slices/userSlice';
-import { setCurrentBooking, updateBooking } from '@/store/slices/bookingSlice';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { setError, setPaymentStatus } from '@store/slices/userSlice';
+import { setCurrentBooking, updateBooking } from '@store/slices/bookingSlice';
 
 // Constants and Utils
-import { PAYMENT_STATES } from '@/constants/payment';
-import { cn } from '@/lib/utils';
+import { PAYMENT_STATES } from '@constants/payment';
 
 // Services
-import { getStripe } from '@/services/stripe';
-import { createPaymentIntent, addToServiceQueue } from '@/services/paymentService';
-import { createBooking } from '@/services/supabaseBookingService';
-import { getServiceByAppointmentType } from '@/services/serviceUtils';
+import { getStripe } from '@services/stripe';
+import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
+import { createBooking } from '@services/supabaseBookingService';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
 
 const initialPaymentState: PaymentState = {
   status: PAYMENT_STATES.INITIALIZING,

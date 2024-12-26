@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import ConfirmDialog from './ConfirmDialog';
+import React, { useState } from 'react';
+
+import ConfirmDialog from '@admin/ConfirmDialog';
 
 interface UserStatusToggleProps {
   userId: string;

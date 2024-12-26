@@ -1,7 +1,8 @@
-import { loadStripe, StripeError } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import type { StripeError } from '@stripe/stripe-js';
 import axios from 'axios';
 import { z } from 'zod';
-import { ApiError, handleApiError, retryOperation } from '../utils/apiErrors';
+import { ApiError, handleApiError, retryOperation } from '@utils/apiErrors';
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 

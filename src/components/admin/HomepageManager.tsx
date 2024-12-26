@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Save, Plus, Trash2, Loader2, GripVertical, Link, Image, ChevronRight, ChevronDown } from 'lucide-react';
-import { useSettingsForm } from '../../hooks/useSettingsForm';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+
+import { useSettingsForm } from '../../hooks/useSettingsForm';
+
+
 import CategoryMappingModal from './CategoryMappingModal';
-import type { ServiceCategory } from '../../types';
+
 import type { AppointmentType } from '../../services/categoryMapping';
+import type { ServiceCategory } from '../../types';
 
 interface CategoryWithChildren extends ServiceCategory {
   children?: CategoryWithChildren[];
@@ -217,7 +221,7 @@ const HomepageManager: React.FC = () => {
     return roots;
   };
 
-  const renderCategory = (category: CategoryWithChildren, level: number = 0, dragHandleProps?: any) => {
+  const renderCategory = (category: CategoryWithChildren, level = 0, dragHandleProps?: any) => {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories.has(category.id);
 

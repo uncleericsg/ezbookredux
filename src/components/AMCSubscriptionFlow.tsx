@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useUser } from '../contexts/UserContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store';
 import { toast } from 'sonner';
+import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface SubscriptionStep {
   id: string;
@@ -33,17 +34,17 @@ const AMCSubscriptionFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, updateUser } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
 
   const handlePaymentSuccess = async () => {
     try {
       setLoading(true);
       
       // Update user status
-      await updateUser({
-        ...user,
-        amcStatus: 'active'
-      });
+      // await updateUser({
+      //   ...user,
+      //   amcStatus: 'active'
+      // });
 
       // Show success message
       toast.success('AMC Package activated successfully!');
@@ -62,14 +63,14 @@ const AMCSubscriptionFlow: React.FC = () => {
       setLoading(true);
       
       // Enable AMC features
-      await Promise.all([
-        // Update user preferences
-        updateUser({
-          ...user,
-          amcStatus: 'active'
-        }),
-        // Additional activation tasks...
-      ]);
+      // await Promise.all([
+      //   // Update user preferences
+      //   updateUser({
+      //     ...user,
+      //     amcStatus: 'active'
+      //   }),
+      //   // Additional activation tasks...
+      // ]);
 
       toast.success('AMC features enabled successfully');
       setCurrentStep(2);

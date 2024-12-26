@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
-import type { AppSettings } from '../types/appSettings';
-import { defaultAppSettings } from '../types/appSettings';
+import type { AppSettings } from '@types/appSettings';
+import { defaultAppSettings } from '@types/appSettings';
 
 const APP_SETTINGS_KEY = 'app_settings';
 

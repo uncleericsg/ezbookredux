@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
-import type { TimeSlot } from '../types';
-import type { Region } from '../services/locations/regions';
-import { useLocationOptimizer } from './useLocationOptimizer';
-import { cacheWarmer } from '../utils/cache';
-import { isRateLimitError, isNetworkError } from '../types/errors';
+import type { TimeSlot } from '@types';
+import type { Region } from '@services/locations/regions';
+import { useLocationOptimizer } from '@hooks/useLocationOptimizer';
+import { cacheWarmer } from '@utils/cache';
+import { isRateLimitError, isNetworkError } from '@types/errors';
 
 const BATCH_SIZE = 10;
 const RATE_LIMIT_DELAY = 1000;

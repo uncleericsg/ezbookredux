@@ -1,4 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+
+export type UserViewType = 'non-user' | 'regular' | 'amc' | 'admin';
 
 interface AdminData {
   totalUsers?: number;
@@ -15,6 +17,7 @@ interface AdminData {
 
 interface AdminState {
   isAdmin: boolean;
+  currentView: UserViewType;
   adminData: AdminData | null;
   loading: boolean;
   error: string | null;
@@ -22,6 +25,7 @@ interface AdminState {
 
 const initialState: AdminState = {
   isAdmin: false,
+  currentView: 'regular',
   adminData: null,
   loading: false,
   error: null,
@@ -35,7 +39,14 @@ const adminSlice = createSlice({
       state.isAdmin = action.payload;
       if (!action.payload) {
         state.adminData = null;
+        state.currentView = 'regular';
       }
+    },
+    setCurrentView: (state, action: PayloadAction<UserViewType>) => {
+      state.currentView = action.payload;
+    },
+    resetView: (state) => {
+      state.currentView = 'regular';
     },
     setAdminData: (state, action: PayloadAction<AdminData | null>) => {
       state.adminData = action.payload;
@@ -47,11 +58,18 @@ const adminSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
-    resetAdmin: (state) => {
-      return initialState;
-    },
+    resetAdmin: (_state) => initialState,
   },
 });
 
-export const { setIsAdmin, setAdminData, setLoading, setError, resetAdmin } = adminSlice.actions;
+export const { 
+  setIsAdmin, 
+  setCurrentView,
+  resetView,
+  setAdminData, 
+  setLoading, 
+  setError, 
+  resetAdmin 
+} = adminSlice.actions;
+
 export default adminSlice.reducer;

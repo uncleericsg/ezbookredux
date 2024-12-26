@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppointments } from './useAppointments';
-import { useToast } from './useToast';
-import { useCalendarExport } from './useCalendarExport';
-import { useUser } from '../contexts/UserContext';
+import { useAppointments } from '@hooks/useAppointments';
+import { useToast } from '@hooks/useToast';
+import { useCalendarExport } from '@hooks/useCalendarExport';
+import { useUser } from '@contexts/UserContext';
 import { addDays } from 'date-fns';
 
 export const useServiceScheduling = (categoryId: string, isAMC: boolean = false) => {

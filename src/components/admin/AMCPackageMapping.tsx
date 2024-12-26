@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
 import { Save, AlertTriangle, Loader2, Link } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { useAcuitySettings } from '../../hooks/useAcuitySettings';
-import type { AMCPackage } from '../../types';
+
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
+
+import type { AMCPackage } from '@types';
 
 interface AMCPackageMappingProps {
   package: AMCPackage;

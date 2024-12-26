@@ -1,4 +1,4 @@
-import type { SocialLinks } from '../types';
+import type { SocialLinks } from '@types';
 
 export const fetchSocialLinks = async (): Promise<SocialLinks> => {
   // In a real app, this would fetch from an API

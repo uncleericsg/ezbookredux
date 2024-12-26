@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
 import { Upload, Loader2, AlertTriangle, Settings } from 'lucide-react';
-import { useRepairShopr } from '../../hooks/useRepairShopr';
-import UserImportMapping from './UserImportMapping';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { useRepairShopr } from '@hooks/useRepairShopr';
+
+import UserImportMapping from './UserImportMapping';
+
 
 const UserImport: React.FC = () => {
   const [importing, setImporting] = useState(false);

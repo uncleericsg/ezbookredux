@@ -6,12 +6,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useUserRedux } from '../../hooks/useUserRedux';
-import ServicePricingSelection from '../ServicePricingSelection';
-import ReturnCustomerSchedule from './ReturnCustomerSchedule';
-import PaymentStep from './PaymentStep';
-import BookingSelectionModal from '../modals/BookingSelectionModal';
-import type { PricingOption, SavedLocation, SavedDetails, CustomerInfo, BookingData, ServicePricing } from '../../types/booking';
+import { useUserRedux } from '@hooks/useUserRedux';
+import { ServicePricingSelection } from '@components/ServicePricingSelection';
+import { ReturnCustomerSchedule } from '@components/booking/ReturnCustomerSchedule';
+import { PaymentStep } from '@components/booking/PaymentStep';
+import { BookingSelectionModal } from '@components/modals/BookingSelectionModal';
+import type { PricingOption, SavedLocation, SavedDetails, CustomerInfo, BookingData, ServicePricing } from '@types/booking';
+
+// Services
+import { createBooking, updateBooking } from '@services/bookingService';
+import { getServicePricing } from '@services/serviceManager';
+import { validateBookingDetails } from '@utils/validation';
 
 interface SavedLocation {
   id: string;

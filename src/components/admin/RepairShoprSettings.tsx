@@ -1,7 +1,9 @@
-import React from 'react';
 import { Key, Loader2, Save } from 'lucide-react';
-import RepairShoprMapping from './RepairShoprMapping';
-import type { AcuitySettings } from '../../types/settings';
+import React from 'react';
+
+import RepairShoprMapping from '@admin/RepairShoprMapping';
+
+import type { AcuitySettings } from '@types/settings';
 
 interface RepairShoprSettingsProps {
   settings: AcuitySettings;

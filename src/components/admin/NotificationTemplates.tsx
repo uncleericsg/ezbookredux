@@ -1,5 +1,5 @@
-import React from 'react';
 import { Bell } from 'lucide-react';
+import React from 'react';
 
 const NotificationTemplates: React.FC = () => {
   return (

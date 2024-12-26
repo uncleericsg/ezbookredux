@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePWA } from '../hooks/usePWA';
+import { usePWA } from '@hooks/usePWA';
 
 const PWAInstallBanner: React.FC = () => {
   const { isInstallable, isInstalled, promptInstall } = usePWA();

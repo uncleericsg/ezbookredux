@@ -1,5 +1,5 @@
-import React from 'react';
 import { TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import React from 'react';
 
 interface MetricCard {
   title: string;

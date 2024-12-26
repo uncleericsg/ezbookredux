@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FormData } from './useFormValidation';
+import { FormData } from '@hooks/useFormValidation';
 
 const FORM_STORAGE_KEY = 'customerFormData';
 const RECENT_ADDRESSES_KEY = 'recentAddresses';

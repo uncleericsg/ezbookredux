@@ -6,6 +6,10 @@ import { motion } from 'framer-motion';
 import { Clock, Users, Timer, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+// Services
+import { getServicePricing } from '@services/serviceManager';
+import { validateBookingDetails } from '@utils/validation';
+
 interface PricingOption {
   id: string;
   title: string;
@@ -400,4 +404,5 @@ const ServicePricingSelection: React.FC<ServicePricingSelectionProps> = ({
   );
 };
 
+export { ServicePricingSelection };
 export default ServicePricingSelection;

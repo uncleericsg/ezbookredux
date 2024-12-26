@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useAppDispatch } from '../store';
-import { setAuthenticated, setToken } from '../store/slices/authSlice';
-import { setUser } from '../store/slices/userSlice';
+import { useAppDispatch } from '@store';
+import { setAuthenticated, setToken } from '@store/slices/authSlice';
+import { setUser } from '@store/slices/userSlice';
 
 /**
  * Hook to initialize authentication state from localStorage

@@ -4,9 +4,9 @@ import {
   uploadBuildVersion, 
   rollbackBuild,
   deleteBuildVersions
-} from '../services/admin';
+} from '@services/admin';
 import { toast } from 'sonner';
-import type { BuildVersion } from '../types';
+import type { BuildVersion } from '@types';
 
 export const useBuildManager = () => {
   const [versions, setVersions] = useState<BuildVersion[]>([]);

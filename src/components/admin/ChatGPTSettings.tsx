@@ -1,6 +1,7 @@
-import React from 'react';
 import { Key, Loader2, Save, MessageSquare, Sliders } from 'lucide-react';
-import type { ChatGPTSettings as ChatGPTSettingsType } from '../../types';
+import React from 'react';
+
+import type { ChatGPTSettings as ChatGPTSettingsType } from '@types/index';
 
 interface ChatGPTSettingsProps {
   settings: ChatGPTSettingsType;

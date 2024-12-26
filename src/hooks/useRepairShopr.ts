@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { testConnection, syncCustomerData, syncInventoryData, processPayment } from '../services/repairShopr';
+import { testConnection, syncCustomerData, syncInventoryData, processPayment } from '@services/repairShopr';
 import { toast } from 'sonner';
 
 export const useRepairShopr = () => {

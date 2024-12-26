@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { fetchAvailableSlots } from '../services/acuity';
+import { fetchAvailableSlots } from '@services/acuity';
 import { format, addMinutes, isBefore, isAfter } from 'date-fns';
-import { withRetry } from '../utils/retry';
-import { useAcuitySettings } from './useAcuitySettings';
+import { withRetry } from '@utils/retry';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
 import { toast } from 'sonner';
-import type { TimeSlot, FetchError } from '../types';
-import { categoryMapper } from '../services/categoryMapping';
-import { validateTimeSlot } from '../utils/bookingValidation';
-import type { AcuityAppointmentType } from '../services/acuityIntegration';
+import type { TimeSlot, FetchError } from '@types';
+import { categoryMapper } from '@services/categoryMapping';
+import { validateTimeSlot } from '@utils/bookingValidation';
+import type { AcuityAppointmentType } from '@services/acuityIntegration';
 
 const CACHE_DURATION = 30000; // 30 seconds cache
 const CACHE_KEY_FORMAT = 'yyyy-MM-dd';

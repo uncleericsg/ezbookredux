@@ -2,8 +2,8 @@
 // @ai-doc This component handles role-based access control
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../store';
-import { useUserMigration } from '../hooks/useUserMigration';
+import { useAppSelector } from '@store';
+import { useUserMigration } from '@hooks/useUserMigration';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

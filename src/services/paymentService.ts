@@ -1,11 +1,12 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { PaymentDetails, PaymentError, TransactionRecord } from '../types/payment';
-import { ServiceRequest } from '../types/service';
+import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
+import type { PaymentDetails, PaymentError, TransactionRecord } from '@types/payment';
+import type { ServiceRequest } from '@types/service';
 import axios from 'axios';
-import { supabase } from '../lib/supabase';
-import { ApiError } from '../utils/apiErrors';
-import { createBooking as createSupabaseBooking } from './supabaseBookingService';
-import type { BookingDetails } from './supabaseBookingService';
+import { supabase } from '@services/supabase/client'; 
+import { ApiError } from '@utils/apiErrors';
+import { createBooking as createSupabaseBooking } from '@services/supabaseBookingService';
+import type { BookingDetails } from '@services/supabaseBookingService';
 
 // Initialize Stripe instance
 let stripeInstance: Stripe | null = null;
@@ -378,4 +379,4 @@ export const paymentService: PaymentService = {
   }
 };
 
-export type { ServiceRequest } from '../types/service';
+export type { ServiceRequest } from '@types/service';

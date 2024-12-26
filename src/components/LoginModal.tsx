@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
-import { setAuthenticated, setToken } from '../store/slices/authSlice';
-import { setUser } from '../store/slices/userSlice';
-import { setIsAdmin } from '../store/slices/adminSlice';
-import { OTPInput } from './common/OTPInput';
+import { setAuthenticated, setToken } from '@store/slices/authSlice';
+import { setUser } from '@store/slices/userSlice';
+import { setIsAdmin } from '@store/slices/adminSlice';
+import { OTPInput } from '@components/common/OTPInput';
 import { FiX, FiPhone } from 'react-icons/fi';
 
 interface LoginModalProps {

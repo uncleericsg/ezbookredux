@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Settings, Users, Bell, Shield, MoreVertical } from 'lucide-react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../../store';
 import { toast } from 'sonner';
+
+import { useAppSelector } from '@store';
 
 interface Action {
   icon: React.ElementType;

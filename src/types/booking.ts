@@ -1,4 +1,4 @@
-export interface PricingOption {
+interface PricingOption {
   id: string;
   title: string;
   price: number;
@@ -9,7 +9,7 @@ export interface PricingOption {
   isSignature?: boolean;
 }
 
-export interface SavedLocation {
+interface SavedLocation {
   id: string;
   address: string;
   postalCode: string;
@@ -17,7 +17,7 @@ export interface SavedLocation {
   default: boolean;
 }
 
-export interface SavedDetails {
+interface SavedDetails {
   firstName: string;
   lastName: string;
   phone: string;
@@ -25,7 +25,7 @@ export interface SavedDetails {
   locations: SavedLocation[];
 }
 
-export interface CustomerInfo {
+interface CustomerInfo {
   firstName: string;
   lastName: string;
   email: string;
@@ -37,3 +37,20 @@ export interface CustomerInfo {
     unitNumber: string;
   };
 }
+
+interface TimeSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+  isAMC?: boolean;
+}
+
+// Export all types
+export type {
+  PricingOption,
+  SavedLocation,
+  SavedDetails,
+  CustomerInfo,
+  TimeSlot
+};

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Save, Plus, Trash2, Star, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
-import { useSettingsForm } from '../../hooks/useSettingsForm';
 import { motion } from 'framer-motion';
+import { Save, Plus, Trash2, Star, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
-import AMCPackageMapping from './AMCPackageMapping';
+
+import { useSettingsForm } from '@hooks/useSettingsForm';
+import AMCPackageMapping from '@components/admin/AMCPackageMapping';
 
 interface AMCPackageConfig {
   pageSettings: {

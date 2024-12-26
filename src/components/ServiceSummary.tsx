@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { format, addMinutes } from 'date-fns';
 import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
+import type { AcuityAppointmentType } from '@services/acuityIntegration';
 
 interface ServiceSummaryProps {
   date: Date;

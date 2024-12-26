@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@services/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
@@ -11,8 +10,6 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase credentials');
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkBookingTable() {
   try {

@@ -4,7 +4,7 @@ import { chatGPTService } from './chatgpt';
 import { getUserDetails } from './users';
 import { fetchPublicHolidays } from './publicHolidays';
 import { toast } from 'sonner';
-import type { PushTemplate } from '../types/notifications';
+import type { PushTemplate } from '@types/notifications';
 
 const validateTemplateContent = (content: string): boolean => {
   if (!content.trim()) return false;
@@ -64,7 +64,7 @@ const isValidUrl = (url: string): boolean => {
     return false;
   }
 };
-import type { Notification, HolidayGreeting } from '../types';
+import type { Notification, HolidayGreeting } from '@types';
 
 export const sendServiceNotification = async (
   userId: string,

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchAcuitySettings, fetchAppointmentTypes } from '../services/acuityIntegration';
 import { defaultSettings } from '../types/settings';
 import type { AcuitySettings, AcuityAppointmentType } from '../services/acuityIntegration';
+import { toast } from 'sonner';
 
 const APP_SETTINGS_KEY = 'app_settings';
 

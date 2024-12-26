@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
+import React from 'react';
 
 const UserManagement: React.FC = () => {
   return (

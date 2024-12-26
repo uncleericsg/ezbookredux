@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from './useToast';
+import { useToast } from '@hooks/useToast';
 
 interface NotificationPreferences {
   email: boolean;

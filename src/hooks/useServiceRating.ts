@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { submitServiceRating } from '../services/ratings';
-import { chatGPTService } from '../services/chatgpt';
-import { useAcuitySettings } from './useAcuitySettings';
+import { submitServiceRating } from '@services/ratings';
+import { chatGPTService } from '@services/chatgpt';
+import { useAcuitySettings } from '@hooks/useAcuitySettings';
 import { toast } from 'sonner';
 
 export const useServiceRating = () => {

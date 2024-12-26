@@ -1,15 +1,14 @@
 import React from 'react';
-import { useAppSelector } from '../../store';
-import AdminHeader from './AdminHeader';
-import AdminNav from './AdminNav';
-import UserTable from './UserTable';
-import UserStatusToggle from './UserStatusToggle';
 
-interface Props {}
+import AdminHeader from '@admin/AdminHeader';
+import AdminNav from '@admin/AdminNav';
+import UserTable from '@admin/UserTable';
 
-const AdminUsers: React.FC<Props> = () => {
-  const { currentUser } = useAppSelector((state) => state.user);
-  const { users, loading } = useAppSelector((state) => ({
+import { useAppSelector } from '@store/index';
+
+const AdminUsers = () => {
+  const { currentUser } = useAppSelector((_state) => _state.user);
+  const { users, loading } = useAppSelector(() => ({
     users: [], // TODO: Add users slice
     loading: false
   }));
@@ -49,9 +48,7 @@ const AdminUsers: React.FC<Props> = () => {
               <p className="text-gray-500 mt-2">Add users manually or import from a file</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <UserTable users={users} />
-            </div>
+            <UserTable users={users} currentUser={currentUser} />
           )}
         </div>
       </main>
@@ -59,9 +56,7 @@ const AdminUsers: React.FC<Props> = () => {
   );
 };
 
-// Add display name
 AdminUsers.displayName = 'AdminUsers';
 
-// Export both named and default
 export { AdminUsers };
 export default AdminUsers;

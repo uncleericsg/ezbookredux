@@ -1,118 +1,127 @@
-import React, { useState } from 'react';
 import { X, Save, AlertTriangle } from 'lucide-react';
-import type { ServiceCategory } from '../../types';
-import type { AppointmentType } from '../../services/categoryMapping';
-import { mapCategory } from '../../services/categoryMapping';
+import React, { useState } from 'react';
 
-interface CategoryMappingModalProps {
+import { mapCategory } from '@services/categoryMapping';
+import type { AppointmentType, ServiceCategory } from '@types/index';
+
+interface Props {
   category: ServiceCategory;
   appointmentTypes: AppointmentType[];
   onClose: () => void;
   onSave: () => void;
 }
 
-const CategoryMappingModal: React.FC<CategoryMappingModalProps> = ({
-  category,
-  appointmentTypes,
-  onClose,
-  onSave
-}) => {
-  const [selectedTypeId, setSelectedTypeId] = useState(category.acuityAppointmentTypeId || '');
+const CategoryMappingModal = ({ category, appointmentTypes, onClose, onSave }: Props) => {
+  const [selectedType, setSelectedType] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    try {
-      setLoading(true);
-      const appointmentType = appointmentTypes.find(type => type.id === selectedTypeId);
-      if (!appointmentType) return;
+    if (!selectedType) {
+      setError('Please select an appointment type');
+      return;
+    }
 
-      await mapCategory(category, appointmentType);
+    setLoading(true);
+    setError(null);
+
+    try {
+      await mapCategory(category.id, selectedType);
       onSave();
-    } catch (error) {
-      console.error('Failed to save mapping:', error);
+    } catch (err) {
+      setError('Failed to map category. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Map Category to Appointment Type</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <h3 className="text-lg font-medium">Map Category: {category.name}</h3>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+            className="text-gray-400 hover:text-gray-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Category
-            </label>
-            <div className="bg-gray-700 rounded-lg px-4 py-2 text-gray-300">
-              {category.name}
+        <div className="p-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Select Appointment Type
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a type...</option>
+                {appointmentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Appointment Type
-            </label>
-            <select
-              value={selectedTypeId}
-              onChange={(e) => setSelectedTypeId(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
-            >
-              <option value="">Select an appointment type</option>
-              {appointmentTypes.map(type => (
-                <option key={type.id} value={type.id}>
-                  {type.name} ({type.duration} mins)
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {category.parentId && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <AlertTriangle className="h-5 w-5 text-blue-400 mt-1" />
-                <div>
-                  <p className="text-sm text-blue-400">
-                    This is a sub-category. You can:
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-gray-300 mt-2">
-                    <li>Map it to a specific appointment type</li>
-                    <li>Leave it empty to inherit from parent</li>
-                  </ul>
-                </div>
+            {error && (
+              <div className="flex items-center space-x-2 text-red-400 bg-red-400/10 p-3 rounded-md">
+                <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+                <p className="text-sm">{error}</p>
               </div>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={onClose}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={loading || !selectedTypeId}
-              className="btn btn-primary"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Mapping
-            </button>
+            )}
           </div>
+        </div>
+
+        <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-700">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading || !selectedType}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="flex items-center space-x-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span>Saving...</span>
+              </span>
+            ) : (
+              <span className="flex items-center space-x-2">
+                <Save className="h-4 w-4" />
+                <span>Save Mapping</span>
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
+CategoryMappingModal.displayName = 'CategoryMappingModal';
 
 export default CategoryMappingModal;

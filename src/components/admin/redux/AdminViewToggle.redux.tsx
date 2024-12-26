@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../../../store/hooks';
-import ViewSelector from '../ViewSelector';
-import type { UserViewType } from '../AdminViewToggle';
-import { RootState } from '../../../store';
 
-export const AdminViewToggleRedux: React.FC = () => {
+import ViewSelector from '@admin/ViewSelector';
+
+import { useAppDispatch } from '@store/hooks';
+import type { RootState } from '@store/index';
+import { setCurrentView, resetView, type UserViewType } from '@store/slices/adminSlice';
+
+const AdminViewToggleRedux = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
   
-  const { isAdmin, adminData } = useSelector((state: RootState) => state.admin);
-  const currentView = useSelector((state: RootState) => state.adminView.currentView);
+  const { currentView } = useSelector((state: RootState) => state.admin);
+  const { user } = useSelector((state: RootState) => state.user);
 
   // Only show in development mode and for admin users in production
-  if (process.env.NODE_ENV === 'production' && !isAdmin) {
+  if (process.env.NODE_ENV === 'production' && user?.role !== 'admin') {
     return null;
   }
 
   const handleViewChange = (view: UserViewType) => {
-    dispatch({ type: 'adminView/setCurrentView', payload: view });
+    dispatch(setCurrentView(view));
+    setIsOpen(false);
   };
 
-  const resetView = () => {
-    dispatch({ type: 'adminView/resetView' });
+  const handleResetView = () => {
+    dispatch(resetView());
+    setIsOpen(false);
   };
 
   return (
@@ -61,14 +65,14 @@ export const AdminViewToggleRedux: React.FC = () => {
           currentView={currentView}
           onViewChange={handleViewChange}
           onClose={() => setIsOpen(false)}
+          onReset={handleResetView}
         />
       )}
     </div>
   );
 };
 
-// Add displayName
 AdminViewToggleRedux.displayName = 'AdminViewToggleRedux';
 
-// Export both named and default
+export { AdminViewToggleRedux };
 export default AdminViewToggleRedux;

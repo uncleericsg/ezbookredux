@@ -95,9 +95,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, startOfDay, addMinutes, isFriday } from 'date-fns';
-import { Calendar } from '../Calendar';
+import { Calendar } from '@components/Calendar';
 import { Loader2 } from 'lucide-react';
-import { BUSINESS_RULES } from '../../constants/businessRules';
+import { BUSINESS_RULES } from '@constants/businessRules';
 import styles from './ScheduleStep.module.css';
 
 interface TimeSlot {

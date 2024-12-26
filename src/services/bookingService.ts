@@ -1,5 +1,6 @@
 import { db } from '@/config/firebase';
-import { collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, doc, DocumentData } from 'firebase/firestore';
+import { collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, doc } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 
 export interface BookingDetails {
   brands: string[];

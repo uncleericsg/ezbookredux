@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import stripeRouter from './api/stripe';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import stripeRouter from '@api/stripe';
 
 // Load environment variables
 dotenv.config();

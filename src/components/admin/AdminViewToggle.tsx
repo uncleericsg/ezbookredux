@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useAdminView } from '../../contexts/AdminViewContext';
-import ViewSelector from './ViewSelector';
 
-export type UserViewType = 'non-user' | 'regular' | 'amc' | 'admin';
+import ViewSelector from '@admin/ViewSelector';
 
-const AdminViewToggle: React.FC = () => {
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { setCurrentView, resetView, type UserViewType } from '@store/slices/adminSlice';
+
+const AdminViewToggle = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
-  const { currentView, setCurrentView, resetView } = useAdminView();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.user);
+  const { currentView } = useAppSelector((state) => state.admin);
 
   // Only show in development mode and for admin users in production
   if (process.env.NODE_ENV === 'production' && user?.role !== 'admin') {
     return null;
   }
+
+  const handleViewChange = (view: UserViewType) => {
+    dispatch(setCurrentView(view));
+    setIsOpen(false);
+  };
+
+  const handleResetView = () => {
+    dispatch(resetView());
+    setIsOpen(false);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -49,17 +60,16 @@ const AdminViewToggle: React.FC = () => {
       {isOpen && (
         <ViewSelector
           currentView={currentView}
-          onViewChange={setCurrentView}
-          onClose={() => {
-            setIsOpen(false);
-            if (process.env.NODE_ENV === 'production') {
-              resetView();
-            }
-          }}
+          onViewChange={handleViewChange}
+          onClose={() => setIsOpen(false)}
+          onReset={handleResetView}
         />
       )}
     </div>
   );
 };
 
+AdminViewToggle.displayName = 'AdminViewToggle';
+
+export { AdminViewToggle };
 export default AdminViewToggle;

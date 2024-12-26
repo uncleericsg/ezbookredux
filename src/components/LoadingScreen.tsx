@@ -1,5 +1,7 @@
 import React from 'react';
-import { Spinner } from '@/components/ui/spinner';
+import { motion } from 'framer-motion';
+
+import { Spinner } from '@components/ui/spinner';
 
 interface LoadingScreenProps {
   message?: string;

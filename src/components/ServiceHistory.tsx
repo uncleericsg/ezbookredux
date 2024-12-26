@@ -1,8 +1,8 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import type { ServiceVisit } from '../types';
-import { useServiceHistory } from '../hooks/useServiceHistory';
+import type { ServiceVisit } from '@types';
+import { useServiceHistory } from '@hooks/useServiceHistory';
 
 interface ServiceHistoryProps {
   userId?: string;

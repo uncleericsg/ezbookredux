@@ -122,6 +122,7 @@ export const restoreSettings = async (file: File): Promise<void> => {
     throw error;
   }
 };
+
 interface AcuitySettings {
   apiKey: string;
   userId: string;
@@ -170,6 +171,7 @@ export const fetchAcuitySettings = async (): Promise<AcuitySettings> => {
     throw error;
   }
 };
+
 interface BrandingSettings {
   primaryColor: string;
   secondaryColor: string;
@@ -315,7 +317,6 @@ export const deactivateUser = async (userId: string): Promise<void> => {
     throw error;
   }
 };
-
 
 export const updateUser = async (userId: string, updates: Partial<User>): Promise<User> => {
   if (import.meta.env.DEV) {

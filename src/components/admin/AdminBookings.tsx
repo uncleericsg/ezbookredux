@@ -1,11 +1,11 @@
 import React from 'react';
-import { useAppSelector } from '../../store';
-import AdminHeader from './AdminHeader';
-import AdminNav from './AdminNav';
 
-interface Props {}
+import AdminHeader from '@admin/AdminHeader';
+import AdminNav from '@admin/AdminNav';
 
-const AdminBookings: React.FC<Props> = () => {
+import { useAppSelector } from '@store/index';
+
+const AdminBookings = () => {
   const { bookings } = useAppSelector((state) => state.booking);
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePWA } from '../hooks/usePWA';
+import { usePWA } from '@hooks/usePWA';
 
 const PROMPT_DELAY = 3000; // 3 seconds
 

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AMCStatusCard from './AMCStatusCard';
-import ServiceVisitTimeline from './ServiceVisitTimeline';
-import AMCRenewalModal from './AMCRenewalModal';
-import { useAMCStatus } from '../hooks/useAMCStatus';
-import { useUserRedux } from '../contexts/UserContext';
-import { useToast } from '../hooks/useToast';
+import { useSelector } from 'react-redux';
+import { AMCStatusCard } from '@components/AMCStatusCard';
+import { ServiceVisitTimeline } from '@components/ServiceVisitTimeline';
+import { AMCRenewalModal } from '@components/AMCRenewalModal';
+import { useAMCStatus } from '@hooks/useAMCStatus';
+import { useToast } from '@hooks/useToast';
+import { RootState } from '@store';
 
 const AMCManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUserRedux();
+  const user = useSelector((state: RootState) => state.user.currentUser);
   const {
     visits,
     loading,

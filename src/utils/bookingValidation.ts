@@ -1,7 +1,8 @@
 import { addDays, isBefore, isAfter, startOfDay, addMinutes } from 'date-fns';
-import type { BookingValidation, TimeSlot } from '../types';
+import type { BookingValidation, TimeSlot } from '@types';
 import { toast } from 'sonner';
-import { BUSINESS_RULES } from '../constants/businessRules';
+import { BUSINESS_RULES } from '@constants/businessRules';
+
 export const validateBookingDetails = (
   userId: string | undefined,
   datetime: string | undefined,
