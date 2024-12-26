@@ -1,6 +1,5 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Save, Loader2, Clock, Calendar, Users } from 'lucide-react';
 import React, { useState } from 'react';
@@ -95,10 +94,10 @@ const BookingSettings = ({
   };
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-4">
         Booking Settings
-      </Typography>
+      </h2>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -511,7 +510,7 @@ const BookingSettings = ({
           </button>
         </div>
       </motion.div>
-    </Box>
+    </div>
   );
 };
 
