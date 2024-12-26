@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { store } from './store';
 import RouterComponent from './router';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './index.css';
 
 // Create a client
@@ -21,15 +22,14 @@ const queryClient = new QueryClient({
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
-const root = ReactDOM.createRoot(rootElement);
-
-root.render(
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ErrorBoundary>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <Suspense fallback={<LoadingScreen />}>
             <RouterComponent />
+            <SpeedInsights />
           </Suspense>
         </QueryClientProvider>
       </Provider>
