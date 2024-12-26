@@ -39,6 +39,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@config/routes';
 
 interface ServiceOption {
   id: string;
@@ -226,7 +227,7 @@ const PriceSelectionPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleServiceSelect = (service: ServiceOption) => {
-    navigate('/booking/first-time', { 
+    navigate(ROUTES.BOOKING.FIRST_TIME, { 
       state: { 
         selectedService: service,
         fromPriceSelection: true 

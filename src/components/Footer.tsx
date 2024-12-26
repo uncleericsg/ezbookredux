@@ -3,12 +3,10 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 import TikTokIcon from '@components/icons/TikTokIcon';
 import { useSocialLinks } from '@hooks/useSocialLinks';
 import RatingsDisplay from '@components/RatingsDisplay';
-import AdminViewToggle from '@components/admin/AdminViewToggle';
 import { useAppSelector } from '@store/hooks';
 
 const Footer = () => {
   const { socialLinks, loading } = useSocialLinks();
-  const { currentView } = useAppSelector((state) => state.admin);
 
   return (
     <footer className="bg-gray-800 border-t border-gray-700 py-14">
@@ -64,14 +62,8 @@ const Footer = () => {
           )}
 
           <div className="text-gray-400 text-sm text-center">
-            {currentView === 'admin' ? (
-              <p>Admin View - &copy; {new Date().getFullYear()} iAircon Easy Booking. All rights reserved.</p>
-            ) : (
-              <p>&copy; {new Date().getFullYear()} iAircon Easy Booking. All rights reserved.</p>
-            )}
+            <p>&copy; {new Date().getFullYear()} iAircon Easy Booking. All rights reserved.</p>
           </div>
-
-          <AdminViewToggle />
         </div>
       </div>
     </footer>
