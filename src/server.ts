@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
-import stripeRouter from '@api/stripe';
+import stripeRouter from './api/stripe';
 
 // Load environment variables
 dotenv.config();

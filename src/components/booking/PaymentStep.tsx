@@ -111,6 +111,8 @@ interface PaymentStepContentProps {
 // React and hooks
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@utils/cn';
+import { isValidServiceData } from '@utils/validation';
 
 // External libraries
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -193,6 +195,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const dispatch = useAppDispatch();
   const { currentUser, error: userError } = useAppSelector((state) => state.user);
   const { currentBooking } = useAppSelector((state) => state.booking);
+  const summaryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (summaryRef.current) {
+      summaryRef.current.focus();
+    }
+  }, []);
 
   // Clear any existing errors on mount
   useEffect(() => {
@@ -279,179 +288,162 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       return;
     }
 
-    const initializePayment = async (retryCount = 3) => {
+    const initializePayment = async () => {
+      stagesCompleted.current = [];
+      const startTime = Date.now();
+
       try {
-        initStartTime.current = Date.now();
-        const networkStatus = checkNetworkConnection();
-        
-        logPaymentEvent('Payment initialization started', {
-          initStartTime: initStartTime.current,
-          timeSinceMount: initStartTime.current - mountTime.current,
-          networkStatus
+        logPaymentEvent('Initializing payment', {
+          selectedService: bookingData.selectedService,
+          amount: bookingData.selectedService?.price || 0
         });
 
-        if (!networkStatus.online) {
-          throw new Error('No network connection available');
+        // Validate service data first
+        if (!bookingData.selectedService || !isValidServiceData(bookingData.selectedService)) {
+          logPaymentEvent('Invalid service data', {
+            service: bookingData.selectedService
+          });
+          throw new Error('Invalid service data');
         }
 
-        paymentInitializedRef.current = true;
-        setIsLoading(true);
-        stagesCompleted.current.push('initialization_started');
-
-        try {
-          // Get the actual service UUID from Supabase
-          logPaymentEvent('Fetching service details');
-          const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);
-          stagesCompleted.current.push('service_details_fetched');
-          
-          if (!serviceDetails) {
-            throw new Error('Service not found');
-          }
-          
-          // Create booking details
-          logPaymentEvent('Creating booking details');
-          const bookingDetails: BookingDetails = {
-            service_id: serviceDetails.id, // Use the UUID from Supabase
-            service_title: bookingData.selectedService?.title || '',
-            service_price: bookingData.selectedService?.price || 0,
-            service_duration: bookingData.selectedService?.duration || '',
-            service_description: bookingData.selectedService?.description,
-            
-            // Customer information
-            customer_info: {
-              first_name: bookingData.customerInfo?.firstName || '',
-              last_name: bookingData.customerInfo?.lastName || '',
-              email: bookingData.customerInfo?.email || '',
-              mobile: bookingData.customerInfo?.mobile || '',
-              floor_unit: bookingData.customerInfo?.floorUnit || '',
-              block_street: bookingData.customerInfo?.blockStreet || '',
-              postal_code: bookingData.customerInfo?.postalCode || '',
-              condo_name: bookingData.customerInfo?.condoName,
-              lobby_tower: bookingData.customerInfo?.lobbyTower,
-              special_instructions: bookingData.customerInfo?.specialInstructions
-            },
-            
-            // Booking details
-            brands: bookingData.brands || [],
-            issues: bookingData.issues || [],
-            other_issue: bookingData.otherIssue,
-            is_amc: false,
-            
-            // Schedule
-            scheduled_datetime: bookingData.scheduledDateTime || new Date(),
-            scheduled_timeslot: bookingData.scheduledTimeSlot || '',
-            
-            // Status
-            status: 'pending',
-            payment_status: 'pending',
-            total_amount: calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount),
-            tip_amount: paymentState.tipAmount,
-            
-            // Metadata
-            metadata: {
-              source: 'web',
-              version: '1.0',
-              isFirstTimeFlow: bookingData.isFirstTimeFlow
-            }
-          };
-
-          // Create the booking in Supabase
-          logPaymentEvent('Creating Supabase booking');
-          const supabaseBookingId = await createBooking(bookingDetails);
-          stagesCompleted.current.push('booking_created');
-
-          // Create payment intent with retry mechanism
-          const total = calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount);
-          
-          let paymentIntent;
-          let attemptCount = 0;
-          
-          while (attemptCount < retryCount) {
-            try {
-              logPaymentEvent('Creating payment intent', {
-                attempt: attemptCount + 1,
-                amount: total,
-                serviceId: serviceDetails.id,
-                bookingId: supabaseBookingId,
-                timeSinceInit: Date.now() - initStartTime.current,
-                networkStatus: checkNetworkConnection()
-              });
-
-              paymentIntent = await createPaymentIntent(
-                total, // Pass the raw amount, service will convert to cents
-                serviceDetails.id,
-                supabaseBookingId,
-                paymentState.tipAmount,
-                'sgd',
-                currentUser?.id
-              );
-              
-              break; // Success, exit retry loop
-            } catch (error) {
-              attemptCount++;
-              if (attemptCount === retryCount || !(error instanceof Error && error.message === 'Network Error')) {
-                throw error; // Rethrow if max retries reached or not a network error
-              }
-              logPaymentEvent('Payment intent creation failed, retrying', {
-                attempt: attemptCount,
-                error: error instanceof Error ? error.message : 'Unknown error',
-                nextRetryIn: 1000 * attemptCount
-              });
-              await delay(1000 * attemptCount); // Exponential backoff
-            }
-          }
-
-          if (!paymentIntent) {
-            throw new Error('Failed to create payment intent after retries');
-          }
-
-          stagesCompleted.current.push('payment_intent_created');
-
-          logPaymentEvent('Payment intent created', {
-            intentId: paymentIntent.id,
-            amount: total,
-            status: paymentIntent.status,
-            timeSinceInit: Date.now() - initStartTime.current,
-            networkStatus: checkNetworkConnection()
+        // Get the actual service UUID from Supabase
+        const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);  // Frontend sends appointment_type_id as id
+        if (!serviceDetails) {
+          logPaymentEvent('Service not found', {
+            appointmentTypeId: bookingData.selectedService.id
           });
-
-          setPaymentState((prev) => ({
-            ...prev,
-            clientSecret: paymentIntent.clientSecret,
-            status: PAYMENT_STATES.READY
-          }));
-          stagesCompleted.current.push('state_updated_ready');
-
-        } catch (error) {
-          paymentInitializedRef.current = false;
-          const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
-          logPaymentEvent('Payment initialization error', {
-            error: errorMessage,
-            stage: stagesCompleted.current[stagesCompleted.current.length - 1],
-            timeSinceInit: Date.now() - initStartTime.current,
-            networkStatus: checkNetworkConnection()
-          });
-          toast.error(errorMessage);
-          setPaymentState((prev) => ({
-            ...prev,
-            status: PAYMENT_STATES.ERROR,
-            error: errorMessage,
-          }));
-        } finally {
-          setIsLoading(false);
-          logPaymentEvent('Initialization complete', {
-            success: !paymentState.error,
-            stages: stagesCompleted.current,
-            totalTime: Date.now() - initStartTime.current,
-            networkStatus: checkNetworkConnection()
-          });
+          throw new Error('Service not found');
         }
+        stagesCompleted.current.push('service_details_fetched');
+        
+        // Create booking details
+        logPaymentEvent('Creating booking details');
+        const bookingDetails: BookingDetails = {
+          service_id: serviceDetails.id, // Use the UUID from database
+          service_title: serviceDetails.title,
+          service_price: serviceDetails.price,
+          service_duration: serviceDetails.duration,
+          service_description: serviceDetails.description,
+          
+          // Customer information
+          customer_info: {
+            first_name: bookingData.customerInfo?.firstName || '',
+            last_name: bookingData.customerInfo?.lastName || '',
+            email: bookingData.customerInfo?.email || '',
+            mobile: bookingData.customerInfo?.mobile || '',
+            floor_unit: bookingData.customerInfo?.floorUnit || '',
+            block_street: bookingData.customerInfo?.blockStreet || '',
+            postal_code: bookingData.customerInfo?.postalCode || '',
+            condo_name: bookingData.customerInfo?.condoName,
+            lobby_tower: bookingData.customerInfo?.lobbyTower,
+            special_instructions: bookingData.customerInfo?.specialInstructions
+          },
+          
+          // Booking details
+          brands: bookingData.brands || [],
+          issues: bookingData.issues || [],
+          other_issue: bookingData.otherIssue,
+          is_amc: false,
+          
+          // Schedule
+          scheduled_datetime: bookingData.scheduledDateTime || new Date(),
+          scheduled_timeslot: bookingData.scheduledTimeSlot || '',
+          
+          // Status
+          status: 'pending',
+          payment_status: 'pending',
+          total_amount: calculateTotalAmount(serviceDetails.price, paymentState.tipAmount),
+          tip_amount: paymentState.tipAmount,
+        };
+
+        // Create the booking in Supabase
+        logPaymentEvent('Creating Supabase booking');
+        const supabaseBookingId = await createBooking(bookingDetails);
+        stagesCompleted.current.push('booking_created');
+
+        // Create payment intent with retry mechanism
+        const total = calculateTotalAmount(serviceDetails.price, paymentState.tipAmount);
+        
+        let paymentIntent;
+        let attemptCount = 0;
+        
+        while (attemptCount < 3) {
+          try {
+            logPaymentEvent('Creating payment intent', {
+              attempt: attemptCount + 1,
+              amount: total,
+              serviceId: serviceDetails.id,
+              bookingId: supabaseBookingId,
+              timeSinceInit: Date.now() - startTime,
+              networkStatus: checkNetworkConnection()
+            });
+
+            paymentIntent = await createPaymentIntent(
+              total, // Pass the raw amount, service will convert to cents
+              serviceDetails.id,
+              supabaseBookingId,
+              paymentState.tipAmount,
+              'sgd',
+              currentUser?.id
+            );
+            
+            break; // Success, exit retry loop
+          } catch (error) {
+            attemptCount++;
+            if (attemptCount === 3 || !(error instanceof Error && error.message === 'Network Error')) {
+              throw error; // Rethrow if max retries reached or not a network error
+            }
+            logPaymentEvent('Payment intent creation failed, retrying', {
+              attempt: attemptCount,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              nextRetryIn: 1000 * attemptCount
+            });
+            await delay(1000 * attemptCount); // Exponential backoff
+          }
+        }
+
+        if (!paymentIntent) {
+          throw new Error('Failed to create payment intent after retries');
+        }
+
+        stagesCompleted.current.push('payment_intent_created');
+
+        logPaymentEvent('Payment intent created', {
+          intentId: paymentIntent.id,
+          amount: total,
+          status: paymentIntent.status,
+          timeSinceInit: Date.now() - startTime,
+          networkStatus: checkNetworkConnection()
+        });
+
+        setPaymentState((prev) => ({
+          ...prev,
+          clientSecret: paymentIntent.clientSecret,
+          status: PAYMENT_STATES.READY
+        }));
+        stagesCompleted.current.push('state_updated_ready');
+
       } catch (error) {
-        console.error('Error initializing payment:', error);
-        logPaymentEvent('Critical initialization error', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stage: 'initialization',
-          timeSinceMount: Date.now() - mountTime.current,
+        paymentInitializedRef.current = false;
+        const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
+        logPaymentEvent('Payment initialization error', {
+          error: errorMessage,
+          stage: stagesCompleted.current[stagesCompleted.current.length - 1],
+          timeSinceInit: Date.now() - startTime,
+          networkStatus: checkNetworkConnection()
+        });
+        toast.error(errorMessage);
+        setPaymentState((prev) => ({
+          ...prev,
+          status: PAYMENT_STATES.ERROR,
+          error: errorMessage,
+        }));
+      } finally {
+        setIsLoading(false);
+        logPaymentEvent('Initialization complete', {
+          success: !paymentState.error,
+          stages: stagesCompleted.current,
+          totalTime: Date.now() - startTime,
           networkStatus: checkNetworkConnection()
         });
       }
@@ -751,42 +743,55 @@ const PaymentStepContent = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-800/90 rounded-lg p-2 sm:p-6">
-      <PaymentElement 
-        id="payment-element"
-        options={{
-          layout: 'tabs'
-        }}
-      />
-      
-      <button
-        type="submit"
-        disabled={!stripe || isLoading}
-        className={cn(
-          "mt-6 w-full py-3 px-4 rounded-lg font-medium",
-          "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600",
-          "text-gray-900 shadow-lg",
-          "hover:shadow-yellow-400/30",
-          "transform hover:scale-[1.02]",
-          "transition-all duration-200",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          "disabled:transform-none",
-          "flex items-center justify-center gap-2"
-        )}
-      >
-        {isLoading ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            <FiCreditCard className="h-5 w-5" />
-            <span>Pay Now ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
-          </>
-        )}
-      </button>
-    </form>
+    <div className="w-full max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="bg-gray-800/90 rounded-lg p-2 sm:p-6">
+        <PaymentElement 
+          id="payment-element"
+          options={{
+            layout: 'tabs'
+          }}
+        />
+        
+        <button
+          type="submit"
+          disabled={!stripe || isLoading}
+          className={cn(
+            "mt-6 w-full py-3 px-4 rounded-lg font-medium",
+            "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600",
+            "text-gray-900 shadow-lg",
+            "hover:shadow-yellow-400/30",
+            "transform hover:scale-[1.02]",
+            "transition-all duration-200",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            "disabled:transform-none",
+            "flex items-center justify-center gap-2"
+          )}
+        >
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <FiCreditCard className="h-5 w-5" />
+              <span>Pay Now ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Back Button - Hidden during processing */}
+      {paymentState.status !== PAYMENT_STATES.PROCESSING && (
+        <button
+          onClick={onBack}
+          className="absolute bottom-4 left-4 px-4 py-2 text-sm font-medium bg-zinc-900 text-white rounded-md hover:bg-zinc-800 transition-colors"
+          disabled={paymentState.status === PAYMENT_STATES.PROCESSING}
+        >
+          Back
+        </button>
+      )}
+    </div>
   );
 };
 

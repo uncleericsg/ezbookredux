@@ -40,9 +40,8 @@ const getApiBaseUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
   if (!apiUrl) {
     console.warn('VITE_API_URL not set, falling back to default');
-    // In development, use the local network IP instead of localhost for mobile testing
     return process.env.NODE_ENV === 'development' 
-      ? 'http://192.168.4.118:3001'  // Use HTTP in development
+      ? 'http://localhost:3001'  // Use localhost for development
       : window.location.origin;
   }
   return apiUrl;
@@ -69,60 +68,45 @@ export const createPaymentIntent = async (
   console.log('Making request to:', `${baseUrl}/api/payments/create-payment-intent`);
 
   try {
-    // Create custom axios instance
+    // Create custom axios instance with retry logic
     const axiosInstance = axios.create({
       baseURL: baseUrl,
-      timeout: 10000,
+      timeout: 30000, // 30 seconds
       headers: {
         'Content-Type': 'application/json'
       }
     });
 
-    // Add request interceptor for debugging
-    axiosInstance.interceptors.request.use(request => {
-      console.log('Request details:', {
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        data: request.data
-      });
-      return request;
-    });
+    // Add retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000; // Start with 1 second
 
-    // Configure axios to not throw on non-2xx status codes
-    axiosInstance.interceptors.response.use(
-      response => {
-        console.log('Response received:', {
-          status: response.status,
-          data: response.data,
-          headers: response.headers
+    const makeRequest = async (): Promise<any> => {
+      try {
+        const response = await axiosInstance.post('/api/payments/create-payment-intent', {
+          amount: Math.round(amount * 100),
+          tipAmount: Math.round(tipAmount * 100),
+          currency,
+          serviceId,
+          customerId,
+          bookingId
         });
+
         return response;
-      },
-      error => {
-        console.error('Axios error:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-          code: error.code,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers
-          }
-        });
+      } catch (error) {
+        if (retryCount < maxRetries && (error.code === 'ECONNABORTED' || !error.response)) {
+          retryCount++;
+          const delay = retryDelay * Math.pow(2, retryCount - 1); // Exponential backoff
+          console.log(`Retry attempt ${retryCount} after ${delay}ms`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return makeRequest();
+        }
         throw error;
       }
-    );
+    };
 
-    const response = await axiosInstance.post('/api/payments/create-payment-intent', {
-      amount: Math.round(amount * 100), // Convert to cents
-      tipAmount: Math.round(tipAmount * 100), // Convert tip to cents
-      currency,
-      serviceId,
-      customerId,
-      bookingId
-    });
+    const response = await makeRequest();
 
     if (!response.data || !response.data.clientSecret) {
       console.error('Invalid response from payment server:', response.data);
@@ -141,7 +125,8 @@ export const createPaymentIntent = async (
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
-      code: error.code
+      code: error.code,
+      retryAttempts: retryCount
     });
     throw new Error(`Payment server error: ${error.message}`);
   }

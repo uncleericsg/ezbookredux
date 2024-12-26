@@ -181,3 +181,30 @@ export const validateCustomerData = (data: any): boolean => {
     return value && typeof value === 'string' && value.trim().length > 0;
   });
 };
+
+/**
+ * Validates if a string is a valid UUID
+ * @param uuid String to validate
+ * @returns boolean indicating if string is valid UUID
+ */
+export const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
+/**
+ * Validates service data structure
+ * @param service Service object to validate
+ * @returns boolean indicating if service data is valid
+ */
+export const isValidServiceData = (service: any): boolean => {
+  if (!service) return false;
+  
+  // Frontend sends id which maps to appointment_type_id
+  return (
+    typeof service.id === 'string' &&
+    typeof service.title === 'string' &&
+    typeof service.price === 'number' &&
+    typeof service.duration === 'string'
+  );
+};
