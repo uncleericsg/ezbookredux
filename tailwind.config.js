@@ -17,7 +17,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mulish: ['Mulish', 'sans-serif'],
+        sans: ['Quicksand', 'Open Sans', 'sans-serif'],
       },
       colors: {
         gray: {
