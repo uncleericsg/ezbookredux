@@ -1,9 +1,11 @@
-import type { Config } from 'tailwindcss';
 import { themeConfig } from './src/theme/theme.config';
+
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
     './src/**/*.{js,jsx,ts,tsx}',
+    './mockup/**/*.{js,jsx,ts,tsx}',
     './index.html',
   ],
   theme: {

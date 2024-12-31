@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2022",
     "lib": ["ES2023"],
     "module": "ESNext",
@@ -7,10 +8,9 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "emitDeclarationOnly": true,
 
     /* Linting */
     "strict": true,
@@ -21,13 +21,19 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "*": ["src/*"],
       "@api/*": ["src/api/*"],
       "@services/*": ["src/services/*"],
       "@config/*": ["src/config/*"],
       "@constants/*": ["src/constants/*"],
-      "@types/*": ["src/types/*"]
+      "@types/*": ["src/types/*"],
+      "@mockup/*": ["mockup/*"]
     }
   },
-  "include": ["vite.config.ts", "src/server.ts", "src/api/**/*"]
+  "include": [
+    "vite.config.ts",
+    "src/server.ts",
+    "src/api/**/*",
+    "mockup/**/*"
+  ]
 }

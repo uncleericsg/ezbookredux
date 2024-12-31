@@ -31,7 +31,7 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "*": ["src/*"],
       "@admin/*": ["src/components/admin/*"],
       "@api/*": ["src/api/*"],
       "@auth/*": ["src/components/auth/*"],
@@ -70,7 +70,8 @@
       "@types/*": ["src/types/*"],
       "@ui/*": ["src/components/ui/*"],
       "@utils/*": ["src/utils/*"],
-      "@validation/*": ["src/services/validation/*"]
+      "@validation/*": ["src/services/validation/*"],
+      "@mockup/*": ["mockup/*"]
     },
 
     /* Types */
@@ -88,6 +89,7 @@
   "include": [
     "src",
     "scripts",
+    "mockup",
     "*.ts",
     "*.tsx",
     "*.mts",
@@ -98,7 +100,8 @@
     "vitest.config.ts",
     "vite-plugin-google-maps.ts",
     "test/**/*.ts",
-    "test/**/*.tsx"
+    "test/**/*.tsx",
+    "eslint.config.js"
   ],
   "exclude": [
     "node_modules",

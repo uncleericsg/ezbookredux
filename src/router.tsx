@@ -6,20 +6,28 @@
 // @ai-doc 3. Public route implementation
 // @ai-doc 4. Route hierarchy
 
+import { startTransition, Suspense } from 'react';
 import { 
   Navigate, 
   Routes,
   Route,
   BrowserRouter
 } from 'react-router-dom';
-import { startTransition, Suspense } from 'react';
-import App from '@/App';
-import { ROUTES } from '@config/routes';
+
+
+import AdminBookings from '@admin/AdminBookings';
+import AdminDashboard from '@admin/AdminDashboard';
+import AdminSettings from '@admin/AdminSettings';
+import ServiceHub from '@admin/ServiceHub/ServiceHub';
+import UserManagement from '@admin/UserManagement';
+
+import AMCSignup from '@components/AMCSignup';
+import PowerJetChemWashHome from '@booking/PowerJetChemWashHome';
 import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
+import Layout from '@components/Layout';
 import { LoadingScreen } from '@components/LoadingScreen';
 
 // Core Components
-import Layout from '@components/Layout';
 import Login from '@components/Login';
 import NotFound from '@components/NotFound';
 import Notifications from '@components/Notifications';
@@ -27,8 +35,8 @@ import ProtectedRoute from '@components/ProtectedRoute';
 import PublicRoute from '@components/PublicRoute';
 import ServiceCategorySelection from '@components/ServiceCategorySelection';
 import ServicePricingSelection from '@components/ServicePricingSelection';
+import SupabaseTest from '@components/test/SupabaseTest';
 import UserProfile from '@components/UserProfile';
-import AMCSignup from '@components/AMCSignup';
 
 // Booking Components
 import BookingConfirmation from '@booking/BookingConfirmation';
@@ -37,14 +45,14 @@ import PriceSelectionPage from '@booking/PriceSelectionPage';
 import ReturnCustomerBooking from '@booking/ReturnCustomerBooking';
 
 // Admin Components
-import AdminBookings from '@admin/AdminBookings';
-import AdminDashboard from '@admin/AdminDashboard';
-import AdminSettings from '@admin/AdminSettings';
-import ServiceHub from '@admin/ServiceHub/ServiceHub';
-import UserManagement from '@admin/UserManagement';
+
 
 // Test Components
-import SupabaseTest from '@components/test/SupabaseTest';
+import { ROUTES } from '@config/routes';
+
+import App from './App';
+import PriceCardsMockup from './components/mockups/PriceCards';
+
 
 const RouterComponent = () => {
   return (
@@ -55,8 +63,7 @@ const RouterComponent = () => {
             <Route path="/" element={<App />}>
               {/* Routes WITH Layout */}
               <Route element={<Layout />}>
-                <Route index element={<ServiceCategorySelection />} />
-                <Route path={ROUTES.HOME} element={<ServiceCategorySelection />} />
+              <Route index element={<ServiceCategorySelection />} />
                 <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
                 <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               </Route>
@@ -67,19 +74,30 @@ const RouterComponent = () => {
               <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
               <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
               <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
+              <Route 
+                path={ROUTES.BOOKING.POWERJET_CHEMICAL} 
+                element={
+                  <>
+                    {console.log('[DEBUG] Router: PowerJet Chemical route matched', { path: ROUTES.BOOKING.POWERJET_CHEMICAL })}
+                    <PowerJetChemWashHome />
+                  </>
+                } 
+              />
               <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
               <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
 
               {/* Admin Routes - All WITHOUT Layout */}
-              <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.BOOKINGS} element={<ProtectedRoute adminOnly><AdminBookings /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute adminOnly><ServiceHub /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute adminOnly><AdminSettings /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute requiresAdmin><ServiceHub /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute requiresAdmin><UserManagement /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute requiresAdmin><AdminSettings /></ProtectedRoute>} />
 
               {/* Test Routes */}
               {process.env.NODE_ENV === 'development' && (
-                <Route path="/test/supabase" element={<SupabaseTest />} />
+                <>
+                  <Route path="/test/supabase" element={<SupabaseTest />} />
+                  <Route path="/mockup/price-cards" element={<PriceCardsMockup />} />
+                </>
               )}
 
               {/* 404 Route */}

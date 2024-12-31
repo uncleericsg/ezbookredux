@@ -29,6 +29,7 @@ export const ROUTES = {
     CONFIRMATION: '/booking/confirmation/:bookingId',
     RETURN_CUSTOMER: '/booking/return-customer',
     PRICE_SELECTION: '/booking/price-selection',
+    POWERJET_CHEMICAL: '/booking/powerjet-chemical-wash',
     NEW: '/booking/new'
   },
   AMC: {
@@ -68,6 +69,7 @@ export const ROUTES_WITHOUT_NAVBAR = [
   ROUTES.BOOKING.NEW,
   ROUTES.BOOKING.CONFIRMATION,
   ROUTES.BOOKING.RETURN_CUSTOMER,
+  ROUTES.BOOKING.POWERJET_CHEMICAL,
   ROUTES.ADMIN.ROOT,
   ROUTES.ADMIN.DASHBOARD,
   ROUTES.ADMIN.USERS,
@@ -167,5 +169,9 @@ export const ROUTE_METADATA = {
   [ROUTES.AMC.PACKAGES]: {
     title: 'AMC Packages',
     breadcrumb: 'AMC Packages',
+  },
+  [ROUTES.BOOKING.POWERJET_CHEMICAL]: {
+    title: 'PowerJet Chemical Wash',
+    breadcrumb: 'PowerJet Chemical Wash',
   },
 } as const;

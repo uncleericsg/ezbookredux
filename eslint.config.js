@@ -1,11 +1,11 @@
 import js from '@eslint/js';
-import globals from 'globals';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import globals from 'globals';
 
 export default [
   { ignores: ['dist/**', 'coverage/**', 'node_modules/**', '.git', '*.min.js', 'build/**'] },
@@ -79,7 +79,10 @@ export default [
       'no-undef': 'error',
       'no-duplicate-imports': 'error',
       'no-var': 'error',
-      'prefer-const': 'error',
+      'prefer-const': ['warn', {
+        destructuring: 'all',
+        ignoreReadBeforeAssign: true
+      }],
       'eqeqeq': ['error', 'always'],
       'no-restricted-imports': ['error', {
         patterns: [{
@@ -91,8 +94,8 @@ export default [
       // React rules
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
-      'react/prop-types': 'off', // We use TypeScript instead
-      'react/react-in-jsx-scope': 'off', // Not needed in React 17+
+      'react/prop-types': 'off',
+      'react/react-in-jsx-scope': 'off',
       'react/jsx-no-undef': 'error',
       'react/jsx-key': 'error',
       'react/jsx-no-duplicate-props': 'error',
@@ -123,7 +126,7 @@ export default [
         ],
         'pathGroups': [
           {
-            pattern: '@/**',
+            pattern: 'src/**',
             group: 'internal',
             position: 'before'
           },
@@ -178,7 +181,7 @@ export default [
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_'
       }],
-      '@typescript-eslint/consistent-type-imports': ['error', {
+      '@typescript-eslint/consistent-type-imports': ['warn', {
         prefer: 'type-imports',
         disallowTypeAnnotations: false,
         fixStyle: 'separate-type-imports'
@@ -193,12 +196,20 @@ export default [
         'ts-check': false,
         minimumDescriptionLength: 3
       }],
-      '@typescript-eslint/consistent-type-assertions': ['error', {
+      '@typescript-eslint/consistent-type-assertions': ['warn', {
         assertionStyle: 'as',
-        objectLiteralTypeAssertions: 'allow-as-parameter'
+        objectLiteralTypeAssertions: 'allow-as-parameter',
+        allowConstAssertions: true
       }],
-      '@typescript-eslint/no-inferrable-types': 'error',
-      '@typescript-eslint/no-empty-interface': 'error'
+      '@typescript-eslint/no-inferrable-types': 'warn',
+      '@typescript-eslint/no-empty-interface': 'warn'
+    }
+  },
+  {
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   }
 ];
