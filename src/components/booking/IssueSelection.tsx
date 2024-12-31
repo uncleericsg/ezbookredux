@@ -94,8 +94,38 @@ const COMMON_ISSUES: Issue[] = [
   {
     id: 'all-good',
     title: 'No Problem! My AC is All Good!',
-    description: 'Regular maintenance check to keep your AC in top condition',
+    description: 'Regular maintenance for optimal AC performance',
     icon: <ThumbsUp className="w-5 h-5 text-green-500" />
+  },
+  {
+    id: 'not-cooling',
+    title: 'Need Help! Not Cooling!',
+    description: 'AC system running normally but not producing cooling effectively',
+    icon: <Thermometer className="w-5 h-5 text-red-500" />
+  },
+  {
+    id: 'water-leaking',
+    title: 'Oh Yes! Water Leaking!',
+    description: 'Water visibly dripping or leaking from AC unit',
+    icon: <Droplet className="w-5 h-5 text-blue-500" />
+  },
+  {
+    id: 'funky-smell',
+    title: 'Having Funky Smell...',
+    description: 'Persistent unpleasant odors emitting from AC system',
+    icon: <Wind className="w-5 h-5 text-purple-500" />
+  },
+  {
+    id: 'weird-noises',
+    title: 'Some Weird Noises',
+    description: 'Unusual and concerning operational sounds from AC unit',
+    icon: <Volume2 className="w-5 h-5 text-yellow-500" />
+  },
+  {
+    id: 'sweating-trunking',
+    title: 'Sweating on Trunking',
+    description: 'Condensation or water marks on AC trunking',
+    icon: <Droplets className="w-5 h-5 text-cyan-500" />
   },
   {
     id: 'just-moved',
@@ -108,36 +138,6 @@ const COMMON_ISSUES: Issue[] = [
     title: 'We are Moving Out!',
     description: 'Handover service to ensure AC is in proper condition',
     icon: <LogOut className="w-5 h-5 text-orange-500" />
-  },
-  {
-    id: 'not-cooling',
-    title: 'Need Help! Not Cooling!',
-    description: 'AC is running but not producing cold air effectively',
-    icon: <Thermometer className="w-5 h-5 text-red-500" />
-  },
-  {
-    id: 'water-leaking',
-    title: 'Oh Yes! Water Leaking!',
-    description: 'Water dripping or leaking from your AC unit',
-    icon: <Droplet className="w-5 h-5 text-blue-500" />
-  },
-  {
-    id: 'funky-smell',
-    title: 'Having Funky Smell...',
-    description: 'Unpleasant odors coming from your AC',
-    icon: <Wind className="w-5 h-5 text-purple-500" />
-  },
-  {
-    id: 'weird-noises',
-    title: 'Some Weird Noises',
-    description: 'Unusual sounds during AC operation',
-    icon: <Volume2 className="w-5 h-5 text-yellow-500" />
-  },
-  {
-    id: 'sweating-trunking',
-    title: 'Sweating on Trunking',
-    description: 'Condensation or moisture on AC trunking',
-    icon: <Droplets className="w-5 h-5 text-cyan-500" />
   },
   {
     id: 'other',
@@ -273,15 +273,24 @@ const IssueSelection: React.FC<IssueSelectionProps> = ({ onContinue, error: prop
     <motion.div
       key={issue.id}
       initial={{ opacity: 1, scale: 1 }}
-      animate={{ 
+      animate={{
         opacity: fadeOutItems ? (state.selectedIssues.includes(issue.id) ? 1 : 0) : 1,
         scale: fadeOutItems ? (state.selectedIssues.includes(issue.id) ? 1 : 0.95) : 1,
         height: state.isCompactView ? (state.selectedIssues.includes(issue.id) ? 'auto' : 0) : 'auto'
       }}
       transition={{ duration: 0.5 }}
-      style={{ 
+      style={{
         overflow: 'hidden',
         display: state.isCompactView && !state.selectedIssues.includes(issue.id) ? 'none' : 'block'
+      }}
+      role="checkbox"
+      aria-checked={state.selectedIssues.includes(issue.id)}
+      tabIndex={0}
+      onKeyPress={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleIssueToggle(issue.id);
+        }
       }}
     >
       <IssueCard
@@ -291,15 +300,6 @@ const IssueSelection: React.FC<IssueSelectionProps> = ({ onContinue, error: prop
         selected={state.selectedIssues.includes(issue.id)}
         onClick={() => handleIssueToggle(issue.id)}
         aria-label={`${issue.title} - ${issue.description}`}
-        role="checkbox"
-        aria-checked={state.selectedIssues.includes(issue.id)}
-        tabIndex={0}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleIssueToggle(issue.id);
-          }
-        }}
       />
     </motion.div>
   ), [state.isCompactView, state.selectedIssues, handleIssueToggle, fadeOutItems]);
