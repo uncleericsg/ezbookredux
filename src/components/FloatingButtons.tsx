@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, MessageCircle, User, LayoutDashboard, ArrowUp } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '@store';
+import { useAppSelector } from '@store/hooks';
+import { RootState } from '@store/store';
 
 interface FloatingButtonsProps {
   showAuthButtons?: boolean;
@@ -11,23 +12,38 @@ interface FloatingButtonsProps {
 const FloatingButtons: React.FC<FloatingButtonsProps> = ({ showAuthButtons = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser } = useAppSelector(state => state.user);
-  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const { currentUser } = useAppSelector((state: RootState) => state.user);
+  const authState = useAppSelector((state: RootState) => state.auth);
+  const isAuthenticated = authState?.isAuthenticated || false;
 
   // Only show auth buttons if both showAuthButtons is true AND user is authenticated
   const shouldShowAuthButtons = showAuthButtons && isAuthenticated;
   const isAdmin = currentUser?.role === 'admin';
 
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showButtons, setShowButtons] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 200);
+      const currentScrollY = window.scrollY;
+      
+      // Show buttons when scrolling down past 200px
+      if (currentScrollY > 200 && currentScrollY > lastScrollY) {
+        setShowButtons(true);
+      } 
+      // Hide buttons when scrolling up past 200px
+      else if (currentScrollY <= 200 || currentScrollY < lastScrollY) {
+        setShowButtons(false);
+      }
+      
+      setShowScrollTop(currentScrollY > 200);
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const scrollToTop = () => {
     const scrollStep = -window.scrollY / (500 / 15);
@@ -49,7 +65,15 @@ const FloatingButtons: React.FC<FloatingButtonsProps> = ({ showAuthButtons = tru
   };
 
   return (
-    <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+    <motion.div
+      className="fixed bottom-8 right-4 flex flex-col gap-2 z-50"
+      initial={{ opacity: 0 }}
+      animate={{ 
+        opacity: showButtons ? 1 : 0
+      }}
+      transition={{ duration: 0.3 }}
+      style={{ pointerEvents: showButtons ? 'auto' : 'none' }}
+    >
       {/* WhatsApp */}
       <motion.a
         href="https://wa.me/+6591234567"
@@ -109,7 +133,7 @@ const FloatingButtons: React.FC<FloatingButtonsProps> = ({ showAuthButtons = tru
           <ArrowUp className="h-6 w-6" />
         </motion.button>
       )}
-    </div>
+    </motion.div>
   );
 };
 

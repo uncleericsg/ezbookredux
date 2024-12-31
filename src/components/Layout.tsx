@@ -28,49 +28,22 @@
  * }
  */
 
-import React, { useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '@components/Navbar';
 import Footer from '@components/Footer';
 import Announcement from '@components/Announcement';
 import AppInstallPrompt from '@components/AppInstallPrompt';
-import ServiceDueBanner from '@components/ServiceDueBanner';
-import FloatingButtons from '@components/FloatingButtons';
 import { useAnnouncements } from '@hooks/useAnnouncements';
-import { useAppSelector } from '@store';
-import { LoadingScreen } from '@components/LoadingScreen';
-import { PROTECTED_ROUTES, ROUTES_WITHOUT_NAVBAR, ROUTES } from '@config/routes';
+import { ROUTES_WITHOUT_NAVBAR, ROUTES } from '@config/routes';
+type AppRoute = typeof ROUTES[keyof typeof ROUTES];
+type NavbarExcludedRoute = typeof ROUTES_WITHOUT_NAVBAR[number];
 
 const Layout: React.FC = () => {
   const { announcements, dismissAnnouncement } = useAnnouncements();
   const currentAnnouncement = announcements[0];
-  const { currentUser } = useAppSelector((state) => state.user);
-  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const pathname = location.pathname;
-  const isLoginPage = pathname === ROUTES.LOGIN;
-  const shouldShowNavbar = !ROUTES_WITHOUT_NAVBAR.includes(pathname);
-
-  useEffect(() => {
-    // Check if we're on a protected route
-    const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
-
-    if (isProtectedRoute && !isAuthenticated && !loading) {
-      navigate(ROUTES.LOGIN, { state: { from: location }, replace: true });
-    }
-
-    // Redirect from login page if already authenticated
-    if (isLoginPage && isAuthenticated) {
-      const intendedPath = location.state?.from?.pathname || ROUTES.HOME;
-      navigate(intendedPath, { replace: true });
-    }
-  }, [isAuthenticated, loading, pathname, navigate, location, isLoginPage]);
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  const shouldShowNavbar = !ROUTES_WITHOUT_NAVBAR.includes(location.pathname as NavbarExcludedRoute);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -81,12 +54,10 @@ const Layout: React.FC = () => {
           onDismiss={() => dismissAnnouncement(currentAnnouncement.id)}
         />
       )}
-      {isAuthenticated && <ServiceDueBanner />}
-      <main className="flex-grow pt-16">
+      <main className="flex-grow pt-16 bg-white dark:bg-gray-900">
         <Outlet />
       </main>
       {shouldShowNavbar && <Footer />}
-      {isAuthenticated && <FloatingButtons />}
       <AppInstallPrompt />
     </div>
   );

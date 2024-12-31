@@ -52,14 +52,22 @@ import { ROUTES } from '@config/routes';
 
 import App from './App';
 import PriceCardsMockup from './components/mockups/PriceCards';
+import GasCheckLeakage from './components/booking/GasCheckLeakage';
 
 
 const RouterComponent = () => {
+  // Add route logging
+  const logRoute = (path: string) => {
+    console.log(`[Router] Navigating to: ${path}`);
+    return null;
+  };
+
   return (
     <BrowserRouter>
       <ErrorBoundary>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route path="*" element={logRoute(window.location.pathname)} />
             <Route path="/" element={<App />}>
               {/* Routes WITH Layout */}
               <Route element={<Layout />}>
@@ -76,15 +84,11 @@ const RouterComponent = () => {
               <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
               <Route 
                 path={ROUTES.BOOKING.POWERJET_CHEMICAL} 
-                element={
-                  <>
-                    {console.log('[DEBUG] Router: PowerJet Chemical route matched', { path: ROUTES.BOOKING.POWERJET_CHEMICAL })}
-                    <PowerJetChemWashHome />
-                  </>
-                } 
+                element={<PowerJetChemWashHome />}
               />
               <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
               <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
+              <Route path="/booking/gas-check-leak" element={<PublicRoute><GasCheckLeakage /></PublicRoute>} />
 
               {/* Admin Routes - All WITHOUT Layout */}
               <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />

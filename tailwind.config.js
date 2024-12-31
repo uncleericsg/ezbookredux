@@ -16,6 +16,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        mulish: ['Mulish', 'sans-serif'],
+      },
       colors: {
         gray: {
           900: '#121212',

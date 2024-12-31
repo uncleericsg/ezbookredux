@@ -19,6 +19,11 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     state: location.state
   });
 
+  // Skip redirect for login route
+  if (location.pathname === '/login') {
+    return <>{children}</>;
+  }
+
   // Only redirect if both isAuthenticated is true AND we have a currentUser
   if (isAuthenticated && currentUser) {
     const intendedPath = location.state?.from || '/';

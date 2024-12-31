@@ -99,17 +99,32 @@ const PowerJetChemWashHome: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-10 md:mb-20">
-          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4 md:mb-6">
+          <motion.h1 
+            className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4 md:mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             PowerJet Chemical Wash
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-6 md:mb-8">
+          </motion.h1>
+          <motion.p 
+            className="text-xl md:text-2xl text-gray-300 mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             10x More Effective Than Traditional Cleaning Methods
-          </p>
-          <div className="max-w-2xl mx-auto text-gray-400 text-base md:text-lg">
-            <p className="mb-3 md:mb-4">
+          </motion.p>
+          <motion.div 
+            className="max-w-2xl mx-auto text-gray-400 text-base md:text-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <motion.p className="mb-3 md:mb-4">
             Our signature PowerJet service combines high-pressure cleaning with specialized coil chemicals to deeply clean and maintain your air conditioning system, ensuring optimal performance and energy efficiency.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
 
         {/* Services Grid */}
@@ -138,7 +153,15 @@ const PowerJetChemWashHome: React.FC = () => {
                   <div className="p-2 md:p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
                     {service.icon}
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-blue-400">{service.title}</h2>
+                  <motion.h2 
+                    className="text-xl md:text-2xl font-bold text-blue-400"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                  >
+                    {service.title}
+                  </motion.h2>
                 </div>
 
                 {/* Benefits List */}
@@ -165,15 +188,29 @@ const PowerJetChemWashHome: React.FC = () => {
 
         {/* Key Features Section */}
         <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8">
+          <motion.h2 
+            className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             Why Choose PowerJet?
-          </h2>
+          </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <motion.div 
               className="p-6 bg-gradient-to-br from-gray-800/80 to-gray-900/90 border border-gray-700/50 rounded-xl"
               whileHover={{ scale: 1.02 }}
             >
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Advanced Technology</h3>
+              <motion.h3 
+                className="text-xl font-bold text-blue-400 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                Advanced Technology
+              </motion.h3>
               <p className="text-gray-300">
                 Our proprietary PowerJet system uses high-pressure, precision cleaning to remove even the most stubborn contaminants.
               </p>
@@ -182,7 +219,15 @@ const PowerJetChemWashHome: React.FC = () => {
               className="p-6 bg-gradient-to-br from-gray-800/80 to-gray-900/90 border border-gray-700/50 rounded-xl"
               whileHover={{ scale: 1.02 }}
             >
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Eco-Friendly</h3>
+              <motion.h3 
+                className="text-xl font-bold text-blue-400 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                Eco-Friendly
+              </motion.h3>
               <p className="text-gray-300">
                 We use biodegradable, non-toxic cleaning solutions that are safe for your family and the environment.
               </p>
@@ -191,7 +236,15 @@ const PowerJetChemWashHome: React.FC = () => {
               className="p-6 bg-gradient-to-br from-gray-800/80 to-gray-900/90 border border-gray-700/50 rounded-xl"
               whileHover={{ scale: 1.02 }}
             >
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Guaranteed Results</h3>
+              <motion.h3 
+                className="text-xl font-bold text-blue-400 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+              >
+                Guaranteed Results
+              </motion.h3>
               <p className="text-gray-300">
                 Backed by our 100% satisfaction guarantee and 1-year service warranty.
               </p>
@@ -201,9 +254,15 @@ const PowerJetChemWashHome: React.FC = () => {
 
         {/* Testimonials Section */}
         <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8">
+          <motion.h2 
+            className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             What Our Customers Say
-          </h2>
+          </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="p-6 bg-gradient-to-br from-gray-800/80 to-gray-900/90 border border-gray-700/50 rounded-xl">
               <p className="text-gray-300 italic mb-4">

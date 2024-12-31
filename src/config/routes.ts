@@ -30,6 +30,7 @@ export const ROUTES = {
     RETURN_CUSTOMER: '/booking/return-customer',
     PRICE_SELECTION: '/booking/price-selection',
     POWERJET_CHEMICAL: '/booking/powerjet-chemical-wash',
+    GAS_LEAK: '/booking/gas-check-leak',
     NEW: '/booking/new'
   },
   AMC: {
