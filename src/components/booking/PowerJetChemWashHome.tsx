@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Zap, CheckCircle, Shield, Droplet, Settings, Wind, Thermometer, Clock, Star } from 'lucide-react';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface ServiceCard {
@@ -82,8 +82,17 @@ const services: ServiceCard[] = [
 
 const PowerJetChemWashHome: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const autoFocus = searchParams.get('autoFocus') === 'true';
+  const mainHeadingRef = useRef<HTMLHeadingElement>(null);
   const [price] = useState(150);
   const [duration] = useState(90);
+
+  useEffect(() => {
+    if (autoFocus) {
+      window.scrollTo(0, 0);
+    }
+  }, [autoFocus]);
 
   const handleBookNow = () => {
     toast.success('Booking confirmed for PowerJet Chemical Wash');

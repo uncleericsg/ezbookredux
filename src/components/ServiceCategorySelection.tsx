@@ -103,9 +103,10 @@ const ServiceCategorySelection: React.FC = () => {
 
   const handleCategorySelect = useCallback((categoryId: string) => {
     console.log('Selected category:', categoryId);
+    window.scrollTo(0, 0);
     const selectedCategory = categories.find(c => c.id === categoryId)?.name || '';
-    const state: NavigationState = { 
-      from: '/', 
+    const state: NavigationState = {
+      from: '/',
       timestamp: Date.now(),
       selectedCategory
     };
@@ -188,8 +189,18 @@ const ServiceCategorySelection: React.FC = () => {
     <div className={`${styles.serviceCategoryContainer} min-h-screen bg-gray-900 text-white relative`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Service Categories Design */}
-        <div className="mb-24">
-          <div className="text-center mb-20">
+        <motion.div 
+          className="mb-24"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          >
             <motion.h2 
               className="text-5xl font-bold bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] bg-clip-text text-transparent mb-6"
               initial={{ opacity: 0, y: 20 }}
@@ -206,7 +217,7 @@ const ServiceCategorySelection: React.FC = () => {
             >
               No.1 PowerJet Experts in Singapore!
             </motion.p>
-          </div>
+          </motion.div>
           
           {/* Service Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
@@ -244,53 +255,53 @@ const ServiceCategorySelection: React.FC = () => {
                   onClick={() => handleCategorySelect(category.id)}
                   className={`w-full h-full backdrop-blur-xl rounded-2xl p-8 border transition-all duration-300 shadow-lg flex flex-col ${
                     category.id === 'regular'
-                      ? 'bg-gradient-to-br from-yellow-900/40 to-slate-900/60 border-yellow-700/50 hover:border-yellow-500/70 hover:shadow-yellow-500/30'
+                      ? 'bg-gradient-to-br from-amber-600/50 to-[#1a365d]/70 border-amber-500/50 hover:border-amber-400/70 hover:shadow-amber-500/30'
                     : category.id === 'powerjet-chemical'
-                      ? 'bg-gradient-to-br from-cyan-900/40 to-slate-900/60 border-cyan-700/50 hover:border-cyan-500/70 hover:shadow-cyan-500/30'
+                      ? 'bg-gradient-to-br from-blue-500/50 to-cyan-900/70 border-cyan-400/50 hover:border-cyan-300/70 hover:shadow-cyan-400/30'
                     : category.id === 'gas-leak'
-                      ? 'bg-gradient-to-br from-pink-900/40 to-slate-900/60 border-pink-700/50 hover:border-pink-500/70 hover:shadow-pink-500/30'
+                      ? 'bg-gradient-to-br from-red-500/50 to-purple-900/70 border-red-400/50 hover:border-red-300/70 hover:shadow-red-400/30'
                     : category.id === 'amc'
-                      ? 'bg-gradient-to-br from-[#FFD700]/40 to-slate-900/60 border-[#FFD700]/50 hover:border-[#FFD700]/70 hover:shadow-[#FFD700]/30'
+                      ? 'bg-gradient-to-br from-[#FFD700]/60 to-blue-900/70 border-[#FFD700]/50 hover:border-[#FFD700]/70 hover:shadow-[#FFD700]/30'
                     : 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-gray-700/50 hover:border-[#FFD700]/30 hover:shadow-[#FFD700]/5'
                   }`}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center mb-6">
-                    <div className={`p-4 rounded-xl group-hover:scale-110 transition-transform duration-300 ${
+                    <div className={`p-4 rounded-xl group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm ${
                       category.id === 'regular'
-                        ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-500/5'
+                        ? 'bg-gradient-to-br from-amber-500/30 to-amber-600/10 shadow-lg shadow-amber-500/20'
                       : category.id === 'powerjet-chemical'
-                        ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/5'
+                        ? 'bg-gradient-to-br from-blue-400/30 to-cyan-500/10 shadow-lg shadow-cyan-400/20'
                       : category.id === 'gas-leak'
-                        ? 'bg-gradient-to-br from-pink-500/20 to-pink-500/5'
+                        ? 'bg-gradient-to-br from-red-400/30 to-purple-500/10 shadow-lg shadow-red-400/20'
                       : category.id === 'amc'
-                        ? 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5'
+                        ? 'bg-gradient-to-br from-[#FFD700]/30 to-blue-500/10 shadow-lg shadow-[#FFD700]/20'
                       : 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5'
                     }`}>
-                      <category.icon className={`h-8 w-8 ${
+                      <category.icon className={`h-8 w-8 filter drop-shadow-lg ${
                         category.id === 'regular'
-                          ? 'text-yellow-400'
+                          ? 'text-amber-400 drop-shadow-[0_0_0.3rem_#f59e0b]'
                         : category.id === 'powerjet-chemical'
-                          ? 'text-cyan-400'
+                          ? 'text-cyan-300 drop-shadow-[0_0_0.3rem_#22d3ee]'
                         : category.id === 'gas-leak'
-                          ? 'text-pink-400'
+                          ? 'text-red-400 drop-shadow-[0_0_0.3rem_#f87171]'
                         : category.id === 'amc'
-                          ? 'text-[#FFD700]'
+                          ? 'text-[#FFD700] drop-shadow-[0_0_0.3rem_#FFD700]'
                         : 'text-[#FFD700]'
                       }`} />
                     </div>
                   </div>
                   
                   <div className="flex-grow">
-                    <h3 className={`text-xl font-bold mb-3 transition-colors ${
+                    <h3 className={`text-xl font-bold mb-3 transition-colors tracking-wide ${
                       category.id === 'regular'
-                        ? 'text-yellow-300'
+                        ? 'text-amber-300 drop-shadow-[0_0_0.2rem_#f59e0b]'
                       : category.id === 'powerjet-chemical'
-                        ? 'text-cyan-300'
+                        ? 'text-cyan-200 drop-shadow-[0_0_0.2rem_#22d3ee]'
                       : category.id === 'gas-leak'
-                        ? 'text-pink-300'
+                        ? 'text-red-300 drop-shadow-[0_0_0.2rem_#f87171]'
                       : category.id === 'amc'
-                        ? 'text-[#FFD700]'
+                        ? 'text-[#FFD700] drop-shadow-[0_0_0.2rem_#FFD700]'
                       : 'text-[#FFD700]'
                     }`}>
                       {category.name}
@@ -333,10 +344,10 @@ const ServiceCategorySelection: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Trust Indicators Section */}
-        <div className="mt-24 mb-24">
+        <div className="mt-36 mb-24">
           <TrustIndicators />
         </div>
 
@@ -344,8 +355,8 @@ const ServiceCategorySelection: React.FC = () => {
         <div className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto">
             <div className="relative overflow-hidden w-full py-4">
-              <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'linear-gradient(90deg, rgba(17,24,39,1) 0%, rgba(17,24,39,0) 5%, rgba(17,24,39,0) 95%, rgba(17,24,39,1) 100%)'
+              <div className="absolute inset-0 pointer-events-none" style={{ 
+                background: 'linear-gradient(90deg, rgba(17,24,39,1) 0%, rgba(17,24,39,0) 5%, rgba(17,24,39,0) 95%, rgba(17,24,39,1) 100%)' 
               }}></div>
               <motion.div
                 className="flex px-4"

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, CheckCircle, Flame, AlertTriangle, Clock, Star, Droplet } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ServiceCard {
   id: string;
@@ -46,6 +46,15 @@ const services: ServiceCard[] = [
 
 const GasCheckLeakage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const autoFocus = searchParams.get('autoFocus') === 'true';
+  const mainHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) {
+      window.scrollTo(0, 0);
+    }
+  }, [autoFocus]);
 
   const handleSelectService = () => {
     console.log('[GasCheckLeakage] Navigating to confirmation page');
