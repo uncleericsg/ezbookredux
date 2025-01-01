@@ -64,7 +64,7 @@ const TrustIndicators: React.FC = () => {
     <div className="mb-16">
       <div
         ref={counterRef}
-        className="relative bg-gradient-to-br from-blue-600/30 to-indigo-800/40 backdrop-blur-sm rounded-3xl border border-blue-500/30 shadow-lg shadow-blue-700/15 overflow-hidden"
+        className="relative bg-gradient-to-br from-purple-600/40 to-blue-900/60 backdrop-blur-md rounded-3xl border border-purple-500/20 shadow-lg shadow-blue-900/30 overflow-hidden"
       >
         <div
           className="absolute inset-0 opacity-25 pointer-events-none"
