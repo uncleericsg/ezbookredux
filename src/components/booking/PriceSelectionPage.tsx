@@ -34,7 +34,17 @@ const PriceSelectionPage: React.FC = () => {
       <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-tl from-[#0c001a] via-gray-900 to-gray-800 relative flex items-center justify-center">
         <motion.div
           className="w-32 h-32 rounded-xl bg-gradient-to-r from-sky-900/40 to-blue-900/40 backdrop-blur-sm border border-sky-500/30 shadow-lg"
-          animate={loadingAnimation}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{
+            opacity: [0.5, 1, 0.5],
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         />
       </div>
     );
@@ -63,7 +73,9 @@ const PriceSelectionPage: React.FC = () => {
         <ServiceInfoSection />
 
         <motion.div
-          variants={pageItem}
+          variants={cardContainer}
+          initial="hidden"
+          animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr mt-12"
         >
           {serviceOptions.map((service) => (

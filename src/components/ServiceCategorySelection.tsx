@@ -48,14 +48,18 @@ interface NavigationState {
 }
 
 const ServiceCategorySelection: React.FC = () => {
+  console.log('ServiceCategorySelection component mounted');
   const navigate = useNavigate();
   const { currentUser } = useAppSelector((state: RootState) => state.user);
+  console.log('Current user:', currentUser);
   const { visits } = useServiceHistory(currentUser?.id || '');
   const isAmcCustomer = currentUser?.amcStatus === 'active';
+  console.log('AMC customer status:', isAmcCustomer);
   const [showRating, setShowRating] = useState(false);
   const shouldReduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [shuffledTestimonials, setShuffledTestimonials] = useState<Testimonial[]>([]);
   const location = useLocation();
+
 
   // Memoize categories as per enhancement plan
   const categories = useMemo(() => {
@@ -377,6 +381,7 @@ const ServiceCategorySelection: React.FC = () => {
                 }}
               >
                 {[...shuffledTestimonials, ...shuffledTestimonials, ...shuffledTestimonials].map((testimonial, index) => (
+                  console.log('Rendering testimonial:', testimonial.id),
                   <motion.div
                     key={`${testimonial.id}-${index}`}
                     className="w-full min-w-[280px] md:w-[320px] lg:w-[300px] px-2 py-2"
@@ -420,6 +425,7 @@ const ServiceCategorySelection: React.FC = () => {
               onSubmit={handleRatingSubmit}
             />
           )}
+          
         </div>
       </div>
     </div>

@@ -130,7 +130,8 @@ const Login: React.FC = () => {
       setOtpSent(true);
       toast.success('OTP sent to your mobile number');
     } else {
-      toast.error('Invalid mobile number. For testing, use: 91874498');
+      dispatch(setError('Invalid mobile number'));
+      // toast.error('Invalid mobile number'); // Removed toast in favor of UI error display
     }
   };
 

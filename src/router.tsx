@@ -51,7 +51,8 @@ import ReturnCustomerBooking from '@booking/ReturnCustomerBooking';
 import { ROUTES } from '@config/routes';
 
 import App from './App';
-import PriceCardsMockup from './components/mockups/PriceCards';
+// import PriceCardsMockup from './components/mockups/PriceCards';
+// import MockHome from './components/mockups/MockHome';
 import GasCheckLeakage from './components/booking/GasCheckLeakage';
 
 
@@ -68,45 +69,42 @@ const RouterComponent = () => {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="*" element={logRoute(window.location.pathname)} />
-            <Route path="/" element={<App />}>
-              {/* Routes WITH Layout */}
-              <Route element={<Layout />}>
+            {/* Routes WITH Layout */}
+            <Route element={<Layout />}>
               <Route index element={<ServiceCategorySelection />} />
-                <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
-                <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-              </Route>
-
-              {/* Routes WITHOUT Layout */}
-              <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
-              <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
-              <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
-              <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
-              <Route 
-                path={ROUTES.BOOKING.POWERJET_CHEMICAL} 
-                element={<PowerJetChemWashHome />}
-              />
-              <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
-              <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
-              <Route path="/booking/gas-check-leak" element={<PublicRoute><GasCheckLeakage /></PublicRoute>} />
-
-              {/* Admin Routes - All WITHOUT Layout */}
-              <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute requiresAdmin><ServiceHub /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute requiresAdmin><UserManagement /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute requiresAdmin><AdminSettings /></ProtectedRoute>} />
-
-              {/* Test Routes */}
-              {process.env.NODE_ENV === 'development' && (
-                <>
-                  <Route path="/test/supabase" element={<SupabaseTest />} />
-                  <Route path="/mockup/price-cards" element={<PriceCardsMockup />} />
-                </>
-              )}
-
-              {/* 404 Route */}
-              <Route path="*" element={<NotFound />} />
+              <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
+              <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             </Route>
+
+            {/* Routes WITHOUT Layout */}
+            <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
+            <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
+            <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
+            <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
+            <Route
+              path={ROUTES.BOOKING.POWERJET_CHEMICAL}
+              element={<PowerJetChemWashHome />}
+            />
+            <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
+            <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
+            <Route path="/booking/gas-check-leak" element={<PublicRoute><GasCheckLeakage /></PublicRoute>} />
+
+            {/* Admin Routes - All WITHOUT Layout */}
+            <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />
+            <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute requiresAdmin><ServiceHub /></ProtectedRoute>} />
+            <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute requiresAdmin><UserManagement /></ProtectedRoute>} />
+            <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute requiresAdmin><AdminSettings /></ProtectedRoute>} />
+
+            {/* Test Routes */}
+            {process.env.NODE_ENV === 'development' && (
+              <>
+                <Route path="/test/supabase" element={<SupabaseTest />} />
+              </>
+            )}
+
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </ErrorBoundary>
