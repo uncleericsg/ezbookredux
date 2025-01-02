@@ -1,13 +1,16 @@
 import React, { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
+import ErrorFallback from '../error-boundary/ErrorFallback';
 import { ROUTES } from '@config/routes';
+import EmptyState from '../common/EmptyState';
 const ServiceCard = React.lazy(() => import('./ServiceCard'));
 const PremiumServiceCard = React.lazy(() => import('./PremiumServiceCard'));
 const ServiceInfoSection = React.lazy(() => import('./ServiceInfoSection'));
 const WhatsAppContactCard = React.lazy(() => import('./WhatsAppContactCard'));
-import { serviceOptions } from './servicesData';
-import { premiumServices } from './premiumServicesData';
+import useServiceData from '../../hooks/useServiceData';
+import usePremiumServiceData from '../../hooks/usePremiumServiceData';
 import { pageContainer, pageItem, loadingAnimation } from './pageAnimations';
 import { cardContainer, cardItem } from './cardAnimations';
 import styles from './PriceSelectionPage.module.css';
@@ -33,14 +36,12 @@ const LoadingSpinner = () => (
 
 const PriceSelectionPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = React.useState(true);
+  const { services, isLoading: isServicesLoading, error: servicesError } = useServiceData();
+  const { premiumServices, isLoading: isPremiumLoading, error: premiumError } = usePremiumServiceData();
+  
+  const isLoading = isServicesLoading || isPremiumLoading;
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleServiceSelect = (service: typeof serviceOptions[0]) => {
+  const handleServiceSelect = (service: typeof services[0]) => {
     // Handle special redirection cases
     if (service.id === "powerjet-chemical") {
       navigate(ROUTES.BOOKING.POWERJET_CHEMICAL);
@@ -63,9 +64,33 @@ const PriceSelectionPage: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
+  if (servicesError || premiumError) {
+    return (
+      <div className={styles.errorContainer}>
+        <h2>Error loading services</h2>
+        <p>{servicesError?.message || premiumError?.message}</p>
+      </div>
+    );
+  }
+
+  if (services.length === 0 && premiumServices.length === 0 && !isLoading) {
+    return (
+      <EmptyState
+        title="No Services Available"
+        description="We're currently unable to load our service options. Please try again later."
+      />
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className={styles.loadingContainer}>
+      <motion.div
+        className={styles.loadingContainer}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <motion.div
           className={styles.loadingSpinner}
           initial={{ opacity: 0, scale: 0.8 }}
@@ -80,7 +105,7 @@ const PriceSelectionPage: React.FC = () => {
             ease: "easeInOut"
           }}
         />
-      </div>
+      </motion.div>
     );
   }
 
@@ -89,24 +114,31 @@ const PriceSelectionPage: React.FC = () => {
       variants={pageContainer}
       initial="hidden"
       animate="show"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
       className={styles.pageContainer}
     >
       <div className={styles.gradientOverlay}></div>
       <div className={styles.contentWrapper}>
-        <motion.div
-          variants={pageItem}
-          className={styles.titleSection}
-        >
-          <h1 className={styles.pageTitle}>
+        <div className={styles.titleSection}>
+          <motion.h1
+            className={styles.pageTitle}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             First Time Customer Offer
-          </h1>
-          <p className={styles.pageSubtitle}>
+          </motion.h1>
+          <motion.p
+            className={styles.pageSubtitle}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             For HDB & Condo only
-          </p>
-        </motion.div>
-        <Suspense fallback={<LoadingSpinner />}>
-          <ServiceInfoSection />
-        </Suspense>
+          </motion.p>
+        </div>
+        <ServiceInfoSection />
 
         <motion.div
           variants={cardContainer}
@@ -114,7 +146,7 @@ const PriceSelectionPage: React.FC = () => {
           animate="show"
           className={styles.cardGrid}
         >
-          {serviceOptions.map((service) => (
+          {services.map((service) => (
             <Suspense fallback={<LoadingSpinner />}>
               <ServiceCard
                 key={service.id}
@@ -129,13 +161,24 @@ const PriceSelectionPage: React.FC = () => {
           </Suspense>
         </motion.div>
 
-        <motion.div
-          variants={pageItem}
-          className={styles.premiumSection}
-        >
-          <h2 className={styles.sectionTitle}>Premium Services</h2>
-          <p className={styles.sectionSubtitle}>Professional Powerjet Wash & Specialized Services</p>
-        </motion.div>
+        <div className={styles.premiumSection}>
+          <motion.h2
+            className={styles.sectionTitle}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Premium Services
+          </motion.h2>
+          <motion.p
+            className={styles.sectionSubtitle}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            Professional Powerjet Wash & Specialized Services
+          </motion.p>
+        </div>
 
         <motion.div
           variants={cardContainer}
@@ -159,3 +202,4 @@ const PriceSelectionPage: React.FC = () => {
 };
 
 export default PriceSelectionPage;
+

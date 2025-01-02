@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ErrorBoundary } from './components/error-boundary/ErrorBoundary';
+import EnhancedErrorBoundary from './components/EnhancedErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { store } from './store';
 import RouterComponent from './router';
@@ -25,7 +25,7 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <ErrorBoundary>
+    <EnhancedErrorBoundary>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <Suspense fallback={<LoadingScreen />}>
@@ -35,6 +35,6 @@ ReactDOM.createRoot(rootElement).render(
           </Suspense>
         </QueryClientProvider>
       </Provider>
-    </ErrorBoundary>
+    </EnhancedErrorBoundary>
   </React.StrictMode>
 );
