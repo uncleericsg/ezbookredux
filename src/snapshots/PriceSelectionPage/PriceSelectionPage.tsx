@@ -1,35 +1,16 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
-const ServiceCard = React.lazy(() => import('./ServiceCard'));
-const PremiumServiceCard = React.lazy(() => import('./PremiumServiceCard'));
-const ServiceInfoSection = React.lazy(() => import('./ServiceInfoSection'));
-const WhatsAppContactCard = React.lazy(() => import('./WhatsAppContactCard'));
+import ServiceCard from './ServiceCard';
+import PremiumServiceCard from './PremiumServiceCard';
+import ServiceInfoSection from './ServiceInfoSection';
+import WhatsAppContactCard from './WhatsAppContactCard';
 import { serviceOptions } from './servicesData';
 import { premiumServices } from './premiumServicesData';
 import { pageContainer, pageItem, loadingAnimation } from './pageAnimations';
 import { cardContainer, cardItem } from './cardAnimations';
 import styles from './PriceSelectionPage.module.css';
-
-const LoadingSpinner = () => (
-  <div className={styles.loadingContainer}>
-    <motion.div
-      className={styles.loadingSpinner}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{
-        opacity: [0.5, 1, 0.5],
-        scale: [1, 1.2, 1],
-        rotate: [0, 180, 360]
-      }}
-      transition={{
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-    />
-  </div>
-);
 
 const PriceSelectionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -104,9 +85,7 @@ const PriceSelectionPage: React.FC = () => {
             For HDB & Condo only
           </p>
         </motion.div>
-        <Suspense fallback={<LoadingSpinner />}>
-          <ServiceInfoSection />
-        </Suspense>
+        <ServiceInfoSection />
 
         <motion.div
           variants={cardContainer}
@@ -115,18 +94,14 @@ const PriceSelectionPage: React.FC = () => {
           className={styles.cardGrid}
         >
           {serviceOptions.map((service) => (
-            <Suspense fallback={<LoadingSpinner />}>
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onClick={handleServiceSelect}
-              />
-            </Suspense>
+            <ServiceCard
+              key={service.id}
+              service={service}
+              onClick={handleServiceSelect}
+            />
           ))}
           
-          <Suspense fallback={<LoadingSpinner />}>
-            <WhatsAppContactCard />
-          </Suspense>
+          <WhatsAppContactCard />
         </motion.div>
 
         <motion.div
@@ -144,13 +119,11 @@ const PriceSelectionPage: React.FC = () => {
           className={styles.cardGrid}
         >
           {premiumServices.map((service) => (
-            <Suspense fallback={<LoadingSpinner />}>
-              <PremiumServiceCard
-                key={service.id}
-                service={service}
-                onClick={handleServiceSelect}
-              />
-            </Suspense>
+            <PremiumServiceCard
+              key={service.id}
+              service={service}
+              onClick={handleServiceSelect}
+            />
           ))}
         </motion.div>
       </div>
