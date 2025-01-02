@@ -54,27 +54,40 @@ Improve page load performance by:
 
 ### Simplified Implementation Plan
 
-1. Convert static imports to React.lazy for main components
-2. Add basic Suspense fallback
-3. Create snapshot of current implementation
-4. Run Lighthouse audit before and after changes
-5. Test core functionality:
-   - Component loading
-   - Basic interactions
-   - Page navigation
+#### Preparation
+1. ~~Create snapshot of current implementation~~
+2. Verify development environment setup
+   - Check Node.js and npm versions
+   - Verify React and related dependencies
+   - Ensure build tools are working
+3. Run initial Lighthouse audit for baseline
+   - Run audit in Chrome DevTools
+   - Record key metrics (FCP, LCP, TTI)
+   - Save audit report
+4. Prepare basic test cases
+   - Test component loading
+   - Verify core interactions
+   - Check page navigation
 
-### Monitoring
+#### Implementation
+1. ~~Convert static imports to React.lazy for main components~~
+   - ~~ServiceCard~~
+   - ~~PremiumServiceCard~~
+   - ~~ServiceInfoSection~~
+   - ~~WhatsAppContactCard~~
+2. ~~Add basic Suspense fallback~~
+3. ~~Test core functionality:~~
+   - ~~Component loading~~
+   - ~~Basic interactions~~
+   - ~~Page navigation~~
+
+#### Monitoring
 - Use browser's built-in DevTools
 - Run Lighthouse audits periodically
 
-### Documentation
+#### Documentation
 - Keep snapshot of original implementation
 - Note key changes made
-
-### Testing
-- Verify component loading
-- Check basic functionality
-- Ensure no broken features
 
 ### Phase 2: Implementation
 1. Convert static imports to React.lazy
