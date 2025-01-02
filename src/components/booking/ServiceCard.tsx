@@ -41,7 +41,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onClick }) => {
         </motion.div>
       )}
 
-      <h3 className="text-xl font-bold text-[#FFD700] mb-4">{service.title}</h3>
+      <motion.h3 
+        className="text-xl font-bold text-[#FFD700] mb-4"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        {service.title}
+      </motion.h3>
       <div className="flex flex-col items-center justify-center mb-4">
         <motion.div
           className="text-3xl font-bold text-white"
