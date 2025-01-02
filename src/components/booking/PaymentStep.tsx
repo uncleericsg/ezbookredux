@@ -127,7 +127,7 @@ import { toast } from 'sonner';
 // Components
 import { BookingSummary } from '@components/booking/BookingSummary';
 import { BookingConfirmation } from '@components/booking/BookingConfirmation';
-import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 
 // Redux
 import { useAppDispatch, useAppSelector } from '@store/hooks';
@@ -572,7 +572,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   if (paymentState.status === PAYMENT_STATES.READY && paymentState.clientSecret) {
     const stripePromise = getStripe();
     return (
-      <ErrorBoundary>
+      <EnhancedErrorBoundary>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -662,14 +662,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             </Elements>
           </div>
         </motion.div>
-      </ErrorBoundary>
+      </EnhancedErrorBoundary>
     );
   }
 
   // Render success state
   if (paymentState.status === PAYMENT_STATES.SUCCESS) {
     return (
-      <ErrorBoundary>
+      <EnhancedErrorBoundary>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -681,7 +681,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             onComplete={handlePaymentComplete}
           />
         </motion.div>
-      </ErrorBoundary>
+      </EnhancedErrorBoundary>
     );
   }
 

@@ -23,7 +23,7 @@ import UserManagement from '@admin/UserManagement';
 
 import AMCSignup from '@components/AMCSignup';
 import PowerJetChemWashHome from '@booking/PowerJetChemWashHome';
-import { ErrorBoundary } from '@components/error-boundary/ErrorBoundary';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 import Layout from '@components/Layout';
 import { LoadingScreen } from '@components/LoadingScreen';
 
@@ -65,7 +65,7 @@ const RouterComponent = () => {
 
   return (
     <BrowserRouter>
-      <ErrorBoundary>
+      <EnhancedErrorBoundary>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="*" element={logRoute(window.location.pathname)} />
@@ -107,7 +107,7 @@ const RouterComponent = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-      </ErrorBoundary>
+      </EnhancedErrorBoundary>
     </BrowserRouter>
   );
 };

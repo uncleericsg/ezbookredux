@@ -30,7 +30,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocationOptimizer } from '@hooks/useLocationOptimizer';
 import { Region, TimeSlot } from '@types';
-import { ErrorBoundary } from 'react-error-boundary';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 
 interface OptimizedLocationProviderProps {
   address: string;
@@ -112,23 +112,9 @@ export function OptimizedLocationProvider({
   }, []);
 
   return (
-    <ErrorBoundary
-      onReset={handleReset}
-      FallbackComponent={({ error, resetErrorBoundary }) => (
-        <div className="text-center p-4 bg-red-50 rounded-lg">
-          <p className="text-sm text-red-400 mt-1">
-            {error?.message || 'An error occurred while processing your location'}
-          </p>
-          <button
-            onClick={resetErrorBoundary}
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Try again
-          </button>
-        </div>
-      )}
-    >
+    <EnhancedErrorBoundary>
+      {state && typeof children === 'function' && children(state)}
       {state && typeof children === 'function' ? children(state) : null}
-    </ErrorBoundary>
+    </EnhancedErrorBoundary>
   );
 }

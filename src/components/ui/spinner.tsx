@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { motion } from 'framer-motion';
 import { cn } from './cn';
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,14 +21,18 @@ export function Spinner({
   ...props 
 }: SpinnerProps) {
   return (
-    <div
+    <motion.div
       role="status"
       className={cn(
         'inline-block',
         sizeMap[size],
         className
       )}
-      {...props}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      {...(props as React.ComponentProps<typeof motion.div>)}
     >
       <div className={cn(
         'w-full h-full border-3 rounded-full animate-spin force-animation',
@@ -38,6 +43,6 @@ export function Spinner({
             : 'border-gray-300 border-t-transparent dark:border-gray-600'
       )} />
       <span className="sr-only">Loading...</span>
-    </div>
+    </motion.div>
   );
 }

@@ -8,6 +8,24 @@
   background: linear-gradient(to top left, rgba(88, 28, 135, 0.2), transparent, rgba(96, 165, 250, 0.05));
 }
 
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.errorContainer h2 {
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.errorContainer p {
+  color: #6b7280;
+}
+
 .loadingContainer {
   composes: pageContainer;
   @apply flex items-center justify-center;
@@ -45,7 +63,7 @@
 }
 
 .titleSection {
-  @apply text-center mb-12;
+  @apply text-center mb-12 relative z-10;
 }
 
 .premiumSection {

@@ -1,243 +1,60 @@
-/// <reference types="vitest" />
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { googleMapsPlugin } from './vite-plugin-google-maps';
-import dts from 'vite-plugin-dts';
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  
-  return {
-    resolve: {
-      alias: [
-        // Root alias
-        {
-          find: '@',
-          replacement: path.resolve(__dirname, './src')
-        },
-        // Mockup alias
-        {
-          find: '@mockup',
-          replacement: path.resolve(__dirname, './mockup')
-        },
-        // Component aliases
-        {
-          find: '@admin',
-          replacement: path.resolve(__dirname, './src/components/admin')
-        },
-        {
-          find: '@auth',
-          replacement: path.resolve(__dirname, './src/components/auth')
-        },
-        {
-          find: '@booking',
-          replacement: path.resolve(__dirname, './src/components/booking')
-        },
-        {
-          find: '@common',
-          replacement: path.resolve(__dirname, './src/components/common')
-        },
-        {
-          find: '@components',
-          replacement: path.resolve(__dirname, './src/components')
-        },
-        {
-          find: '@dev',
-          replacement: path.resolve(__dirname, './src/components/dev')
-        },
-        {
-          find: '@error-boundary',
-          replacement: path.resolve(__dirname, './src/components/error-boundary')
-        },
-        {
-          find: '@icons',
-          replacement: path.resolve(__dirname, './src/components/icons')
-        },
-        {
-          find: '@modals',
-          replacement: path.resolve(__dirname, './src/components/modals')
-        },
-        {
-          find: '@notifications',
-          replacement: path.resolve(__dirname, './src/components/notifications')
-        },
-        {
-          find: '@payment',
-          replacement: path.resolve(__dirname, './src/components/payment')
-        },
-        {
-          find: '@profile',
-          replacement: path.resolve(__dirname, './src/components/profile')
-        },
-        {
-          find: '@tech',
-          replacement: path.resolve(__dirname, './src/components/tech')
-        },
-        {
-          find: '@test',
-          replacement: path.resolve(__dirname, './src/components/test')
-        },
-        {
-          find: '@ui',
-          replacement: path.resolve(__dirname, './src/components/ui')
-        },
-        // Service aliases
-        {
-          find: '@api',
-          replacement: path.resolve(__dirname, './src/api')
-        },
-        {
-          find: '@config',
-          replacement: path.resolve(__dirname, './src/config')
-        },
-        {
-          find: '@constants',
-          replacement: path.resolve(__dirname, './src/constants')
-        },
-        {
-          find: '@data',
-          replacement: path.resolve(__dirname, './src/data')
-        },
-        {
-          find: '@google',
-          replacement: path.resolve(__dirname, './src/services/google')
-        },
-        {
-          find: '@hooks',
-          replacement: path.resolve(__dirname, './src/hooks')
-        },
-        {
-          find: '@lib',
-          replacement: path.resolve(__dirname, './src/lib')
-        },
-        {
-          find: '@locations',
-          replacement: path.resolve(__dirname, './src/services/locations')
-        },
-        {
-          find: '@mocks',
-          replacement: path.resolve(__dirname, './src/mocks')
-        },
-        {
-          find: '@onemap',
-          replacement: path.resolve(__dirname, './src/services/onemap')
-        },
-        {
-          find: '@pages',
-          replacement: path.resolve(__dirname, './src/pages')
-        },
-        {
-          find: '@redux-types',
-          replacement: path.resolve(__dirname, './src/store/types')
-        },
-        {
-          find: '@routes',
-          replacement: path.resolve(__dirname, './src/routes')
-        },
-        {
-          find: '@server',
-          replacement: path.resolve(__dirname, './src/server')
-        },
-        {
-          find: '@services',
-          replacement: path.resolve(__dirname, './src/services')
-        },
-        {
-          find: '@slices',
-          replacement: path.resolve(__dirname, './src/store/slices')
-        },
-        {
-          find: '@snapshots',
-          replacement: path.resolve(__dirname, './src/snapshots')
-        },
-        {
-          find: '@store',
-          replacement: path.resolve(__dirname, './src/store')
-        },
-        {
-          find: '@styles',
-          replacement: path.resolve(__dirname, './src/styles')
-        },
-        {
-          find: '@teams',
-          replacement: path.resolve(__dirname, './src/services/teams')
-        },
-        {
-          find: '@theme',
-          replacement: path.resolve(__dirname, './src/theme')
-        },
-        {
-          find: '@types',
-          replacement: path.resolve(__dirname, './src/types')
-        },
-        {
-          find: '@utils',
-          replacement: path.resolve(__dirname, './src/utils')
-        },
-        {
-          find: '@validation',
-          replacement: path.resolve(__dirname, './src/services/validation')
-        },
-        // Supabase browser polyfill (keep this last)
-        {
-          find: 'stream',
-          replacement: 'stream-browserify'
-        }
-      ]
-    },
-    plugins: [
-      react({
-        jsxRuntime: 'automatic',
-        fastRefresh: true,
-      }),
-      googleMapsPlugin(),
-      dts()
-    ],
-    optimizeDeps: {
-      exclude: ['lucide-react'],
-      include: ['@supabase/supabase-js'],
-      esbuildOptions: {
-        define: {
-          global: 'globalThis'
-        }
-      }
-    },
-    build: {
-      sourcemap: true,
-      target: 'es2020',
-      rollupOptions: {
-        external: [],
-        output: {
-          manualChunks: {
-            vendor: ['jszip']
-          }
-        },
-        input: {
-          main: path.resolve(__dirname, 'index.html')
-        }
-      }
-    },
-    server: {
-      port: 5173,  // Development server port
-      host: true
-    },
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/setupTests.ts'],
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'src/setupTests.ts',
-        ]
-      }
-    },
-    define: {
-      'process.env': env
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+      '@admin': path.resolve(__dirname, './src/components/admin'),
+      '@booking': path.resolve(__dirname, './src/components/booking'),
+      '@config': path.resolve(__dirname, './src/config'),
+      '@store': path.resolve(__dirname, './src/store'),
+      '@services': path.resolve(__dirname, './src/services'),
+      '@types': path.resolve(__dirname, './src/types'),
+      '@constants': path.resolve(__dirname, './src/constants'),
+      '@lib': path.resolve(__dirname, './src/lib')
     }
-  };
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Core Framework
+          if (id.includes('node_modules/react')) return 'vendor-react';
+          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
+          
+          // State Management
+          if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack';
+          
+          // UI Libraries
+          if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
+          if (id.includes('node_modules/@headlessui')) return 'vendor-headlessui';
+          
+          // Utilities
+          if (id.includes('node_modules/lodash') || 
+              id.includes('node_modules/date-fns')) return 'vendor-utils';
+              
+          // Payment
+          if (id.includes('node_modules/@stripe')) return 'vendor-stripe';
+          
+          // Project Components
+          if (id.includes('src/components/ui')) return 'ui-components';
+          if (id.includes('src/components/common')) return 'common-components';
+          if (id.includes('src/components/booking')) return 'booking-components';
+          if (id.includes('src/components/admin')) return 'admin-components';
+          
+          // Data Layer
+          if (id.includes('src/api') || id.includes('src/services')) return 'data-layer';
+          
+          // Default vendor chunk
+          if (id.includes('node_modules')) return 'vendor';
+        }
+      }
+    }
+  }
 });

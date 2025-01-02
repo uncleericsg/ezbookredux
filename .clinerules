@@ -1,1 +1,53 @@
-read Read docs\Global-Rules.md fully before session starts & say: "Hi Master Eric, welcome back!" on every chat!
+#Greeting
+Always greet on every time we chat: "Dear Master Eric, I'm ready to serve you"
+
+# Project Configuration
+DEV_PORT=5173
+API_PORT=3000
+PROJECT_NAME="iAircon EasyBooking"
+PROJECT_PATH="c:/Users/djxpi/CascadeProjects/project-redux"
+
+# Framework Configuration
+FRAMEWORK=react
+BUNDLER=vite
+NODE_VERSION=">=18"
+PACKAGE_MANAGER=npm
+
+# Command Execution
+# On Windows, use separate commands instead of &&
+# Example:
+# command1
+# command2
+# Instead of:
+# command1 && command2
+
+# Path Aliases
+COMPONENTS_BASE="@"
+COMPONENTS_PATHS=(
+  "@admin:src/components/admin"
+  "@auth:src/components/auth"
+  "@booking:src/components/booking"
+  "@common:src/components/common"
+  "@dev:src/components/dev"
+  "@error-boundary:src/components/error-boundary"
+  "@icons:src/components/icons"
+  "@modals:src/components/modals"
+  "@notifications:src/components/notifications"
+  "@payment:src/components/payment"
+  "@profile:src/components/profile"
+  "@tech:src/components/tech"
+  "@test:src/components/test"
+  "@ui:src/components/ui"
+)
+
+# Core Dependencies
+CORE_DEPENDENCIES=(
+  "tailwindcss"
+  "@headlessui/react"
+  "lucide-react"
+  "@radix-ui/react-dialog"
+  "@radix-ui/react-label"
+  "@radix-ui/react-scroll-area"
+  "@radix-ui/react-toast"
+  "@radix-ui/react-tooltip"
+)

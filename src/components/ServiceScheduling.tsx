@@ -10,7 +10,7 @@ import { useAppointments } from '@hooks/useAppointments';
 import { useBookingState } from '@hooks/useBookingState';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import ErrorBoundary from '@components/ErrorBoundary';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 import { LoadingScreen } from '@components/LoadingScreen';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AcuityAppointmentType } from '@services/acuityIntegration';
@@ -191,7 +191,7 @@ const ServiceScheduling: React.FC = () => {
   }
 
   return (
-    <ErrorBoundary>
+    <EnhancedErrorBoundary>
       {showPayment ? (
         <PaymentFlow
           amount={price || 0}
@@ -272,7 +272,7 @@ const ServiceScheduling: React.FC = () => {
           </AnimatePresence>
         </motion.div>
       )}
-    </ErrorBoundary>
+    </EnhancedErrorBoundary>
   );
 };
 
