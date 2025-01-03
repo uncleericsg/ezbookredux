@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Auto-Analysis Refactor Prompt
+
+  Purpose:
+  This XML file serves as a template for requesting an AI-powered analysis and generation of a comprehensive refactoring plan. It's designed to streamline the process of creating detailed implementation plans for various software development issues or refactoring tasks.
+
+  How to Use:
+  1. Fill in the <issue-description> section with a brief overview of the problem you're facing.
+  2. Provide relevant details about your project in the <project-context> section, including tech stack, architecture, or specific components involved.
+  3. Present this filled-out XML to an AI assistant with the following instruction:
+     "Using the provided XML prompt, analyze the issue and project context, then automatically generate a comprehensive implementation plan by filling in all the sections in the <output-requirements>."
+
+  Expected Output:
+  The AI will analyze the provided information and automatically fill in:
+  - A suitable task name
+  - Current state analysis
+  - Objectives for the refactoring
+  - A detailed implementation plan with phases for analysis, design, implementation, testing, and documentation
+  - Potential risks and mitigation strategies
+  - Success criteria for the refactoring task
+
+  Benefits:
+  - Quickly obtain structured, detailed plans for various refactoring or issue-resolution tasks
+  - Minimal input required from the user
+  - Leverages AI's ability to analyze the situation and propose appropriate solutions
+  - Ensures a thorough, context-aware plan for your specific issue
+
+  Note: The quality and relevance of the generated plan depend on the detail and clarity of the information provided in the issue description and project context sections.
+-->
+<refactor-task>
+  <instructions>
+    Analyze the provided issue description and project context. Then, automatically fill in the following sections with detailed information to create a comprehensive refactoring plan.
+  </instructions>
+  <issue-description>
+    [Provide a brief description of the problem or area needing refactoring]
+  </issue-description>
+  <project-context>
+    [Provide relevant details about the project, such as tech stack, architecture, or specific components involved]
+  </project-context>
+  <output-requirements>
+    <task-name/>
+    <current-state/>
+    <objectives/>
+    <implementation-plan>
+      <analysis-phase/>
+      <design-phase/>
+      <implementation-phase/>
+      <testing-phase/>
+      <documentation-phase/>
+    </implementation-plan>
+    <risks-and-mitigations/>
+    <success-criteria/>
+  </output-requirements>
+</refactor-task>

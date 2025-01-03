@@ -1,8 +1,30 @@
+/*
+ * Error Handling Strategy:
+ *
+ * This component uses a multi-layered error handling approach:
+ *
+ * 1. Component-Level Error States:
+ *    - Handles service loading errors with dedicated error UI
+ *    - Uses React Query's built-in error states
+ *    - Shows empty state when no services are available
+ *
+ * 2. Loading States:
+ *    - Uses Suspense for lazy-loaded components
+ *    - Shows loading spinner during data fetching
+ *    - Prevents errors during loading with proper state checks
+ *
+ * 3. Error Recovery:
+ *    - Uses React Query's automatic retry mechanism
+ *    - Shows clear error messages to users
+ *    - Provides empty state fallback for data issues
+ *
+ * Note: This component relies on the root error boundary in main.tsx
+ * for unexpected errors, while handling expected errors at the component level.
+ */
+
 import React, { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
-import ErrorFallback from '../error-boundary/ErrorFallback';
 import { ROUTES } from '@config/routes';
 import EmptyState from '../common/EmptyState';
 const ServiceCard = React.lazy(() => import('./ServiceCard'));

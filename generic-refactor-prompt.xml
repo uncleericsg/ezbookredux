@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refactor-task>
+  <task-name>[Insert specific task name]</task-name>
+  <description>
+    [Provide a brief description of the issue or area needing refactoring]
+  </description>
+  <current-state>
+    [List key points about the current implementation or issues]
+  </current-state>
+  <objectives>
+    [List the main goals of this refactoring task]
+  </objectives>
+  <scope>
+    [Define the scope of the refactoring, including affected components or systems]
+  </scope>
+  <constraints>
+    [List any constraints or limitations to consider]
+  </constraints>
+  <resources>
+    [List available resources, including team size, time, and tools]
+  </resources>
+  <additional-context>
+    [Provide any additional context or background information]
+  </additional-context>
+</refactor-task>

@@ -87,3 +87,6 @@ TYPESCRIPT_CONFIG="tsconfig.json"
 VITE_CONFIG="vite.config.ts"
 POSTCSS_CONFIG="postcss.config.js"
 TAILWIND_CONFIG="tailwind.config.ts"
+
+# Script Module
+Scripts must use ES module syntax

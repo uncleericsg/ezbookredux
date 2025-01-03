@@ -10,7 +10,6 @@ import { useAppointments } from '@hooks/useAppointments';
 import { useBookingState } from '@hooks/useBookingState';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 import { LoadingScreen } from '@components/LoadingScreen';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AcuityAppointmentType } from '@services/acuityIntegration';
@@ -190,89 +189,85 @@ const ServiceScheduling: React.FC = () => {
     );
   }
 
-  return (
-    <EnhancedErrorBoundary>
-      {showPayment ? (
-        <PaymentFlow
-          amount={price || 0}
-          serviceDetails={{
-            type: appointmentType?.name || 'Service',
-            date: selectedDate?.toISOString() || '',
-            time: selectedTime,
-            duration: appointmentType?.duration || 60
-          }}
-          onSuccess={processBooking}
-          onCancel={() => setShowPayment(false)}
-        />
-      ) : (
+  return showPayment ? (
+    <PaymentFlow
+      amount={price || 0}
+      serviceDetails={{
+        type: appointmentType?.name || 'Service',
+        date: selectedDate?.toISOString() || '',
+        time: selectedTime,
+        duration: appointmentType?.duration || 60
+      }}
+      onSuccess={processBooking}
+      onCancel={() => setShowPayment(false)}
+    />
+  ) : (
+    <motion.div 
+      className="max-w-4xl mx-auto space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <p className="text-gray-400">
+        {price && !isAmcService && (
+          <span>Service fee: ${price}</span>
+        )}
+        {isAmcService && (
+          <span className="text-blue-400">AMC Service Visit</span>
+        )}
+      </p>
+
+      <AnimatePresence mode="wait">
         <motion.div 
-          className="max-w-4xl mx-auto space-y-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          key={selectedDate?.toISOString() ?? 'no-date'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
         >
-          <p className="text-gray-400">
-            {price && !isAmcService && (
-              <span>Service fee: ${price}</span>
-            )}
-            {isAmcService && (
-              <span className="text-blue-400">AMC Service Visit</span>
-            )}
-          </p>
-
-          <AnimatePresence mode="wait">
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              key={selectedDate?.toISOString() ?? 'no-date'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="space-y-6">
-                {validationErrors.length > 0 && (
-                  <div className="bg-red-500/10 text-red-400 p-4 rounded-lg border border-red-500/20">
-                    {validationErrors[0]}
-                  </div>
-                )}
-
-                <ServiceSchedulingCalendar
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                  disabled={bookingLoading}
-                />
-                
-                {selectedDate && (
-                  <TimeSlotPicker
-                    slots={slots}
-                    selectedTime={selectedTime}
-                    onTimeSelect={setSelectedTime}
-                    appointmentType={appointmentType}
-                    loading={slotsLoading}
-                    isAMC={isAmcService}
-                    disabled={bookingLoading}
-                  />
-                )}
+          <div className="space-y-6">
+            {validationErrors.length > 0 && (
+              <div className="bg-red-500/10 text-red-400 p-4 rounded-lg border border-red-500/20">
+                {validationErrors[0]}
               </div>
+            )}
 
-              {selectedDate && selectedTime && (
-                <ServiceSummary
-                  date={selectedDate}
-                  time={selectedTime}
-                  appointmentType={appointmentType}
-                  onConfirm={handleSchedule}
-                  loading={bookingLoading}
-                  price={price}
-                  address={user?.address}
-                  isAMC={isAmcService}
-                  disabled={bookingInProgressRef.current}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
+            <ServiceSchedulingCalendar
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate}
+              disabled={bookingLoading}
+            />
+            
+            {selectedDate && (
+              <TimeSlotPicker
+                slots={slots}
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+                appointmentType={appointmentType}
+                loading={slotsLoading}
+                isAMC={isAmcService}
+                disabled={bookingLoading}
+              />
+            )}
+          </div>
+
+          {selectedDate && selectedTime && (
+            <ServiceSummary
+              date={selectedDate}
+              time={selectedTime}
+              appointmentType={appointmentType}
+              onConfirm={handleSchedule}
+              loading={bookingLoading}
+              price={price}
+              address={user?.address}
+              isAMC={isAmcService}
+              disabled={bookingInProgressRef.current}
+            />
+          )}
         </motion.div>
-      )}
-    </EnhancedErrorBoundary>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

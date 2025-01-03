@@ -56,7 +56,143 @@
  * - Error handling improved
  */
 
-// Types
+/*
+ * @ai-protection - CRITICAL COMPONENT - DO NOT MODIFY WITHOUT REVIEW
+ * This component is a core part of the payment processing system.
+ * See documentation at the top of the file for details.
+ */
+
+// React and hooks
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// Utils
+import { cn } from '@utils/cn';
+import { isValidServiceData } from '@utils/validation';
+import { format } from 'date-fns';
+
+// External libraries
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
+import { motion } from 'framer-motion';
+import { FiCreditCard } from 'react-icons/fi';
+import { ImSpinner8 } from 'react-icons/im';
+import { HiHeart } from 'react-icons/hi2';
+import { toast } from 'sonner';
+
+// Components
+import { BookingSummary } from '@components/booking/BookingSummary';
+import { BookingConfirmation } from '@components/booking/BookingConfirmation';
+
+// Redux
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setError, setPaymentStatus } from '../../store/slices/userSlice';
+import { setCurrentBooking, updateBooking } from '../../store/slices/bookingSlice';
+
+// Services
+import { getStripe } from '@services/stripe';
+import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
+import { createBooking } from '@services/supabaseBookingService';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
+
+// Types and Constants
+type ServiceType = 'repair' | 'maintenance' | 'installation';
+type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+
+// Payment States and Types
+const PAYMENT_STATES = {
+  INITIAL: 'INITIAL',
+  INITIALIZING: 'INITIALIZING',
+  READY: 'READY',
+  SUCCESS: 'SUCCESS',
+  ERROR: 'ERROR',
+  CANCELLED: 'CANCELLED'
+} as const;
+
+type PaymentStateType = typeof PAYMENT_STATES[keyof typeof PAYMENT_STATES];
+
+// Stripe types
+type StripePaymentStatus = 'requires_payment_method' | 'processing' | 'succeeded' | 'failed';
+
+// Stripe API response types
+interface StripePaymentIntent {
+  id: string;
+  clientSecret: string;
+  status: StripePaymentStatus;
+  amount?: number;
+}
+
+interface StripePaymentResponse {
+  id: string;
+  clientSecret: string;
+}
+
+// Type guard for PaymentIntent
+const isPaymentIntent = (obj: any): obj is StripePaymentIntent => {
+  return obj &&
+    typeof obj.id === 'string' &&
+    typeof obj.clientSecret === 'string';
+};
+
+// Helper to safely access payment intent
+const getPaymentIntentStatus = (intent: StripePaymentResponse): StripePaymentStatus => {
+  return (intent as StripePaymentIntent).status || 'requires_payment_method';
+};
+
+interface PaymentState {
+  status: PaymentStateType;
+  clientSecret: string | null;
+  error: string | null;
+  tipAmount: number;
+}
+
+const initialPaymentState: PaymentState = {
+  status: PAYMENT_STATES.INITIALIZING,
+  clientSecret: null,
+  error: null,
+  tipAmount: 0
+};
+
+interface RootState {
+  user: {
+    currentUser: any;
+    error: string | null;
+  };
+  booking: {
+    currentBooking: any;
+  };
+}
+
+interface BookingDetails {
+  service_id: string;
+  service_title: string;
+  service_price: number;
+  service_duration: string;
+  service_description: string;
+  customer_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile: string;
+    floor_unit: string;
+    block_street: string;
+    postal_code: string;
+    condo_name?: string;
+    lobby_tower?: string;
+    special_instructions?: string;
+  };
+  brands: string[];
+  issues: string[];
+  other_issue?: string;
+  is_amc: boolean;
+  scheduled_datetime: Date;
+  scheduled_timeslot: string;
+  status: BookingStatus;
+  payment_status: string;
+  total_amount: number;
+  tip_amount: number;
+}
+
 export interface PaymentStepProps {
   bookingData: {
     brands: string[];
@@ -93,13 +229,6 @@ export interface PaymentStepProps {
   onBack: () => void;
 }
 
-interface PaymentState {
-  status: string;
-  clientSecret: string | null;
-  error: string | null;
-  tipAmount: number;
-}
-
 interface PaymentStepContentProps {
   paymentState: PaymentState;
   setPaymentState: React.Dispatch<React.SetStateAction<PaymentState>>;
@@ -108,47 +237,6 @@ interface PaymentStepContentProps {
   onSuccess: () => void;
 }
 
-// React and hooks
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@utils/cn';
-import { isValidServiceData } from '@utils/validation';
-
-// External libraries
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import type { Stripe } from '@stripe/stripe-js';
-import { motion } from 'framer-motion';
-import { FiCreditCard } from 'react-icons/fi';
-import { ImSpinner8 } from 'react-icons/im';
-import { HiHeart } from 'react-icons/hi2';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-
-// Components
-import { BookingSummary } from '@components/booking/BookingSummary';
-import { BookingConfirmation } from '@components/booking/BookingConfirmation';
-import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
-
-// Redux
-import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { setError, setPaymentStatus } from '@store/slices/userSlice';
-import { setCurrentBooking, updateBooking } from '@store/slices/bookingSlice';
-
-// Constants and Utils
-import { PAYMENT_STATES } from '@constants/payment';
-
-// Services
-import { getStripe } from '@services/stripe';
-import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
-import { createBooking } from '@services/supabaseBookingService';
-import { getServiceByAppointmentType } from '@services/serviceUtils';
-
-const initialPaymentState: PaymentState = {
-  status: PAYMENT_STATES.INITIALIZING,
-  clientSecret: null,
-  error: null,
-  tipAmount: 0
-};
 
 // Enhanced logging for mobile debugging
 const logPaymentEvent = (event: string, data?: any) => {
@@ -193,8 +281,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 }: PaymentStepProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentUser, error: userError } = useAppSelector((state) => state.user);
-  const { currentBooking } = useAppSelector((state) => state.booking);
+  const { currentUser, error: userError } = useAppSelector((state: RootState) => state.user);
+  const { currentBooking } = useAppSelector((state: RootState) => state.booking);
   const summaryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -216,20 +304,21 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     if (bookingData && (!currentBooking || currentBooking.id !== bookingData.bookingId)) {
       logPaymentEvent('Setting current booking in Redux', bookingData);
       dispatch(setCurrentBooking({
-        id: bookingData.bookingId,
-        serviceType: bookingData.selectedService?.title || '',
-        date: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
-        time: bookingData.scheduledTimeSlot || '',
-        status: 'Pending',
-        amount: bookingData.selectedService?.price || 0,
-        customerInfo: bookingData.customerInfo || null
+        id: bookingData.bookingId || '',
+        userId: currentUser?.id || '',
+        serviceType: (bookingData.selectedService?.title as ServiceType) || 'repair',
+        status: 'pending',
+        scheduledDate: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
+        address: `${bookingData.customerInfo?.blockStreet || ''}, ${bookingData.customerInfo?.postalCode || ''}`,
+        notes: bookingData.customerInfo?.specialInstructions,
+        price: bookingData.selectedService?.price || 0
       }));
     }
   }, [bookingData, currentBooking, dispatch]);
 
   // State management
   const [isLoading, setIsLoading] = useState(false);  // Start with false to prevent UI flicker
-  const [paymentState, setPaymentState] = useState(initialPaymentState);
+  const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
   const [stripePromise] = useState(getStripe);
 
   // Add initialization timing tracking
@@ -411,7 +500,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         logPaymentEvent('Payment intent created', {
           intentId: paymentIntent.id,
           amount: total,
-          status: paymentIntent.status,
+          status: getPaymentIntentStatus(paymentIntent),
           timeSinceInit: Date.now() - startTime,
           networkStatus: checkNetworkConnection()
         });
@@ -436,7 +525,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         setPaymentState((prev) => ({
           ...prev,
           status: PAYMENT_STATES.ERROR,
-          error: errorMessage,
+          error: errorMessage || null,
         }));
       } finally {
         setIsLoading(false);
@@ -505,16 +594,19 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       if (bookingData.bookingId) {
         logPaymentEvent('Updating booking status', {
           bookingId: bookingData.bookingId,
-          status: 'Confirmed',
+          status: 'confirmed',
           paymentId: paymentIntent.id
         });
 
         await dispatch(updateBooking({
-          id: bookingData.bookingId,
-          status: 'Confirmed',
-          paymentStatus: 'Completed',
-          paymentId: paymentIntent.id,
-          updatedAt: new Date().toISOString()
+          id: bookingData.bookingId || '',
+          userId: currentUser?.id || '',
+          serviceType: (bookingData.selectedService?.title as ServiceType) || 'repair',
+          status: 'confirmed',
+          scheduledDate: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
+          address: `${bookingData.customerInfo?.blockStreet || ''}, ${bookingData.customerInfo?.postalCode || ''}`,
+          notes: `Payment ID: ${paymentIntent.id}`,
+          price: bookingData.selectedService?.price || 0
         }));
       }
 
@@ -572,116 +664,112 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   if (paymentState.status === PAYMENT_STATES.READY && paymentState.clientSecret) {
     const stripePromise = getStripe();
     return (
-      <EnhancedErrorBoundary>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
-        >
-          {/* Booking Summary */}
-          <div className="mb-2 sm:mb-8">
-            <BookingSummary
-              customerInfo={bookingData.customerInfo}
-              selectedDate={bookingData.scheduledDateTime}
-              selectedTimeSlot={bookingData.scheduledTimeSlot}
-              service={bookingData.selectedService}
-              brands={bookingData.brands}
-              issues={bookingData.issues}
-            />
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
+      >
+        {/* Booking Summary */}
+        <div className="mb-2 sm:mb-8">
+          <BookingSummary
+            customerInfo={bookingData.customerInfo}
+            selectedDate={bookingData.scheduledDateTime}
+            selectedTimeSlot={bookingData.scheduledTimeSlot}
+            service={bookingData.selectedService}
+            brands={bookingData.brands}
+            issues={bookingData.issues}
+          />
+        </div>
 
-          <div className="w-full max-w-4xl mx-auto">
-            <Elements 
-              stripe={stripePromise} 
-              options={{
-                clientSecret: paymentState.clientSecret || '',
-                appearance: {
-                  theme: 'night',
-                  variables: {
-                    colorPrimary: '#eab308',
-                    colorBackground: '#1e293b',
-                    colorText: '#f8fafc',
-                    colorDanger: '#ef4444',
-                    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                  },
+        <div className="w-full max-w-4xl mx-auto">
+          <Elements 
+            stripe={stripePromise} 
+            options={{
+              clientSecret: paymentState.clientSecret || '',
+              appearance: {
+                theme: 'night',
+                variables: {
+                  colorPrimary: '#eab308',
+                  colorBackground: '#1e293b',
+                  colorText: '#f8fafc',
+                  colorDanger: '#ef4444',
+                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                 },
-              }}
-            >
-              {/* Tip Selection */}
-              <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
-                <div className="text-center mx-auto px-1 sm:px-4">
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
-                    <HiHeart className="w-6 h-6 text-pink-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
-                  <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                    Motivate our service teams to go above and beyond!
-                  </p>
+              },
+            }}
+          >
+            {/* Tip Selection */}
+            <div className="bg-gray-800/90 rounded-lg p-2 sm:p-6 mb-2 sm:mb-8">
+              <div className="text-center mx-auto px-1 sm:px-4">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 mb-2">
+                  <HiHeart className="w-6 h-6 text-pink-400" />
                 </div>
-
-                <div className="flex justify-center gap-2 sm:gap-4 mb-4 mt-4">
-                  {[5, 10, 15, 20, 30, 50].map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() => handleTipChange(amount)}
-                      className={cn(
-                        'px-2 sm:px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
-                        paymentState.tipAmount === amount
-                          ? 'bg-gray-700 text-pink-400 border border-pink-400/50'
-                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/80'
-                      )}
-                    >
-                      ${amount}
-                    </button>
-                  ))}
-                </div>
-                {paymentState.tipAmount > 0 && (
-                  <div className="mt-4 text-center text-sm text-gray-300">
-                    <div className="flex justify-center items-center gap-2 sm:gap-4 flex-wrap">
-                      <span>Service: ${bookingData.selectedService?.price || 0}</span>
-                      <span>Tip: ${paymentState.tipAmount}</span>
-                      <span className="font-medium text-white">Total: ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
-                    </div>
-                  </div>
-                )}
+                <h3 className="text-lg font-medium text-white mb-2">Add a Tip</h3>
+                <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                  Motivate our service teams to go above and beyond!
+                </p>
               </div>
 
-              {/* Payment Form */}
-              <PaymentStepContent
-                bookingData={bookingData}
-                paymentState={paymentState}
-                setPaymentState={setPaymentState}
-                onBack={onBack}
-                onSuccess={() => {
-                  if (paymentState.clientSecret) {
-                    onComplete(paymentState.clientSecret);
-                  }
-                }}
-              />
-            </Elements>
-          </div>
-        </motion.div>
-      </EnhancedErrorBoundary>
+              <div className="flex justify-center gap-2 sm:gap-4 mb-4 mt-4">
+                {[5, 10, 15, 20, 30, 50].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => handleTipChange(amount)}
+                    className={cn(
+                      'px-2 sm:px-3 py-1.5 rounded text-sm font-medium transition-all duration-200',
+                      paymentState.tipAmount === amount
+                        ? 'bg-gray-700 text-pink-400 border border-pink-400/50'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/80'
+                    )}
+                  >
+                    ${amount}
+                  </button>
+                ))}
+              </div>
+              {paymentState.tipAmount > 0 && (
+                <div className="mt-4 text-center text-sm text-gray-300">
+                  <div className="flex justify-center items-center gap-2 sm:gap-4 flex-wrap">
+                    <span>Service: ${bookingData.selectedService?.price || 0}</span>
+                    <span>Tip: ${paymentState.tipAmount}</span>
+                    <span className="font-medium text-white">Total: ${calculateTotalAmount(bookingData.selectedService?.price || 0, paymentState.tipAmount)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Payment Form */}
+            <PaymentStepContent
+              bookingData={bookingData}
+              paymentState={paymentState}
+              setPaymentState={setPaymentState}
+              onBack={onBack}
+              onSuccess={() => {
+                if (paymentState.clientSecret) {
+                  onComplete(paymentState.clientSecret);
+                }
+              }}
+            />
+          </Elements>
+        </div>
+      </motion.div>
     );
   }
 
   // Render success state
   if (paymentState.status === PAYMENT_STATES.SUCCESS) {
     return (
-      <EnhancedErrorBoundary>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
-        >
-          <BookingConfirmation
-            reference={paymentState.clientSecret}
-            onComplete={handlePaymentComplete}
-          />
-        </motion.div>
-      </EnhancedErrorBoundary>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="w-full max-w-4xl mx-auto py-1 px-0.5 sm:py-8 sm:px-4"
+      >
+        <BookingConfirmation
+          bookingReference={paymentState.clientSecret || ''}
+          onDownloadReceipt={() => handlePaymentComplete(paymentState.clientSecret || '')}
+        />
+      </motion.div>
     );
   }
 
@@ -719,7 +807,7 @@ const PaymentStepContent = ({
         setPaymentState(prev => ({
           ...prev,
           status: PAYMENT_STATES.ERROR,
-          error: error.message
+          error: error.message || null
         }));
         return;
       }
@@ -781,16 +869,14 @@ const PaymentStepContent = ({
         </button>
       </form>
 
-      {/* Back Button - Hidden during processing */}
-      {paymentState.status !== PAYMENT_STATES.PROCESSING && (
-        <button
-          onClick={onBack}
-          className="absolute bottom-4 left-4 px-4 py-2 text-sm font-medium bg-zinc-900 text-white rounded-md hover:bg-zinc-800 transition-colors"
-          disabled={paymentState.status === PAYMENT_STATES.PROCESSING}
-        >
-          Back
-        </button>
-      )}
+      {/* Back Button - Hidden during loading */}
+      <button
+        onClick={onBack}
+        className="absolute bottom-4 left-4 px-4 py-2 text-sm font-medium bg-zinc-900 text-white rounded-md hover:bg-zinc-800 transition-colors"
+        disabled={isLoading}
+      >
+        Back
+      </button>
     </div>
   );
 };

@@ -29,8 +29,16 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocationOptimizer } from '@hooks/useLocationOptimizer';
-import { Region, TimeSlot } from '@types';
-import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
+import ConsolidatedErrorBoundary from '../ConsolidatedErrorBoundary';
+
+// TODO: Update these types once they are implemented as per SCHEDULE_STEP_INTEGRATION_PLAN
+type Region = string; // Placeholder, update when actual Region type is defined
+interface TimeSlot { // Based on BookingSlot in the integration plan
+  startTime: Date;
+  endTime: Date;
+  isAvailable: boolean;
+  isPeakHour: boolean;
+}
 
 interface OptimizedLocationProviderProps {
   address: string;
@@ -112,9 +120,9 @@ export function OptimizedLocationProvider({
   }, []);
 
   return (
-    <EnhancedErrorBoundary>
+    <ConsolidatedErrorBoundary useEnhancedFeatures={true}>
       {state && typeof children === 'function' && children(state)}
       {state && typeof children === 'function' ? children(state) : null}
-    </EnhancedErrorBoundary>
+    </ConsolidatedErrorBoundary>
   );
 }

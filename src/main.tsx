@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistGate } from 'redux-persist/integration/react';
-import ErrorBoundary from './components/error-boundary/ErrorBoundary';
+import ConsolidatedErrorBoundary from './components/ConsolidatedErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { store, persistor } from './store/store';
 import RouterComponent from './router';
@@ -43,13 +43,13 @@ const ErrorFallback = () => (
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <ErrorBoundary fallback={<ErrorFallback />}>
+    <ConsolidatedErrorBoundary fallback={<ErrorFallback />} useEnhancedFeatures={true}>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <PersistGate loading={<LoadingScreen />} persistor={persistor}>
             <Suspense fallback={<LoadingScreen />}>
               <RouterComponent />
-              <Toaster 
+              <Toaster
                 position="top-center"
                 theme="dark"
                 expand={true}
@@ -68,6 +68,6 @@ ReactDOM.createRoot(rootElement).render(
           </PersistGate>
         </QueryClientProvider>
       </Provider>
-    </ErrorBoundary>
+    </ConsolidatedErrorBoundary>
   </React.StrictMode>
 );
