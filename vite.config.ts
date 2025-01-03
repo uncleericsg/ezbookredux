@@ -18,31 +18,47 @@ export default defineConfig({
       'redux-persist',
       'framer-motion',
       '@tanstack/react-query'
-    ]
+    ],
+    esbuildOptions: {
+      target: 'es2020'
+    }
   },
   build: {
     sourcemap: true,
+    target: 'es2020',
     rollupOptions: {
       cache: true,
       output: {
         manualChunks(id) {
           // Core Framework
-          if (id.includes('node_modules/react')) return 'vendor-react';
-          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
           
-          // State Management
-          if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack';
+          // Tanstack/React Query
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'vendor-tanstack';
+          }
           
           // UI Libraries
-          if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
-          if (id.includes('node_modules/@headlessui')) return 'vendor-headlessui';
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix';
+          }
+          if (id.includes('node_modules/@headlessui')) {
+            return 'vendor-headlessui';
+          }
           
           // Utilities
           if (id.includes('node_modules/lodash') || 
-              id.includes('node_modules/date-fns')) return 'vendor-utils';
-              
+              id.includes('node_modules/date-fns')) {
+            return 'vendor-utils';
+          }
+          
           // Payment
-          if (id.includes('node_modules/@stripe')) return 'vendor-stripe';
+          if (id.includes('node_modules/@stripe')) {
+            return 'vendor-stripe';
+          }
           
           // Project Components
           if (id.includes('src/components/ui')) return 'ui-components';
@@ -51,10 +67,14 @@ export default defineConfig({
           if (id.includes('src/components/admin')) return 'admin-components';
           
           // Data Layer
-          if (id.includes('src/api') || id.includes('src/services')) return 'data-layer';
+          if (id.includes('src/api') || id.includes('src/services')) {
+            return 'data-layer';
+          }
           
           // Default vendor chunk
-          if (id.includes('node_modules')) return 'vendor';
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     }
