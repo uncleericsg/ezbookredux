@@ -23,40 +23,57 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: 'esnext',
+    modulePreload: {
+      polyfill: true
+    },
+    commonjsOptions: {
+      include: [
+        /node_modules/,
+        /\@tanstack\/react-query/
+      ]
+    },
     rollupOptions: {
       external: [],
       output: {
         manualChunks(id) {
-          // Core Framework
-          if (id.includes('node_modules/react')) return 'vendor-react';
-          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
-          
-          // State Management
-          if (id.includes('node_modules/@tanstack/react-query')) return 'vendor-react-query';
-          if (id.includes('node_modules/@tanstack/query-core')) return 'vendor-react-query';
-          
-          // UI Libraries
-          if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
-          if (id.includes('node_modules/@headlessui')) return 'vendor-headlessui';
-          
-          // Utilities
+          if (id.includes('node_modules/react')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@tanstack/react-query') || 
+              id.includes('node_modules/@tanstack/query-core')) {
+            return 'vendor-react-query';
+          }
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix';
+          }
+          if (id.includes('node_modules/@headlessui')) {
+            return 'vendor-headlessui';
+          }
           if (id.includes('node_modules/lodash') || 
-              id.includes('node_modules/date-fns')) return 'vendor-utils';
-              
-          // Payment
-          if (id.includes('node_modules/@stripe')) return 'vendor-stripe';
-          
-          // Project Components
-          if (id.includes('src/components/ui')) return 'ui-components';
-          if (id.includes('src/components/common')) return 'common-components';
-          if (id.includes('src/components/booking')) return 'booking-components';
-          if (id.includes('src/components/admin')) return 'admin-components';
-          
-          // Data Layer
-          if (id.includes('src/api') || id.includes('src/services')) return 'data-layer';
-          
-          // Default vendor chunk
-          if (id.includes('node_modules')) return 'vendor';
+              id.includes('node_modules/date-fns')) {
+            return 'vendor-utils';
+          }
+          if (id.includes('node_modules/@stripe')) {
+            return 'vendor-stripe';
+          }
+          if (id.includes('src/components/ui')) {
+            return 'ui-components';
+          }
+          if (id.includes('src/components/common')) {
+            return 'common-components';
+          }
+          if (id.includes('src/components/booking')) {
+            return 'booking-components';
+          }
+          if (id.includes('src/components/admin')) {
+            return 'admin-components';
+          }
+          if (id.includes('src/api') || id.includes('src/services')) {
+            return 'data-layer';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     }

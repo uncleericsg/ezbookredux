@@ -12,26 +12,34 @@ import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'sonner';
 import './index.css';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
+// Ensure React is initialized before creating QueryClient
+const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [queryClient] = React.useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: 1,
+      },
     },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
       <EnhancedErrorBoundary>
         <Provider store={store}>
           <PersistGate loading={<LoadingScreen />} persistor={persistor}>
@@ -56,6 +64,6 @@ ReactDOM.createRoot(rootElement).render(
           </PersistGate>
         </Provider>
       </EnhancedErrorBoundary>
-    </QueryClientProvider>
+    </AppProviders>
   </React.StrictMode>
 );
