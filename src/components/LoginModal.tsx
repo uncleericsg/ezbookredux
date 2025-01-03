@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
-import { setAuthenticated, setToken } from '@store/slices/authSlice';
-import { setUser } from '@store/slices/userSlice';
-import { setIsAdmin } from '@store/slices/adminSlice';
-import { OTPInput } from '@components/common/OTPInput';
+import { setAuthenticated, setToken } from '../store/slices/authSlice';
+import { setUser } from '../store/slices/userSlice';
+import { setIsAdmin } from '../store/slices/adminSlice';
+import { OTPInput } from './common/OTPInput';
 import { FiX, FiPhone } from 'react-icons/fi';
+import type { MembershipTier } from '../types/user';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -19,12 +20,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('91874498'); // Default to admin number
 
   useEffect(() => {
     if (!isOpen) {
       setShowOtpInput(false);
-      setPhoneNumber('');
+      setPhoneNumber('91874498'); // Reset to admin number
       setIsLoading(false);
     }
   }, [isOpen]);
@@ -45,16 +46,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true);
       
-      // Check if admin number
-      const isAdmin = phoneNumber === '91874498';
-      
-      // Mock user data
+      // Mock user data (always admin)
       const mockUser = {
-        id: isAdmin ? 'admin-1' : '1',
+        id: 'admin-1',
         phone: phoneNumber,
-        role: isAdmin ? 'admin' : 'user',
-        email: isAdmin ? 'admin@admin.com' : 'test@example.com',
-        firstName: isAdmin ? 'Admin' : 'Test',
+        membershipTier: 'AMC' as MembershipTier,
+        email: 'admin@admin.com',
+        firstName: 'Admin',
         lastName: 'User',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -70,11 +68,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       dispatch(setToken(mockToken));
       dispatch(setUser(mockUser));
       dispatch(setAuthenticated(true));
-      
-      // Set admin state if admin user
-      if (isAdmin) {
-        dispatch(setIsAdmin(true));
-      }
+      dispatch(setIsAdmin(true));
 
       // Close modal and navigate
       onClose();
@@ -146,7 +140,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       disabled={isLoading}
                     />
                     <div className="mt-2 text-sm text-gray-500">
-                      For testing, use: 91874498 (Admin)
+                      Admin login: 91874498
                     </div>
                   </div>
                   <button

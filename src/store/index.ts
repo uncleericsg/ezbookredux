@@ -1,21 +1,10 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { store } from './store';
+import type { RootState, AppDispatch } from './store';
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux';
+import { RESET_STORE, resetStore } from './rootReducer';
 
-import rootReducer from './rootReducer';
-
-const store = configureStore({
-  reducer: rootReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
-});
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useAppDispatch = () => useDispatch<AppDispatch>();
-export { resetStore, RESET_STORE } from './rootReducer';
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
-export { store as default, store };
+export { store, RESET_STORE, resetStore };
+export type { RootState, AppDispatch };

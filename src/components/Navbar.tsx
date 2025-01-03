@@ -1,26 +1,20 @@
-// @ai-doc Navigation component with authentication controls
-// @ai-doc CRITICAL: This component handles the main navigation and logout flow
-// @ai-doc DO NOT modify the authentication and navigation logic
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, User, Shield, Settings, LogOut, LogIn } from 'lucide-react';
 import NotificationBadge from './NotificationBadge';
 import GuestNotificationModal from './GuestNotificationModal';
 import LoginModal from './LoginModal';
-import { useAppDispatch, useAppSelector } from '@store';
-import { setUser } from '@store/slices/userSlice';
-import { clearAuth, setAuthenticated, setToken } from '@store/slices/authSlice';
-import { resetAdmin } from '@store/slices/adminSlice';
-import { useNotifications } from '@hooks/useNotifications';
+import { useAppDispatch, useAppSelector, type RootState } from '../store';
+import { setUser } from '../store/slices/userSlice';
+import { clearAuth, setAuthenticated, setToken } from '../store/slices/authSlice';
+import { resetAdmin } from '../store/slices/adminSlice';
+import { useNotifications } from '../hooks/useNotifications';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { RESET_STORE } from '@store';
+import { RESET_STORE } from '../store';
 
-// @ai-doc Main navigation component
-// @ai-doc Handles user navigation and authentication state
 const Navbar: React.FC = () => {
-  const { currentUser } = useAppSelector((state) => state.user);
+  const { currentUser } = useAppSelector((state: RootState) => state.user);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
@@ -29,21 +23,22 @@ const Navbar: React.FC = () => {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // @ai-doc Logout handler - DO NOT modify the logout flow
   const handleLogout = async () => {
     try {
-      // First clear user data and auth state
+      // Show success message first
+      toast.success('Logged out successfully');
+      
+      // Then clear the state
       dispatch(setUser(null));
       dispatch(clearAuth());
       dispatch(setAuthenticated(false));
       dispatch(setToken(null));
-      // Reset admin state
       dispatch(resetAdmin());
-      // Reset entire store
-      dispatch({ type: RESET_STORE });
-      // Show success message
-      toast.success('Logged out successfully');
-      // No redirection - stay on current page
+      
+      // Reset entire store last
+      setTimeout(() => {
+        dispatch({ type: RESET_STORE });
+      }, 100);
     } catch (error) {
       toast.error('Failed to logout');
     }

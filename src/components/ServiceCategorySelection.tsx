@@ -60,7 +60,6 @@ const ServiceCategorySelection: React.FC = () => {
   const [shuffledTestimonials, setShuffledTestimonials] = useState<Testimonial[]>([]);
   const location = useLocation();
 
-
   // Memoize categories as per enhancement plan
   const categories = useMemo(() => {
     const baseCategories: ServiceCategory[] = [

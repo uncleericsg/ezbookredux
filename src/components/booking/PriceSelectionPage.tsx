@@ -42,7 +42,6 @@ const PriceSelectionPage: React.FC = () => {
   const isLoading = isServicesLoading || isPremiumLoading;
 
   const handleServiceSelect = (service: typeof services[0]) => {
-    // Handle special redirection cases
     if (service.id === "powerjet-chemical") {
       navigate(ROUTES.BOOKING.POWERJET_CHEMICAL);
       window.scrollTo(0, 0);
@@ -54,7 +53,6 @@ const PriceSelectionPage: React.FC = () => {
       return;
     }
 
-    // Handle regular services
     navigate(ROUTES.BOOKING.FIRST_TIME, {
       state: {
         selectedService: service,
@@ -124,7 +122,8 @@ const PriceSelectionPage: React.FC = () => {
           <motion.h1
             className={styles.pageTitle}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             First Time Customer Offer
@@ -132,7 +131,8 @@ const PriceSelectionPage: React.FC = () => {
           <motion.p
             className={styles.pageSubtitle}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             For HDB & Condo only
@@ -165,7 +165,8 @@ const PriceSelectionPage: React.FC = () => {
           <motion.h2
             className={styles.sectionTitle}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             Premium Services
@@ -173,7 +174,8 @@ const PriceSelectionPage: React.FC = () => {
           <motion.p
             className={styles.sectionSubtitle}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             Professional Powerjet Wash & Specialized Services
@@ -202,4 +204,3 @@ const PriceSelectionPage: React.FC = () => {
 };
 
 export default PriceSelectionPage;
-

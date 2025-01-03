@@ -61,7 +61,7 @@
       "@services/*": ["src/services/*"],
       "@slices/*": ["src/store/slices/*"],
       "@snapshots/*": ["src/snapshots/*"],
-      "@store/*": ["src/store/*"],
+      "@store": ["src/store"],
       "@styles/*": ["src/styles/*"],
       "@teams/*": ["src/services/teams/*"],
       "@tech/*": ["src/components/tech/*"],
