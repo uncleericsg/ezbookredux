@@ -18,6 +18,10 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
@@ -27,10 +31,10 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <EnhancedErrorBoundary>
-      <Provider store={store}>
-        <PersistGate loading={<LoadingScreen />} persistor={persistor}>
-          <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <EnhancedErrorBoundary>
+        <Provider store={store}>
+          <PersistGate loading={<LoadingScreen />} persistor={persistor}>
             <Suspense fallback={<LoadingScreen />}>
               <RouterComponent />
               <Toaster 
@@ -49,9 +53,9 @@ ReactDOM.createRoot(rootElement).render(
               <SpeedInsights />
               <Analytics />
             </Suspense>
-          </QueryClientProvider>
-        </PersistGate>
-      </Provider>
-    </EnhancedErrorBoundary>
+          </PersistGate>
+        </Provider>
+      </EnhancedErrorBoundary>
+    </QueryClientProvider>
   </React.StrictMode>
 );

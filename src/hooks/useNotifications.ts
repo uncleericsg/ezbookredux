@@ -3,13 +3,14 @@ import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fetchNotifications, markNotificationAsRead } from '../services/notifications';
-import type { Notification } from '../services/notifications';
+import type { Notification } from '../types';
 import { useAppSelector } from '../store';
 
 // Mock notifications data with actionUrls
-const MOCK_NOTIFICATIONS = [
+const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
+    userId: '1',
     type: 'appointment_confirmation',
     title: 'Upcoming Appointment',
     message: 'Your aircon service appointment is scheduled for tomorrow at 2:00 PM',
@@ -20,6 +21,7 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: '2',
+    userId: '1',
     type: 'amc_expiry',
     title: 'AMC Package Expiring Soon',
     message: 'Your AMC package will expire in 30 days. Renew now to continue enjoying premium benefits.',
@@ -30,6 +32,7 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: '3',
+    userId: '1',
     type: 'service_reminder',
     title: 'Service Due',
     message: 'It\'s time for your regular aircon maintenance. Book a service now.',
@@ -47,7 +50,7 @@ export const useNotifications = () => {
   // For now, always return mock notifications
   const { data: notifications = MOCK_NOTIFICATIONS, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
-    queryFn: () => fetchNotifications(user?.id),
+    queryFn: () => fetchNotifications(user?.id || ''),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -55,13 +58,15 @@ export const useNotifications = () => {
   const markAsReadMutation = useMutation({
     mutationFn: markNotificationAsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['notifications', user?.id]
+      });
     },
   });
 
   const handleMarkAsRead = useCallback((notificationId: string) => {
     if (!user?.id) return;
-    markAsReadMutation.mutate({ userId: user.id, notificationId });
+    markAsReadMutation.mutate(notificationId);
   }, [user?.id, markAsReadMutation]);
 
   const unreadCount = useMemo(() => {
