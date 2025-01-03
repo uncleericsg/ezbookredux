@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, MessageCircle, User, LayoutDashboard, ArrowUp } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '@store/hooks';
-import { RootState } from '@store/store';
+import { useAppSelector } from '../store';
+import type { RootState } from '../store';
 import type { UserProfile } from '../types/user';
 
 interface FloatingButtonsProps {
@@ -90,69 +90,101 @@ const FloatingButtons: React.FC<FloatingButtonsProps> = ({ showAuthButtons = tru
       style={{ pointerEvents: showButtons ? 'auto' : 'none' }}
     >
       {/* WhatsApp */}
-      <motion.a
-        href="https://wa.me/+6591234567"
-        target="_blank"
-        rel="noopener noreferrer"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20"
-        title="Chat with us on WhatsApp"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 fill-current">
-          <path d="M17.507 14.307l-.009.075c-2.199-1.096-2.429-1.242-2.713-.816-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.173-.3-.019-.463.13-.606.134-.125.3-.326.45-.489.146-.157.195-.262.295-.432.098-.172.05-.32-.025-.449-.075-.125-.658-1.58-.9-2.162-.24-.578-.487-.5-.658-.51-.168-.008-.363-.008-.558-.008a1.03 1.03 0 00-.747.355c-.258.273-.99.967-.99 2.355 0 1.387 1.01 2.732 1.15 2.92.14.187 1.984 3.028 4.804 4.132 2.82 1.105 2.82.74 3.328.693.51-.05 1.655-.678 1.887-1.33.232-.653.232-1.21.162-1.33-.07-.12-.27-.192-.57-.342z"/>
-          <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .06 5.387.052 11.971c-.004 2.096.546 4.142 1.606 5.945L0 24l6.335-1.652c1.746.95 3.72 1.444 5.71 1.447h.005c6.585 0 11.99-5.387 12-12 .004-3.176-1.238-6.165-3.53-8.346zM12.047 21.781c-1.774 0-3.51-.48-5.03-1.385l-.36-.214-3.75.975.996-3.645-.235-.374c-.926-1.48-1.42-3.18-1.416-4.93.008-5.762 4.697-10.45 10.465-10.45 2.8 0 5.445 1.09 7.405 3.07 1.96 1.98 3.04 4.61 3.035 7.43-.01 5.76-4.7 10.44-10.47 10.44z"/>
-        </svg>
-      </motion.a>
+      <div className="group relative">
+        <motion.a
+          href="https://wa.me/+6591234567"
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20 block"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 fill-current">
+            <path d="M17.507 14.307l-.009.075c-2.199-1.096-2.429-1.242-2.713-.816-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.173-.3-.019-.463.13-.606.134-.125.3-.326.45-.489.146-.157.195-.262.295-.432.098-.172.05-.32-.025-.449-.075-.125-.658-1.58-.9-2.162-.24-.578-.487-.5-.658-.51-.168-.008-.363-.008-.558-.008a1.03 1.03 0 00-.747.355c-.258.273-.99.967-.99 2.355 0 1.387 1.01 2.732 1.15 2.92.14.187 1.984 3.028 4.804 4.132 2.82 1.105 2.82.74 3.328.693.51-.05 1.655-.678 1.887-1.33.232-.653.232-1.21.162-1.33-.07-.12-.27-.192-.57-.342z"/>
+            <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .06 5.387.052 11.971c-.004 2.096.546 4.142 1.606 5.945L0 24l6.335-1.652c1.746.95 3.72 1.444 5.71 1.447h.005c6.585 0 11.99-5.387 12-12 .004-3.176-1.238-6.165-3.53-8.346zM12.047 21.781c-1.774 0-3.51-.48-5.03-1.385l-.36-.214-3.75.975.996-3.645-.235-.374c-.926-1.48-1.42-3.18-1.416-4.93.008-5.762 4.697-10.45 10.465-10.45 2.8 0 5.445 1.09 7.405 3.07 1.96 1.98 3.04 4.61 3.035 7.43-.01 5.76-4.7 10.44-10.47 10.44z"/>
+          </svg>
+        </motion.a>
+        <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+          <div className="bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg whitespace-nowrap">
+            Chat with us on WhatsApp
+          </div>
+        </div>
+      </div>
 
       {/* Phone */}
-      <motion.a
-        href="tel:+6591234567"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20"
-      >
-        <Phone className="h-6 w-6" />
-      </motion.a>
+      <div className="group relative">
+        <motion.a
+          href="tel:+6591234567"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20 block"
+        >
+          <Phone className="h-6 w-6" />
+        </motion.a>
+        <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+          <div className="bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg whitespace-nowrap">
+            Call us
+          </div>
+        </div>
+      </div>
 
       {/* Only show auth buttons if shouldShowAuthButtons is true */}
       {shouldShowAuthButtons && (
         <>
-          <motion.button
-            onClick={handleProfileClick}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="bg-yellow-400 hover:bg-yellow-400/80 text-gray-900 p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-gray-900/10 hover:ring-gray-900/20"
-            title="View your profile"
-          >
-            <User className="h-6 w-6" />
-          </motion.button>
+          <div className="group relative">
+            <motion.button
+              onClick={handleProfileClick}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="bg-yellow-400 hover:bg-yellow-400/80 text-gray-900 p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-gray-900/10 hover:ring-gray-900/20 block"
+            >
+              <User className="h-6 w-6" />
+            </motion.button>
+            <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+              <div className="bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                View your profile
+              </div>
+            </div>
+          </div>
 
           {/* Admin Dashboard Button - Only show for admin users */}
           {isAdmin && (
-            <motion.button
-              onClick={() => navigate('/admin')}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20"
-              title="Admin Dashboard"
-            >
-              <LayoutDashboard className="h-6 w-6" />
-            </motion.button>
+            <div className="group relative">
+              <motion.button
+                onClick={() => navigate('/admin')}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20 block"
+              >
+                <LayoutDashboard className="h-6 w-6" />
+              </motion.button>
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+                <div className="bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                  Admin Dashboard
+                </div>
+              </div>
+            </div>
           )}
         </>
       )}
 
       {/* Scroll to top button */}
       {showScrollTop && (
-        <motion.button
-          onClick={scrollToTop}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20"
-        >
-          <ArrowUp className="h-6 w-6" />
-        </motion.button>
+        <div className="group relative">
+          <motion.button
+            onClick={scrollToTop}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 ring-2 ring-white/10 hover:ring-white/20 block"
+          >
+            <ArrowUp className="h-6 w-6" />
+          </motion.button>
+          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
+            <div className="bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg whitespace-nowrap">
+              Scroll to top
+            </div>
+          </div>
+        </div>
       )}
     </motion.div>
   );

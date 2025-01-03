@@ -1,5 +1,3 @@
-// @ts-nocheck
- 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
@@ -11,12 +9,10 @@ interface User {
 
 interface UserState {
   currentUser: User | null;
-  isAuthenticated: boolean;
 }
 
 const initialState: UserState = {
   currentUser: null,
-  isAuthenticated: false,
 };
 
 const userSlice = createSlice({
@@ -25,7 +21,6 @@ const userSlice = createSlice({
   reducers: {
     setCurrentUser(state, action: PayloadAction<User | null>) {
       state.currentUser = action.payload;
-      state.isAuthenticated = !!action.payload;
     },
   },
 });
