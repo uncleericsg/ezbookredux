@@ -13,6 +13,11 @@ BUNDLER=vite
 NODE_VERSION=">=18"
 PACKAGE_MANAGER=npm
 
+# Database Configuration
+DATABASE_TYPE=supabase
+ORM=prisma
+SCHEMA_PATH="prisma/schema.prisma"
+
 # Command Execution
 # On Windows, use separate commands instead of &&
 # Example:
@@ -51,3 +56,34 @@ CORE_DEPENDENCIES=(
   "@radix-ui/react-toast"
   "@radix-ui/react-tooltip"
 )
+
+# Development Tools
+TOOLS=(
+  "eslint"
+  "typescript"
+  "vitest"
+  "prettier"
+)
+
+# Project Structure
+MAIN_DIRECTORIES=(
+  "src/"
+  "public/"
+  "prisma/"
+  "migrations/"
+  "scripts/"
+  "docs/"
+  "server/"
+  "supabase/"
+  "tools/"
+)
+
+# Testing Configuration
+TEST_FRAMEWORK=vitest
+TEST_CONFIG_FILE="vitest.config.ts"
+
+# Build Configuration
+TYPESCRIPT_CONFIG="tsconfig.json"
+VITE_CONFIG="vite.config.ts"
+POSTCSS_CONFIG="postcss.config.js"
+TAILWIND_CONFIG="tailwind.config.ts"

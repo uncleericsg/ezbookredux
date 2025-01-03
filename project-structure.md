@@ -33,6 +33,24 @@
   - `technicianSlice.ts`: Technician management
   - `userSlice.ts`: User profile state
 
+## Database Integration
+
+### Prisma ORM
+- `prisma/`
+  - `schema.prisma`: Database schema definition
+  - Models for users, bookings, services, and AMC packages
+
+### Supabase Integration
+- `supabase/`
+  - `config.toml`: Supabase configuration
+  - `migrations/`: Database migrations
+
+### Migrations
+- `migrations/`
+  - SQL migration files for schema changes
+  - Migration metadata and journals
+  - Service and payment table migrations
+
 ## Routing System
 
 ### Main Router
@@ -91,29 +109,59 @@
   - User profile components
   - Notification system
   - Admin management components
+  - AMC management components:
+    - AMCManagement.tsx
+    - AMCPackageCard.tsx
+    - AMCRenewal.tsx
+    - AMCRenewalModal.tsx
+    - AMCSignup.tsx
+    - AMCStatusCard.tsx
+
+## Server Structure
+
+### API Server
+- `server/`
+  - Express.js server configuration
+  - API route handlers
+  - Middleware implementations
+  - Integration with Stripe for payments
 
 ## Configuration Files
 
 ### Build Configuration
 - `vite.config.ts`: Vite build configuration
 - `tsconfig.*.json`: TypeScript configurations
+  - Base configuration
+  - App-specific config
+  - Test config
+  - Node config
 - `tailwind.config.ts`: Tailwind CSS configuration
+- `postcss.config.js`: PostCSS configuration
+- `eslint.config.js`: ESLint configuration
 
 ### Environment Configuration
 - `.env`: Environment variables
 - `.env.example`: Environment variable template
+- `.cascade-config.json`: Project-specific configurations
 
 ## Development Tools
 
 ### Testing
 - `vitest.config.ts`: Test configuration
 - Type tests in `src/store/types/__tests__/`
+- Integration tests for components
 
 ### Scripts
 - Various utility scripts in `scripts/` directory
   - State analysis
   - Backup creation
   - Code fixes and migrations
+  - Migration tools:
+    - Component categorization
+    - Dependency analysis
+    - Import verification
+    - Route analysis
+    - Path updates
 
 ## Documentation
 
@@ -121,6 +169,8 @@
 - `docs/`: Contains project documentation
   - Integration plans
   - Setup references
+  - Service categorization
+  - Deployment guides
   - Archived documentation
 
 ### Code Documentation
@@ -135,7 +185,15 @@
   - Images
   - Fonts
   - Icons
+  - Payment method logos
   - Manifest files
+  - Service worker for PWA support
 
 ### Certificates
 - SSL certificates for local development
+- Production certificates
+
+## Tools
+- `tools/`: Contains utility executables
+  - Stripe CLI tool
+  - Search utilities
