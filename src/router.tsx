@@ -69,26 +69,25 @@ const RouterComponent = () => {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="*" element={logRoute(window.location.pathname)} />
-            {/* Routes WITH Layout */}
             <Route element={<Layout />}>
+              {/* Routes WITH Layout */}
               <Route index element={<ServiceCategorySelection />} />
               <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
               <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              
+              {/* Booking Routes */}
+              <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
+              <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
+              <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
+              <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
+              <Route path={ROUTES.BOOKING.POWERJET_CHEMICAL} element={<PowerJetChemWashHome />} />
+              <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
+              <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
+              <Route path="/booking/gas-check-leak" element={<GasCheckLeakage />} />
             </Route>
 
             {/* Routes WITHOUT Layout */}
             <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
-            <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
-            <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
-            <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
-            <Route
-              path={ROUTES.BOOKING.POWERJET_CHEMICAL}
-              element={<PowerJetChemWashHome />}
-            />
-            <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
-            <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
-            <Route path="/booking/gas-check-leak" element={<PublicRoute><GasCheckLeakage /></PublicRoute>} />
 
             {/* Admin Routes - All WITHOUT Layout */}
             <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />

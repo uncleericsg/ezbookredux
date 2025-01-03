@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, CheckCircle, Flame, AlertTriangle, Clock, Star, Droplet } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
+import { ROUTES } from '@config/routes';
 
 interface ServiceCard {
   id: string;
@@ -56,9 +57,15 @@ const GasCheckLeakage: React.FC = () => {
     }
   }, [autoFocus]);
 
-  const handleSelectService = () => {
-    console.log('[GasCheckLeakage] Navigating to confirmation page');
-    navigate('/booking/confirmation');
+  const handleSelectService = (service: ServiceCard) => {
+    console.log('[GasCheckLeakage] Navigating to confirmation page with service:', service);
+    navigate(ROUTES.BOOKING.CONFIRMATION.replace(':bookingId', ''), {
+      state: {
+        selectedService: service,
+        from: '/booking/gas-check-leak',
+        timestamp: Date.now()
+      }
+    });
   };
 
   return (

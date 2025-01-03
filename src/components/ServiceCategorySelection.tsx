@@ -12,8 +12,8 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useServiceHistory } from '@hooks/useServiceHistory';
 import { useServiceRating } from '@hooks/useServiceRating';
 
-import { useAppSelector } from '@store/hooks';
-import { type RootState } from '@store/store';
+import { useAppSelector } from '../store/hooks';
+import { type RootState } from '../store/store';
 
 import ServiceCategoryCard from './ServiceCategoryCard';
 
@@ -48,13 +48,11 @@ interface NavigationState {
 }
 
 const ServiceCategorySelection: React.FC = () => {
-  console.log('ServiceCategorySelection component mounted');
   const navigate = useNavigate();
   const { currentUser } = useAppSelector((state: RootState) => state.user);
-  console.log('Current user:', currentUser);
   const { visits } = useServiceHistory(currentUser?.id || '');
   const isAmcCustomer = currentUser?.amcStatus === 'active';
-  console.log('AMC customer status:', isAmcCustomer);
+  const { submitRating } = useServiceRating();
   const [showRating, setShowRating] = useState(false);
   const shouldReduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [shuffledTestimonials, setShuffledTestimonials] = useState<Testimonial[]>([]);
@@ -133,54 +131,54 @@ const ServiceCategorySelection: React.FC = () => {
     setShowRating(true);
   };
 
-  const handleRatingSubmit = async (rating: number, feedback?: string) => {
-    const { submitRating } = useServiceRating();
+  const handleRatingSubmit = useCallback(async (rating: number, feedback?: string) => {
     await submitRating('latest-service', rating, feedback);
     setShowRating(false);
-  };
+  }, [submitRating]);
+
+  const shuffleArray = useCallback((array: Testimonial[]): Testimonial[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }, []);
+
+  const testimonials = useMemo((): Testimonial[] => [
+    {
+      id: 1,
+      name: 'Sarah Chen',
+      rating: 5,
+      text: 'Excellent service! The technician was professional and thorough.',
+      date: '2 weeks ago'
+    },
+    {
+      id: 2,
+      name: 'Michael Tan',
+      rating: 5,
+      text: 'Very satisfied with the chemical wash service. Highly recommended!',
+      date: '1 month ago'
+    },
+    {
+      id: 3,
+      name: 'David Lim',
+      rating: 5,
+      text: 'The AMC service is worth every penny. Regular maintenance keeps my aircon running perfectly.',
+      date: '3 weeks ago'
+    },
+    {
+      id: 4,
+      name: 'Jessica Wong',
+      rating: 5,
+      text: 'Quick response time and great attention to detail. My go-to aircon service!',
+      date: '2 days ago'
+    }
+  ], []);
 
   useEffect(() => {
-    const shuffleArray = (array: Testimonial[]): Testimonial[] => {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    };
-
-    const testimonials: Testimonial[] = [
-      {
-        id: 1,
-        name: 'Sarah Chen',
-        rating: 5,
-        text: 'Excellent service! The technician was professional and thorough.',
-        date: '2 weeks ago'
-      },
-      {
-        id: 2,
-        name: 'Michael Tan',
-        rating: 5,
-        text: 'Very satisfied with the chemical wash service. Highly recommended!',
-        date: '1 month ago'
-      },
-      {
-        id: 3,
-        name: 'David Lim',
-        rating: 5,
-        text: 'The AMC service is worth every penny. Regular maintenance keeps my aircon running perfectly.',
-        date: '3 weeks ago'
-      },
-      {
-        id: 4,
-        name: 'Jessica Wong',
-        rating: 5,
-        text: 'Quick response time and great attention to detail. My go-to aircon service!',
-        date: '2 days ago'
-      }
-    ];
-
     setShuffledTestimonials(shuffleArray(testimonials));
-  }, []);
+  }, [shuffleArray, testimonials]);
 
   useEffect(() => {
     return () => {
@@ -380,7 +378,6 @@ const ServiceCategorySelection: React.FC = () => {
                 }}
               >
                 {[...shuffledTestimonials, ...shuffledTestimonials, ...shuffledTestimonials].map((testimonial, index) => (
-                  console.log('Rendering testimonial:', testimonial.id),
                   <motion.div
                     key={`${testimonial.id}-${index}`}
                     className="w-full min-w-[280px] md:w-[320px] lg:w-[300px] px-2 py-2"

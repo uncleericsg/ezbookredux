@@ -32,7 +32,17 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const messaging = getMessaging(app);
+import { type Messaging } from 'firebase/messaging';
+
+export let messaging: Messaging | undefined;
+try {
+  // Only initialize messaging if the browser supports it
+  if ('serviceWorker' in navigator && 'Notification' in window) {
+    messaging = getMessaging(app);
+  }
+} catch (error) {
+  console.log('Firebase messaging not supported in this environment');
+}
 
 // Set persistence to LOCAL
 setPersistence(auth, browserLocalPersistence)
@@ -40,9 +50,11 @@ setPersistence(auth, browserLocalPersistence)
     console.error('Error setting auth persistence:', error);
   });
 
-export default {
+const firebase = {
   app,
   auth,
   db,
-  messaging
+  messaging: messaging || null
 };
+
+export default firebase;
