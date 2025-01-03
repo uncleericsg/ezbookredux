@@ -22,39 +22,36 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    target: 'es2020',
     rollupOptions: {
-      cache: true,
       output: {
-        manualChunks(id) {
-          // Core Framework
-          if (id.includes('node_modules/react')) return 'vendor-react';
-          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
+        manualChunks: {
+          // Core React
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           
           // State Management
-          if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack';
+          'react-query': ['@tanstack/react-query'],
+          'redux': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
           
           // UI Libraries
-          if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
-          if (id.includes('node_modules/@headlessui')) return 'vendor-headlessui';
+          'ui-libs': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-label',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+            '@headlessui/react'
+          ],
           
-          // Utilities
-          if (id.includes('node_modules/lodash') || 
-              id.includes('node_modules/date-fns')) return 'vendor-utils';
+          // Animation and Utils
+          'animation': ['framer-motion'],
+          'utils': ['date-fns', 'axios', 'zod'],
           
           // Payment
-          if (id.includes('node_modules/@stripe')) return 'vendor-stripe';
+          'payment': ['@stripe/react-stripe-js', '@stripe/stripe-js'],
           
-          // Project Components
-          if (id.includes('src/components/ui')) return 'ui-components';
-          if (id.includes('src/components/common')) return 'common-components';
-          if (id.includes('src/components/booking')) return 'booking-components';
-          if (id.includes('src/components/admin')) return 'admin-components';
-          
-          // Data Layer
-          if (id.includes('src/api') || id.includes('src/services')) return 'data-layer';
-          
-          // Default vendor chunk
-          if (id.includes('node_modules')) return 'vendor';
+          // Analytics
+          'analytics': ['@vercel/analytics', '@vercel/speed-insights']
         }
       }
     }

@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistGate } from 'redux-persist/integration/react';
-import EnhancedErrorBoundary from './components/EnhancedErrorBoundary';
+import ErrorBoundary from './components/error-boundary/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { store, persistor } from './store/store';
 import RouterComponent from './router';
@@ -12,15 +12,11 @@ import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'sonner';
 import './index.css';
 
-// Create a client
+// Match the working version's QueryClient config
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false
-    },
-    mutations: {
       retry: 1
     }
   }
@@ -29,12 +25,28 @@ const queryClient = new QueryClient({
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
+// Default error fallback UI
+const ErrorFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div className="text-center">
+      <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+      <p className="text-gray-400 mb-4">Please refresh the page to try again.</p>
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Refresh Page
+      </button>
+    </div>
+  </div>
+);
+
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <EnhancedErrorBoundary>
+    <ErrorBoundary fallback={<ErrorFallback />}>
       <Provider store={store}>
-        <PersistGate loading={<LoadingScreen />} persistor={persistor}>
-          <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <PersistGate loading={<LoadingScreen />} persistor={persistor}>
             <Suspense fallback={<LoadingScreen />}>
               <RouterComponent />
               <Toaster 
@@ -53,9 +65,9 @@ ReactDOM.createRoot(rootElement).render(
               <SpeedInsights />
               <Analytics />
             </Suspense>
-          </QueryClientProvider>
-        </PersistGate>
+          </PersistGate>
+        </QueryClientProvider>
       </Provider>
-    </EnhancedErrorBoundary>
+    </ErrorBoundary>
   </React.StrictMode>
 );
