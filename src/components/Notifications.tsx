@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 const Notifications: React.FC = () => {
   const { currentUser } = useAppSelector((state) => state.user);
-  const { notifications, isLoading, markAsRead, markAllRead, deleteAll } = useNotifications();
+  const { notifications, isLoading, markAsRead } = useNotifications();
 
   if (isLoading) {
     return (
@@ -24,8 +24,8 @@ const Notifications: React.FC = () => {
         <NotificationList
           notifications={notifications}
           onMarkAsRead={markAsRead}
-          onMarkAllRead={markAllRead}
-          onDeleteAll={deleteAll}
+          onMarkAllRead={() => notifications.forEach(n => !n.read && markAsRead(n.id))}
+          onDeleteAll={() => notifications.forEach(n => !n.read && markAsRead(n.id))}
           isLoading={isLoading}
         />
       ) : (

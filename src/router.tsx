@@ -6,7 +6,7 @@
 // @ai-doc 3. Public route implementation
 // @ai-doc 4. Route hierarchy
 
-import { startTransition, Suspense } from 'react';
+import { startTransition, Suspense, lazy } from 'react';
 import { 
   Navigate, 
   Routes,
@@ -14,47 +14,33 @@ import {
   BrowserRouter
 } from 'react-router-dom';
 
-
-import AdminBookings from '@admin/AdminBookings';
-import AdminDashboard from '@admin/AdminDashboard';
-import AdminSettings from '@admin/AdminSettings';
-import ServiceHub from '@admin/ServiceHub/ServiceHub';
-import UserManagement from '@admin/UserManagement';
-
-import AMCSignup from '@components/AMCSignup';
-import PowerJetChemWashHome from '@booking/PowerJetChemWashHome';
-import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
+// Core Components - Keep these eager loaded
 import Layout from '@components/Layout';
 import { LoadingScreen } from '@components/LoadingScreen';
-
-// Core Components
 import Login from '@components/Login';
 import NotFound from '@components/NotFound';
-import Notifications from '@components/Notifications';
 import ProtectedRoute from '@components/ProtectedRoute';
 import PublicRoute from '@components/PublicRoute';
 import ServiceCategorySelection from '@components/ServiceCategorySelection';
-import ServicePricingSelection from '@components/ServicePricingSelection';
-import SupabaseTest from '@components/test/SupabaseTest';
-import UserProfile from '@components/UserProfile';
 
-// Booking Components
-import BookingConfirmation from '@booking/BookingConfirmation';
-import FirstTimeBookingFlow from '@booking/FirstTimeBookingFlow';
-import PriceSelectionPage from '@booking/PriceSelectionPage';
-import ReturnCustomerBooking from '@booking/ReturnCustomerBooking';
+// Lazy load components that use React Query or are not needed immediately
+const Notifications = lazy(() => import('@components/Notifications'));
+const UserProfile = lazy(() => import('@components/UserProfile'));
+const AdminDashboard = lazy(() => import('@admin/AdminDashboard'));
+const AdminSettings = lazy(() => import('@admin/AdminSettings'));
+const ServiceHub = lazy(() => import('@admin/ServiceHub/ServiceHub'));
+const UserManagement = lazy(() => import('@admin/UserManagement'));
+const AMCSignup = lazy(() => import('@components/AMCSignup'));
+const PowerJetChemWashHome = lazy(() => import('@booking/PowerJetChemWashHome'));
+const BookingConfirmation = lazy(() => import('@booking/BookingConfirmation'));
+const FirstTimeBookingFlow = lazy(() => import('@booking/FirstTimeBookingFlow'));
+const PriceSelectionPage = lazy(() => import('@booking/PriceSelectionPage'));
+const ReturnCustomerBooking = lazy(() => import('@booking/ReturnCustomerBooking'));
+const GasCheckLeakage = lazy(() => import('./components/booking/GasCheckLeakage'));
+const ServicePricingSelection = lazy(() => import('@components/ServicePricingSelection'));
 
-// Admin Components
-
-
-// Test Components
+// Import routes configuration
 import { ROUTES } from '@config/routes';
-
-import App from './App';
-// import PriceCardsMockup from './components/mockups/PriceCards';
-// import MockHome from './components/mockups/MockHome';
-import GasCheckLeakage from './components/booking/GasCheckLeakage';
-
 
 const RouterComponent = () => {
   // Add route logging
@@ -65,48 +51,151 @@ const RouterComponent = () => {
 
   return (
     <BrowserRouter>
-      <EnhancedErrorBoundary>
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="*" element={logRoute(window.location.pathname)} />
-            <Route element={<Layout />}>
-              {/* Routes WITH Layout */}
-              <Route index element={<ServiceCategorySelection />} />
-              <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
-              <Route path={ROUTES.PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-              
-              {/* Booking Routes */}
-              <Route path={ROUTES.PRICING} element={<ServicePricingSelection />} />
-              <Route path={ROUTES.BOOKING.PRICE_SELECTION} element={<PriceSelectionPage />} />
-              <Route path={ROUTES.BOOKING.RETURN_CUSTOMER} element={<ReturnCustomerBooking />} />
-              <Route path={ROUTES.BOOKING.FIRST_TIME} element={<FirstTimeBookingFlow />} />
-              <Route path={ROUTES.BOOKING.POWERJET_CHEMICAL} element={<PowerJetChemWashHome />} />
-              <Route path={ROUTES.AMC.SIGNUP} element={<AMCSignup />} />
-              <Route path={ROUTES.BOOKING.CONFIRMATION} element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
-              <Route path="/booking/gas-check-leak" element={<GasCheckLeakage />} />
-            </Route>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="*" element={logRoute(window.location.pathname)} />
+          <Route element={<Layout />}>
+            {/* Core Routes - Eagerly Loaded */}
+            <Route index element={<ServiceCategorySelection />} />
+            
+            {/* Routes with React Query - Lazy Loaded */}
+            <Route
+              path={ROUTES.NOTIFICATIONS}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <Notifications />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.PROFILE}
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingScreen />}>
+                    <UserProfile />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Booking Routes - Lazy Loaded */}
+            <Route
+              path={ROUTES.PRICING}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <ServicePricingSelection />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.BOOKING.PRICE_SELECTION}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <PriceSelectionPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.BOOKING.RETURN_CUSTOMER}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <ReturnCustomerBooking />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.BOOKING.FIRST_TIME}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <FirstTimeBookingFlow />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.BOOKING.POWERJET_CHEMICAL}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <PowerJetChemWashHome />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.AMC.SIGNUP}
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <AMCSignup />
+                </Suspense>
+              }
+            />
+            <Route
+              path={ROUTES.BOOKING.CONFIRMATION}
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingScreen />}>
+                    <BookingConfirmation />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/booking/gas-check-leak"
+              element={
+                <Suspense fallback={<LoadingScreen />}>
+                  <GasCheckLeakage />
+                </Suspense>
+              }
+            />
+          </Route>
 
-            {/* Routes WITHOUT Layout */}
-            <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+          {/* Routes WITHOUT Layout */}
+          <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
 
-            {/* Admin Routes - All WITHOUT Layout */}
-            <Route path={ROUTES.ADMIN.DASHBOARD} element={<ProtectedRoute requiresAdmin><AdminDashboard /></ProtectedRoute>} />
-            <Route path={ROUTES.ADMIN.SERVICES} element={<ProtectedRoute requiresAdmin><ServiceHub /></ProtectedRoute>} />
-            <Route path={ROUTES.ADMIN.USERS} element={<ProtectedRoute requiresAdmin><UserManagement /></ProtectedRoute>} />
-            <Route path={ROUTES.ADMIN.SETTINGS} element={<ProtectedRoute requiresAdmin><AdminSettings /></ProtectedRoute>} />
+          {/* Admin Routes - All WITHOUT Layout */}
+          <Route
+            path={ROUTES.ADMIN.DASHBOARD}
+            element={
+              <ProtectedRoute requiresAdmin>
+                <Suspense fallback={<LoadingScreen />}>
+                  <AdminDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.ADMIN.SERVICES}
+            element={
+              <ProtectedRoute requiresAdmin>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ServiceHub />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.ADMIN.USERS}
+            element={
+              <ProtectedRoute requiresAdmin>
+                <Suspense fallback={<LoadingScreen />}>
+                  <UserManagement />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.ADMIN.SETTINGS}
+            element={
+              <ProtectedRoute requiresAdmin>
+                <Suspense fallback={<LoadingScreen />}>
+                  <AdminSettings />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Test Routes */}
-            {process.env.NODE_ENV === 'development' && (
-              <>
-                <Route path="/test/supabase" element={<SupabaseTest />} />
-              </>
-            )}
-
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </EnhancedErrorBoundary>
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 };
