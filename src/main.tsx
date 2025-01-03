@@ -12,37 +12,29 @@ import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'sonner';
 import './index.css';
 
-// Ensure React is initialized before creating QueryClient
-const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [queryClient] = React.useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
-      mutations: {
-        retry: 1,
-      },
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false
     },
-  }));
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-};
+    mutations: {
+      retry: 1
+    }
+  }
+});
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <AppProviders>
-      <EnhancedErrorBoundary>
-        <Provider store={store}>
-          <PersistGate loading={<LoadingScreen />} persistor={persistor}>
+    <EnhancedErrorBoundary>
+      <Provider store={store}>
+        <PersistGate loading={<LoadingScreen />} persistor={persistor}>
+          <QueryClientProvider client={queryClient}>
             <Suspense fallback={<LoadingScreen />}>
               <RouterComponent />
               <Toaster 
@@ -61,9 +53,9 @@ ReactDOM.createRoot(rootElement).render(
               <SpeedInsights />
               <Analytics />
             </Suspense>
-          </PersistGate>
-        </Provider>
-      </EnhancedErrorBoundary>
-    </AppProviders>
+          </QueryClientProvider>
+        </PersistGate>
+      </Provider>
+    </EnhancedErrorBoundary>
   </React.StrictMode>
 );
