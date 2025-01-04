@@ -1,14 +1,63 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { FiMapPin, FiHome, FiHash } from 'react-icons/fi';
 import type { AddressSectionProps } from '../types';
+import { useAddressAutocomplete } from '../hooks/useAddressAutocomplete';
 
 const AddressSection: React.FC<AddressSectionProps> = ({
   formData,
   validation,
-  isGoogleMapsLoaded,
   onInputChange,
   onBlur
 }) => {
+  const unitInputRef = useRef<HTMLInputElement>(null);
+  const { setInputRef, isGoogleMapsLoaded } = useAddressAutocomplete({
+    onAddressSelect: (addressData) => {
+      console.log('Address selected:', addressData);
+
+      // Update block/street
+      if (addressData.blockStreet) {
+        const addressEvent = {
+          target: {
+            name: 'blockStreet',
+            value: addressData.blockStreet
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        onInputChange(addressEvent);
+      }
+
+      // Update postal code
+      if (addressData.postalCode) {
+        console.log('Setting postal code:', addressData.postalCode);
+        const postalEvent = {
+          target: {
+            name: 'postalCode',
+            value: addressData.postalCode
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        onInputChange(postalEvent);
+      }
+
+      // Update condo name if available
+      if (addressData.buildingName) {
+        const buildingEvent = {
+          target: {
+            name: 'condoName',
+            value: addressData.buildingName
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        onInputChange(buildingEvent);
+      }
+
+      // Focus unit field after address selection
+      setTimeout(() => {
+        if (unitInputRef.current) {
+          unitInputRef.current.focus();
+          unitInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  });
+
   return (
     <div className="space-y-8">
       <div className="relative">
@@ -18,9 +67,10 @@ const AddressSection: React.FC<AddressSectionProps> = ({
         <div className="relative">
           <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
+            ref={setInputRef}
             type="text"
             id="address"
-            name="address"
+            name="blockStreet"
             required
             value={formData.blockStreet}
             onChange={onInputChange}
@@ -32,7 +82,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   : 'border-red-500'
                 : 'border-gray-600'
             } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            placeholder={!isGoogleMapsLoaded ? "Loading address search..." : ""}
+            placeholder={!isGoogleMapsLoaded ? "Loading address search..." : "Enter your address"}
             disabled={!isGoogleMapsLoaded}
           />
         </div>
@@ -63,6 +113,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                     : 'border-red-500'
                   : 'border-gray-600'
               } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              placeholder="Auto-filled from address"
               readOnly
             />
           </div>
@@ -78,9 +129,10 @@ const AddressSection: React.FC<AddressSectionProps> = ({
           <div className="relative">
             <FiHash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
+              ref={unitInputRef}
               type="text"
               id="unit"
-              name="unit"
+              name="floorUnit"
               required
               value={formData.floorUnit}
               onChange={onInputChange}
