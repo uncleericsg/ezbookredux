@@ -64,6 +64,7 @@
 
 // React and hooks
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useScrollToTop } from '@hooks/useScrollToTop';
 import { useNavigate } from 'react-router-dom';
 
 // Utils
@@ -284,6 +285,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const { currentUser, error: userError } = useAppSelector((state: RootState) => state.user);
   const { currentBooking } = useAppSelector((state: RootState) => state.booking);
   const summaryRef = useRef<HTMLDivElement>(null);
+  const scrollToTop = useScrollToTop([]);
 
   useEffect(() => {
     if (summaryRef.current) {

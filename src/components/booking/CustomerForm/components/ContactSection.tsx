@@ -13,7 +13,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   onVerifyOTP
 }) => {
   return (
-    <div className="space-y-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="relative">
         <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
           Email Address
@@ -93,24 +93,26 @@ const ContactSection: React.FC<ContactSectionProps> = ({
             {validationState.isValidating ? 'Sending...' : 'Verify Mobile'}
           </button>
         )}
-        {validationState.showOTPInput && (
-          <div className="mt-2">
-            <OTPInput
-              length={6}
-              onComplete={onVerifyOTP}
-              error={validationState.otpError}
-            />
-            {validationState.otpError && (
-              <p className="mt-2 text-sm text-red-500">{validationState.otpError}</p>
-            )}
-          </div>
-        )}
-        {validationState.isMobileVerified && (
-          <div className="text-green-500 text-sm mt-1 flex items-center gap-2">
-            <FiCheck className="h-4 w-4" />
-            Mobile verified
-          </div>
-        )}
+        <div className="mt-2">
+          {validationState.showOTPInput && (
+            <>
+              <OTPInput
+                length={6}
+                onComplete={onVerifyOTP}
+                error={validationState.otpError}
+              />
+              {validationState.otpError && (
+                <p className="mt-2 text-sm text-red-500">{validationState.otpError}</p>
+              )}
+            </>
+          )}
+          {validationState.isMobileVerified && (
+            <div className="text-green-500 text-sm mt-1 flex items-center gap-2">
+              <FiCheck className="h-4 w-4" />
+              Mobile verified
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ const UserManagement = lazy(() => import('@admin/UserManagement'));
 const AMCSignup = lazy(() => import('@components/AMCSignup'));
 const PowerJetChemWashHome = lazy(() => import('@booking/PowerJetChemWashHome'));
 const BookingConfirmation = lazy(() => import('@booking/BookingConfirmation'));
-const FirstTimeBookingFlow = lazy(() => import('@booking/FirstTimeBookingFlow'));
+const FirstTimeBookingFlowWrapper = lazy(() => import('@booking/FirstTimeBookingFlowWrapper'));
 const PriceSelectionPage = lazy(() => import('@booking/PriceSelectionPage'));
 const ReturnCustomerBooking = lazy(() => import('@booking/ReturnCustomerBooking'));
 const GasCheckLeakage = lazy(() => import('./components/booking/GasCheckLeakage'));
@@ -107,7 +107,7 @@ const RouterComponent = () => {
               path={ROUTES.BOOKING.FIRST_TIME}
               element={
                 <Suspense fallback={<LoadingScreen />}>
-                  <FirstTimeBookingFlow />
+                  <FirstTimeBookingFlowWrapper />
                 </Suspense>
               }
             />

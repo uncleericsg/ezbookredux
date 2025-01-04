@@ -91,13 +91,13 @@
  * - Duration handling enhanced
  */
 
-// @ai-visual-protection: This component's visual design and styling must be preserved exactly as is.
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, startOfDay, addMinutes, isFriday } from 'date-fns';
 import { Calendar } from '@components/Calendar';
 import { Loader2 } from 'lucide-react';
 import { BUSINESS_RULES } from '@constants/businessRules';
+import { useScrollToTop } from '@hooks/useScrollToTop';
 import styles from './ScheduleStep.module.css';
 
 interface TimeSlot {
@@ -136,14 +136,16 @@ interface ScheduleStepProps {
   onScheduleSelect: (date: Date, timeSlot: string) => void;
 }
 
-const ScheduleStep: React.FC<ScheduleStepProps> = ({ 
-  customerInfo, 
+const ScheduleStep: React.FC<ScheduleStepProps> = ({
+  customerInfo,
   selectedService,
-  onScheduleSelect 
+  onScheduleSelect
 }) => {
+  const scrollToTop = useScrollToTop([]);
+
   useEffect(() => {
-    console.log('ScheduleStep - Component mounted with:', { 
-      customerInfo, 
+    console.log('ScheduleStep - Component mounted with:', {
+      customerInfo,
       selectedService,
       customerAddress: customerInfo?.address,
       serviceTitle: selectedService?.title
@@ -176,7 +178,6 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
     return slots;
   };
 
-  // Simulate fetching available time slots based on location
   useEffect(() => {
     let mounted = true;
     let abortController = new AbortController();
@@ -186,14 +187,12 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
       
       setIsLoading(true);
       try {
-        // TODO: Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         const slots = generateTimeSlots(selectedDate);
         
-        // Simulate availability based on location optimization
         const optimizedSlots = slots.map(slot => ({
           ...slot,
-          available: Math.random() > (slot.isPeakHour ? 0.4 : 0.2) // Less availability during peak hours
+          available: Math.random() > (slot.isPeakHour ? 0.4 : 0.2)
         }));
 
         if (mounted && !abortController.signal.aborted) {
@@ -220,12 +219,14 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
       mounted = false;
       abortController.abort();
     };
-  }, [selectedDate]); // Only re-run when date changes
+  }, [selectedDate]);
 
-  const handleDateSelect = (date: Date) => {
-    console.log('ScheduleStep - Date selected:', date);
-    setSelectedDate(date);
-    setSelectedTime('');
+  const handleDateSelect = (date: Date | null) => {
+    if (date) {
+      console.log('ScheduleStep - Date selected:', date);
+      setSelectedDate(date);
+      setSelectedTime('');
+    }
   };
 
   const handleTimeSelect = async (time: string) => {
@@ -234,10 +235,8 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
     setIsLoading(true);
     
     try {
-      // Simulate loading time for better UX
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Proceed immediately after selecting time
       const [hours, minutes] = time.split(':').map(Number);
       const scheduledDateTime = new Date(selectedDate);
       scheduledDateTime.setHours(hours, minutes);
