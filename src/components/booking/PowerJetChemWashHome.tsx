@@ -10,65 +10,151 @@ interface ServiceCard {
   icon: JSX.Element;
   benefits: string[];
   price: string;
+  regularPrice: string;
+  discountedPrice: string;
+  duration: string;
   isPopular?: boolean;
+  padding?: {
+    before: number;
+    after: number;
+  };
 }
 
 const services: ServiceCard[] = [
+  {
+    id: '1-unit',
+    title: 'PowerJet Chemical Wash - 1 Unit',
+    icon: <Zap className="w-8 h-8" />,
+    benefits: ['Removes 99.9% contaminants', 'Restores airflow', 'Improves efficiency'],
+    price: '120',
+    regularPrice: '130',
+    discountedPrice: '120',
+    duration: '1 hour',
+    padding: { before: 15, after: 30 }
+  },
+  {
+    id: '2-units',
+    title: 'PowerJet Chemical Wash - 2 Units',
+    icon: <Zap className="w-8 h-8" />,
+    benefits: ['Removes stubborn buildup', 'Prevents corrosion', 'Extends coil life'],
+    price: '240',
+    regularPrice: '260',
+    discountedPrice: '240',
+    duration: '1 hour',
+    padding: { before: 15, after: 30 }
+  },
+  {
+    id: '3-units',
+    title: 'PowerJet Chemical Wash - 3 Units',
+    icon: <Zap className="w-8 h-8" />,
+    benefits: ['Comprehensive cleaning', 'Includes all components', 'Full system optimization'],
+    price: '360',
+    regularPrice: '390',
+    discountedPrice: '360',
+    duration: '1 hour',
+    padding: { before: 15, after: 30 }
+  },
+  {
+    id: '4-units',
+    title: 'PowerJet Chemical Wash - 4 Units',
+    icon: <Zap className="w-8 h-8" />,
+    benefits: ['Kills mold spores', 'Prevents regrowth', 'Improves air quality'],
+    price: '480',
+    regularPrice: '520',
+    discountedPrice: '480',
+    duration: '1 hour',
+    padding: { before: 15, after: 30 }
+  },
+  {
+    id: '5-units',
+    title: 'PowerJet Chemical Wash - 5 Units',
+    icon: <Zap className="w-8 h-8" />,
+    benefits: ['Increases airflow by 40%', 'Reduces energy costs', 'Improves comfort'],
+    price: '600',
+    regularPrice: '650',
+    discountedPrice: '600',
+    duration: '1 hour',
+    padding: { before: 15, after: 30 }
+  },
   {
     id: 'deep-clean',
     title: 'Deep System Clean',
     icon: <Zap className="w-8 h-8" />,
     benefits: ['Removes 99.9% contaminants', 'Restores airflow', 'Improves efficiency'],
-    price: '$120-$150'
+    price: '150',
+    regularPrice: '150',
+    discountedPrice: '150',
+    duration: '1 hour'
   },
   {
     id: 'coil-clean',
     title: 'Coil Revitalization',
     icon: <Droplet className="w-8 h-8" />,
     benefits: ['Removes stubborn buildup', 'Prevents corrosion', 'Extends coil life'],
-    price: '$100-$130'
+    price: '130',
+    regularPrice: '130',
+    discountedPrice: '130',
+    duration: '1 hour'
   },
   {
     id: 'full-system',
     title: 'Complete System Wash',
     icon: <Settings className="w-8 h-8" />,
     benefits: ['Comprehensive cleaning', 'Includes all components', 'Full system optimization'],
-    price: '$150-$180'
+    price: '180',
+    regularPrice: '180',
+    discountedPrice: '180',
+    duration: '1 hour'
   },
   {
     id: 'mold-removal',
     title: 'Mold Elimination',
     icon: <Shield className="w-8 h-8" />,
     benefits: ['Kills mold spores', 'Prevents regrowth', 'Improves air quality'],
-    price: '$130-$160'
+    price: '160',
+    regularPrice: '160',
+    discountedPrice: '160',
+    duration: '1 hour'
   },
   {
     id: 'airflow-boost',
     title: 'Airflow Enhancement',
     icon: <Wind className="w-8 h-8" />,
     benefits: ['Increases airflow by 40%', 'Reduces energy costs', 'Improves comfort'],
-    price: '$110-$140'
+    price: '140',
+    regularPrice: '140',
+    discountedPrice: '140',
+    duration: '1 hour'
   },
   {
     id: 'temperature',
     title: 'Temperature Optimization',
     icon: <Thermometer className="w-8 h-8" />,
     benefits: ['Improves cooling efficiency', 'Reduces strain on system', 'Saves energy'],
-    price: '$120-$150'
+    price: '150',
+    regularPrice: '150',
+    discountedPrice: '150',
+    duration: '1 hour'
   },
   {
     id: 'quick-clean',
     title: 'Express Maintenance',
     icon: <Clock className="w-8 h-8" />,
     benefits: ['Quick system check', 'Basic cleaning', 'Performance assessment'],
-    price: '$80-$100'
+    price: '100',
+    regularPrice: '100',
+    discountedPrice: '100',
+    duration: '1 hour'
   },
   {
     id: 'premium',
     title: 'Premium Package',
     icon: <Star className="w-8 h-8" />,
     benefits: ['All services included', 'Priority scheduling', '1 year warranty'],
-    price: '$200-$250',
+    price: '250',
+    regularPrice: '250',
+    discountedPrice: '250',
+    duration: '1 hour',
     isPopular: true
   },
   {
@@ -76,7 +162,10 @@ const services: ServiceCard[] = [
     title: 'Custom Solution',
     icon: <Settings className="w-8 h-8" />,
     benefits: ['Tailored to your needs', 'Flexible scheduling', 'Personalized service'],
-    price: 'Custom Quote'
+    price: 'Custom Quote',
+    regularPrice: '0',
+    discountedPrice: '0',
+    duration: 'Varies'
   }
 ];
 
@@ -184,9 +273,15 @@ const PowerJetChemWashHome: React.FC = () => {
                 </ul>
 
                 {/* Price Section */}
-                <div className="mt-6">
-                  <p className="text-xl font-semibold text-white">
-                    {service.price}
+                <div className="mt-6 flex flex-col items-center space-y-2">
+                  <p className="text-base text-gray-400 line-through">
+                    ${service.regularPrice}
+                  </p>
+                  <p className="text-3xl font-bold text-blue-400">
+                    ${service.discountedPrice}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {service.duration}
                   </p>
                 </div>
 
