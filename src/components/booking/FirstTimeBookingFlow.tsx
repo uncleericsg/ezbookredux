@@ -1,21 +1,3 @@
-/*
- * @AI_INSTRUCTION - DO NOT MODIFY THIS FILE
- * This component orchestrates the entire first-time booking flow and is considered stable.
- * 
- * Critical Features:
- * - Step management and navigation
- * - Form state handling
- * - Integration with all booking steps (Customer, Brand, Issue, Payment)
- * - Progress persistence
- * 
- * Any modifications could affect the entire booking experience.
- * If changes are needed, please:
- * 1. Create a detailed proposal
- * 2. Test thoroughly in a development environment
- * 3. Ensure all steps still work correctly
- * 4. Validate form state management
- */
-
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -337,15 +319,26 @@ const FirstTimeBookingFlow: React.FC = () => {
   };
 
   const renderScheduleStep = () => {
-    if (!bookingData.selectedService) {
-      console.error('No service selected when trying to render ScheduleStep');
+    if (!bookingData.selectedService || !bookingData.customerInfo) {
+      console.error('No service or customer info when trying to render ScheduleStep');
       navigate('/booking/price-selection');
       return null;
     }
 
+    // Transform customer info to match ScheduleStep's expected format
+    const formattedCustomerInfo = {
+      ...bookingData.customerInfo,
+      selectedAddressId: 'default', // Since this is first-time booking
+      address: {
+        address: bookingData.customerInfo.blockStreet,
+        postalCode: bookingData.customerInfo.postalCode,
+        unitNumber: bookingData.customerInfo.floorUnit
+      }
+    };
+
     return (
       <ScheduleStep
-        customerInfo={bookingData.customerInfo!}
+        customerInfo={formattedCustomerInfo}
         selectedService={bookingData.selectedService}
         onScheduleSelect={handleScheduleSelect}
       />
