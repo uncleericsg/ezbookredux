@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 const ChemWashHeroSection = lazy(() => import('./components/ChemWashHeroSection'));
 const ChemWashServiceGrid = lazy(() => import('./components/ChemWashServiceGrid'));
 const ChemOverhaulServiceGrid = lazy(() => import('./components/ChemOverhaulServiceGrid'));
-const AdditionalServices = lazy(() => import('./components/AdditionalServices'));
 const ChemWashKeyFeatures = lazy(() => import('./components/ChemWashKeyFeatures'));
 const Testimonials = lazy(() => import('./components/Testimonials'));
 
@@ -90,22 +89,6 @@ const PowerJetChemWashHome: React.FC = () => {
             <ChemOverhaulServiceGrid />
           </Suspense>
         </div>
-
-        {/* Additional Services Section */}
-        <Suspense 
-          fallback={
-            <div className="animate-pulse space-y-8">
-              <div className="h-8 bg-gray-700 rounded w-1/2 mx-auto"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 bg-gray-800 rounded-xl"></div>
-                ))}
-              </div>
-            </div>
-          }
-        >
-          <AdditionalServices />
-        </Suspense>
 
         {/* Key Features Section */}
         <Suspense 
