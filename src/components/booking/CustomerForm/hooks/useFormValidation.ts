@@ -32,7 +32,7 @@ export const useFormValidation = () => {
           error: !isValidFormat ? 'Please enter a valid email address' : undefined
         };
       }
-      case 'mobile':
+      case 'mobile': {
         const digitsOnly = value.replace(/\D/g, '');
         const mobileRegex = /^[89]\d{7}$/;
         return {
@@ -40,25 +40,30 @@ export const useFormValidation = () => {
           valid: mobileRegex.test(digitsOnly),
           error: !mobileRegex.test(digitsOnly) ? 'Must be 8 digits starting with 8 or 9' : undefined
         };
+      }
+      case 'blockStreet':
       case 'address':
         return {
           touched: true,
           valid: value.length > 0,
           error: value.length === 0 ? 'Address is required' : undefined
         };
-      case 'postalCode':
+      case 'postalCode': {
         const postalRegex = /^[0-9]{6}$/;
         return {
           touched: true,
           valid: postalRegex.test(value),
           error: !postalRegex.test(value) ? 'Invalid postal code' : undefined
         };
+      }
+      case 'floorUnit':
       case 'unit':
         return {
           touched: true,
           valid: value.length > 0,
           error: value.length === 0 ? 'Unit number is required' : undefined
         };
+      case 'condoName':
       case 'buildingName':
       case 'lobbyTower':
         return {
@@ -72,14 +77,23 @@ export const useFormValidation = () => {
 
   const isFormValid = useCallback((): boolean => {
     const requiredFields = ['firstName', 'lastName', 'email', 'mobile', 'address', 'postalCode', 'unit'];
-    return requiredFields.every(field => validation[field as keyof FormValidation].valid);
+    return requiredFields.every(field => {
+      const validationField = validation[field as keyof FormValidation];
+      return validationField.touched && validationField.valid;
+    });
   }, [validation]);
 
-  const updateValidation = useCallback((name: string, value: string) => {
+  const updateValidation = useCallback((name: string, value: string): ValidationState => {
+    const fieldName = name === 'blockStreet' ? 'address' : 
+                     name === 'floorUnit' ? 'unit' : 
+                     name === 'condoName' ? 'buildingName' : name;
+    
+    const validationState = validateField(name, value);
     setValidation(prev => ({
       ...prev,
-      [name]: validateField(name, value)
+      [fieldName]: validationState
     }));
+    return validationState;
   }, [validateField]);
 
   return {

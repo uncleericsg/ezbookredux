@@ -52,7 +52,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
       setTimeout(() => {
         if (unitInputRef.current) {
           unitInputRef.current.focus();
-          unitInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }, 100);
     }

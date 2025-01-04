@@ -1,4 +1,5 @@
-// Form Data Types
+import { EmailSuggestion } from '@utils/emailUtils';
+
 export interface CustomerFormData {
   firstName: string;
   lastName: string;
@@ -30,7 +31,6 @@ export interface FormValidation {
   lobbyTower: ValidationState;
 }
 
-// Props Types
 export interface CustomerFormProps {
   onSave: (formData: CustomerFormData) => void;
   user?: {
@@ -38,7 +38,7 @@ export interface CustomerFormProps {
     lastName: string;
     email: string;
     mobile: string;
-    addresses: Array<{
+    addresses?: Array<{
       id: string;
       floorUnit: string;
       blockStreet: string;
@@ -51,49 +51,50 @@ export interface CustomerFormProps {
   isAMC?: boolean;
 }
 
-// Section Props Types
-export interface PersonalInfoSectionProps {
-  formData: Pick<CustomerFormData, 'firstName' | 'lastName'>;
-  validation: Pick<FormValidation, 'firstName' | 'lastName'>;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+export interface MobileValidationState {
+  isValidating: boolean;
+  showOTPInput: boolean;
+  isMobileVerified: boolean;
+  otpError?: string;
 }
 
 export interface ContactSectionProps {
-  formData: Pick<CustomerFormData, 'email' | 'mobile'>;
-  validation: Pick<FormValidation, 'email' | 'mobile'>;
-  validationState: {
-    showOTPInput: boolean;
-    isMobileVerified: boolean;
-    isValidating: boolean;
-    otpError?: string;
-  };
+  formData: CustomerFormData;
+  validation: FormValidation;
+  validationState: MobileValidationState;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-  onVerifyMobile: (e: React.MouseEvent) => void;
+  onVerifyMobile: (e: React.MouseEvent<Element> | React.KeyboardEvent<Element>) => void;
   onVerifyOTP: (code: string) => void;
+  emailSuggestion: EmailSuggestion | null;
+  onSuggestionClick: () => void;
 }
 
 export interface AddressSectionProps {
-  formData: Pick<CustomerFormData, 'blockStreet' | 'postalCode' | 'floorUnit'>;
-  validation: Pick<FormValidation, 'address' | 'postalCode' | 'unit'>;
-  isGoogleMapsLoaded: boolean;
+  formData: CustomerFormData;
+  validation: FormValidation;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+}
+
+export interface PersonalInfoSectionProps {
+  formData: CustomerFormData;
+  validation: FormValidation;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export interface OptionalSectionProps {
-  formData: Pick<CustomerFormData, 'condoName' | 'lobbyTower'>;
-  validation: Pick<FormValidation, 'buildingName' | 'lobbyTower'>;
+  formData: CustomerFormData;
+  validation: FormValidation;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
-// Declare global types for Google Maps
-declare global {
-  interface Window {
-    google: typeof google;
-    initMap: () => void;
-    isGoogleMapsLoaded: boolean;
-  }
+export interface ExistingUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userEmail?: string;
+  userMobile?: string;
+  type: 'email' | 'mobile';
 }

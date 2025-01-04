@@ -12,14 +12,14 @@ const OptionalSection: React.FC<OptionalSectionProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="relative">
         <label htmlFor="buildingName" className="block text-sm font-medium text-gray-200 mb-2">
-          Building Name (Optional)
+          Condo Name (Optional)
         </label>
         <div className="relative">
           <FiHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             id="buildingName"
-            name="buildingName"
+            name="condoName"
             value={formData.condoName}
             onChange={onInputChange}
             onBlur={onBlur}
