@@ -138,6 +138,30 @@ export interface ChemOverhaulService {
 - [x] Add loading states
 - [x] Test responsive design
 
+## Recent Updates (January 5, 2025, 1:40 AM UTC+8)
+
+### 1. WhatsApp Card Enhancements
+- Centered content layout with proper spacing
+- Added staggered animations for card elements:
+  * Icon springs into view with scale effect
+  * Text content fades and slides up
+  * Button appears with spring animation
+- Enhanced pill-shaped button with:
+  * Gradient colors
+  * Shadow effects
+  * Hover animations
+  * Spring physics for natural motion
+- Maintained consistent height with service cards
+
+### 2. Chemical Overhaul Section Improvements
+- Added descriptive subtitle explaining the service:
+  * Comprehensive aircon restoration details
+  * Full dismantling process highlight
+  * Performance and longevity benefits
+- Coordinated animations with main title
+- Improved visual hierarchy
+- Enhanced user understanding of service offering
+
 ## Notes
 - All original sections maintained
 - Added new service package sections
@@ -146,7 +170,9 @@ export interface ChemOverhaulService {
 - Loading states for async components
 - Clear section separation with headings
 - Smooth animations throughout
+- Enhanced user experience with descriptive content
+- Improved visual feedback on interactions
 
 ---
-**Last Updated**: January 5, 2025, 12:44 AM (UTC+8)
+**Last Updated**: January 5, 2025, 1:40 AM (UTC+8)
 **Author**: Cline AI Assistant

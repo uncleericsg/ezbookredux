@@ -4,6 +4,7 @@ import { ChemOverhaulService } from '../types/chemoverhaulTypes';
 import { chemoverhaulServices } from '../data/chemoverhaulServices';
 
 const ChemOverhaulServiceCard = lazy(() => import('./ChemOverhaulServiceCard'));
+const WAcard = lazy(() => import('./WAcard'));
 
 const LoadingSkeleton = () => (
   <div className="rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-sm bg-gradient-to-br from-purple-900/80 to-blue-900/90 border border-purple-700/50 animate-pulse">
@@ -43,6 +44,18 @@ const ChemOverhaulServiceGrid = () => {
         >
           Chemical Overhaul Packages
         </motion.h2>
+        <motion.p
+          className="text-gray-300 text-lg max-w-2xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.3,
+            duration: 0.6,
+            ease: "easeOut"
+          }}
+        >
+          Comprehensive aircon restoration with full dismantling process, ensuring deep cleaning and thorough maintenance for optimal performance and longevity.
+        </motion.p>
       </motion.div>
 
       {/* Services Grid */}
@@ -60,6 +73,17 @@ const ChemOverhaulServiceGrid = () => {
             </Suspense>
           </motion.div>
         ))}
+        {/* WhatsApp Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Suspense fallback={<LoadingSkeleton />}>
+            <WAcard />
+          </Suspense>
+        </motion.div>
       </div>
     </div>
   );

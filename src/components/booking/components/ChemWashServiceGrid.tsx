@@ -4,6 +4,7 @@ import { ChemWashService } from '../types/chemwashserviceTypes';
 import { chemwashServices } from '../data/chemwashServices';
 
 const ChemWashServiceCard = lazy(() => import('./ChemWashServiceCard'));
+const WAcard = lazy(() => import('./WAcard'));
 
 const LoadingSkeleton = () => (
   <div className="rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-sm bg-gray-800/80 border border-gray-700/50 animate-pulse">
@@ -60,6 +61,17 @@ const ChemWashServiceGrid = () => {
             </Suspense>
           </motion.div>
         ))}
+        {/* WhatsApp Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Suspense fallback={<LoadingSkeleton />}>
+            <WAcard />
+          </Suspense>
+        </motion.div>
       </div>
     </div>
   );
