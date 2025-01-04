@@ -3,16 +3,16 @@ import { motion } from 'framer-motion';
 import { ChemOverhaulService } from '../types/chemoverhaulTypes';
 import { chemoverhaulServices } from '../data/chemoverhaulServices';
 
-const ChemWashServiceCard = lazy(() => import('./ChemWashServiceCard'));
+const ChemOverhaulServiceCard = lazy(() => import('./ChemOverhaulServiceCard'));
 
 const LoadingSkeleton = () => (
-  <div className="rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-sm bg-gray-800/80 border border-gray-700/50 animate-pulse">
-    <div className="h-8 bg-gray-700 rounded w-3/4 mb-6"></div>
-    <div className="h-10 bg-gray-700 rounded w-1/2 mb-6"></div>
+  <div className="rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-sm bg-gradient-to-br from-purple-900/80 to-blue-900/90 border border-purple-700/50 animate-pulse">
+    <div className="h-8 bg-purple-800/50 rounded w-3/4 mb-6"></div>
+    <div className="h-10 bg-purple-800/50 rounded w-1/2 mb-6"></div>
     <div className="space-y-3">
-      <div className="h-4 bg-gray-700 rounded w-full"></div>
-      <div className="h-4 bg-gray-700 rounded w-5/6"></div>
-      <div className="h-4 bg-gray-700 rounded w-4/6"></div>
+      <div className="h-4 bg-purple-800/50 rounded w-full"></div>
+      <div className="h-4 bg-purple-800/50 rounded w-5/6"></div>
+      <div className="h-4 bg-purple-800/50 rounded w-4/6"></div>
     </div>
   </div>
 );
@@ -56,7 +56,7 @@ const ChemOverhaulServiceGrid = () => {
             transition={{ duration: 0.5 }}
           >
             <Suspense fallback={<LoadingSkeleton />}>
-              <ChemWashServiceCard service={service} />
+              <ChemOverhaulServiceCard service={service} />
             </Suspense>
           </motion.div>
         ))}

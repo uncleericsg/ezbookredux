@@ -5,6 +5,7 @@ export interface ChemOverhaulService {
   title: string;
   units: number;
   price: number;
+  regularPrice: number;
   duration: string;
   paddingBefore: number;
   paddingAfter: number;
