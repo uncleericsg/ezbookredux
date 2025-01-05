@@ -20,20 +20,32 @@ export const ExistingCustomerPanel: React.FC = () => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
-      className="md:col-span-2 flex flex-col items-center justify-center p-6 bg-gray-800/50 border border-gray-700/70 rounded-xl backdrop-blur-sm"
+      className="flex flex-col items-center justify-center p-6 bg-gray-800/50 border border-gray-700/70 rounded-xl backdrop-blur-sm"
     >
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-[#FFD700] text-center mb-2">
+        <h2 
+          id="returning-customer-title"
+          className="text-xl font-bold text-[#FFD700] text-center mb-2"
+        >
           Welcome Back!
-        </h3>
+        </h2>
         <p className="text-gray-100 text-center text-sm">
           Return Customer, please sign-in here!
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full space-y-4">
-        <div>
-          <label htmlFor="mobile" className="block text-sm font-medium text-gray-300 text-center mb-4">
+      <form 
+        onSubmit={handleSubmit} 
+        className="w-full space-y-4"
+        aria-label="Customer login form"
+        noValidate
+      >
+        <div role="group" aria-labelledby="mobile-input-label">
+          <label 
+            id="mobile-input-label"
+            htmlFor="mobile" 
+            className="block text-sm font-medium text-gray-300 text-center mb-4"
+          >
             Mobile Number
           </label>
           <input
@@ -48,7 +60,13 @@ export const ExistingCustomerPanel: React.FC = () => {
             onChange={handleMobileNumberChange}
             className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
             placeholder="Enter 8 digit mobile number"
+            aria-required="true"
+            aria-invalid={mobileNumber.length > 0 && mobileNumber.length !== 8}
+            aria-describedby="mobile-hint"
           />
+          <p id="mobile-hint" className="mt-1 text-xs text-gray-400">
+            Enter your registered 8-digit mobile number
+          </p>
         </div>
 
         {showOtpButton && !otpSent && (
@@ -59,14 +77,19 @@ export const ExistingCustomerPanel: React.FC = () => {
             onClick={handleSendOtp}
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 text-sm font-medium text-gray-900 bg-[#FFD700] rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
+            aria-label="Send one-time password to your mobile"
           >
             Send OTP
           </motion.button>
         )}
 
         {otpSent && (
-          <div>
-            <label htmlFor="otp" className="block text-sm font-medium text-gray-300">
+          <div role="group" aria-labelledby="otp-input-label">
+            <label 
+              id="otp-input-label"
+              htmlFor="otp" 
+              className="block text-sm font-medium text-gray-300"
+            >
               One Time Password
             </label>
             <input
@@ -82,7 +105,13 @@ export const ExistingCustomerPanel: React.FC = () => {
               className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
               placeholder="Enter 6-digit OTP"
               autoFocus
+              aria-required="true"
+              aria-invalid={otp.length > 0 && otp.length !== 6}
+              aria-describedby="otp-hint"
             />
+            <p id="otp-hint" className="mt-1 text-xs text-gray-400">
+              Enter the 6-digit code sent to your mobile
+            </p>
           </div>
         )}
 
@@ -93,7 +122,8 @@ export const ExistingCustomerPanel: React.FC = () => {
                 type="button"
                 onClick={handleSendOtp}
                 disabled={loading}
-                className="font-medium text-[#FFD700] hover:text-yellow-500 disabled:opacity-50"
+                className="font-medium text-[#FFD700] hover:text-yellow-500 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#FFD700] focus:ring-offset-2 focus:ring-offset-gray-900"
+                aria-label="Request a new one-time password"
               >
                 Resend OTP
               </button>
@@ -108,6 +138,7 @@ export const ExistingCustomerPanel: React.FC = () => {
               type="submit"
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 text-sm font-medium text-gray-900 bg-[#FFD700] rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
+              aria-label={loading ? 'Verifying your one-time password' : 'Verify one-time password'}
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
             </motion.button>

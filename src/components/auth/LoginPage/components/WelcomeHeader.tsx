@@ -9,14 +9,27 @@ export const WelcomeHeader: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="text-center mb-6"
     >
+      {/* Logo with proper dimensions and loading priority */}
       <img
         className="mx-auto h-16 w-auto"
         src="/logo.png"
-        alt="Easy Booking Logo"
+        alt="iAircon Easy Booking Logo"
+        width="64"
+        height="64"
+        loading="eager"
+        // Removed fetchPriority due to React warning
       />
-      <h2 className="mt-2 text-xl font-bold leading-7 tracking-tight text-[#FFD700]">
-        Welcome to Easy Booking
-      </h2>
+      {/* Main heading for SEO */}
+      <h1 
+        id="login-title"
+        className="mt-2 text-xl font-bold leading-7 tracking-tight text-[#FFD700]"
+      >
+        Welcome to iAircon Easy Booking
+      </h1>
+      {/* Descriptive subheading for SEO */}
+      <p className="mt-2 text-sm text-gray-300">
+        Singapore's Premier Air Conditioning Service Platform
+      </p>
     </motion.div>
   );
 };
