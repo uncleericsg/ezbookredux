@@ -54,11 +54,12 @@ const RouterComponent = () => {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="*" element={logRoute(window.location.pathname)} />
+          {/* Routes WITH Layout */}
           <Route element={<Layout />}>
             {/* Core Routes - Eagerly Loaded */}
             <Route index element={<ServiceCategorySelection />} />
             
-            {/* Routes with React Query - Lazy Loaded */}
+            {/* Protected Routes with Layout */}
             <Route
               path={ROUTES.NOTIFICATIONS}
               element={
@@ -78,23 +79,7 @@ const RouterComponent = () => {
               }
             />
             
-            {/* Booking Routes - Lazy Loaded */}
-            <Route
-              path={ROUTES.PRICING}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <ServicePricingSelection />
-                </Suspense>
-              }
-            />
-            <Route
-              path={ROUTES.BOOKING.PRICE_SELECTION}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <PriceSelectionPage />
-                </Suspense>
-              }
-            />
+            {/* Return Customer Booking - WITH Layout */}
             <Route
               path={ROUTES.BOOKING.RETURN_CUSTOMER}
               element={
@@ -103,30 +88,8 @@ const RouterComponent = () => {
                 </Suspense>
               }
             />
-            <Route
-              path={ROUTES.BOOKING.FIRST_TIME}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <FirstTimeBookingFlowWrapper />
-                </Suspense>
-              }
-            />
-            <Route
-              path={ROUTES.BOOKING.POWERJET_CHEMICAL}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <PowerJetChemWashHome />
-                </Suspense>
-              }
-            />
-            <Route
-              path={ROUTES.AMC.SIGNUP}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <AMCSignup />
-                </Suspense>
-              }
-            />
+            
+            {/* Booking Confirmation - WITH Layout */}
             <Route
               path={ROUTES.BOOKING.CONFIRMATION}
               element={
@@ -137,18 +100,48 @@ const RouterComponent = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/booking/gas-check-leak"
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <GasCheckLeakage />
-                </Suspense>
-              }
-            />
           </Route>
 
-          {/* Routes WITHOUT Layout */}
+          {/* Routes WITHOUT Layout - Self Contained */}
+          
+          {/* Authentication */}
           <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+
+          {/* First Time Customer Flow - Self Contained */}
+          <Route
+            path={ROUTES.BOOKING.PRICE_SELECTION}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <PriceSelectionPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path={ROUTES.BOOKING.POWERJET_CHEMICAL}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <PowerJetChemWashHome />
+              </Suspense>
+            }
+          />
+          <Route
+            path={ROUTES.BOOKING.GAS_LEAK}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <GasCheckLeakage />
+              </Suspense>
+            }
+          />
+
+          {/* AMC Package Flow - Self Contained */}
+          <Route
+            path={ROUTES.AMC.SIGNUP}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <AMCSignup />
+              </Suspense>
+            }
+          />
 
           {/* Admin Routes - All WITHOUT Layout */}
           <Route

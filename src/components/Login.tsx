@@ -52,13 +52,6 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate, returnUrl, bookingData]);
 
-  // Remove the initial navigation effect since we always want to go to home
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, authLoading, navigate]);
-
   // Handle mobile number input
   const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

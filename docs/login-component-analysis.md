@@ -1,88 +1,183 @@
 # Login Component Analysis
 
-[Previous content remains the same until Integration Points section...]
+## 1. Navigation Flows
 
-## 8. Integration Points
+### A. Entry Points to Login
+1. Direct Access
+   - URL: `/login`
+   - Wrapped in `<PublicRoute>`
+   - No layout (header/footer)
 
-### External Services
-- Authentication service (OTP)
-- Form validation service
-- Navigation service
-- State management (Redux)
+2. Protected Route Redirect
+   - When accessing protected pages while unauthenticated
+   - Stores intended path in location state
+   - Example: Profile page -> Login -> Back to Profile
 
-### Storage Integration
-- Local storage for auth persistence
-- Session storage for booking data
-- Redux store for global state
+3. Booking Flow Redirect
+   - When booking requires authentication
+   - Stores booking data in session storage
+   - Preserves booking state through auth flow
 
-### Route Integration
-- PublicRoute wrapper component
-  - Checks both isAuthenticated and currentUser
-  - Special handling for /login path
-  - Handles intended path redirects
-  - Manages authentication state redirects
-- Outside Layout hierarchy
-- Route logging via logRoute
-- Suspense boundaries
+### B. Navigation Patterns (Fixed) ✅
 
-### Authentication States
+1. Return URL Logic (Kept)
 ```typescript
-// From PublicRoute
-const isFullyAuthenticated = isAuthenticated && !!currentUser;
-
-// Authentication Conditions
-- Not authenticated: Show login page
-- Partially authenticated: Show login page
-- Fully authenticated: Redirect to home or intended path
+// Single navigation effect
+useEffect(() => {
+  if (isAuthenticated) {
+    if (bookingData) {
+      navigate(returnUrl, { 
+        state: { bookingData },
+        replace: true 
+      });
+    } else {
+      navigate(returnUrl, { replace: true });
+    }
+  }
+}, [isAuthenticated, navigate, returnUrl, bookingData]);
 ```
 
-[Previous content remains the same until Migration Considerations section...]
+2. First Time Customer Paths
+```typescript
+// Price Selection -> Self-contained
+navigate('/booking/price-selection', { 
+  state: { isFirstTimeCustomer: true } 
+});
 
-## Migration Considerations
+// Browse Services -> With Layout
+navigate('/');
 
-1. Must maintain PublicRoute wrapper
-   - Preserve dual authentication checks
-   - Keep intended path functionality
-   - Handle all redirect scenarios
-2. Keep outside Layout hierarchy
-3. Preserve eager loading
-4. Maintain route logging integration
-5. Consider Suspense boundaries
-6. Handle navigation state properly
-7. Preserve authentication state checks
-   - isAuthenticated flag
-   - currentUser existence
-   - Redirect logic
-8. Test Requirements
-   - Authentication flows
-   - Navigation scenarios
-   - State management
-   - Form validation
-   - Error handling
-   - Video background
-   - Mobile responsiveness
+// AMC Signup -> Self-contained
+navigate('/amc/signup');
+```
 
-## Build Configuration Impact
+## 2. Layout Structure (Fixed) ✅
 
-1. Path Aliases
-   - @components
-   - @store
-   - @services
+### A. Routes WITH Layout
+```typescript
+<Route element={<Layout />}>
+  {/* Home */}
+  <Route index element={<ServiceCategorySelection />} />
+  
+  {/* Protected Routes */}
+  <Route path="/notifications" />
+  <Route path="/profile" />
+  
+  {/* Return Customer Flow */}
+  <Route path="/booking/return-customer" />
+  <Route path="/booking/confirmation/:bookingId" />
+</Route>
+```
 
-2. Asset Handling
-   - Video files
-   - Images
-   - Icons
+### B. Routes WITHOUT Layout
+```typescript
+{/* Authentication */}
+<Route path="/login" />
 
-3. Environment Variables
-   - API endpoints
-   - Feature flags
-   - Debug modes
+{/* First Time Customer Flow */}
+<Route path="/booking/price-selection" />
+<Route path="/booking/powerjet-chemical" />
+<Route path="/booking/gas-leak" />
 
-4. Bundle Optimization
-   - Component code splitting
-   - CSS optimization
-   - Asset optimization
-   - Dependency management
+{/* AMC Flow */}
+<Route path="/amc/signup" />
 
-This analysis will guide the code splitting process to maintain functionality while improving maintainability and performance.
+{/* Admin Routes */}
+<Route path="/admin/*" />
+```
+
+## 3. State Management
+
+### A. Local State
+```typescript
+const [mobileNumber, setMobileNumber] = useState('');
+const [otp, setOtp] = useState('');
+const [loading, setLocalLoading] = useState(false);
+const [showOtpButton, setShowOtpButton] = useState(false);
+const [otpSent, setOtpSent] = useState(false);
+```
+
+### B. Redux State
+```typescript
+// Auth State
+const { isAuthenticated, loading: authLoading } = useAppSelector(state => state.auth);
+
+// Actions
+dispatch(setToken(mockToken));
+dispatch(setUser(mockUserData));
+dispatch(setAuthenticated(true));
+dispatch(setError(null));
+```
+
+### C. Navigation State
+```typescript
+// Return URL Management
+const getReturnData = () => {
+  if (location.state) {
+    return location.state;
+  }
+  const storedBooking = sessionStorage.getItem('pendingBooking');
+  return storedBooking ? JSON.parse(storedBooking) : null;
+};
+
+const returnData = getReturnData();
+const returnUrl = returnData?.returnUrl || '/';
+const bookingData = returnData?.bookingData;
+```
+
+## 4. Next Steps
+
+### A. Component Simplification
+1. Consolidate into main panels
+   - FirstTimePanel
+   - LoginPanel
+   - Main container
+
+2. Centralize logic
+   - useLoginFlow hook
+   - Authentication handling
+   - Navigation management
+
+3. Improve state management
+   - Single source of truth
+   - Clear state transitions
+   - Better error handling
+
+### B. Testing Requirements
+1. Navigation Scenarios
+   - Direct access
+   - Protected route redirect
+   - Booking flow redirect
+   - Post-auth navigation
+
+2. Layout Integration
+   - Verify correct layout application
+   - Test layout transitions
+   - Check responsive behavior
+
+3. Error Handling
+   - Auth failures
+   - Navigation failures
+   - State preservation
+
+## 5. Success Criteria
+
+### A. Navigation
+- [x] Return URL logic works correctly
+- [x] No conflicting navigation effects
+- [x] Proper layout application
+- [x] State preservation during auth
+
+### B. Layout
+- [x] Home page has header/footer
+- [x] Login is self-contained
+- [x] First time flow is self-contained
+- [x] AMC signup is self-contained
+
+### C. Code Quality
+- [ ] Simplified component structure
+- [ ] Centralized logic
+- [ ] Clear state management
+- [ ] Comprehensive tests
+
+This analysis reflects our fixed navigation and layout structure, setting the stage for component simplification.
