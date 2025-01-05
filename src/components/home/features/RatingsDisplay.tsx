@@ -3,9 +3,9 @@ import { Star, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
-import { useServiceRating } from '@hooks/useServiceRating';
-import ServiceRating from '@components/ServiceRating';
-import { RootState } from '@store';
+import { useServiceRating } from '@hooks/useServiceRating.js';
+import ServiceRating from '@components/ServiceRating.js';
+import type { RootState } from '@store';
 
 interface Rating {
   id: string;

@@ -1,14 +1,14 @@
 import React, { lazy, Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LoadingScreen } from '@components/LoadingScreen';
+import { LoadingScreen } from '@components/LoadingScreen.js';
 import SectionErrorBoundary from './utils/ErrorBoundary';
 import { initializeTracking } from './utils/performance';
 
 // Lazy load sections
-const WelcomeSection = lazy(() => import('./sections/WelcomeSection'));
-const CategoryGrid = lazy(() => import('./sections/CategoryGrid'));
-const TestimonialsSection = lazy(() => import('./sections/TestimonialsSection'));
-const TrustIndicators = lazy(() => import('@components/TrustIndicators'));
+const WelcomeSection = lazy(() => import('./sections/WelcomeSection.js'));
+const CategoryGrid = lazy(() => import('./sections/CategoryGrid.js'));
+const TestimonialsSection = lazy(() => import('./sections/TestimonialsSection.js'));
+const TrustIndicators = lazy(() => import('@components/TrustIndicators.js'));
 
 // Types
 interface HomePageProps {

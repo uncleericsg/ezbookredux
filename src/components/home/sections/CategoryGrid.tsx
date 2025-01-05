@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useMediaQuery } from '@hooks/useMediaQuery';
+import { useMediaQuery } from '@hooks/useMediaQuery.js';
 import { useAppSelector } from '@store';
+import type { RootState } from '@store';
 import { AirVent, Wrench, ShieldCheck } from 'lucide-react';
-import CategoryCard from '../features/CategoryCard';
-import { ROUTES } from '@config/routes';
+import CategoryCard from '../features/CategoryCard.js';
+import { ROUTES } from '@config/routes.js';
+
 
 interface CategoryGridProps {
   className?: string;
@@ -18,7 +20,7 @@ interface CategoryGridProps {
 const CategoryGrid: React.FC<CategoryGridProps> = ({ className }) => {
   const navigate = useNavigate();
   const shouldReduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const { currentUser } = useAppSelector(state => state.user);
+  const { currentUser } = useAppSelector((state: RootState) => state.user);
   const isAmcCustomer = currentUser?.amcStatus === 'active';
 
   // Memoize categories to prevent unnecessary recalculations
