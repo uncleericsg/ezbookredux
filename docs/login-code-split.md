@@ -1,191 +1,134 @@
-# Login Component Code Split Plan
+# Login Component Code Split Plan - Simplified Approach
 
-## Simplified Approach
+## Current Analysis
 
-### 1. Directory Structure
+### 1. Component Structure
 ```
-src/components/auth/
-  ├── LoginPage/
-  │   ├── index.tsx (main container)
-  │   ├── FirstTimePanel.tsx (left panel)
-  │   ├── LoginPanel.tsx (right panel)
-  │   └── hooks/
-  │       └── useLoginFlow.ts (all auth logic)
-  └── hooks/
-      └── useAuth.ts (shared auth logic)
+src/components/auth/LoginPage/
+├── index.tsx (main container)
+├── components/
+│   ├── FirstTimeCustomerPanel.tsx
+│   ├── ExistingCustomerPanel.tsx
+│   ├── VideoBackground.tsx
+│   └── WelcomeHeader.tsx
+├── styles/
+│   └── common.ts
 ```
 
 ### 2. Component Responsibilities
 
-#### A. LoginPage/index.tsx
-- Main container component
-- Video background
-- Layout management
-- Panel composition
-- Navigation state handling
+#### A. Main Container (index.tsx)
+- Layout management (60/40 split)
+- Component composition
+- Background video integration
 
-#### B. FirstTimePanel.tsx
-- First time customer options
-- Welcome header
-- Navigation buttons:
-  - First time offer
-  - Browse services
-  - AMC signup
+#### B. Components
+- FirstTimeCustomerPanel: New customer options and navigation
+- ExistingCustomerPanel: Login form and authentication
+- VideoBackground: Visual background with overlay
+- WelcomeHeader: Logo and welcome text
 
-#### C. LoginPanel.tsx
-- Mobile input
-- OTP handling
-- Form validation
-- Error display
-- Loading states
+### 3. Recommended Improvements
 
-#### D. useLoginFlow.ts
-- Authentication logic
-- OTP verification
-- Navigation handling
-- State management
-- Error handling
-
-### 3. State Management
-
+#### 1. Style Management
 ```typescript
-// Single hook for all login logic
-const useLoginFlow = () => {
-  const [state, setState] = useState({
-    mobile: '',
-    otp: '',
-    isLoading: false,
-    error: null
-  });
-
-  // Auth methods
-  const handleLogin = () => {/*...*/};
-  const handleOtp = () => {/*...*/};
-  
-  return { ...state, handleLogin, handleOtp };
-};
+// Replace getStyle utility with CSS modules
+import styles from './styles/LoginPage.module.css'
 ```
 
-### 4. Navigation Flow
-
+#### 2. Type Safety
 ```typescript
-// Routes Configuration
-<Routes>
-  {/* Pages WITH Layout */}
-  <Route element={<Layout />}>
-    <Route path="/" />
-    <Route path="/booking/return-customer" />
-  </Route>
+// Add type definitions
+type LoginPageProps = {
+  onAuthSuccess?: () => void;
+}
 
-  {/* Self-contained Pages */}
-  <Route path="/login" />
-  <Route path="/booking/*" />
-  <Route path="/amc/*" />
-</Routes>
+type CustomerPanelProps = {
+  onSubmit: (data: AuthData) => Promise<void>;
+  isLoading: boolean;
+  error?: string;
+}
 ```
 
-### 5. Implementation Steps
+#### 3. Error Handling
+```typescript
+// Add error boundary wrapper
+const LoginPageErrorBoundary: React.FC = () => (
+  <ErrorBoundary fallback={<LoginErrorFallback />}>
+    <LoginPage />
+  </ErrorBoundary>
+);
+```
 
-1. Clean Up
-- [x] Remove redundant components
-- [x] Remove unnecessary directories
-- [x] Consolidate types and constants
+#### 4. Loading States
+```typescript
+// Add loading states
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState<Error | null>(null);
+```
 
-2. Create Core Files
-- [ ] Create useLoginFlow hook
-- [ ] Create FirstTimePanel component
-- [ ] Create LoginPanel component
-- [ ] Create main container
+### 4. Migration Plan
 
-3. Implement Features
-- [ ] Authentication logic
-- [ ] Navigation handling
-- [ ] Form validation
-- [ ] Error handling
-- [ ] Loading states
+1. Phase 1: Setup
+- [x] Create component directory structure
+- [ ] Add type definitions
+- [ ] Implement CSS modules
 
-4. Testing
-- [ ] Unit tests for hooks
-- [ ] Component integration tests
-- [ ] Navigation flow tests
-- [ ] Error handling tests
+2. Phase 2: Component Updates
+- [ ] Add error boundaries
+- [ ] Add loading states
+- [ ] Improve type safety
 
-### 6. Benefits
+3. Phase 3: Testing
+- [ ] Add unit tests
+- [ ] Test error scenarios
+- [ ] Validate loading states
+
+### 5. Benefits
 
 1. Maintainability
-- Fewer files to manage
-- Clear component boundaries
-- Simplified state management
-- Easier to test
+- Clear component structure
+- Type-safe implementation
+- Better error handling
+- Proper loading states
 
 2. Performance
-- Reduced bundle size
-- Fewer re-renders
-- Better code splitting
-- Simpler prop drilling
+- Co-located components
+- Efficient bundling
+- No unnecessary code splitting
 
-3. Development
-- Faster implementation
-- Easier debugging
-- Clear responsibilities
-- Better team collaboration
+3. Developer Experience
+- Simple directory structure
+- Clear component responsibilities
+- Easy to understand and modify
 
-### 7. Success Criteria
+### 6. Success Criteria
 
 1. Functionality
 - All auth flows work correctly
-- Navigation behaves as expected
-- Forms validate properly
-- Errors handled gracefully
+- Proper error handling
+- Smooth loading states
 
-2. Performance
+2. Code Quality
+- Type safety throughout
+- Proper test coverage
+- Clear component structure
+
+3. Performance
 - Quick initial load
 - Smooth transitions
 - Responsive UI
-- Efficient state updates
 
-3. Code Quality
-- Clear component structure
-- Proper type safety
-- Consistent styling
-- Good test coverage
+### 7. Notes
 
-### 8. Migration Plan
+1. Code Splitting Decision
+- Components are small enough to bundle together
+- Login is a critical path component
+- No need for lazy loading at this scale
 
-1. Phase 1: Setup
-- [x] Create new directory structure
-- [x] Remove redundant files
-- [ ] Set up new component files
+2. Current Implementation
+- Using direct imports for better performance
+- Co-located components for maintainability
+- Simple, focused component structure
 
-2. Phase 2: Core Logic
-- [ ] Implement useLoginFlow
-- [ ] Create base components
-- [ ] Add navigation handling
-
-3. Phase 3: UI/UX
-- [ ] Style components
-- [ ] Add animations
-- [ ] Implement loading states
-- [ ] Handle errors
-
-4. Phase 4: Testing
-- [ ] Write unit tests
-- [ ] Add integration tests
-- [ ] Test edge cases
-- [ ] Performance testing
-
-### 9. Comparison with Previous Approach
-
-Previous (Over-complicated):
-- Many tiny components
-- Scattered logic
-- Complex directory structure
-- Multiple state sources
-
-New (Simplified):
-- Focused components
-- Centralized logic
-- Flat structure
-- Single source of truth
-
-This simplified approach maintains all functionality while reducing complexity and improving maintainability.
+This simplified approach maintains functionality while reducing complexity and improving maintainability.
