@@ -1,6 +1,8 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LoadingScreen } from '@components/LoadingScreen';
+import SectionErrorBoundary from './utils/ErrorBoundary';
+import { initializeTracking } from './utils/performance';
 
 // Lazy load sections
 const WelcomeSection = lazy(() => import('./sections/WelcomeSection'));
@@ -18,6 +20,12 @@ interface HomePageProps {
  * Main landing page with service categories, testimonials, and trust indicators
  */
 const HomePage: React.FC<HomePageProps> = ({ className }) => {
+  // Initialize performance tracking
+  useEffect(() => {
+    const cleanup = initializeTracking();
+    return () => cleanup();
+  }, []);
+
   return (
     <div className="min-h-screen w-full relative">
       {/* Video Background */}
@@ -39,26 +47,34 @@ const HomePage: React.FC<HomePageProps> = ({ className }) => {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-start w-full pt-6 px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
-        <Suspense fallback={<LoadingScreen />}>
-          <WelcomeSection />
-        </Suspense>
+        <SectionErrorBoundary section="welcome">
+          <Suspense fallback={<LoadingScreen />}>
+            <WelcomeSection />
+          </Suspense>
+        </SectionErrorBoundary>
 
         {/* Service Categories */}
-        <Suspense fallback={<LoadingScreen />}>
-          <CategoryGrid />
-        </Suspense>
+        <SectionErrorBoundary section="categories">
+          <Suspense fallback={<LoadingScreen />}>
+            <CategoryGrid />
+          </Suspense>
+        </SectionErrorBoundary>
 
         {/* Trust Indicators */}
         <div className="mt-36 mb-24">
-          <Suspense fallback={<LoadingScreen />}>
-            <TrustIndicators />
-          </Suspense>
+          <SectionErrorBoundary section="trust-indicators">
+            <Suspense fallback={<LoadingScreen />}>
+              <TrustIndicators />
+            </Suspense>
+          </SectionErrorBoundary>
         </div>
 
         {/* Testimonials */}
-        <Suspense fallback={<LoadingScreen />}>
-          <TestimonialsSection />
-        </Suspense>
+        <SectionErrorBoundary section="testimonials">
+          <Suspense fallback={<LoadingScreen />}>
+            <TestimonialsSection />
+          </Suspense>
+        </SectionErrorBoundary>
       </div>
     </div>
   );
