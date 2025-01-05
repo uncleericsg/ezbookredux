@@ -1,18 +1,18 @@
 /* Form sections and groups */
 .form-section {
-  @apply w-full mb-6 sm:mb-8 px-3 sm:px-0;
+  @apply w-full mb-4 px-3 sm:px-0;
 }
 
 .form-section + .form-section {
-  @apply mt-6 sm:mt-8;
+  @apply mt-4;
 }
 
 .form-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8;
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
 }
 
 .form-group {
-  @apply mb-4 sm:mb-6 relative;
+  @apply mb-1 relative;
 }
 
 .form-label {
@@ -21,14 +21,14 @@
 
 /* Input styling */
 .form-input {
-  @apply w-full pl-10 pr-10 py-2.5 sm:py-2 bg-gray-700 rounded-md sm:rounded-lg border border-gray-600 text-white;
+  @apply w-full pl-14 pr-14 py-2.5 sm:py-2 bg-gray-700 rounded-md sm:rounded-lg border border-gray-600 text-white;
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent;
   min-height: 42px;
 }
 
 /* Icon positioning */
 .form-group .absolute.left-3 {
-  @apply top-3 sm:top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10;
+  @apply top-2.5 left-5 h-5 w-5 text-gray-400 pointer-events-none z-10;
 }
 
 .form-group .absolute.right-3 {
@@ -42,7 +42,7 @@
 
 /* Validation icons */
 .validation-icon {
-  @apply absolute right-3 top-3 sm:top-2.5 h-5 w-5 pointer-events-none;
+  @apply absolute right-5 top-2.5 h-5 w-5 pointer-events-none;
   animation: fadeIn 0.2s ease-out forwards;
 }
 
@@ -88,7 +88,7 @@
 
 /* Submit button */
 .submit-button {
-  @apply w-full py-4 px-6 rounded-lg font-medium text-base transition-all duration-300;
+  @apply w-full py-2.5 px-6 rounded-lg font-medium text-sm transition-all duration-300;
 }
 
 .submit-button:not(:disabled) {
