@@ -72,7 +72,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({
               name="mobile"
               required
               value={formData.mobile}
-              placeholder="For testing, use: 91874498"
               onChange={onInputChange}
               onBlur={onBlur}
               onKeyPress={(e) => {
@@ -90,6 +89,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({
               </div>
             )}
           </div>
+          {!validationState.showOTPInput && !validationState.isMobileVerified && (
+            <div className="text-gray-500 text-xs mt-1">For testing, use: 91874498</div>
+          )}
           {validation.mobile.touched && !validation.mobile.valid && !validationState.showOTPInput && (
             <div className="text-red-500 text-xs mt-1">{validation.mobile.error}</div>
           )}

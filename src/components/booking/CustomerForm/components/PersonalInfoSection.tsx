@@ -26,7 +26,6 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               onChange={onInputChange}
               onBlur={onBlur}
               className="form-input"
-              placeholder="Enter your first name"
             />
             {validation.firstName.touched && (
               <div className={`validation-icon ${validation.firstName.valid ? 'text-green-400' : 'text-red-400'}`}>
@@ -54,7 +53,6 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               onChange={onInputChange}
               onBlur={onBlur}
               className="form-input"
-              placeholder="Enter your last name"
             />
             {validation.lastName.touched && (
               <div className={`validation-icon ${validation.lastName.valid ? 'text-green-400' : 'text-red-400'}`}>

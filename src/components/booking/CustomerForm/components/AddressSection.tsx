@@ -75,7 +75,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             onChange={onInputChange}
             onBlur={onBlur}
             className="form-input"
-            placeholder={!isGoogleMapsLoaded ? "Loading address search..." : "Enter your address"}
+            placeholder={!isGoogleMapsLoaded ? "Loading address search..." : ""}
             disabled={!isGoogleMapsLoaded}
           />
           {validation.address.touched && (
@@ -105,7 +105,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
               onChange={onInputChange}
               onBlur={onBlur}
               className="form-input"
-              placeholder="Auto-filled from address"
               readOnly
             />
             {validation.postalCode.touched && (
