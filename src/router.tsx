@@ -21,7 +21,7 @@ import Login from '@components/auth/LoginPage';  // Updated import path
 import NotFound from '@components/NotFound';
 import ProtectedRoute from '@components/ProtectedRoute';
 import PublicRoute from '@components/PublicRoute';
-import ServiceCategorySelection from '@components/ServiceCategorySelection';
+const HomePage = lazy(() => import('@components/home'));
 
 // Lazy load components that use React Query or are not needed immediately
 const Notifications = lazy(() => import('@components/Notifications'));
@@ -57,7 +57,7 @@ const RouterComponent = () => {
           {/* Routes WITH Layout */}
           <Route element={<Layout />}>
             {/* Core Routes - Eagerly Loaded */}
-            <Route index element={<ServiceCategorySelection />} />
+            <Route index element={<HomePage />} />
             
             {/* Protected Routes with Layout */}
             <Route
