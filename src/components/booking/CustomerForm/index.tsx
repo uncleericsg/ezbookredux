@@ -200,8 +200,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, user, isAMC = false
   }, [user, updateValidation]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="form-container">
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         <div className="form-header">Customer Information</div>
         <div className="form-description">
           Please fill in your details for the booking

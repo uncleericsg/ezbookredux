@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FiMapPin, FiHome, FiHash } from 'react-icons/fi';
+import { FiMapPin, FiHome, FiHash, FiCheck, FiX } from 'react-icons/fi';
 import type { AddressSectionProps } from '../types';
 import { useAddressAutocomplete } from '../hooks/useAddressAutocomplete';
 
@@ -58,13 +58,13 @@ const AddressSection: React.FC<AddressSectionProps> = ({
   });
 
   return (
-    <div className="space-y-8">
-      <div className="relative">
-        <label htmlFor="address" className="block text-sm font-medium text-gray-200 mb-2">
+    <div className="form-section">
+      <div className="form-group">
+        <label htmlFor="address" className="form-label">
           Street Address {!isGoogleMapsLoaded && <span className="text-xs text-gray-400">(Loading address search...)</span>}
         </label>
         <div className="relative">
-          <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FiMapPin className="absolute left-3" />
           <input
             ref={setInputRef}
             type="text"
@@ -74,29 +74,28 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             value={formData.blockStreet}
             onChange={onInputChange}
             onBlur={onBlur}
-            className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
-              validation.address.touched
-                ? validation.address.valid
-                  ? 'border-green-500'
-                  : 'border-red-500'
-                : 'border-gray-600'
-            } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className="form-input"
             placeholder={!isGoogleMapsLoaded ? "Loading address search..." : "Enter your address"}
             disabled={!isGoogleMapsLoaded}
           />
+          {validation.address.touched && (
+            <div className={`validation-icon ${validation.address.valid ? 'text-green-400' : 'text-red-400'}`}>
+              {validation.address.valid ? <FiCheck /> : <FiX />}
+            </div>
+          )}
         </div>
         {validation.address.touched && !validation.address.valid && (
-          <p className="mt-2 text-sm text-red-500">{validation.address.error}</p>
+          <div className="text-red-500 text-xs mt-1">{validation.address.error}</div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="relative">
-          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-200 mb-2">
+      <div className="form-grid">
+        <div className="form-group">
+          <label htmlFor="postalCode" className="form-label">
             Postal Code
           </label>
           <div className="relative">
-            <FiHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiHome className="absolute left-3" />
             <input
               type="text"
               id="postalCode"
@@ -105,28 +104,27 @@ const AddressSection: React.FC<AddressSectionProps> = ({
               value={formData.postalCode}
               onChange={onInputChange}
               onBlur={onBlur}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
-                validation.postalCode.touched
-                  ? validation.postalCode.valid
-                    ? 'border-green-500'
-                    : 'border-red-500'
-                  : 'border-gray-600'
-              } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className="form-input"
               placeholder="Auto-filled from address"
               readOnly
             />
+            {validation.postalCode.touched && (
+              <div className={`validation-icon ${validation.postalCode.valid ? 'text-green-400' : 'text-red-400'}`}>
+                {validation.postalCode.valid ? <FiCheck /> : <FiX />}
+              </div>
+            )}
           </div>
           {validation.postalCode.touched && !validation.postalCode.valid && (
-            <p className="mt-2 text-sm text-red-500">{validation.postalCode.error}</p>
+            <div className="text-red-500 text-xs mt-1">{validation.postalCode.error}</div>
           )}
         </div>
 
-        <div className="relative">
-          <label htmlFor="unit" className="block text-sm font-medium text-gray-200 mb-2">
+        <div className="form-group">
+          <label htmlFor="unit" className="form-label">
             Unit Number (NA if none)
           </label>
           <div className="relative">
-            <FiHash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiHash className="absolute left-3" />
             <input
               ref={unitInputRef}
               type="text"
@@ -136,17 +134,16 @@ const AddressSection: React.FC<AddressSectionProps> = ({
               value={formData.floorUnit}
               onChange={onInputChange}
               onBlur={onBlur}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border ${
-                validation.unit.touched
-                  ? validation.unit.valid
-                    ? 'border-green-500'
-                    : 'border-red-500'
-                  : 'border-gray-600'
-              } text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className="form-input"
             />
+            {validation.unit.touched && (
+              <div className={`validation-icon ${validation.unit.valid ? 'text-green-400' : 'text-red-400'}`}>
+                {validation.unit.valid ? <FiCheck /> : <FiX />}
+              </div>
+            )}
           </div>
           {validation.unit.touched && !validation.unit.valid && (
-            <p className="mt-2 text-sm text-red-500">{validation.unit.error}</p>
+            <div className="text-red-500 text-xs mt-1">{validation.unit.error}</div>
           )}
         </div>
       </div>

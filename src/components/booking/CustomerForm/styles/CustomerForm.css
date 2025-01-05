@@ -1,7 +1,9 @@
+/* Base container */
 .form-container {
-  @apply max-w-full sm:max-w-3xl mx-0 sm:mx-auto bg-gray-800 rounded-none sm:rounded-lg shadow-lg p-0 sm:p-6;
+  @apply w-full max-w-full sm:max-w-5xl mx-0 sm:mx-auto bg-gray-800 rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6;
 }
 
+/* Form header and description */
 .form-header {
   @apply text-xl sm:text-2xl font-bold text-white mb-2 px-3 sm:px-0;
 }
@@ -10,52 +12,63 @@
   @apply text-gray-400 mb-3 sm:mb-6 text-sm sm:text-base px-3 sm:px-0;
 }
 
+/* Form sections and groups */
 .form-section {
-  @apply mb-4 sm:mb-6 px-3 sm:px-0;
+  @apply w-full mb-6 sm:mb-8 px-3 sm:px-0;
+}
+
+.form-section + .form-section {
+  @apply mt-6 sm:mt-8;
 }
 
 .form-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4;
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8;
 }
 
 .form-group {
-  @apply mb-2 sm:mb-4 relative;
+  @apply mb-4 sm:mb-6 relative;
 }
 
 .form-label {
   @apply block text-sm font-medium text-gray-300 mb-1;
 }
 
-.form-group input {
-  @apply w-full pl-10 pr-10 py-2.5 sm:py-2 bg-gray-700 rounded-md sm:rounded-lg border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent;
+/* Input styling */
+.form-input {
+  @apply w-full pl-10 pr-10 py-2.5 sm:py-2 bg-gray-700 rounded-md sm:rounded-lg border border-gray-600 text-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent;
   min-height: 42px;
 }
 
+/* Icon positioning */
 .form-group .absolute.left-3 {
-  @apply top-3 sm:top-2.5;
+  @apply top-3 sm:top-2.5 h-5 w-5 text-gray-400 pointer-events-none z-10;
 }
 
 .form-group .absolute.right-3 {
-  @apply top-3 sm:top-2.5;
+  @apply top-3 sm:top-2.5 h-5 w-5 pointer-events-none z-10;
 }
 
+/* Button container */
 .form-button-container {
-  @apply mt-4 sm:mt-6 px-3 sm:px-0;
+  @apply mt-6 sm:mt-8 px-3 sm:px-0;
 }
 
+/* Validation icons */
 .validation-icon {
-  @apply pointer-events-none;
+  @apply absolute right-3 top-3 sm:top-2.5 h-5 w-5 pointer-events-none;
   animation: fadeIn 0.2s ease-out forwards;
 }
 
-.validation-icon-success {
+.validation-icon.text-green-400 {
   @apply text-green-500;
 }
 
-.validation-icon-error {
+.validation-icon.text-red-400 {
   @apply text-red-500;
 }
 
+/* Suggestions dropdown */
 .suggestions-container {
   @apply absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto;
 }
@@ -68,11 +81,50 @@
   @apply bg-gray-700;
 }
 
+/* Clear button */
 .form-clear-button {
   @apply text-sm text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-1;
 }
 
-/* Error message animation */
+/* Error messages */
+.text-red-500 {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.loading-content {
+  @apply bg-gray-800 rounded-lg p-6 flex items-center space-x-3;
+}
+
+/* Submit button */
+.submit-button {
+  @apply w-full py-4 px-6 rounded-lg font-medium text-base transition-all duration-300;
+}
+
+.submit-button:not(:disabled) {
+  @apply bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-gray-900 shadow-lg;
+  @apply hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] transform hover:-translate-y-0.5;
+}
+
+.submit-button:disabled {
+  @apply bg-gray-700 text-gray-400 cursor-not-allowed;
+}
+
+/* OTP Input specific styles */
+.otp-input-container {
+  @apply flex gap-2 justify-center mt-2;
+}
+
+.otp-input {
+  @apply w-12 h-12 text-center text-xl bg-gray-700 border border-gray-600 rounded-lg text-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent;
+}
+
+/* Animations */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -84,11 +136,6 @@
   }
 }
 
-.error-message {
-  animation: slideDown 0.2s ease-out;
-}
-
-/* Fade-in animation for validation icons */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -98,17 +145,36 @@
   }
 }
 
-/* Mobile-specific adjustments */
+/* Mobile adjustments */
 @media (max-width: 640px) {
   .form-container {
-    @apply shadow-none;
+    @apply shadow-none rounded-none p-4;
+  }
+  
+  .form-section {
+    @apply px-0;
+  }
+  
+  .form-header,
+  .form-description {
+    @apply px-0;
+  }
+  
+  .form-button-container {
+    @apply px-0;
   }
   
   .suggestions-container {
-    @apply mx-3;
+    @apply mx-0;
   }
 }
 
+/* Utility classes */
 .text-red-500, .text-green-500, .text-yellow-400 {
   @apply mx-0 px-0;
+}
+
+/* Focus styles */
+.focus-visible:focus {
+  @apply outline-none ring-2 ring-blue-500/50;
 }
