@@ -109,6 +109,14 @@ const RouterComponent = () => {
 
           {/* First Time Customer Flow - Self Contained */}
           <Route
+            path={ROUTES.BOOKING.FIRST_TIME}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <FirstTimeBookingFlowWrapper />
+              </Suspense>
+            }
+          />
+          <Route
             path={ROUTES.BOOKING.PRICE_SELECTION}
             element={
               <Suspense fallback={<LoadingScreen />}>

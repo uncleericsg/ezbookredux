@@ -63,7 +63,20 @@ export const PROTECTED_ROUTES = [
 
 // Routes that should not show the main navigation
 export const ROUTES_WITHOUT_NAVBAR = [
+  // Authentication
   ROUTES.LOGIN,
+  
+  // First Time Customer Flow
+  ROUTES.BOOKING.FIRST_TIME,
+  ROUTES.BOOKING.PRICE_SELECTION,
+  ROUTES.BOOKING.POWERJET_CHEMICAL,
+  ROUTES.BOOKING.GAS_LEAK,
+  
+  // AMC Flow
+  ROUTES.AMC.SIGNUP,
+  ROUTES.AMC.SUBSCRIPTION,
+  
+  // Admin Routes
   ROUTES.ADMIN.ROOT,
   ROUTES.ADMIN.DASHBOARD,
   ROUTES.ADMIN.USERS,
