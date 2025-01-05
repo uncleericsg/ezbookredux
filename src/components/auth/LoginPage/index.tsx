@@ -1,9 +1,12 @@
 import React from 'react';
-import { getStyle } from './styles/common';
-import { FirstTimeCustomerPanel } from './components/FirstTimeCustomerPanel';
-import { ExistingCustomerPanel } from './components/ExistingCustomerPanel';
-import { VideoBackground } from './components/VideoBackground';
-import { WelcomeHeader } from './components/WelcomeHeader';
+import { useAppSelector } from '../../../store';
+import { LoadingScreen } from '@components/LoadingScreen';
+import {
+  VideoBackground,
+  WelcomeHeader,
+  FirstTimeCustomerPanel,
+  ExistingCustomerPanel
+} from './components';
 
 /**
  * Main login page component
@@ -19,19 +22,25 @@ import { WelcomeHeader } from './components/WelcomeHeader';
  * - Grid layout for panels (60/40 split)
  */
 const LoginPage: React.FC = () => {
+  const { loading: authLoading } = useAppSelector(state => state.auth);
+
+  if (authLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <div className={getStyle('containers', 'root')}>
+    <div className="min-h-screen w-full relative">
       {/* Background */}
       <VideoBackground />
 
       {/* Content Container */}
-      <div className={getStyle('containers', 'content')}>
+      <div className="relative z-10 flex flex-col items-center justify-start w-full pt-6 px-4 sm:px-6 lg:px-8">
         {/* Logo and Welcome Text */}
         <WelcomeHeader />
 
         {/* Login Panels */}
-        <div className={getStyle('responsive', 'container')}>
-          <div className={getStyle('containers', 'grid')}>
+        <div className="max-w-6xl w-full">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 divide-gray-700">
             <FirstTimeCustomerPanel />
             <ExistingCustomerPanel />
           </div>
