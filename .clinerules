@@ -26,6 +26,10 @@ SCHEMA_PATH="prisma/schema.prisma"
 # Instead of:
 # command1 && command2
 
+or use ; semi-colon
+example:
+git add docs/login-code-split.md; git commit -m "docs: update login code-split plan with simplified approach"
+
 # Path Aliases
 COMPONENTS_BASE="@"
 COMPONENTS_PATHS=(

@@ -1,24 +1,18 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 export const WelcomeHeader: React.FC = () => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="text-center mb-6"
-    >
+    <div className="text-center mb-6 animate-fade-in">
       {/* Logo with optimized loading */}
       <img
-        className="mx-auto h-16 w-auto"
+        className="mx-auto h-16 w-16" // Fixed dimensions to prevent layout shift
         src="/logo.png"
         alt="iAircon Easy Booking Logo"
-        width="64"
-        height="64"
+        width={64}
+        height={64}
         decoding="async"
         loading="eager"
-        // Remove fetchPriority as it's not widely supported yet
+        fetchPriority="high" // Fixed casing for TypeScript
       />
       {/* Main heading for SEO */}
       <h1 
@@ -31,8 +25,32 @@ export const WelcomeHeader: React.FC = () => {
       <p className="mt-2 text-sm text-gray-300">
         Singapore's Premier Air Conditioning Service Platform
       </p>
-    </motion.div>
+    </div>
   );
 };
+
+// Add CSS animation instead of framer-motion
+const styles = `
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  will-change: transform;
+}
+`;
+
+// Insert styles
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
 
 export default WelcomeHeader;
