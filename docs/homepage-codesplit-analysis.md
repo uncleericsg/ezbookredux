@@ -18,7 +18,67 @@ const isAmcCustomer = currentUser?.amcStatus === 'active';
 
 ### B. Navigation & State Management
 
-1. Navigation State
+1. Navigation Flow
+```typescript
+// Forward Navigation
+const handleCategorySelect = (categoryId: string) => {
+  const state = {
+    from: '/',
+    timestamp: Date.now(),
+    selectedCategory: categories.find(c => c.id === categoryId)?.name
+  };
+  navigate(routes[categoryId], { state });
+};
+
+// Return Path Handling
+const handleReturn = () => {
+  const { state } = location;
+  if (state?.from === '/') {
+    navigate('/', { replace: true });
+  } else {
+    navigate(-1);
+  }
+};
+
+// Login Redirect
+const handleProtectedRoute = () => {
+  const returnUrl = location.pathname + location.search;
+  navigate('/login', { state: { returnUrl } });
+};
+```
+
+2. Category-Specific Behaviors
+```typescript
+// Validation Rules
+const categoryValidation = {
+  regular: {
+    requiresHistory: true,
+    minVisits: 1
+  },
+  'powerjet-chemical': {
+    requiresHistory: false,
+    hasWarranty: true
+  },
+  'gas-leak': {
+    isEmergency: true,
+    priorityLevel: 'high'
+  },
+  amc: {
+    requiresSubscription: true,
+    checkServiceDue: true
+  }
+};
+
+// Form Fields
+const categoryFields = {
+  regular: ['unitCount', 'lastServiceDate'],
+  'powerjet-chemical': ['unitCount', 'warrantyStatus'],
+  'gas-leak': ['symptoms', 'urgencyLevel'],
+  amc: ['contractNumber', 'nextServiceDate']
+};
+```
+
+3. Navigation State
 ```typescript
 interface NavigationState {
   from: string;        // Source path
