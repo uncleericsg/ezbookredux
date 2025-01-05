@@ -9,15 +9,16 @@ export const WelcomeHeader: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="text-center mb-6"
     >
-      {/* Logo with proper dimensions and loading priority */}
+      {/* Logo with optimized loading */}
       <img
         className="mx-auto h-16 w-auto"
         src="/logo.png"
         alt="iAircon Easy Booking Logo"
         width="64"
         height="64"
+        decoding="async"
         loading="eager"
-        // Removed fetchPriority due to React warning
+        // Remove fetchPriority as it's not widely supported yet
       />
       {/* Main heading for SEO */}
       <h1 

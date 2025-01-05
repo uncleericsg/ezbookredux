@@ -9,10 +9,11 @@ export const VideoBackground: React.FC = () => {
         loop
         muted
         playsInline
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover"
         aria-hidden="true"
-        preload="auto"
-        poster="/videos/bokeh_video_bg.webm?poster"
+        width="1920"
+        height="1080"
       >
         <source 
           src="/videos/bokeh_video_bg.webm" 
