@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from '@hooks/useMediaQuery.js';
@@ -7,7 +7,6 @@ import type { RootState } from '@store';
 import { AirVent, Wrench, ShieldCheck } from 'lucide-react';
 import CategoryCard from '../features/CategoryCard.js';
 import { ROUTES } from '@config/routes.js';
-
 
 interface CategoryGridProps {
   className?: string;
@@ -23,50 +22,47 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ className }) => {
   const { currentUser } = useAppSelector((state: RootState) => state.user);
   const isAmcCustomer = currentUser?.amcStatus === 'active';
 
-  // Memoize categories to prevent unnecessary recalculations
-  const categories = useMemo(() => {
-    const baseCategories = [
-      {
-        id: 'regular',
-        name: 'Return Customers Booking',
-        description: 'Quick and easy booking for our valued returning customers',
-        icon: AirVent,
-        rating: 4.8,
-        reviewCount: 1250,
-        popular: true
-      },
-      {
-        id: 'powerjet-chemical',
-        name: 'PowerJet Chemical Wash',
-        description: 'Signature powerjet service with deep cleaning using coil chemicals',
-        icon: Wrench,
-        rating: 4.9,
-        reviewCount: 850
-      },
-      {
-        id: 'gas-leak',
-        name: 'Gas Check & Leakage Issues',
-        description: 'Frequent gas top-up & leakage issues inspection service',
-        icon: ShieldCheck,
-        rating: 4.9,
-        reviewCount: 680
-      }
-    ];
-    
-    // Add AMC category for AMC customers
-    if (isAmcCustomer) {
-      baseCategories.unshift({
-        id: 'amc',
-        name: 'AMC Service Visit',
-        description: 'Premium maintenance service included in your AMC package',
-        icon: ShieldCheck,
-        rating: 4.9,
-        reviewCount: 320
-      });
+  // Base categories that are always available
+  const baseCategories = [
+    {
+      id: 'regular',
+      name: 'Return Customers Booking',
+      description: 'Quick and easy booking for our valued returning customers',
+      icon: AirVent,
+      rating: 4.8,
+      reviewCount: 1250,
+      popular: true
+    },
+    {
+      id: 'powerjet-chemical',
+      name: 'PowerJet Chemical Wash',
+      description: 'Signature powerjet service with deep cleaning using coil chemicals',
+      icon: Wrench,
+      rating: 4.9,
+      reviewCount: 850
+    },
+    {
+      id: 'gas-leak',
+      name: 'Gas Check & Leakage Issues',
+      description: 'Frequent gas top-up & leakage issues inspection service',
+      icon: ShieldCheck,
+      rating: 4.9,
+      reviewCount: 680
     }
-    
-    return baseCategories;
-  }, [isAmcCustomer]);
+  ];
+  
+  // Add AMC category for AMC customers
+  const categories = isAmcCustomer ? [
+    {
+      id: 'amc',
+      name: 'AMC Service Visit',
+      description: 'Premium maintenance service included in your AMC package',
+      icon: ShieldCheck,
+      rating: 4.9,
+      reviewCount: 320
+    },
+    ...baseCategories
+  ] : baseCategories;
 
   // Handle category selection
   const handleCategorySelect = (categoryId: string) => {
@@ -99,7 +95,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ className }) => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className={`mb-24 ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { LoadingScreen } from '@components/LoadingScreen.js';
 import SectionErrorBoundary from './utils/ErrorBoundary';
 import { initializeTracking } from './utils/performance';
+import '@styles/home.css';
 
 // Lazy load sections
 const WelcomeSection = lazy(() => import('./sections/WelcomeSection.js'));
@@ -27,25 +28,12 @@ const HomePage: React.FC<HomePageProps> = ({ className }) => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full relative">
-      {/* Video Background */}
-      <Suspense fallback={null}>
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src="videos/bokeh_video_bg.webm" type="video/webm" />
-        </video>
-      </Suspense>
-
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-[#030812]/90" />
-
+    <div className="min-h-screen bg-gray-900 text-white relative">
+      {/* Background Gradient */}
+      <div className="bg-gradient-overlay" />
+      
       {/* Content Container */}
-      <div className="relative z-10 flex flex-col items-center justify-start w-full pt-6 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}
         <SectionErrorBoundary section="welcome">
           <Suspense fallback={<LoadingScreen />}>
@@ -55,7 +43,19 @@ const HomePage: React.FC<HomePageProps> = ({ className }) => {
 
         {/* Service Categories */}
         <SectionErrorBoundary section="categories">
-          <Suspense fallback={<LoadingScreen />}>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <div className="animate-pulse bg-gray-800 rounded-lg p-8">
+                  <div className="h-8 w-32 bg-gray-700 rounded mb-4 mx-auto"></div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-700 rounded w-3/4 mx-auto"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/2 mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }>
             <CategoryGrid />
           </Suspense>
         </SectionErrorBoundary>

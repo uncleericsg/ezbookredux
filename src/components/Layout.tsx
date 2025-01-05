@@ -54,7 +54,7 @@ const Layout: React.FC = () => {
           onDismiss={() => dismissAnnouncement(currentAnnouncement.id)}
         />
       )}
-      <main className={`flex-grow pt-16 ${location.pathname !== '/login' ? 'bg-white dark:bg-gray-900' : ''}`}>
+      <main className={`flex-grow pt-16 ${location.pathname === '/' || location.pathname === '/login' ? '' : 'bg-white dark:bg-gray-900'}`}>
         <Outlet />
       </main>
       {shouldShowNavbar && <Footer />}
