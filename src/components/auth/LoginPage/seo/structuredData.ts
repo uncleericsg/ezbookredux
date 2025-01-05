@@ -6,14 +6,76 @@ export const loginPageStructuredData = {
   "url": "https://iaircon.app/login",
   "provider": {
     "@type": "LocalBusiness",
-    "name": "iAircon Singapore Aircon Service",
+    "name": "iAircon Singapore Aircon Services",
     "description": "Professional air conditioning services in Singapore",
     "image": "https://iaircon.app/logo.png",
     "telephone": "+65 9187 4498",
     "email": "iairconsg@gmail.com",
+    "priceRange": "$$",
+    "currencyAccepted": "SGD",
     "areaServed": {
       "@type": "City",
       "name": "Singapore"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Professional Aircon Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "PowerJet Chemical Wash",
+            "description": "Premium chemical wash using PowerJet technology for deep cleaning",
+            "category": "Cleaning Service",
+            "serviceType": "Premium",
+            "offers": {
+              "@type": "Offer",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "priceCurrency": "SGD",
+                "price": "From 120.00"
+              }
+            }
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Gas Top-up & Leak Repair",
+            "description": "Professional gas leak detection and repair with quality refrigerant top-up",
+            "category": "Repair Service",
+            "serviceType": "Essential",
+            "offers": {
+              "@type": "Offer",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "priceCurrency": "SGD",
+                "price": "From 125.00"
+              }
+            }
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Annual Maintenance Contract",
+            "description": "Comprehensive yearly maintenance package with priority support",
+            "category": "Maintenance Service",
+            "serviceType": "Contract",
+            "offers": {
+              "@type": "Offer",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "priceCurrency": "SGD",
+                "price": "From 240.00"
+              }
+            }
+          }
+        }
+      ]
     },
     "aggregateRating": {
       "@type": "AggregateRating",
@@ -35,7 +97,9 @@ export const loginPageStructuredData = {
           "name": "John D."
         },
         "datePublished": "2024-01-05",
-        "reviewBody": "Excellent service! The technicians were professional and efficient."
+        "reviewBody": "Excellent service! The technicians were professional and efficient.",
+        "isPurchaseVerified": true,
+        "servicePerformed": "PowerJet Chemical Wash"
       },
       {
         "@type": "Review",
@@ -49,7 +113,9 @@ export const loginPageStructuredData = {
           "name": "Sarah L."
         },
         "datePublished": "2024-01-04",
-        "reviewBody": "Very satisfied with their AMC package. Great value for money!"
+        "reviewBody": "Very satisfied with their AMC package. Great value for money!",
+        "isPurchaseVerified": true,
+        "servicePerformed": "Annual Maintenance Contract"
       }
     ],
     "contactPoint": [
@@ -102,7 +168,7 @@ export const loginPageStructuredData = {
   "offers": {
     "@type": "Offer",
     "name": "First Time Customer Special",
-    "description": "Special offers for first-time customers booking air conditioning services"
+    "description": "Special offers for first-time customers booking aircon servicing"
   },
   "potentialAction": [
     {
