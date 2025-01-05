@@ -2,8 +2,8 @@ import React from 'react';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 import TikTokIcon from '@components/icons/TikTokIcon';
 import { useSocialLinks } from '@hooks/useSocialLinks';
-import RatingsDisplay from '@components/RatingsDisplay';
-import { useAppSelector } from '@store/hooks';
+import RatingsDisplay from '@components/home/features/RatingsDisplay.js';
+import { useAppSelector } from '@store';
 
 const Footer = () => {
   const { socialLinks, loading } = useSocialLinks();
