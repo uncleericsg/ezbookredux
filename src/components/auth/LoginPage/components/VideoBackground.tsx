@@ -1,15 +1,5 @@
 import React from 'react';
 
-/**
- * Video Background Component
- * 
- * TODO: Create and add poster image
- * - Required dimensions: 1920x1080
- * - Should capture bokeh effect with gradient overlay
- * - Save as: /public/images/video-poster.jpg
- * - Format: JPG (best for photographs)
- * - Quality: 80-90% (balance between quality and file size)
- */
 export const VideoBackground: React.FC = () => {
   return (
     <>
@@ -22,8 +12,7 @@ export const VideoBackground: React.FC = () => {
         className="absolute inset-0 w-full h-full object-cover"
         aria-hidden="true"
         preload="auto"
-        // Add poster attribute once image is created:
-        // poster="/images/video-poster.jpg"
+        poster="/videos/bokeh_video_bg.webm?poster"
       >
         <source 
           src="/videos/bokeh_video_bg.webm" 
