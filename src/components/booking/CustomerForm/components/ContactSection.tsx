@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiMail, FiPhone, FiCheck, FiX } from 'react-icons/fi';
+import { OTPInput } from '@components/common/OTPInput';
 import type { ContactSectionProps } from '../types';
 import { EmailSuggestion } from '@utils/emailUtils';
 
@@ -71,6 +72,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
               name="mobile"
               required
               value={formData.mobile}
+              placeholder="For testing, use: 91874498"
               onChange={onInputChange}
               onBlur={onBlur}
               onKeyPress={(e) => {
@@ -103,9 +105,16 @@ const ContactSection: React.FC<ContactSectionProps> = ({
           )}
           {validationState.showOTPInput && (
             <div className="mt-4">
-              <div id="recaptcha-container"></div>
-              <div className="otp-input-container">
-                {/* OTP Input will be rendered here by the parent component */}
+              <div id="recaptcha-container" className="mb-4"></div>
+              <div className="mt-2">
+                <p className="text-sm text-gray-400 mb-2">Enter the 6-digit code sent to your mobile</p>
+                <OTPInput
+                  length={6}
+                  onComplete={onVerifyOTP}
+                  error={validationState.otpError}
+                  isLoading={validationState.isValidating}
+                />
+                <p className="text-xs text-gray-500 mt-2 text-center">For testing, use: 123456</p>
               </div>
             </div>
           )}

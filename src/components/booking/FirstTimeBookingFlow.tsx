@@ -361,7 +361,7 @@ const FirstTimeBookingFlow: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
+        className="bg-gray-800/50 border border-gray-700/70 p-4 sm:p-6 rounded-lg shadow-xl backdrop-blur-sm"
       >
         <PaymentStep 
           bookingData={{
@@ -392,7 +392,7 @@ const FirstTimeBookingFlow: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
+                className="bg-gray-800/50 border border-gray-700/70 p-4 sm:p-6 rounded-lg shadow-xl backdrop-blur-sm"
               >
                 <BrandSelection onContinue={handleBrandSelection} />
               </motion.div>
@@ -404,15 +404,17 @@ const FirstTimeBookingFlow: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
+                className="bg-gray-800/50 border border-gray-700/70 p-4 sm:p-6 rounded-lg shadow-xl backdrop-blur-sm"
               >
-                <IssueSelection onContinue={handleIssueSelection} />
-                <button
-                  onClick={handleBack}
-                  className="mt-4 text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
-                >
-                  ← Back to Brand Selection
-                </button>
+                <div className="space-y-4">
+                  <IssueSelection onContinue={handleIssueSelection} />
+                  <button
+                    onClick={handleBack}
+                    className="text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
+                  >
+                    ← Back to Brand Selection
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -422,15 +424,17 @@ const FirstTimeBookingFlow: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
+                className="bg-gray-800/50 border border-gray-700/70 rounded-lg shadow-xl backdrop-blur-sm p-4 sm:p-6"
               >
-                <CustomerForm onSave={handleCustomerSave} />
-                <button
-                  onClick={handleBack}
-                  className="mt-4 text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
-                >
-                  ← Back to Issue Selection
-                </button>
+                <div className="space-y-4">
+                  <CustomerForm onSave={handleCustomerSave} />
+                  <button
+                    onClick={handleBack}
+                    className="text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
+                  >
+                    ← Back to Issue Selection
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -440,15 +444,17 @@ const FirstTimeBookingFlow: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-gray-800/50 border border-gray-700/70 p-8 rounded-lg shadow-xl backdrop-blur-sm"
+                className="bg-gray-800/50 border border-gray-700/70 p-4 sm:p-6 rounded-lg shadow-xl backdrop-blur-sm"
               >
-                {renderScheduleStep()}
-                <button
-                  onClick={handleBack}
-                  className="mt-4 text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
-                >
-                  ← Back to Customer Details
-                </button>
+                <div className="space-y-4">
+                  {renderScheduleStep()}
+                  <button
+                    onClick={handleBack}
+                    className="text-[#f7f7f7] hover:text-[#FFD700] transition-colors"
+                  >
+                    ← Back to Customer Details
+                  </button>
+                </div>
               </motion.div>
             )}
 
