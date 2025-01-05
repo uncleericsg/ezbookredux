@@ -80,14 +80,6 @@ const RouterComponent = () => {
             />
             
             {/* Return Customer Booking - WITH Layout */}
-            <Route
-              path={ROUTES.BOOKING.RETURN_CUSTOMER}
-              element={
-                <Suspense fallback={<LoadingScreen />}>
-                  <ReturnCustomerBooking />
-                </Suspense>
-              }
-            />
             
             {/* Booking Confirmation - WITH Layout */}
             <Route
@@ -106,6 +98,16 @@ const RouterComponent = () => {
           
           {/* Authentication */}
           <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+
+          {/* Return Customer Booking - Self Contained */}
+          <Route
+            path={ROUTES.BOOKING.RETURN_CUSTOMER}
+            element={
+              <Suspense fallback={<LoadingScreen />}>
+                <ReturnCustomerBooking />
+              </Suspense>
+            }
+          />
 
           {/* First Time Customer Flow - Self Contained */}
           <Route
