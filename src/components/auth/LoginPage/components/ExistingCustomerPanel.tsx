@@ -20,7 +20,7 @@ export const ExistingCustomerPanel: React.FC = () => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center p-6 bg-gray-800/50 border border-gray-700/70 rounded-xl backdrop-blur-sm"
+      className="flex flex-col items-center justify-center p-6 bg-gray-800/50 border border-gray-700/70 rounded-xl backdrop-blur-sm h-full"
     >
       <div className="mb-6">
         <h2 
@@ -34,8 +34,8 @@ export const ExistingCustomerPanel: React.FC = () => {
         </p>
       </div>
 
-      <form 
-        onSubmit={handleSubmit} 
+      <form
+        onSubmit={handleSubmit}
         className="w-full space-y-4"
         aria-label="Customer login form"
         noValidate
@@ -44,7 +44,7 @@ export const ExistingCustomerPanel: React.FC = () => {
           <label 
             id="mobile-input-label"
             htmlFor="mobile" 
-            className="block text-sm font-medium text-gray-300 text-center mb-4"
+            className="block text-sm font-medium text-gray-300 text-center mb-2"
           >
             Mobile Number
           </label>
@@ -58,15 +58,12 @@ export const ExistingCustomerPanel: React.FC = () => {
             maxLength={8}
             value={mobileNumber}
             onChange={handleMobileNumberChange}
-            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
+            className="mt-2 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
             placeholder="Enter 8 digit mobile number"
             aria-required="true"
             aria-invalid={mobileNumber.length > 0 && mobileNumber.length !== 8}
-            aria-describedby="mobile-hint"
+            aria-describedby=""
           />
-          <p id="mobile-hint" className="mt-1 text-xs text-gray-400">
-            Enter your registered 8-digit mobile number
-          </p>
         </div>
 
         {showOtpButton && !otpSent && (
@@ -76,7 +73,7 @@ export const ExistingCustomerPanel: React.FC = () => {
             type="button"
             onClick={handleSendOtp}
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 text-sm font-medium text-gray-900 bg-[#FFD700] rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
+            className="w-full flex justify-center py-3 px-6 text-base font-medium text-gray-900 bg-[#FFD700] rounded-lg hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
             aria-label="Send one-time password to your mobile"
           >
             Send OTP
@@ -102,7 +99,7 @@ export const ExistingCustomerPanel: React.FC = () => {
               maxLength={6}
               value={otp}
               onChange={handleOtpChange}
-              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
+              className="mt-2 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-[#FFD700] focus:border-[#FFD700] sm:text-sm"
               placeholder="Enter 6-digit OTP"
               autoFocus
               aria-required="true"
@@ -137,7 +134,7 @@ export const ExistingCustomerPanel: React.FC = () => {
               whileTap={{ y: 1 }}
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 text-sm font-medium text-gray-900 bg-[#FFD700] rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
+              className="w-full flex justify-center py-3 px-6 text-base font-medium text-gray-900 bg-[#FFD700] rounded-lg hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFD700] focus:ring-offset-gray-900 disabled:opacity-50"
               aria-label={loading ? 'Verifying your one-time password' : 'Verify one-time password'}
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
