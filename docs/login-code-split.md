@@ -13,6 +13,8 @@ src/components/auth/LoginPage/
 │   └── WelcomeHeader.tsx
 ├── styles/
 │   └── common.ts
+├── hooks/
+│   └── useLoginFlow.ts (auth logic & navigation)
 ```
 
 ### 2. Component Responsibilities
@@ -21,114 +23,134 @@ src/components/auth/LoginPage/
 - Layout management (60/40 split)
 - Component composition
 - Background video integration
+- Navigation state management
+```typescript
+// Navigation state handling
+const getReturnData = () => {
+  if (location.state) return location.state;
+  const storedBooking = sessionStorage.getItem('pendingBooking');
+  return storedBooking ? JSON.parse(storedBooking) : null;
+};
+```
 
 #### B. Components
-- FirstTimeCustomerPanel: New customer options and navigation
-- ExistingCustomerPanel: Login form and authentication
-- VideoBackground: Visual background with overlay
-- WelcomeHeader: Logo and welcome text
+- FirstTimeCustomerPanel:
+  * New customer options
+  * Navigation to:
+    - Price selection (with isFirstTimeCustomer state)
+    - Browse services
+    - AMC signup
+- ExistingCustomerPanel:
+  * Login form and authentication
+  * OTP flow
+  * Error handling
+  * Loading states
+- VideoBackground & WelcomeHeader (unchanged)
 
-### 3. Recommended Improvements
-
-#### 1. Style Management
+#### C. Authentication Logic (useLoginFlow.ts)
 ```typescript
-// Replace getStyle utility with CSS modules
-import styles from './styles/LoginPage.module.css'
+const useLoginFlow = () => {
+  // Local state
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
+  // Redux integration
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector(state => state.auth);
+
+  // Navigation
+  const navigate = useNavigate();
+  const location = useLocation();
+  const returnData = getReturnData();
+
+  // Auth methods
+  const handleSendOtp = async () => {/*...*/};
+  const handleVerifyOtp = async () => {/*...*/};
+  
+  // Navigation effect
+  useEffect(() => {
+    if (isAuthenticated) {
+      const returnUrl = returnData?.returnUrl || '/';
+      if (returnData?.bookingData) {
+        navigate(returnUrl, { 
+          state: { bookingData: returnData.bookingData },
+          replace: true 
+        });
+      } else {
+        navigate(returnUrl, { replace: true });
+      }
+    }
+  }, [isAuthenticated]);
+
+  return {/*...*/};
+};
 ```
 
-#### 2. Type Safety
-```typescript
-// Add type definitions
-type LoginPageProps = {
-  onAuthSuccess?: () => void;
-}
+### 3. Implementation Steps
 
-type CustomerPanelProps = {
-  onSubmit: (data: AuthData) => Promise<void>;
-  isLoading: boolean;
-  error?: string;
-}
-```
-
-#### 3. Error Handling
-```typescript
-// Add error boundary wrapper
-const LoginPageErrorBoundary: React.FC = () => (
-  <ErrorBoundary fallback={<LoginErrorFallback />}>
-    <LoginPage />
-  </ErrorBoundary>
-);
-```
-
-#### 4. Loading States
-```typescript
-// Add loading states
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<Error | null>(null);
-```
-
-### 4. Migration Plan
-
-1. Phase 1: Setup
+1. Phase 1: Core Structure
 - [x] Create component directory structure
-- [ ] Add type definitions
 - [ ] Implement CSS modules
+- [ ] Add type definitions
+- [ ] Set up error boundaries
 
-2. Phase 2: Component Updates
-- [ ] Add error boundaries
-- [ ] Add loading states
-- [ ] Improve type safety
+2. Phase 2: Authentication
+- [ ] Implement useLoginFlow hook
+- [ ] Add OTP verification flow
+- [ ] Integrate Redux state management
+- [ ] Handle navigation patterns
 
 3. Phase 3: Testing
-- [ ] Add unit tests
-- [ ] Test error scenarios
-- [ ] Validate loading states
+- [ ] Test navigation scenarios:
+  * Direct access
+  * Protected route redirect
+  * Booking flow redirect
+- [ ] Test authentication flows:
+  * OTP sending/verification
+  * Error cases
+  * Loading states
+- [ ] Test state preservation
 
-### 5. Benefits
+### 4. Success Criteria
 
-1. Maintainability
-- Clear component structure
-- Type-safe implementation
-- Better error handling
-- Proper loading states
+1. Navigation
+- [ ] Return URL logic works correctly
+- [ ] State preservation during auth flow
+- [ ] Proper routing integration
 
-2. Performance
-- Co-located components
-- Efficient bundling
-- No unnecessary code splitting
+2. Authentication
+- [ ] OTP flow functions correctly
+- [ ] Redux state updates properly
+- [ ] Error handling works as expected
 
-3. Developer Experience
-- Simple directory structure
-- Clear component responsibilities
-- Easy to understand and modify
+3. User Experience
+- [ ] Loading states are clear
+- [ ] Error messages are helpful
+- [ ] Smooth transitions
 
-### 6. Success Criteria
+4. Code Quality
+- [ ] Type safety throughout
+- [ ] Proper test coverage
+- [ ] Clear component structure
 
-1. Functionality
-- All auth flows work correctly
-- Proper error handling
-- Smooth loading states
+### 5. Notes
 
-2. Code Quality
-- Type safety throughout
-- Proper test coverage
-- Clear component structure
+1. State Management Strategy
+- Use Redux for auth state
+- Local state for form handling
+- Session storage for booking data
 
-3. Performance
-- Quick initial load
-- Smooth transitions
-- Responsive UI
+2. Navigation Patterns
+- Handle all three entry points:
+  * Direct access
+  * Protected route redirect
+  * Booking flow redirect
 
-### 7. Notes
+3. Testing Requirements
+- Cover all navigation scenarios
+- Test state preservation
+- Verify error handling
 
-1. Code Splitting Decision
-- Components are small enough to bundle together
-- Login is a critical path component
-- No need for lazy loading at this scale
-
-2. Current Implementation
-- Using direct imports for better performance
-- Co-located components for maintainability
-- Simple, focused component structure
-
-This simplified approach maintains functionality while reducing complexity and improving maintainability.
+This simplified approach maintains all required functionality while reducing complexity and improving maintainability.
