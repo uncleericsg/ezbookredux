@@ -120,7 +120,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
               ease: 'linear'
             }}
             style={{
-              background: shouldReduceMotion ? undefined : `linear-gradient(
+              backgroundImage: shouldReduceMotion ? undefined : `linear-gradient(
                 90deg,
                 transparent 25%,
                 rgba(255,255,255,0.2) 50%,
@@ -129,7 +129,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
               backgroundSize: '200% 100%',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
-              color: 'transparent'
+              color: 'transparent',
+              backgroundPosition: shouldReduceMotion ? undefined : '200% 0'
             }}
           >
             {category.name}

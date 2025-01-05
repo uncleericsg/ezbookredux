@@ -42,7 +42,6 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ className }) => {
         width="64"
         height="64"
         loading="eager"
-        fetchPriority="high"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.6 }}
