@@ -6,7 +6,7 @@ import { usePWA } from '@hooks/usePWA';
 const PROMPT_DELAY = 3000; // 3 seconds
 
 const AppInstallPrompt: React.FC = () => {
-  const { isInstallable, promptInstall, isMobile } = usePWA();
+  const { isInstallable, isMobile } = usePWA();
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
@@ -23,12 +23,6 @@ const AppInstallPrompt: React.FC = () => {
 
   const handleDismiss = () => {
     console.log('Install prompt dismissed');
-    setShowPrompt(false);
-  };
-
-  const handleInstall = async () => {
-    console.log('Install button clicked');
-    await promptInstall();
     setShowPrompt(false);
   };
 
@@ -99,7 +93,7 @@ const AppInstallPrompt: React.FC = () => {
                 Not Now
               </button>
               <button
-                onClick={handleInstall}
+                onClick={handleDismiss}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center space-x-2"
               >
                 <Download className="h-4 w-4" />
