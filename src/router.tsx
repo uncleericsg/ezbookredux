@@ -17,7 +17,7 @@ import {
 // Core Components - Keep these eager loaded
 import Layout from '@components/Layout';
 import { LoadingScreen } from '@components/LoadingScreen';
-import Login from '@components/Login';
+import Login from '@components/auth/LoginPage';  // Updated import path
 import NotFound from '@components/NotFound';
 import ProtectedRoute from '@components/ProtectedRoute';
 import PublicRoute from '@components/PublicRoute';
