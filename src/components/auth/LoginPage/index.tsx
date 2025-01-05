@@ -7,6 +7,7 @@ import {
   FirstTimeCustomerPanel,
   ExistingCustomerPanel
 } from './components';
+import { loginPageStructuredData } from './seo/structuredData';
 
 /**
  * Main login page component with SEO and accessibility enhancements
@@ -67,19 +68,10 @@ const LoginPage: React.FC = () => {
       </div>
 
       {/* SEO: Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "iAircon Easy Booking Login",
-          "description": "Access Singapore's premier air conditioning service platform",
-          "provider": {
-            "@type": "LocalBusiness",
-            "name": "iAircon Services",
-            "areaServed": "Singapore"
-          }
-        })}
-      </script>
+      <script 
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(loginPageStructuredData) }}
+      />
     </main>
   );
 };
