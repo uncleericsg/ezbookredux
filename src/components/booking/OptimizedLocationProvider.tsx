@@ -29,7 +29,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocationOptimizer } from '@hooks/useLocationOptimizer';
-import ConsolidatedErrorBoundary from '../ConsolidatedErrorBoundary';
+import { ErrorBoundary } from '@components/error-boundary';
+import { LocationOptimizerError } from '@components/error-boundary/LocationOptimizerError';
 
 // TODO: Update these types once they are implemented as per SCHEDULE_STEP_INTEGRATION_PLAN
 type Region = string; // Placeholder, update when actual Region type is defined
@@ -120,9 +121,16 @@ export function OptimizedLocationProvider({
   }, []);
 
   return (
-    <ConsolidatedErrorBoundary useEnhancedFeatures={true}>
+    <ErrorBoundary
+      fallback={(error) => (
+        <LocationOptimizerError
+          error={error}
+          resetErrorBoundary={handleReset}
+        />
+      )}
+      onError={handleError}
+    >
       {state && typeof children === 'function' && children(state)}
-      {state && typeof children === 'function' ? children(state) : null}
-    </ConsolidatedErrorBoundary>
+    </ErrorBoundary>
   );
 }
