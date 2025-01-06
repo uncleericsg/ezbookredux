@@ -4,9 +4,14 @@
 
 ### Entry Points
 - `src/main.tsx`: Application entry point
-  - Sets up providers (Redux, React Query, Error Boundary)
+  - Sets up providers:
+    - Redux store provider
+    - React Query client provider
+    - Error Boundary with development mode support
+    - PersistGate for state persistence
   - Initializes router and analytics
-  - Configures React Query client
+  - Configures React Query client with optimized settings
+  - Handles global error cases with custom fallback UI
 
 ### Application Root
 - `src/App.tsx`: Root component
@@ -100,15 +105,33 @@
 - `src/components/`
   - Layout components
   - Common UI elements
-  - Error handling components
   - Loading states
+  - Error Boundary System:
+    - `error-boundary/`
+      - `ErrorBoundary.tsx`: Core error boundary component
+      - `ErrorFallback.tsx`: Default error UI
+      - `index.ts`: Public API exports
+      - `fallbacks/`: Specialized error UIs
+        - `SectionErrorFallback.tsx`: Section-specific errors
+      - `LocationOptimizerError.tsx`: Location service errors
 
 ### Feature Components
 - Organized by domain/feature
-  - Booking flow components
-  - User profile components
-  - Notification system
-  - Admin management components
+  - Booking flow components:
+    - Protected by error boundaries with location-specific error handling
+    - Optimized location provider with dedicated error UI
+  - Home page components:
+    - Section-based error boundaries for isolated error handling
+    - Lazy-loaded sections with fallback UI
+  - User profile components:
+    - Form-specific error handling
+    - Data validation error displays
+  - Notification system:
+    - Template editor with error protection
+    - Real-time update error handling
+  - Admin management components:
+    - Protected routes with error boundaries
+    - Data management error handling
   - AMC management components:
     - AMCManagement.tsx
     - AMCPackageCard.tsx
