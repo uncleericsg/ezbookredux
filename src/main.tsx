@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistGate } from 'redux-persist/integration/react';
-import ConsolidatedErrorBoundary from './components/ConsolidatedErrorBoundary';
+import { ErrorBoundary } from '@components/error-boundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { store, persistor } from './store/store';
 import RouterComponent from './router';
@@ -25,8 +25,7 @@ const queryClient = new QueryClient({
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
-// Default error fallback UI
-const ErrorFallback = () => (
+const AppErrorFallback = ({ error }: { error: Error }) => (
   <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
     <div className="text-center">
       <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
@@ -37,13 +36,26 @@ const ErrorFallback = () => (
       >
         Refresh Page
       </button>
+      {process.env.NODE_ENV === 'development' && (
+        <pre className="mt-4 p-4 bg-gray-800 rounded text-left text-sm text-gray-400 overflow-auto">
+          {error.message}
+          {'\n'}
+          {error.stack}
+        </pre>
+      )}
     </div>
   </div>
 );
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <ConsolidatedErrorBoundary fallback={<ErrorFallback />} useEnhancedFeatures={true}>
+    <ErrorBoundary
+      fallback={(error) => <AppErrorFallback error={error} />}
+      onError={(error) => {
+        console.error('Application Error:', error);
+        // You can add error reporting service here
+      }}
+    >
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <PersistGate loading={<LoadingScreen />} persistor={persistor}>
@@ -68,6 +80,6 @@ ReactDOM.createRoot(rootElement).render(
           </PersistGate>
         </QueryClientProvider>
       </Provider>
-    </ConsolidatedErrorBoundary>
+    </ErrorBoundary>
   </React.StrictMode>
 );
