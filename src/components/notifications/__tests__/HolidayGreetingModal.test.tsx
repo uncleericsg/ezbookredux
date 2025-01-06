@@ -3,7 +3,12 @@ import { render, screen, fireEvent, waitFor } from '../../../__test__/test-utils
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HolidayGreetingModal from '../HolidayGreetingModal';
-import { ErrorBoundary } from '../ErrorBoundary';
+import { ErrorBoundary } from '@components/error-boundary';
+
+// Mock the error boundary
+vi.mock('@components/error-boundary', () => ({
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 // Mock the useGreetingForm hook
 const mockUseGreetingForm = {
@@ -43,11 +48,6 @@ vi.mock('../hooks/useModalAccessibility', () => ({
 // Mock the formatDate function
 vi.mock('../utils/holidayGreetings', () => ({
   formatDate: vi.fn(() => 'Monday, January 1, 2024'),
-}));
-
-// Mock the ErrorBoundary component
-vi.mock('../ErrorBoundary', () => ({
-  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('HolidayGreetingModal', () => {
