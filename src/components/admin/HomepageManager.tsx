@@ -4,11 +4,9 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useSettingsForm } from '../../hooks/useSettingsForm';
-
-
 import CategoryMappingModal from './CategoryMappingModal';
 
-import type { AppointmentType } from '../../services/categoryMapping';
+import type { AppointmentType } from '../../types';
 import type { ServiceCategory } from '../../types';
 
 interface CategoryWithChildren extends ServiceCategory {
@@ -36,13 +34,6 @@ interface CardSettings {
 interface HomepageSettings {
   cards: CardSettings[];
   categories: ServiceCategory[];
-  acuityIntegration: {
-    enabled: boolean;
-    appointmentTypes: Array<{
-      id: string;
-      name: string;
-    }>;
-  };
 }
 
 const defaultSettings: HomepageSettings = {
@@ -89,12 +80,31 @@ const defaultSettings: HomepageSettings = {
       visible: true,
       order: 0
     }
-  ],
-  acuityIntegration: {
-    enabled: true,
-    appointmentTypes: []
-  }
+  ]
 };
+
+// Local appointment types
+const appointmentTypes: AppointmentType[] = [
+  {
+    id: 'regular-service',
+    name: 'Regular Service',
+    duration: 60,
+    description: 'Standard air conditioning service'
+  },
+  {
+    id: 'amc-service',
+    name: 'AMC Service Visit',
+    duration: 90,
+    description: 'Maintenance service for AMC customers',
+    isAMC: true
+  },
+  {
+    id: 'repair-service',
+    name: 'Repair Service',
+    duration: 120,
+    description: 'Diagnostic and repair service'
+  }
+];
 
 const fetchHomepageSettings = async (): Promise<HomepageSettings> => {
   // In a real app, this would be an API call
@@ -369,7 +379,7 @@ const HomepageManager: React.FC = () => {
         </DragDropContext>
       </div>
 
-      {/* Rest of the component remains unchanged */}
+      {/* Homepage Cards */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Homepage Cards</h2>
@@ -523,30 +533,28 @@ const HomepageManager: React.FC = () => {
                               />
                             </div>
 
-                            {settings.acuityIntegration.enabled && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
-                                  Appointment Type
-                                </label>
-                                <select
-                                  value={card.appointmentTypeId || ''}
-                                  onChange={(e) => {
-                                    const updatedCards = settings.cards.map(c =>
-                                      c.id === card.id ? { ...c, appointmentTypeId: e.target.value } : c
-                                    );
-                                    updateSettings({ cards: updatedCards });
-                                  }}
-                                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
-                                >
-                                  <option value="">None</option>
-                                  {settings.acuityIntegration.appointmentTypes.map(type => (
-                                    <option key={type.id} value={type.id}>
-                                      {type.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-300 mb-1">
+                                Appointment Type
+                              </label>
+                              <select
+                                value={card.appointmentTypeId || ''}
+                                onChange={(e) => {
+                                  const updatedCards = settings.cards.map(c =>
+                                    c.id === card.id ? { ...c, appointmentTypeId: e.target.value } : c
+                                  );
+                                  updateSettings({ cards: updatedCards });
+                                }}
+                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
+                              >
+                                <option value="">None</option>
+                                {appointmentTypes.map(type => (
+                                  <option key={type.id} value={type.id}>
+                                    {type.name} ({type.duration} mins)
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
 
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">
@@ -616,7 +624,7 @@ const HomepageManager: React.FC = () => {
       {mappingCategory && (
         <CategoryMappingModal
           category={mappingCategory}
-          appointmentTypes={settings.acuityIntegration.appointmentTypes}
+          appointmentTypes={appointmentTypes}
           onClose={() => setMappingCategory(null)}
           onSave={() => {
             setMappingCategory(null);

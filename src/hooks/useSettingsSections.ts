@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 export const SECTION_IDS = {
   APP_SETTINGS: 'app-settings',
-  ACUITY: 'acuity',
   REPAIR_SHOPR: 'repair-shopr',
   STRIPE: 'stripe',
   CHATGPT: 'chatgpt',
@@ -16,7 +15,6 @@ export const useSettingsSections = () => {
     const stored = localStorage.getItem('admin-settings-sections');
     return stored ? JSON.parse(stored) : {
       [SECTION_IDS.APP_SETTINGS]: true,
-      [SECTION_IDS.ACUITY]: false,
       [SECTION_IDS.REPAIR_SHOPR]: false,
       [SECTION_IDS.STRIPE]: false,
       [SECTION_IDS.CHATGPT]: false,

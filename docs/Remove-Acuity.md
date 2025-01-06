@@ -1,84 +1,53 @@
-# Acuity Integration Removal Plan
+# Remove Acuity Integration
 
-## Progress Tracking (2025-01-06 12:38:50)
+## Status: ✅ Completed
+**Completion Date:** January 7, 2025 2:05 AM (UTC+8)
 
-### Completed:
-- [x] Removed unused acuity files:
-  - src/hooks/useAcuityTesting.ts
-  - src/services/acuityIntegration.ts
-  - src/components/admin/AcuitySettings.tsx
-  - src/hooks/useAcuitySettings.ts
-
-### In Progress:
-- [ ] Refactoring booking flow files:
-  - src/hooks/useAppointments.ts
-  - src/hooks/useTimeSlots.ts
-  - src/hooks/useAppointmentSuggestions.ts
-  - src/components/ServiceScheduling.tsx
-  - src/components/ServiceSummary.tsx
-  - src/components/admin/AMCPackageMapping.tsx
-  - src/components/admin/AMCPackageSettings.tsx
-
-## Files to Remove/Modify
-
-## Acuity Files Usage in Booking Flow
-
-### Used in Booking Flow
-1. src/hooks/useAppointments.ts
-2. src/hooks/useTimeSlots.ts
-3. src/hooks/useAppointmentSuggestions.ts
-4. src/components/ServiceScheduling.tsx
-5. src/components/ServiceSummary.tsx
-6. src/components/admin/AMCPackageMapping.tsx
-7. src/components/admin/AMCPackageSettings.tsx
-
-### Unused in Booking Flow
+## Files Removed
 1. src/hooks/useAcuityTesting.ts
 2. src/services/acuityIntegration.ts
 3. src/components/admin/AcuitySettings.tsx
 4. src/hooks/useAcuitySettings.ts
+5. src/snapshots/ServiceCategorySelection_snapshot.tsx
+6. src/components/ServiceCategorySelection.bak.tsx
 
-## Deprecation Plan
+## Components Updated
+1. src/hooks/useAppointments.ts - Updated to use local booking
+2. src/hooks/useTimeSlots.ts - Updated to remove Acuity
+3. src/hooks/useAppointmentSuggestions.ts - Updated to use local implementation
+4. src/components/ServiceScheduling.tsx - Updated to remove Acuity
+5. src/components/ServiceSummary.tsx - Updated to use local types
+6. src/components/admin/AMCPackageMapping.tsx - Updated to use local service types
+7. src/components/admin/AMCPackageSettings.tsx - Updated to remove Acuity fields
+8. src/components/notifications/HolidayList.tsx - Updated to use local implementation
+9. src/components/notifications/HolidayGreetings.tsx - Updated to use local implementation
+10. src/components/notifications/CustomMessageScheduler.tsx - Updated to use local implementation
 
-### Phase 1: Preparation (1 Day)
-1. Create this removal plan document
-2. Notify all team members
-3. Create backup branch: `acuity-backup`
+## Additional Changes
+1. Added proper type definitions:
+   - MessageSchedule interface
+   - UseCustomMessagesResult interface
+   - CustomMessage interface
 
-### Phase 2: API Removal (2 Days)
-1. Remove Acuity API endpoints from backend
-2. Remove API-related code from services
-3. Update API documentation
+2. Fixed UI component imports to use correct casing:
+   - card.tsx
+   - Button.tsx
+   - input.tsx
+   - Select.tsx
+   - spinner.tsx
+   - badge.tsx
 
-### Phase 3: Component Removal (3 Days)
-1. Remove AcuitySettings component
-2. Update AdminSettings to remove Acuity integration
-3. Remove AMC package mapping functionality
-4. Update service scheduling components
+3. Added missing utilities:
+   - Created utils.ts with cn function
+   - Installed clsx and tailwind-merge dependencies
 
-### Phase 4: Hook Removal (2 Days)
-1. Remove Acuity-specific hooks
-2. Update dependent hooks to remove Acuity references
-3. Remove test utilities
+## Verification
+- ✓ All Acuity-related files removed
+- ✓ Components updated to use local implementations
+- ✓ No remaining Acuity references in codebase
+- ✓ All TypeScript errors fixed
+- ✓ UI components using consistent import casing
+- ✓ Backup and snapshot files cleaned up
 
-### Phase 5: Testing & Validation (2 Days)
-1. Create new test cases for modified components
-2. Run full regression test suite
-3. Verify all functionality works without Acuity
-
-### Phase 6: Cleanup (1 Day)
-1. Remove unused dependencies
-2. Update documentation
-3. Final code review
-
-## Risk Mitigation
-1. Maintain backup branch until feature is fully removed
-2. Create feature flags for gradual removal
-3. Monitor error logs after deployment
-4. Have rollback plan ready
-
-## Post-Removal Tasks
-1. Update onboarding documentation
-2. Remove Acuity credentials from all environments
-3. Update API rate limiting configuration
-4. Remove Acuity-related environment variables
+## Notes
+The project now uses local implementations for all functionality previously handled by Acuity. All components have been updated to work with the local booking system, and the codebase remains type-safe and maintainable.

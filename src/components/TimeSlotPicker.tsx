@@ -1,9 +1,8 @@
 import { useMemo, useCallback } from 'react';
 import { format, isBefore, isAfter, addMinutes } from 'date-fns';
 import { Clock, Loader2 } from 'lucide-react';
-import type { TimeSlot, AcuityAppointmentType } from '@types';
-import { useAcuitySettings } from '@hooks/useAcuitySettings';
-import { BUSINESS_RULES } from '@constants';
+import type { TimeSlot, AppointmentType } from '../types';
+import { BUSINESS_RULES } from '../constants/businessRules';
 
 interface TimeSlotPickerProps {
   slots: TimeSlot[];
@@ -12,7 +11,7 @@ interface TimeSlotPickerProps {
   loading?: boolean;
   disabled?: boolean;
   isAMC: boolean;
-  appointmentType?: AcuityAppointmentType;
+  appointmentType?: AppointmentType;
 }
 
 const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({

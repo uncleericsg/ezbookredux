@@ -3,12 +3,12 @@ import React from 'react';
 
 import RepairShoprMapping from '@admin/RepairShoprMapping';
 
-import type { AcuitySettings } from '@types/settings';
+import type { AppSettingsExtended } from '@types/appSettings';
 
 interface RepairShoprSettingsProps {
-  settings: AcuitySettings;
+  settings: AppSettingsExtended;
   loading?: boolean;
-  updateSettings: (updates: any) => void;
+  updateSettings: (updates: Partial<AppSettingsExtended>) => void;
   onSave: () => Promise<void>;
 }
 

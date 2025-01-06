@@ -10,6 +10,43 @@ const MAX_OVERLAPPING_SLOTS = 2;
 const MAX_SLOTS_PER_REGION = 3;
 const PEAK_HOUR_PENALTY = 0.8;
 
+export interface NearbyBooking {
+  datetime: string;
+  location: string;
+  region: Region;
+  duration: number;
+}
+
+export const fetchNearbyBookings = async (address: string): Promise<NearbyBooking[]> => {
+  // Local implementation that returns mock data
+  const mockBookings: NearbyBooking[] = [];
+  const today = new Date();
+  const regions = Object.keys(REGION_CENTERS) as Region[];
+
+  // Generate some mock bookings for the next 7 days
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() + i);
+    
+    // Add 2-3 bookings per day
+    const bookingsForDay = Math.floor(Math.random() * 2) + 2;
+    
+    for (let j = 0; j < bookingsForDay; j++) {
+      const hour = Math.floor(Math.random() * (17 - 9)) + 9; // Between 9 AM and 5 PM
+      date.setHours(hour, 0, 0, 0);
+      
+      mockBookings.push({
+        datetime: date.toISOString(),
+        location: address,
+        region: regions[Math.floor(Math.random() * regions.length)],
+        duration: Math.random() > 0.3 ? 90 : 60 // Mix of AMC and regular bookings
+      });
+    }
+  }
+
+  return mockBookings;
+};
+
 export const optimizeTimeSlots = (
   date: Date,
   slots: TimeSlot[],

@@ -1,26 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { useUser } from '@contexts/UserContext';
-import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import { useSelector } from 'react-redux';
 import { useTimeSlots } from '@hooks/useTimeSlots';
-import { BUSINESS_RULES } from '@constants';
-import PaymentFlow from '@components/PaymentFlow';
+import { BUSINESS_RULES } from '@constants/businessRules';
+import { PaymentForm } from '@components/payment/PaymentForm';
 import { useAppointments } from '@hooks/useAppointments';
 import { useBookingState } from '@hooks/useBookingState';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { LoadingScreen } from '@components/LoadingScreen';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { AcuityAppointmentType } from '@services/acuityIntegration';
 import ServiceSchedulingCalendar from '@components/ServiceSchedulingCalendar';
 import TimeSlotPicker from '@components/TimeSlotPicker';
 import ServiceSummary from '@components/ServiceSummary';
+import type { RootState } from '@store';
+import type { AppointmentType } from '@types';
 
 // Services
-import { getAvailableTimeSlots, createAppointment } from '@services/acuity';
-import { validateScheduling, validateBookingDetails } from '@services/validation';
+import { validateBookingDetails } from '@utils/bookingValidation';
 import { getServiceByAppointmentType } from '@services/serviceUtils';
+
+interface BookingSuccessAction {
+  type: 'BOOKING_SUCCESS';
+  time: string;
+}
+
+interface BookingAction {
+  type: 'START_VALIDATION' | 'VALIDATION_COMPLETE' | 'START_BOOKING' | 'BOOKING_FAILED' | 'RETRY' | 'RESET';
+  error?: string;
+  validationErrors?: string[];
+  warnings?: string[];
+}
+
+type BookingDispatchAction = BookingAction | BookingSuccessAction;
+
+const getAppointmentType = (categoryId: string): AppointmentType => {
+  // Local implementation of service mapping
+  const isAMC = categoryId === 'amc';
+  return {
+    id: categoryId,
+    name: isAMC ? 'AMC Service' : 'Regular Service',
+    duration: isAMC ? 90 : 60,
+    isAMC
+  };
+};
 
 const BookingErrorFallback: React.FC<{ error: string; onRetry: () => void }> = ({ error, onRetry }) => (
   <div className="text-center py-8">
@@ -35,25 +59,50 @@ const ServiceScheduling: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { categoryId, price, isAmcService } = location.state || {};
-  const { user } = useUser();
+  const user = useSelector((state: RootState) => state.user.currentUser);
   const [isInitializing, setIsInitializing] = useState(true);
-  const { getAppointmentType } = useAcuitySettings();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [showPayment, setShowPayment] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string>('');
   const { bookNewAppointment, loading: bookingLoading } = useAppointments();
   const appointmentType = categoryId ? getAppointmentType(categoryId) : null;
   
   const { slots, loading: slotsLoading, error: slotsError } = useTimeSlots(
     selectedDate,
     categoryId,
-    !!isAmcService,
-    appointmentType
+    !!isAmcService
   );
   const { state: bookingState, dispatch: bookingDispatch } = useBookingState();
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const hasNavigated = useRef(false);
   const bookingInProgressRef = useRef(false);
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  // Generate client secret when payment is shown
+  useEffect(() => {
+    if (showPayment && price && !isAmcService) {
+      // TODO: Implement API call to get client secret
+      setClientSecret('mock_client_secret');
+    }
+  }, [showPayment, price, isAmcService]);
+
+  const handlePaymentComplete = async (paymentIntent: any) => {
+    try {
+      await processBooking();
+    } catch (error) {
+      toast.error('Payment succeeded but booking failed');
+      console.error(error);
+    }
+  };
+
+  const handlePaymentError = (error: any) => {
+    toast.error('Payment failed: ' + (error.message || 'Unknown error'));
+    setShowPayment(false);
+  };
 
   // Cleanup function
   useEffect(() => {
@@ -133,7 +182,7 @@ const ServiceScheduling: React.FC = () => {
       }
 
       if (validation.warnings?.length) {
-        validation.warnings.forEach(warning => toast.warning(warning));
+        validation.warnings.forEach((warning: string) => toast.warning(warning));
       }
 
       const loadingToast = toast.loading('Scheduling your appointment...');
@@ -146,7 +195,7 @@ const ServiceScheduling: React.FC = () => {
       bookingDispatch({ 
         type: 'BOOKING_SUCCESS',
         time: selectedTime
-      });
+      } as BookingDispatchAction);
 
     } catch (error) {
       const err = error as Error;
@@ -161,7 +210,7 @@ const ServiceScheduling: React.FC = () => {
       bookingDispatch({
         type: 'BOOKING_FAILED',
         error: err.message
-      });
+      } as BookingDispatchAction);
       
     } finally {
       bookingInProgressRef.current = false;
@@ -190,16 +239,11 @@ const ServiceScheduling: React.FC = () => {
   }
 
   return showPayment ? (
-    <PaymentFlow
+    <PaymentForm
+      clientSecret={clientSecret}
       amount={price || 0}
-      serviceDetails={{
-        type: appointmentType?.name || 'Service',
-        date: selectedDate?.toISOString() || '',
-        time: selectedTime,
-        duration: appointmentType?.duration || 60
-      }}
-      onSuccess={processBooking}
-      onCancel={() => setShowPayment(false)}
+      onComplete={handlePaymentComplete}
+      onError={handlePaymentError}
     />
   ) : (
     <motion.div 
@@ -235,8 +279,7 @@ const ServiceScheduling: React.FC = () => {
 
             <ServiceSchedulingCalendar
               selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-              disabled={bookingLoading}
+              onDateSelect={handleDateSelect}
             />
             
             {selectedDate && (

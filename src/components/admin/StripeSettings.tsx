@@ -1,12 +1,12 @@
 import { Key, Loader2, Save } from 'lucide-react';
 import React from 'react';
 
-import type { AcuitySettings } from '../../types/settings';
+import type { AppSettingsExtended } from '@types/appSettings';
 
 interface StripeSettingsProps {
-  settings: AcuitySettings;
+  settings: AppSettingsExtended;
   loading?: boolean;
-  updateSettings: (updates: any) => void;
+  updateSettings: (updates: Partial<AppSettingsExtended>) => void;
   onSave: () => Promise<void>;
 }
 

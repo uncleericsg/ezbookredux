@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { isEqual } from '../utils/object';
 import { toast } from 'sonner';
-import type { AcuitySettings } from '../types/settings';
 
 export const useSettingsForm = <T extends Record<string, any>>(
   defaultSettings: T,

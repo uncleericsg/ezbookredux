@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, Send, AlertTriangle, X, Save, MessageSquare } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useCustomMessages } from '@hooks/useCustomMessages';
-import { useAcuitySettings } from '@hooks/useAcuitySettings';
-import type { CustomMessage } from '@types';
+import { useCustomMessages } from '../../hooks/useCustomMessages';
+import type { CustomMessage, MessageSchedule, UseCustomMessagesResult } from '../../types';
+import type { AdminSettings } from '../../types/settings';
 
-import { Card } from '@components/molecules/card';
-import { Button } from '@components/atoms/button';
-import { Input } from '@components/atoms/input';
-import { Textarea } from '@components/atoms/textarea';
-import { Badge } from '@components/atoms/badge';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@components/molecules/select';
-import { Label } from '@components/atoms/label';
-import { Spinner } from '@components/atoms/spinner';
-import { Alert, AlertTitle, AlertDescription } from '@components/atoms/alert';
-import { Separator } from '@components/atoms/separator';
+import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
+import { Badge } from '../../components/ui/badge';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/Select';
+import { Label } from '../../components/ui/label';
+import { Spinner } from '../../components/ui/spinner';
+import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 
 interface FormData {
   message: string;
@@ -26,10 +24,24 @@ interface FormData {
   recipients: string[];
 }
 
-const CustomMessageScheduler: React.FC = () => {
+interface CustomMessageSchedulerProps {
+  settings: AdminSettings;
+}
+
+const mapUserType = (type: string): 'all' | 'amc' | 'regular' => {
+  switch (type) {
+    case 'active':
+      return 'regular';
+    case 'inactive':
+      return 'amc';
+    default:
+      return 'all';
+  }
+};
+
+const CustomMessageScheduler: React.FC<CustomMessageSchedulerProps> = ({ settings }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { settings } = useAcuitySettings();
-  const { messages, loading, error, scheduleMessage, generateMessage } = useCustomMessages();
+  const { messages, loading, error, scheduleMessage, generateMessage } = useCustomMessages() as UseCustomMessagesResult;
   
   const {
     register,
@@ -49,12 +61,14 @@ const CustomMessageScheduler: React.FC = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const scheduledDateTime = `${data.scheduledDate}T${data.scheduledTime}:00`;
-      await scheduleMessage({
-        message: data.message,
-        scheduledDateTime,
-        recipients: data.recipients
-      });
+      const schedule: MessageSchedule = {
+        content: data.message,
+        scheduledDate: data.scheduledDate,
+        scheduledTime: data.scheduledTime,
+        frequency: 'once',
+        userType: mapUserType(data.recipients[0])
+      };
+      await scheduleMessage(schedule);
       toast.success('Message scheduled successfully');
       reset();
     } catch (error) {
@@ -102,7 +116,7 @@ const CustomMessageScheduler: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="message">Message</Label>
-              {settings?.chatGPTSettings?.enabled && (
+              {settings?.app?.chatGPTSettings?.enabled && (
                 <Button
                   type="button"
                   variant="outline"
@@ -111,7 +125,7 @@ const CustomMessageScheduler: React.FC = () => {
                   disabled={isGenerating}
                 >
                   {isGenerating ? (
-                    <Spinner size="sm" className="mr-2" />
+                    <Spinner className="h-4 w-4 mr-2" />
                   ) : (
                     <MessageSquare className="h-4 w-4 mr-2" />
                   )}
@@ -167,7 +181,7 @@ const CustomMessageScheduler: React.FC = () => {
           <div className="space-y-2">
             <Label htmlFor="recipients">Recipients</Label>
             <Select
-              onValueChange={(value) => setValue('recipients', [value])}
+              onValueChange={(value: string) => setValue('recipients', [value])}
               defaultValue={watch('recipients')?.[0]}
             >
               <SelectTrigger>
@@ -175,8 +189,8 @@ const CustomMessageScheduler: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Customers</SelectItem>
-                <SelectItem value="active">Active Customers</SelectItem>
-                <SelectItem value="inactive">Inactive Customers</SelectItem>
+                <SelectItem value="active">Regular Customers</SelectItem>
+                <SelectItem value="inactive">AMC Customers</SelectItem>
               </SelectContent>
             </Select>
             {errors.recipients && (
@@ -187,7 +201,7 @@ const CustomMessageScheduler: React.FC = () => {
           <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
-                <Spinner size="sm" className="mr-2" />
+                <Spinner className="h-4 w-4 mr-2" />
               ) : (
                 <Send className="h-4 w-4 mr-2" />
               )}
@@ -201,16 +215,16 @@ const CustomMessageScheduler: React.FC = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Scheduled Messages</h3>
           <div className="space-y-4">
-            {messages.map((message) => (
+            {messages.map((message: CustomMessage) => (
               <Card key={message.id} className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <p className="text-sm">{message.message}</p>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="default" className="text-xs">
                         {format(new Date(message.scheduledDateTime), 'PPp')}
                       </Badge>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="default" className="text-xs">
                         {message.recipients.join(', ')}
                       </Badge>
                     </div>

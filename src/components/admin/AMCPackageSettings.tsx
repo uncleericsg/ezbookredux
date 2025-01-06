@@ -16,7 +16,8 @@ interface AMCPackageConfig {
     id: string;
     name: string;
     price: number;
-    acuityAppointmentTypeId?: string;
+    duration: number;
+    appointmentTypeId?: string;
     visits: number;
     features: string[];
     recommended?: boolean;
@@ -55,6 +56,7 @@ const defaultConfig: AMCPackageConfig = {
       id: '1-2-units',
       name: '1-2 Units',
       price: 280,
+      duration: 90,
       visits: 4,
       features: [
         'Quarterly professional servicing',
@@ -72,6 +74,7 @@ const defaultConfig: AMCPackageConfig = {
       id: '3-units',
       name: '3 Units',
       price: 380,
+      duration: 90,
       visits: 4,
       features: [
         'Quarterly professional servicing',
@@ -152,6 +155,7 @@ const AMCPackageSettings: React.FC = () => {
       id: `package-${Date.now()}`,
       name: 'New Package',
       price: 0,
+      duration: 90,
       visits: 4,
       features: [],
       active: true,
@@ -300,23 +304,23 @@ const AMCPackageSettings: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Service Duration (mins)
+                  </label>
+                  <input
+                    type="number"
+                    value={pkg.duration}
+                    onChange={(e) => updatePackage(pkg.id, { duration: Number(e.target.value) })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Service Visits
                   </label>
                   <input
                     type="number"
                     value={pkg.visits}
                     onChange={(e) => updatePackage(pkg.id, { visits: Number(e.target.value) })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Display Order
-                  </label>
-                  <input
-                    type="number"
-                    value={pkg.order}
-                    onChange={(e) => updatePackage(pkg.id, { order: Number(e.target.value) })}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
                   />
                 </div>
@@ -335,12 +339,12 @@ const AMCPackageSettings: React.FC = () => {
                 />
               </div>
 
-              {/* Acuity Mapping */}
+              {/* Service Type Mapping */}
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <AMCPackageMapping
                   package={pkg}
-                  onSave={async (packageId, acuityTypeId) => {
-                    updatePackage(packageId, { acuityAppointmentTypeId: acuityTypeId });
+                  onSave={async (packageId, appointmentTypeId) => {
+                    updatePackage(packageId, { appointmentTypeId });
                   }}
                 />
               </div>

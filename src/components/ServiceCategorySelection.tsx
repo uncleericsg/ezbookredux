@@ -6,38 +6,18 @@ import {
 import { useAppSelector } from '../store';
 import { useServiceHistory } from '../hooks/useServiceHistory';
 import { differenceInDays } from 'date-fns';
-import { categoryMapper } from '../lib/categoryMapper';
-import { useAcuitySettings } from '../hooks/useAcuitySettings';
 import { toast } from 'sonner';
 import { useNavigate } from '../hooks/useRouterTransition';
 import { useServiceRating } from '../hooks/useServiceRating';
 import ServiceRating from './ServiceRating';
 import TrustIndicators from './TrustIndicators';
 import { motion } from 'framer-motion';
-import { BUSINESS_RULES } from '../constants';
+import { BUSINESS_RULES } from '../constants/businessRules';
 import '../styles/home.css';
 import CountUp from 'react-countup';
 import styles from './ServiceCategorySelection.module.css';
 import FloatingButtons from './FloatingButtons';
-
-interface PricingTier {
-  units: string;
-  price: number;
-  highlight?: string;
-}
-
-interface ServiceCategory {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  price: number | null;
-  icon: any;
-  duration?: string;
-  rating?: number;
-  reviewCount?: number;
-  popular?: boolean;
-}
+import type { ServiceCategory } from '../types';
 
 const ServiceCategorySelection: React.FC = () => {
   const navigate = useNavigate();
@@ -68,9 +48,11 @@ const ServiceCategorySelection: React.FC = () => {
       type: 'maintenance',
       price: 60,
       icon: AirVent,
-      duration: '30-90 minutes',
+      duration: 60,
       rating: 4.8,
       reviewCount: 1250,
+      visible: true,
+      order: 1,
       popular: true
     },
     {
@@ -80,9 +62,11 @@ const ServiceCategorySelection: React.FC = () => {
       type: 'repair',
       price: 120,
       icon: Wrench,
-      duration: '2-4 hours',
+      duration: 120,
       rating: 4.9,
-      reviewCount: 850
+      reviewCount: 850,
+      visible: true,
+      order: 2
     },
     {
       id: 'gas-leak',
@@ -91,9 +75,11 @@ const ServiceCategorySelection: React.FC = () => {
       type: 'diagnostic',
       price: 80,
       icon: ShieldCheck,
-      duration: '1-3 hours',
+      duration: 90,
       rating: 4.9,
-      reviewCount: 680
+      reviewCount: 680,
+      visible: true,
+      order: 3
     }
   ];
 
@@ -105,9 +91,11 @@ const ServiceCategorySelection: React.FC = () => {
       type: 'amc',
       price: null,
       icon: ShieldCheck,
-      duration: '1-2 hours',
+      duration: 90,
       rating: 4.9,
-      reviewCount: 320
+      reviewCount: 320,
+      visible: true,
+      order: 0
     });
   }
 
@@ -150,11 +138,8 @@ const ServiceCategorySelection: React.FC = () => {
   ];
 
   // Event handlers and business logic
-  const handleCategorySelect = (categoryId: string, price: number | null, duration: string | undefined, isAmcService: boolean) => {
-    // Extract numeric duration from the duration string (e.g., "30-90 minutes" -> 90)
-    const maxDuration = duration ? parseInt(duration.split('-')[1]) : 0;
-    
-    if (!categoryId || (!price && !isAmcService) || !maxDuration) {
+  const handleCategorySelect = (categoryId: string, price: number | null, duration: number, isAmcService: boolean) => {
+    if (!categoryId || (!price && !isAmcService) || !duration) {
       toast.error('Invalid service type selected');
       return;
     }
@@ -163,7 +148,7 @@ const ServiceCategorySelection: React.FC = () => {
       state: { 
         categoryId, 
         price: price || 0, // Use 0 for AMC service
-        duration: maxDuration,
+        duration,
         isAmcService 
       } 
     });
@@ -249,7 +234,7 @@ const ServiceCategorySelection: React.FC = () => {
                 >
                   <div className="flex items-center mb-6">
                     <div className="bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/5 p-4 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                      <category.icon className="h-8 w-8 text-[#FFD700]" />
+                      {category.icon && <category.icon className="h-8 w-8 text-[#FFD700]" />}
                     </div>
                     {category.type === 'amc' && (
                       <span className="ml-auto bg-gradient-to-r from-[#FFD700]/20 to-[#FFD700]/10 text-[#FFD700] px-4 py-2 rounded-lg text-sm font-medium">
@@ -414,12 +399,17 @@ const ServiceCategorySelection: React.FC = () => {
           <ServiceRating
             onClose={() => setShowRating(false)}
             onSubmit={handleRatingSubmit}
+            serviceId="latest-service"
           />
         )}
       </div>
       <FloatingButtons />
       {showRating && (
-        <ServiceRating onSubmit={handleRatingSubmit} onClose={() => setShowRating(false)} />
+        <ServiceRating 
+          onSubmit={handleRatingSubmit} 
+          onClose={() => setShowRating(false)} 
+          serviceId="latest-service"
+        />
       )}
     </div>
   );

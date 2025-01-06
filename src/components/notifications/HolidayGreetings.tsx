@@ -1,35 +1,35 @@
 import React, { useState } from 'react';
-import { Edit, Save, X, Calendar, MessageSquare, AlertTriangle, Loader2, Gift } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useHolidayList } from '@hooks/useHolidayList';
-import { useAcuitySettings } from '@hooks/useAcuitySettings';
-import { useHolidayGreetings } from '@hooks/useHolidayGreetings';
+import { Edit, Save, X, Calendar, MessageSquare, AlertTriangle, Gift } from 'lucide-react';
+import { useHolidayList } from '../../hooks/useHolidayList';
+import { useHolidayGreetings } from '../../hooks/useHolidayGreetings';
 import { toast } from 'sonner';
-import type { HolidayGreeting, Holiday } from '@types';
+import type { HolidayGreeting, Holiday } from '../../types';
+import type { AdminSettings } from '../../types/settings';
 import { format, parseISO } from 'date-fns';
-import { Card, CardContent, CardHeader, CardFooter } from '@components/molecules/card';
-import { Button } from '@components/atoms/button';
-import { Input } from '@components/atoms/input';
-import { Select, SelectOption } from '@components/molecules/select';
-import { Badge } from '@components/atoms/badge';
-import { Spinner } from '@components/atoms/spinner';
-import { Toast } from '@components/molecules/toast';
+import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { Spinner } from '../../components/ui/spinner';
 
-const HolidayGreetings: React.FC = () => {
+interface HolidayGreetingsProps {
+  settings: AdminSettings;
+}
+
+const HolidayGreetings: React.FC<HolidayGreetingsProps> = ({ settings }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<HolidayGreeting>>({});
   const [showPreview, setShowPreview] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
   const { holidays, loading: holidaysLoading } = useHolidayList();
-  const { settings } = useAcuitySettings();
   const { 
     holidayGreetings, 
     loading: greetingsLoading, 
     updateGreeting, 
     generateGreeting,
     error: greetingsError 
-  } = useHolidayGreetings({ chatGPTSettings: settings?.chatGPTSettings });
+  } = useHolidayGreetings({ chatGPTSettings: settings?.app?.chatGPTSettings });
 
   const loading = holidaysLoading || greetingsLoading;
 
@@ -74,8 +74,12 @@ const HolidayGreetings: React.FC = () => {
   const handleGenerate = async (holiday: Holiday) => {
     try {
       setIsGenerating(true);
-      const message = await generateGreeting(holiday);
-      setEditForm(prev => ({ ...prev, message }));
+      const message = await generateGreeting(
+        `Generate a holiday greeting for ${holiday.name}`,
+        `Holiday: ${holiday.name}, Date: ${holiday.date}`,
+        'formal'
+      );
+      setEditForm((prev: Partial<HolidayGreeting>) => ({ ...prev, message }));
       toast.success('Message generated successfully');
     } catch (error) {
       toast.error('Failed to generate message');
@@ -89,16 +93,16 @@ const HolidayGreetings: React.FC = () => {
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="w-full animate-pulse">
-            <CardHeader className="flex flex-row items-center gap-4">
+            <div className="flex flex-row items-center gap-4 p-4">
               <div className="h-12 w-12 rounded-full bg-gray-300" />
               <div className="space-y-2 flex-1">
                 <div className="h-4 w-1/3 bg-gray-300" />
                 <div className="h-3 w-1/4 bg-gray-300" />
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-4">
               <div className="h-24 w-full bg-gray-300" />
-            </CardContent>
+            </div>
           </Card>
         ))}
       </div>
@@ -108,10 +112,10 @@ const HolidayGreetings: React.FC = () => {
   if (greetingsError) {
     return (
       <Card className="border-red-200 bg-red-50">
-        <CardContent className="flex items-center gap-2 text-red-700 p-4">
+        <div className="flex items-center gap-2 text-red-700 p-4">
           <AlertTriangle className="h-5 w-5" />
           <p>Failed to load holiday greetings. Please try again later.</p>
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -125,14 +129,14 @@ const HolidayGreetings: React.FC = () => {
 
         return (
           <Card key={holiday.date} className="w-full">
-            <CardHeader className="flex flex-row items-start gap-4 p-4">
+            <div className="flex flex-row items-start gap-4 p-4">
               <div className="p-3 bg-blue-50 rounded-full">
                 <Gift className="h-6 w-6 text-blue-500" />
               </div>
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">{holiday.name}</h3>
-                  <Badge variant={greeting?.enabled ? 'success' : 'secondary'}>
+                  <Badge variant={greeting?.enabled ? 'default' : 'warning'}>
                     {greeting?.enabled ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
@@ -141,8 +145,8 @@ const HolidayGreetings: React.FC = () => {
                   {formattedDate}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="px-4">
+            </div>
+            <div className="px-4">
               {isEditing ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -181,8 +185,8 @@ const HolidayGreetings: React.FC = () => {
                   )}
                 </div>
               )}
-            </CardContent>
-            <CardFooter className="px-4 pb-4">
+            </div>
+            <div className="px-4 pb-4">
               <div className="flex justify-end gap-2">
                 {isEditing ? (
                   <>
@@ -204,7 +208,7 @@ const HolidayGreetings: React.FC = () => {
                       disabled={isGenerating}
                     >
                       {isGenerating ? (
-                        <Spinner size="sm" className="mr-2" />
+                        <Spinner className="h-4 w-4 mr-2" />
                       ) : (
                         <MessageSquare className="h-4 w-4 mr-2" />
                       )}
@@ -230,7 +234,7 @@ const HolidayGreetings: React.FC = () => {
                   </Button>
                 )}
               </div>
-            </CardFooter>
+            </div>
           </Card>
         );
       })}

@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 
-import type { AcuitySettings } from '@types/settings';
+import type { AdminSettings } from '../../types/settings';
 
 interface QuickSettingsProps {
-  settings: AcuitySettings;
+  settings: AdminSettings;
   onIntervalChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
@@ -14,7 +14,8 @@ const OPTIONS = [
 ] as const;
 
 const QuickSettings = memo(({ settings, onIntervalChange }: QuickSettingsProps) => {
-  const intervalValue = settings.defaultIntervalWeeks || 11;
+  // Default to 11 weeks if not set in app settings
+  const intervalValue = settings.app?.repairShoprSettings?.defaultIntervalWeeks ?? 11;
   
   return (
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">

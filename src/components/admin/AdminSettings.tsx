@@ -1,7 +1,6 @@
 import { 
   Archive, 
   Bell, 
-  Calendar, 
   CreditCard, 
   Key, 
   MessageSquare, 
@@ -11,7 +10,6 @@ import {
 import React, { useCallback } from 'react';
 import { toast } from 'sonner';
 
-import AcuitySettings from '@admin/AcuitySettings';
 import BuildManager from '@admin/BuildManager';
 import ChatGPTSettings from '@admin/ChatGPTSettings';
 import CypressSettings from '@admin/CypressSettings';
@@ -22,60 +20,44 @@ import SettingsBackup from '@admin/SettingsBackup';
 import SettingsSection from '@admin/SettingsSection';
 import StripeSettings from '@admin/StripeSettings';
 
-import { updateAcuitySettings } from '@services/admin';
 import { updateAppSettings, fetchAppSettings } from '@services/appSettings';
 
 import { useSettingsForm } from '@hooks/useSettingsForm';
 import { useSettingsSections, SECTION_IDS } from '@hooks/useSettingsSections';
 
-import { defaultAppSettings } from '@types/appSettings';
-import { defaultSettings } from '@types/settings';
-
-// Mock fetch functions for development
-const fetchAcuitySettings = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(defaultSettings);
-    }, 500);
-  });
-};
+import type { AppSettings } from '../../types/appSettings';
+import { defaultAppSettings } from '../../types/appSettings';
 
 const AdminSettings = () => {
-  const {
-    settings: acuitySettings,
-    loading: acuityLoading,
-    updateSettings: updateAcuitySettingsState,
-    handleSave: handleAcuitySave
-  } = useSettingsForm(
-    defaultSettings,
-    updateAcuitySettings,
-    fetchAcuitySettings
-  );
-
   const {
     settings: appSettings,
     loading: appLoading,
     updateSettings: updateAppSettingsState,
     handleSave: handleAppSave
-  } = useSettingsForm(
+  } = useSettingsForm<AppSettings>(
     defaultAppSettings,
-    updateAppSettings,
-    fetchAppSettings
+    async (settings) => {
+      await updateAppSettings(settings);
+    },
+    async () => {
+      const settings = await fetchAppSettings();
+      return {
+        ...defaultAppSettings,
+        ...settings
+      } as AppSettings;
+    }
   );
 
   const { isSectionExpanded, toggleSection } = useSettingsSections();
 
   const handleSettingsSave = useCallback(async () => {
     try {
-      await Promise.all([
-        handleAcuitySave(),
-        handleAppSave()
-      ]);
+      await handleAppSave();
       toast.success('Settings saved successfully');
     } catch (error) {
       toast.error('Failed to save settings');
     }
-  }, [handleAcuitySave, handleAppSave]);
+  }, [handleAppSave]);
 
   const handleTestChatGPT = async () => {
     try {
@@ -85,8 +67,8 @@ const AdminSettings = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: acuitySettings.chatGPTSettings?.apiKey,
-          model: acuitySettings.chatGPTSettings?.model
+          apiKey: appSettings.chatGPTSettings?.apiKey,
+          model: appSettings.chatGPTSettings?.model
         }),
       });
 
@@ -118,21 +100,6 @@ const AdminSettings = () => {
       </SettingsSection>
 
       <SettingsSection
-        id={SECTION_IDS.ACUITY}
-        title="Acuity Integration"
-        icon={<Calendar />}
-        expanded={isSectionExpanded(SECTION_IDS.ACUITY)}
-        onToggle={() => toggleSection(SECTION_IDS.ACUITY)}
-      >
-        <AcuitySettings
-          settings={acuitySettings}
-          loading={acuityLoading}
-          updateSettings={updateAcuitySettingsState}
-          onSave={handleAcuitySave}
-        />
-      </SettingsSection>
-
-      <SettingsSection
         id={SECTION_IDS.REPAIR_SHOPR}
         title="RepairShopr Integration"
         icon={<Key />}
@@ -140,9 +107,10 @@ const AdminSettings = () => {
         onToggle={() => toggleSection(SECTION_IDS.REPAIR_SHOPR)}
       >
         <RepairShoprSettings
-          settings={acuitySettings}
-          loading={acuityLoading}
-          updateSettings={updateAcuitySettingsState}
+          settings={appSettings}
+          loading={appLoading}
+          updateSettings={updateAppSettingsState}
+          onSave={handleAppSave}
         />
       </SettingsSection>
 
@@ -154,9 +122,10 @@ const AdminSettings = () => {
         onToggle={() => toggleSection(SECTION_IDS.STRIPE)}
       >
         <StripeSettings
-          settings={acuitySettings}
-          loading={acuityLoading}
-          updateSettings={updateAcuitySettingsState}
+          settings={appSettings}
+          loading={appLoading}
+          updateSettings={updateAppSettingsState}
+          onSave={handleAppSave}
         />
       </SettingsSection>
 
@@ -168,9 +137,10 @@ const AdminSettings = () => {
         onToggle={() => toggleSection(SECTION_IDS.CHATGPT)}
       >
         <ChatGPTSettings
-          settings={acuitySettings.chatGPTSettings}
-          loading={acuityLoading}
-          updateSettings={(updates) => updateAcuitySettingsState({ chatGPTSettings: updates })}
+          settings={appSettings.chatGPTSettings}
+          loading={appLoading}
+          updateSettings={(updates) => updateAppSettingsState({ chatGPTSettings: updates })}
+          onSave={handleAppSave}
           onTest={handleTestChatGPT}
         />
       </SettingsSection>
@@ -193,9 +163,9 @@ const AdminSettings = () => {
         onToggle={() => toggleSection(SECTION_IDS.CYPRESS)}
       >
         <CypressSettings
-          settings={acuitySettings}
-          loading={acuityLoading}
-          updateSettings={updateAcuitySettingsState}
+          settings={appSettings.cypressSettings || { cypressApiKey: '', cypressEnabled: false }}
+          loading={appLoading}
+          updateSettings={(updates) => updateAppSettingsState({ cypressSettings: updates })}
         />
       </SettingsSection>
 

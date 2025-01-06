@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { format, addMinutes } from 'date-fns';
 import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
-import type { AcuityAppointmentType } from '@services/acuityIntegration';
+import type { AppointmentType } from '../types';
 
 interface ServiceSummaryProps {
   date: Date;
   time: string;
-  appointmentType: AcuityAppointmentType | null;
+  appointmentType: AppointmentType | null;
   onConfirm: () => Promise<void>;
   loading?: boolean;
   address?: string;

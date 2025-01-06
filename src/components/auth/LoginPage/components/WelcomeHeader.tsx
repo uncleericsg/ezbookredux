@@ -12,7 +12,6 @@ export const WelcomeHeader: React.FC = () => {
         height={64}
         decoding="async"
         loading="eager"
-        fetchPriority="high" // Fixed casing for TypeScript
       />
       {/* Main heading for SEO */}
       <h1 

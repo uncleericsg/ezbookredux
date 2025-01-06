@@ -1,242 +1,247 @@
-import { useCallback, useState, useMemo } from 'react';
-import { RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useHolidayNotifications } from '@hooks/useHolidayNotifications';
-import HolidayGreetingModal from './HolidayGreetingModal';
-import { useHolidayGreetings } from '@hooks/useHolidayGreetings';
-import { useAcuitySettings } from '@hooks/useAcuitySettings';
+import React, { useState } from 'react';
+import { Edit, Save, X, Calendar, MessageSquare, AlertTriangle, Gift } from 'lucide-react';
+import { useHolidayList } from '../../hooks/useHolidayList';
+import { useHolidayGreetings } from '../../hooks/useHolidayGreetings';
 import { toast } from 'sonner';
-import ErrorBoundary from './ErrorBoundary';
-import { Button } from '@components/atoms/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@components/organisms/dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@components/atoms/tooltip';
-import { Skeleton } from '@components/atoms/skeleton';
-import { ScrollArea } from '@components/molecules/scroll-area';
-import { AutoSizer, List } from 'react-virtualized';
-import HolidayItem from './HolidayItem';
+import type { HolidayGreeting, Holiday } from '../../types';
+import type { AdminSettings } from '../../types/settings';
+import { format, parseISO } from 'date-fns';
+import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { Spinner } from '../../components/ui/spinner';
 import { cn } from '../../lib/utils';
-import type { Holiday, HolidayListProps } from './types';
 
-const ITEMS_PER_PAGE = 10;
-const ITEM_HEIGHT = 120;
-const RETRY_ATTEMPTS = 3;
-const RETRY_DELAY = 1000;
+interface HolidayListProps {
+  className?: string;
+  settings: AdminSettings;
+}
 
-/**
- * HolidayListContent component displays a list of upcoming holidays with scheduling capabilities
- * Implements virtualization for performance and includes error handling and retry logic
- */
-const HolidayListContent: React.FC<HolidayListProps> = ({ className }) => {
-  const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [previewMessage, setPreviewMessage] = useState('');
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
-  const { upcomingHolidays, loading, error, refetch } = useHolidayNotifications();
-  const { settings } = useAcuitySettings();
-  const { generateGreeting, updateGreeting } = useHolidayGreetings({
-    chatGPTSettings: settings?.chatGPTSettings
-  });
-
-  const totalPages = Math.ceil(upcomingHolidays.length / ITEMS_PER_PAGE);
+const HolidayList: React.FC<HolidayListProps> = ({ className, settings }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<HolidayGreeting>>({});
+  const [showPreview, setShowPreview] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   
-  const paginatedHolidays = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return upcomingHolidays.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [upcomingHolidays, currentPage]);
+  const { holidays, loading: holidaysLoading } = useHolidayList();
+  const { 
+    holidayGreetings, 
+    loading: greetingsLoading, 
+    updateGreeting, 
+    generateGreeting,
+    error: greetingsError 
+  } = useHolidayGreetings({ chatGPTSettings: settings?.app?.chatGPTSettings });
 
-  const handleSchedule = useCallback(async (holiday: Holiday) => {
-    setSelectedHoliday(holiday);
-    
+  const loading = holidaysLoading || greetingsLoading;
+
+  const handleEdit = async (holiday: Holiday) => {
+    const existingGreeting = holidayGreetings.find(g => g.id === holiday.date);
+    setEditingId(holiday.date);
+    setEditForm({
+      id: holiday.date,
+      holiday: holiday.name,
+      date: holiday.date,
+      message: existingGreeting?.message || '',
+      enabled: existingGreeting?.enabled ?? true,
+      sendTime: existingGreeting?.sendTime || `${holiday.date}T00:00:00Z`
+    });
+    setShowPreview(null);
+  };
+
+  const handleSave = async (holiday: Holiday) => {
     try {
-      const message = await generateGreeting(holiday);
-      setPreviewMessage(message);
-      setShowConfirmation(true);
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'An unexpected error occurred while preparing the greeting';
-      toast.error(errorMessage);
-    }
-  }, [generateGreeting]);
-
-  const confirmSchedule = useCallback(async () => {
-    if (!selectedHoliday) return;
-
-    let attempts = 0;
-    while (attempts < RETRY_ATTEMPTS) {
-      try {
-        await updateGreeting({
-          holidayId: selectedHoliday.id,
-          message: previewMessage
-        });
-        
-        toast.success('Holiday greeting scheduled successfully!');
-        setShowConfirmation(false);
-        setSelectedHoliday(null);
-        setPreviewMessage('');
+      if (!editForm.message) {
+        toast.error('Message cannot be empty');
         return;
-      } catch (error) {
-        attempts++;
-        if (attempts === RETRY_ATTEMPTS) {
-          const errorMessage = error instanceof Error 
-            ? error.message 
-            : 'Failed to schedule greeting';
-          toast.error(errorMessage);
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       }
-    }
-  }, [selectedHoliday, previewMessage, updateGreeting]);
 
-  const handlePageChange = useCallback((newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  }, [totalPages]);
+      await updateGreeting({
+        id: holiday.date,
+        holiday: holiday.name,
+        date: holiday.date,
+        message: editForm.message,
+        enabled: editForm.enabled ?? true,
+        sendTime: editForm.sendTime || `${holiday.date}T00:00:00Z`
+      });
 
-  const rowRenderer = useCallback(({ index, style }) => {
-    const holiday = paginatedHolidays[index];
+      setEditingId(null);
+      setEditForm({});
+      toast.success('Holiday greeting updated successfully');
+    } catch (error) {
+      toast.error('Failed to update holiday greeting');
+    }
+  };
+
+  const handleGenerate = async (holiday: Holiday) => {
+    try {
+      setIsGenerating(true);
+      const message = await generateGreeting(
+        `Generate a holiday greeting for ${holiday.name}`,
+        `Holiday: ${holiday.name}, Date: ${holiday.date}`,
+        'formal'
+      );
+      setEditForm((prev: Partial<HolidayGreeting>) => ({ ...prev, message }));
+      toast.success('Message generated successfully');
+    } catch (error) {
+      toast.error('Failed to generate message');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="p-2" style={style}>
-        <HolidayItem
-          key={holiday.id}
-          holiday={holiday}
-          onSchedule={handleSchedule}
-        />
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="w-full animate-pulse">
+            <div className="flex flex-row items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-gray-300" />
+              <div className="space-y-2 flex-1">
+                <div className="h-4 w-1/3 bg-gray-300" />
+                <div className="h-3 w-1/4 bg-gray-300" />
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="h-24 w-full bg-gray-300" />
+            </div>
+          </Card>
+        ))}
       </div>
     );
-  }, [paginatedHolidays, handleSchedule]);
+  }
 
-  if (error) {
+  if (greetingsError) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center" role="alert">
-        <p className="text-destructive mb-4">{error.message}</p>
-        <Button
-          onClick={refetch}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          aria-label="Retry loading holidays"
-        >
-          <RefreshCcw className="w-4 h-4" aria-hidden="true" />
-          Retry
-        </Button>
-      </div>
+      <Card className="border-red-200 bg-red-50">
+        <div className="flex items-center gap-2 text-red-700 p-4">
+          <AlertTriangle className="h-5 w-5" />
+          <p>Failed to load holiday greetings. Please try again later.</p>
+        </div>
+      </Card>
     );
   }
 
   return (
     <div className={cn("w-full space-y-4", className)}>
-      <ScrollArea className="h-[600px] w-full rounded-md border">
-        {loading ? (
-          <div className="space-y-3 p-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-[100px] w-full" />
-            ))}
-          </div>
-        ) : (
-          <div style={{ height: ITEM_HEIGHT * Math.min(paginatedHolidays.length, 5) }}>
-            <AutoSizer>
-              {({ width, height }) => (
-                <List
-                  width={width}
-                  height={height}
-                  rowCount={paginatedHolidays.length}
-                  rowHeight={ITEM_HEIGHT}
-                  rowRenderer={rowRenderer}
-                />
+      {holidays.map((holiday) => {
+        const isEditing = editingId === holiday.date;
+        const greeting = holidayGreetings.find(g => g.id === holiday.date);
+        const formattedDate = format(parseISO(holiday.date), 'MMM d, yyyy');
+
+        return (
+          <Card key={holiday.date} className="w-full">
+            <div className="flex flex-row items-start gap-4 p-4">
+              <div className="p-3 bg-blue-50 rounded-full">
+                <Gift className="h-6 w-6 text-blue-500" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">{holiday.name}</h3>
+                  <Badge variant={greeting?.enabled ? 'default' : 'warning'}>
+                    {greeting?.enabled ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Calendar className="h-4 w-4" />
+                  {formattedDate}
+                </div>
+              </div>
+            </div>
+            <div className="px-4">
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Message</label>
+                    <textarea
+                      value={editForm.message}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, message: e.target.value }))}
+                      className="w-full min-h-[100px] p-3 rounded-md border focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter holiday greeting message..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Send Time</label>
+                    <Input
+                      type="datetime-local"
+                      value={editForm.sendTime?.slice(0, 16)}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, sendTime: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={editForm.enabled}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, enabled: e.target.checked }))}
+                      className="rounded border-gray-300"
+                    />
+                    <label className="text-sm">Enable greeting</label>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {greeting?.message ? (
+                    <p className="text-gray-700">{greeting.message}</p>
+                  ) : (
+                    <p className="text-gray-500 italic">No message set</p>
+                  )}
+                </div>
               )}
-            </AutoSizer>
-          </div>
-        )}
-      </ScrollArea>
-
-      <div className="flex items-center justify-center gap-4">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Previous page</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <span className="text-sm text-muted-foreground">
-          Page {currentPage} of {totalPages}
-        </span>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Next page</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Preview Greeting</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto">
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {previewMessage}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowConfirmation(false);
-                setPreviewMessage('');
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={confirmSchedule}>
-              Confirm & Schedule
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </div>
+            <div className="px-4 pb-4">
+              <div className="flex justify-end gap-2">
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingId(null);
+                        setEditForm({});
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerate(holiday)}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Spinner className="h-4 w-4 mr-2" />
+                      ) : (
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                      )}
+                      Generate
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleSave(holiday)}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(holiday)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 };
-
-const HolidayList: React.FC<HolidayListProps> = (props) => (
-  <ErrorBoundary>
-    <HolidayListContent {...props} />
-  </ErrorBoundary>
-);
 
 export default HolidayList;

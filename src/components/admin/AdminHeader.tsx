@@ -3,10 +3,10 @@ import React, { memo } from 'react';
 import IntegrationStatus from '@admin/IntegrationStatus';
 import QuickSettings from '@admin/QuickSettings';
 
-import type { AcuitySettings } from '@types/settings';
+import type { AdminSettings } from '../../types/settings';
 
 interface AdminHeaderProps {
-  settings: AcuitySettings;
+  settings: AdminSettings;
   integrationStatus: Record<string, boolean>;
   onIntervalChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }

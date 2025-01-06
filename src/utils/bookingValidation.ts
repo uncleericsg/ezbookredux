@@ -1,7 +1,7 @@
 import { addDays, isBefore, isAfter, startOfDay, addMinutes } from 'date-fns';
-import type { BookingValidation, TimeSlot } from '@types';
+import type { BookingValidation, TimeSlot, AppointmentType } from '../types';
 import { toast } from 'sonner';
-import { BUSINESS_RULES } from '@constants/businessRules';
+import { BUSINESS_RULES } from '../constants/businessRules';
 
 export const validateBookingDetails = (
   userId: string | undefined,
@@ -52,7 +52,7 @@ export const validateTimeSlot = (
   slot: TimeSlot,
   isAMC = false,
   existingBookings: { datetime: string; duration: number; type: string }[] = [],
-  appointmentType?: AcuityAppointmentType
+  appointmentType?: AppointmentType
 ): BookingValidation => {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -200,6 +200,7 @@ export const validateSlotAllocation = (
 
   return {
     isValid: true,
+    errors,
     warnings: warnings.length > 0 ? warnings : undefined
   };
 };
