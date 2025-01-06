@@ -1,285 +1,196 @@
 # Root Error Boundary Implementation Plan
 
-## Current State Analysis
+## Current Situation
 
-### Error Boundary Implementations
+1. Multiple Error Boundaries:
+   - ConsolidatedErrorBoundary.tsx (main)
+   - ErrorBoundary.tsx (basic)
+   - EnhancedErrorBoundary.tsx (payment)
+   - Various specialized error boundaries
 
-1. Root Level Components:
-   - `/src/components/ConsolidatedErrorBoundary.tsx` - Main enhanced implementation
-   - `/src/components/ErrorBoundary.tsx` - Basic implementation
-   - `/src/components/EnhancedErrorBoundary.tsx` (referenced in PaymentStep.Full.UI.Working.tsx)
+2. Issues:
+   - Too many similar implementations
+   - Scattered across different directories
+   - Inconsistent error handling
+   - Hard to maintain
 
-2. Import Analysis:
-   - Main app uses ConsolidatedErrorBoundary
-   - Payment flow alternates between PaymentErrorBoundary and EnhancedErrorBoundary
-   - Booking components use ConsolidatedErrorBoundary
-   - Notifications use a specialized ErrorBoundary
-   - Home page uses SectionErrorBoundary
+## Simplified Solution
 
-2. Dedicated Error Boundary Directory:
-   - `/src/components/error-boundary/ErrorBoundary.tsx` - Simple implementation
-   - `/src/components/error-boundary/ErrorFallback.tsx` - Basic fallback UI
-   - `/src/components/error-boundary/LocationOptimizerError.tsx` - Specialized error UI
+### 1. Single Error Boundary Component
 
-3. Feature-Specific Implementations:
-   - `/src/components/payment/PaymentErrorBoundary.tsx` - Payment-specific error handling
-   - `/src/components/home/utils/ErrorBoundary.tsx` - Section-specific error handling
-   - `/src/components/notifications/ErrorBoundary.tsx` - Notification-specific error handling
+Create one main error boundary component:
+```typescript
+// src/components/error-boundary/RootErrorBoundary.tsx
 
-4. Usage Locations:
-   - Main Application (`src/main.tsx`): Uses ConsolidatedErrorBoundary
-   - Booking Flow: Uses PaymentErrorBoundary and ConsolidatedErrorBoundary
-   - Home Page: Uses SectionErrorBoundary for different sections
-   - Service Scheduling: Has custom BookingErrorFallback
-   - Notifications: Uses specialized ErrorBoundary
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, info: ErrorInfo) => void;
+  variant?: 'default' | 'payment' | 'section' | 'minimal';
+}
 
-## Issues Identified
+class RootErrorBoundary extends React.Component<Props, State> {
+  // Implementation here
+}
+```
 
-1. Duplication:
-   - Multiple base ErrorBoundary implementations
-   - Overlapping functionality between implementations
-   - Redundant error fallback components
+### 2. Usage Examples
 
-2. Inconsistent Features:
-   - Different error logging approaches
-   - Varying levels of error detail display
-   - Inconsistent retry/reset functionality
+```typescript
+// Main App
+<RootErrorBoundary>
+  <App />
+</RootErrorBoundary>
 
-3. Scattered Implementation:
-   - Error boundaries spread across multiple directories
-   - No clear hierarchy or organization
-   - Mixed usage of different implementations
+// Payment Flow
+<RootErrorBoundary 
+  variant="payment"
+  onError={logPaymentError}
+  fallback={<PaymentErrorUI />}
+>
+  <PaymentFlow />
+</RootErrorBoundary>
 
-## Implementation Plan
+// Home Sections
+<RootErrorBoundary
+  variant="section"
+  fallback={<SectionErrorUI />}
+>
+  <HomeSection />
+</RootErrorBoundary>
+```
 
-### Phase 1: Consolidation
+### 3. Features
 
-1. Create New Root Error Boundary:
-   ```typescript
-   // src/components/error-boundary/RootErrorBoundary.tsx
-   - Merge best features from ConsolidatedErrorBoundary
-   - Support enhanced features toggle
-   - Flexible fallback component support
-   - Development mode error details
-   - Toast notifications integration
-   - Retry functionality
+1. Error Handling:
+   - Catches JavaScript errors
+   - Logs errors appropriately
+   - Shows user-friendly messages
+   - Supports error recovery
+
+2. UI Variants:
+   - default: Standard error message
+   - payment: Payment-specific UI
+   - section: Section-specific UI
+   - minimal: Basic error message
+
+3. Customization:
+   - Custom fallback UI
+   - Error callbacks
+   - Reset functionality
+
+## Implementation Steps
+
+1. Create New Component:
+   ```bash
+   - Create RootErrorBoundary.tsx
+   - Add basic error boundary logic
+   - Implement variant support
+   - Add customization options
    ```
 
-2. Create Specialized Error Boundaries:
-   ```typescript
-   // src/components/error-boundary/specialized/PaymentErrorBoundary.tsx
-   // src/components/error-boundary/specialized/SectionErrorBoundary.tsx
-   // src/components/error-boundary/specialized/NotificationErrorBoundary.tsx
-   - Extend from RootErrorBoundary
-   - Add domain-specific error handling
-   - Custom UI for specific use cases
+2. Create Error UIs:
+   ```bash
+   - Default error UI
+   - Payment error UI
+   - Section error UI
+   - Minimal error UI
    ```
 
-### Phase 2: File Structure Reorganization
+3. Migration:
+   ```bash
+   - Replace ConsolidatedErrorBoundary first
+   - Update payment flow error boundaries
+   - Update section error boundaries
+   - Remove old implementations
+   ```
+
+4. Testing:
+   ```bash
+   - Test error catching
+   - Test each variant
+   - Test custom fallbacks
+   - Test error recovery
+   ```
+
+## File Structure
 
 ```
 src/components/error-boundary/
-├── index.ts                    # Main exports
-├── RootErrorBoundary.tsx       # Core implementation
-├── types.ts                    # Shared types
-├── constants.ts                # Error messages & configs
-├── utils/
-│   ├── errorReporting.ts       # Error logging & reporting
-│   └── errorFormatting.ts      # Error message formatting
-├── fallbacks/
-│   ├── DefaultFallback.tsx     # Default error UI
-│   ├── DevelopmentFallback.tsx # Dev mode error details
-│   └── MinimalFallback.tsx     # Simple error message
-└── specialized/
-    ├── PaymentErrorBoundary.tsx
-    ├── SectionErrorBoundary.tsx
-    └── NotificationErrorBoundary.tsx
+├── RootErrorBoundary.tsx     # Main component
+├── fallbacks/                # Error UI components
+│   ├── DefaultFallback.tsx
+│   ├── PaymentFallback.tsx
+│   ├── SectionFallback.tsx
+│   └── MinimalFallback.tsx
+└── index.ts                  # Exports
 ```
 
-### Phase 3: Implementation Steps
+## Benefits
 
-1. Create New Structure:
-   ```bash
-   - Create all necessary directories
-   - Set up new file structure
-   - Create index.ts for exports
-   ```
+1. Maintenance:
+   - Single source of truth
+   - Easy to update
+   - Consistent behavior
 
-2. Implement Core Components:
-   ```typescript
-   - Implement RootErrorBoundary with all ConsolidatedErrorBoundary features
-   - Create shared types and constants
-   - Implement utility functions
-   - Create fallback components
-   - Ensure compatibility with EnhancedErrorBoundary usage patterns
-   ```
+2. Development:
+   - Clear usage patterns
+   - Simple props API
+   - Type-safe implementation
 
-3. Migrate Specialized Components:
-   ```typescript
-   - Convert existing specialized error boundaries
-   - Update to extend from RootErrorBoundary
-   - Maintain existing specialized features
-   - Create PaymentErrorBoundary with enhanced features
-   - Implement SectionErrorBoundary with performance optimizations
-   ```
+3. User Experience:
+   - Consistent error handling
+   - Appropriate error messages
+   - Smooth error recovery
 
-4. Update Usage Locations:
-   ```typescript
-   - Update main.tsx to use RootErrorBoundary
-   - Replace EnhancedErrorBoundary usage in PaymentStep
-   - Update OptimizedLocationProvider to use new implementation
-   - Migrate notification components to new error boundary
-   - Update home page section error boundaries
-   ```
-
-5. Migration Priorities:
-   ```typescript
-   - Phase out ConsolidatedErrorBoundary first
-   - Replace EnhancedErrorBoundary usages
-   - Update specialized implementations
-   - Remove deprecated error boundaries
-   ```
-
-### Phase 4: EnhancedErrorBoundary Migration
-
-1. Analysis:
-   ```typescript
-   - Document current EnhancedErrorBoundary usage patterns
-   - Identify specific features used in PaymentStep
-   - Map features to new RootErrorBoundary implementation
-   ```
-
-2. Migration Path:
-   ```typescript
-   - Create compatibility layer if needed
-   - Update PaymentStep implementation
-   - Verify payment flow functionality
-   - Remove EnhancedErrorBoundary after migration
-   ```
-
-3. Validation Strategy:
-   ```typescript
-   - Test payment flow extensively
-   - Verify error handling in payment scenarios
-   - Ensure no regression in payment functionality
-   ```
-
-### Phase 5: Testing & Validation
-
-1. Unit Tests:
-   ```typescript
-   - Test RootErrorBoundary core functionality
-   - Test specialized implementations
-   - Test fallback components
-   - Verify enhanced features
-   - Test payment-specific error scenarios
-   ```
-
-2. Integration Tests:
-   ```typescript
-   - Test error boundary hierarchy
-   - Verify error propagation
-   - Validate recovery mechanisms
-   - Test payment flow integration
-   - Verify section-based error handling
-   - Test notification error scenarios
-   ```
-
-3. Visual Regression Tests:
-   ```typescript
-   - Test all fallback UI components
-   - Verify error message displays
-   - Validate responsive behavior
-   - Test payment error UI states
-   - Verify section error displays
-   - Test enhanced UI features
-   ```
-
-4. Performance Tests:
-   ```typescript
-   - Measure error boundary overhead
-   - Test section-based error isolation
-   - Verify lazy loading behavior
-   - Measure impact on initial load
-   ```
-
-## Migration Strategy
-
-1. Gradual Rollout:
-   - Implement new structure
-   - Add new components alongside existing ones
-   - Gradually migrate usage to new components
-   - Remove old implementations
-
-2. Breaking Changes:
-   - Document all API changes
-   - Update component props where needed
-   - Provide migration guide for team
-
-3. Validation Steps:
-   - Verify error catching works
-   - Test error recovery
-   - Confirm proper error reporting
-   - Check UI consistency
-
-## Monitoring & Maintenance
+## Future Improvements
 
 1. Error Tracking:
+   - Error logging service integration
+   - Error analytics
+   - Performance monitoring
+
+2. Enhanced Features:
+   - More UI variants
+   - Advanced error recovery
+   - Better debug information
+
+## Migration Guide
+
+1. For Existing Code:
    ```typescript
-   - Implement error tracking service integration
-   - Set up error reporting pipeline
-   - Configure error categorization
-   - Establish error severity levels
+   // Old
+   <ConsolidatedErrorBoundary>
+     <Component />
+   </ConsolidatedErrorBoundary>
+
+   // New
+   <RootErrorBoundary>
+     <Component />
+   </RootErrorBoundary>
    ```
 
-2. Performance Monitoring:
+2. For Payment Flow:
    ```typescript
-   - Monitor error boundary impact
-   - Track error recovery success rates
-   - Measure error boundary render times
-   - Monitor bundle size impact
+   // Old
+   <PaymentErrorBoundary>
+     <PaymentComponent />
+   </PaymentErrorBoundary>
+
+   // New
+   <RootErrorBoundary variant="payment">
+     <PaymentComponent />
+   </RootErrorBoundary>
    ```
 
-3. Usage Analytics:
+3. For Sections:
    ```typescript
-   - Track error occurrence patterns
-   - Monitor recovery success rates
-   - Analyze user interaction with error UIs
-   - Measure impact on user sessions
-   ```
+   // Old
+   <SectionErrorBoundary>
+     <Section />
+   </SectionErrorBoundary>
 
-4. Maintenance Schedule:
-   ```typescript
-   - Regular performance audits
-   - Monthly error pattern analysis
-   - Quarterly feature review
-   - Semi-annual comprehensive testing
-   ```
-
-## Future Considerations
-
-1. Error Reporting:
-   - Integration with error tracking services
-   - Enhanced error logging with context
-   - Real-time error notifications
-   - Error analytics dashboard
-
-2. Performance:
-   - Lazy loading of enhanced features
-   - Optimized error boundary placement
-   - Minimal impact on app performance
-   - Automated performance monitoring
-
-3. Maintainability:
-   - Comprehensive documentation
-   - Component API documentation
-   - Usage examples and patterns
-   - Testing guidelines
-   - Regular code reviews
-   - Automated testing pipeline
-
-4. Feature Enhancements:
-   - Custom error recovery strategies
-   - Enhanced debugging tools
-   - Error boundary configuration API
-   - Error boundary composition utilities
+   // New
+   <RootErrorBoundary variant="section">
+     <Section />
+   </RootErrorBoundary>
