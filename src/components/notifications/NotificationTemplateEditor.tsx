@@ -16,7 +16,7 @@ import {
   previewTemplate,
   templateSchema
 } from './utils/templateUtils';
-import { ErrorBoundary } from './ErrorBoundary';
+import { ErrorBoundary } from '@components/error-boundary';
 import { Card, CardContent, CardHeader, CardFooter } from '@components/molecules/card';
 import { Button } from '@components/atoms/button';
 import { Input } from '@components/atoms/input';
