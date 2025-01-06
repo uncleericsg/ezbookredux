@@ -7,7 +7,7 @@ interface WelcomeSectionProps {
 
 /**
  * WelcomeSection Component
- * Displays the welcome header with logo and title
+ * Displays the welcome header with title
  */
 const WelcomeSection: React.FC<WelcomeSectionProps> = ({ className }) => {
   return (
@@ -22,6 +22,10 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ className }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
+        style={{
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text'
+        }}
       >
         Welcome to iAircon
       </motion.h2>
@@ -34,18 +38,6 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ className }) => {
       >
         No.1 PowerJet Experts in Singapore!
       </motion.p>
-
-      <motion.img
-        className="mx-auto h-16 w-auto"
-        src="/logo.png"
-        alt="Easy Booking Logo"
-        width="64"
-        height="64"
-        loading="eager"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-      />
     </motion.div>
   );
 };

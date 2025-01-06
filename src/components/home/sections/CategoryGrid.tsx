@@ -95,23 +95,16 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ className }) => {
   };
 
   return (
-    <motion.div
-      className={`mb-24 ${className}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-        {categories.map((category) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            onSelect={() => handleCategorySelect(category.id)}
-            shouldReduceMotion={shouldReduceMotion}
-          />
-        ))}
-      </div>
-    </motion.div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+      {categories.map((category) => (
+        <CategoryCard
+          key={category.id}
+          category={category}
+          onSelect={() => handleCategorySelect(category.id)}
+          shouldReduceMotion={shouldReduceMotion}
+        />
+      ))}
+    </div>
   );
 };
 

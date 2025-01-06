@@ -1,38 +1,31 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { Star } from 'lucide-react';
+import { ServiceCategory } from '../types/serviceCategory';
 
-interface ServiceCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  rating?: number;
-  reviewCount?: number;
-  popular?: boolean;
-}
-
-interface CategoryCardProps {
+interface ServiceCategoryCardProps {
   category: ServiceCategory;
   onSelect: () => void;
   shouldReduceMotion: boolean;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({
-  category,
+const ServiceCategoryCard = ({ 
+  category, 
   onSelect,
   shouldReduceMotion
-}) => {
+}: ServiceCategoryCardProps) => {
   return (
     <motion.div
       className="relative group"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.8,
-        ease: "easeOut"
+      initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+      whileInView={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={shouldReduceMotion ? {} : { 
+        type: "spring", 
+        stiffness: 300,
+        damping: 20
       }}
-      whileHover={{ y: -5 }}
+      whileHover={shouldReduceMotion ? {} : { y: -5 }}
     >
       {category.popular && (
         <motion.div
@@ -111,9 +104,25 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                 ? 'text-[#FFD700] drop-shadow-[0_0_0.2rem_#FFD700]'
               : 'text-[#FFD700]'
             }`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
+            initial={shouldReduceMotion ? {} : { backgroundPosition: '200% 0' }}
+            animate={shouldReduceMotion ? {} : { backgroundPosition: '-200% 0' }}
+            transition={shouldReduceMotion ? {} : {
+              duration: 6,
+              repeat: Infinity,
+              ease: 'linear'
+            }}
+            style={{
+              background: shouldReduceMotion ? undefined : `linear-gradient(
+                90deg,
+                transparent 25%,
+                rgba(255,255,255,0.2) 50%,
+                transparent 75%
+              )`,
+              backgroundSize: '200% 100%',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent'
+            }}
           >
             {category.name}
           </motion.h3>
@@ -156,4 +165,4 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   );
 };
 
-export default CategoryCard;
+export default ServiceCategoryCard;
