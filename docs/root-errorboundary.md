@@ -57,6 +57,40 @@ export const ErrorFallback: React.FC<Props> = ({ error }) => (
 </ErrorBoundary>
 ```
 
+2. Lazy Loading Protection:
+```tsx
+// Protect against chunk loading failures
+<ErrorBoundary
+  fallback={(error) => (
+    <ChunkLoadError
+      error={error}
+      retry={() => window.location.reload()}
+    />
+  )}
+>
+  <Suspense fallback={<LoadingSpinner />}>
+    <LazyComponent />
+  </Suspense>
+</ErrorBoundary>
+
+// Router-level protection
+const HomePage = lazy(() => import('@components/home'));
+const HomeRoute = () => (
+  <ErrorBoundary
+    fallback={(error) => (
+      <RouteLoadError
+        error={error}
+        retry={() => window.location.reload()}
+      />
+    )}
+  >
+    <Suspense fallback={<PageLoader />}>
+      <HomePage />
+    </Suspense>
+  </ErrorBoundary>
+);
+```
+
 2. Custom Error UI:
 ```tsx
 <ErrorBoundary fallback={<CustomErrorUI />}>

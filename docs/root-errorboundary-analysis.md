@@ -19,6 +19,33 @@ Files found through comprehensive search patterns:
    component={[^}]*Error(?:Boundary|Fallback)|<Error(?:Boundary|Fallback)[^>]*>
    ```
 
+## Additional Considerations: Lazy Loading
+
+### 1. Lazy-Loaded Components
+Key areas using React.lazy:
+- Router level (src/router.tsx)
+- Home page sections (src/components/home/index.tsx)
+- Booking flow (src/components/booking/*)
+- Admin panels (src/components/admin/AdminPanelLoader.tsx)
+
+### 2. Error Handling for Lazy Components
+These components need error boundary protection for:
+- Chunk loading failures
+- Network errors
+- Module loading issues
+
+### 3. Recommended Implementation
+```tsx
+// For lazy-loaded routes
+<ErrorBoundary
+  fallback={(error) => <ChunkErrorFallback error={error} retry={() => window.location.reload()} />}
+>
+  <Suspense fallback={<LoadingSpinner />}>
+    <LazyComponent />
+  </Suspense>
+</ErrorBoundary>
+```
+
 ## Files Requiring Updates
 
 ### 1. Main Application
