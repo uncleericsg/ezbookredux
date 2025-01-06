@@ -2,195 +2,172 @@
 
 ## Current Situation
 
-1. Multiple Error Boundaries:
-   - ConsolidatedErrorBoundary.tsx (main)
-   - ErrorBoundary.tsx (basic)
-   - EnhancedErrorBoundary.tsx (payment)
-   - Various specialized error boundaries
-
-2. Issues:
-   - Too many similar implementations
-   - Scattered across different directories
-   - Inconsistent error handling
-   - Hard to maintain
+Multiple error boundary implementations exist across the project, creating unnecessary complexity and maintenance overhead.
 
 ## Simplified Solution
 
-### 1. Single Error Boundary Component
+### Core Implementation
 
-Create one main error boundary component:
+Two focused files:
+
+1. ErrorBoundary.tsx
 ```typescript
-// src/components/error-boundary/RootErrorBoundary.tsx
-
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, info: ErrorInfo) => void;
-  variant?: 'default' | 'payment' | 'section' | 'minimal';
+  fallback?: ReactNode | ((error: Error) => ReactNode);
+  onError?: (error: Error) => void;
 }
 
-class RootErrorBoundary extends React.Component<Props, State> {
-  // Implementation here
+export class ErrorBoundary extends Component<Props, State> {
+  // Core error boundary logic
 }
 ```
 
-### 2. Usage Examples
-
+2. ErrorFallback.tsx
 ```typescript
-// Main App
-<RootErrorBoundary>
-  <App />
-</RootErrorBoundary>
+interface Props {
+  error: Error;
+}
 
-// Payment Flow
-<RootErrorBoundary 
-  variant="payment"
-  onError={logPaymentError}
-  fallback={<PaymentErrorUI />}
->
-  <PaymentFlow />
-</RootErrorBoundary>
-
-// Home Sections
-<RootErrorBoundary
-  variant="section"
-  fallback={<SectionErrorUI />}
->
-  <HomeSection />
-</RootErrorBoundary>
+export const ErrorFallback: React.FC<Props> = ({ error }) => (
+  // Basic error display
+);
 ```
 
-### 3. Features
+### Design Principles
 
-1. Error Handling:
-   - Catches JavaScript errors
-   - Logs errors appropriately
-   - Shows user-friendly messages
-   - Supports error recovery
+1. Core Files:
+   - Keep minimal and focused
+   - Handle only essential error boundary logic
+   - Provide flexible props interface
+   - Maintain single responsibility
 
-2. UI Variants:
-   - default: Standard error message
-   - payment: Payment-specific UI
-   - section: Section-specific UI
-   - minimal: Basic error message
+2. Consumer Components:
+   - Handle complex error logic
+   - Implement custom UI
+   - Manage business-specific error handling
+   - Handle animations and styling
 
-3. Customization:
-   - Custom fallback UI
-   - Error callbacks
-   - Reset functionality
+### Usage Examples
+
+1. Basic Usage:
+```tsx
+<ErrorBoundary>
+  <MyComponent />
+</ErrorBoundary>
+```
+
+2. Custom Error UI:
+```tsx
+<ErrorBoundary fallback={<CustomErrorUI />}>
+  <PaymentFlow />
+</ErrorBoundary>
+```
+
+3. Dynamic Error Handling:
+```tsx
+<ErrorBoundary
+  fallback={(error) => <PaymentErrorUI error={error} />}
+  onError={logErrorToService}
+>
+  <CheckoutFlow />
+</ErrorBoundary>
+```
 
 ## Implementation Steps
 
-1. Create New Component:
+1. Create New Files:
    ```bash
-   - Create RootErrorBoundary.tsx
-   - Add basic error boundary logic
-   - Implement variant support
-   - Add customization options
+   - src/components/ErrorBoundary.tsx
+   - src/components/ErrorFallback.tsx
    ```
 
-2. Create Error UIs:
-   ```bash
-   - Default error UI
-   - Payment error UI
-   - Section error UI
-   - Minimal error UI
-   ```
+2. Update Imports:
+   - Replace all error boundary imports with new implementation
+   - Remove old error boundary files
+   - Update component usage patterns
 
-3. Migration:
-   ```bash
-   - Replace ConsolidatedErrorBoundary first
-   - Update payment flow error boundaries
-   - Update section error boundaries
-   - Remove old implementations
-   ```
-
-4. Testing:
-   ```bash
-   - Test error catching
-   - Test each variant
-   - Test custom fallbacks
-   - Test error recovery
-   ```
-
-## File Structure
-
-```
-src/components/error-boundary/
-├── RootErrorBoundary.tsx     # Main component
-├── fallbacks/                # Error UI components
-│   ├── DefaultFallback.tsx
-│   ├── PaymentFallback.tsx
-│   ├── SectionFallback.tsx
-│   └── MinimalFallback.tsx
-└── index.ts                  # Exports
-```
+3. Testing:
+   - Unit test core error boundary
+   - Test error fallback rendering
+   - Verify error handling in each context
 
 ## Benefits
 
 1. Maintenance:
-   - Single source of truth
-   - Easy to update
-   - Consistent behavior
+   - Two files to maintain
+   - Clear separation of concerns
+   - Simple to understand and modify
 
-2. Development:
-   - Clear usage patterns
-   - Simple props API
+2. Flexibility:
+   - Supports all current use cases
+   - Extensible through composition
    - Type-safe implementation
 
-3. User Experience:
-   - Consistent error handling
-   - Appropriate error messages
-   - Smooth error recovery
-
-## Future Improvements
-
-1. Error Tracking:
-   - Error logging service integration
-   - Error analytics
-   - Performance monitoring
-
-2. Enhanced Features:
-   - More UI variants
-   - Advanced error recovery
-   - Better debug information
+3. Performance:
+   - Minimal bundle size
+   - No unnecessary abstractions
+   - Efficient error handling
 
 ## Migration Guide
 
-1. For Existing Code:
-   ```typescript
-   // Old
-   <ConsolidatedErrorBoundary>
-     <Component />
-   </ConsolidatedErrorBoundary>
+1. Basic Components:
+```tsx
+// Old
+<ConsolidatedErrorBoundary>
+  <Component />
+</ConsolidatedErrorBoundary>
 
-   // New
-   <RootErrorBoundary>
-     <Component />
-   </RootErrorBoundary>
-   ```
+// New
+<ErrorBoundary>
+  <Component />
+</ErrorBoundary>
+```
 
-2. For Payment Flow:
-   ```typescript
-   // Old
-   <PaymentErrorBoundary>
-     <PaymentComponent />
-   </PaymentErrorBoundary>
+2. Enhanced Features:
+```tsx
+// Old
+<EnhancedErrorBoundary useFeatures={true}>
+  <Component />
+</EnhancedErrorBoundary>
 
-   // New
-   <RootErrorBoundary variant="payment">
-     <PaymentComponent />
-   </RootErrorBoundary>
-   ```
+// New
+<ErrorBoundary
+  fallback={(error) => <EnhancedErrorUI error={error} />}
+  onError={handleError}
+>
+  <Component />
+</ErrorBoundary>
+```
 
-3. For Sections:
-   ```typescript
-   // Old
-   <SectionErrorBoundary>
-     <Section />
-   </SectionErrorBoundary>
+3. Section-Specific:
+```tsx
+// Old
+<SectionErrorBoundary section="welcome">
+  <Section />
+</SectionErrorBoundary>
 
-   // New
-   <RootErrorBoundary variant="section">
-     <Section />
-   </RootErrorBoundary>
+// New
+<ErrorBoundary
+  fallback={(error) => <SectionErrorUI section="welcome" error={error} />}
+>
+  <Section />
+</ErrorBoundary>
+```
+
+## Future Considerations
+
+1. Error Reporting:
+   - Implement through onError prop
+   - Keep core files focused
+   - Handle in consumer components
+
+2. UI Enhancements:
+   - Implement in consumer components
+   - Use composition for complex UIs
+   - Maintain separation of concerns
+
+3. Testing:
+   - Focus on core functionality
+   - Test error scenarios
+   - Verify consumer implementations
