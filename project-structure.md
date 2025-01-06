@@ -216,6 +216,38 @@
 - SSL certificates for local development
 - Production certificates
 
+## Error Handling System
+
+### Core Error Boundary
+- `src/components/error-boundary/`
+  - Unified error handling implementation
+  - Type-safe error boundary components
+  - Customizable error UI system
+  - Development mode enhancements
+
+### Error Handling Strategy
+- Application-wide protection in main.tsx
+- Feature-specific error boundaries:
+  - Section-based error handling for home page
+  - Location service error handling
+  - Form submission error handling
+  - API error management
+- Development tools:
+  - Enhanced error details in development
+  - Error stack traces
+  - Error recovery mechanisms
+
+### Error UI System
+- Default error fallback for general errors
+- Specialized error UIs:
+  - Section-specific error displays
+  - Service-specific error handling
+  - Form validation error displays
+- Error recovery:
+  - Retry mechanisms
+  - State reset capabilities
+  - User feedback system
+
 ## Tools
 - `tools/`: Contains utility executables
   - Stripe CLI tool
