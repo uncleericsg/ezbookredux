@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LoadingScreen } from '@components/LoadingScreen.js';
-import SectionErrorBoundary from './utils/ErrorBoundary';
+import { ErrorBoundary, SectionErrorFallback } from '@components/error-boundary';
 import { initializeTracking } from './utils/performance';
 import styles from './styles/Home.module.css';
 
@@ -40,14 +40,30 @@ const HomePage: React.FC<HomePageProps> = ({ className }) => {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {/* Welcome Section */}
-          <SectionErrorBoundary section="welcome">
+          <ErrorBoundary
+            fallback={(error) => (
+              <SectionErrorFallback
+                error={error}
+                section="welcome"
+                resetErrorBoundary={() => {}}
+              />
+            )}
+          >
             <Suspense fallback={<LoadingScreen />}>
               <WelcomeSection />
             </Suspense>
-          </SectionErrorBoundary>
+          </ErrorBoundary>
 
           {/* Service Categories */}
-          <SectionErrorBoundary section="categories">
+          <ErrorBoundary
+            fallback={(error) => (
+              <SectionErrorFallback
+                error={error}
+                section="categories"
+                resetErrorBoundary={() => {}}
+              />
+            )}
+          >
             <Suspense fallback={
               <div className="flex items-center justify-center h-96">
                 <div className="text-center">
@@ -63,31 +79,55 @@ const HomePage: React.FC<HomePageProps> = ({ className }) => {
             }>
               <CategoryGrid />
             </Suspense>
-          </SectionErrorBoundary>
+          </ErrorBoundary>
         </motion.div>
 
         {/* Trust Indicators */}
         <div className="mt-36 mb-24">
-          <SectionErrorBoundary section="trust-indicators">
+          <ErrorBoundary
+            fallback={(error) => (
+              <SectionErrorFallback
+                error={error}
+                section="trust-indicators"
+                resetErrorBoundary={() => {}}
+              />
+            )}
+          >
             <Suspense fallback={<LoadingScreen />}>
               <TrustIndicators />
             </Suspense>
-          </SectionErrorBoundary>
+          </ErrorBoundary>
         </div>
 
         {/* Testimonials */}
-        <SectionErrorBoundary section="testimonials">
+        <ErrorBoundary
+          fallback={(error) => (
+            <SectionErrorFallback
+              error={error}
+              section="testimonials"
+              resetErrorBoundary={() => {}}
+            />
+          )}
+        >
           <Suspense fallback={<LoadingScreen />}>
             <TestimonialsSection />
           </Suspense>
-        </SectionErrorBoundary>
+        </ErrorBoundary>
 
         {/* Floating Buttons */}
-        <SectionErrorBoundary section="floating-buttons">
+        <ErrorBoundary
+          fallback={(error) => (
+            <SectionErrorFallback
+              error={error}
+              section="floating-buttons"
+              resetErrorBoundary={() => {}}
+            />
+          )}
+        >
           <Suspense fallback={null}>
             <FloatingButtons />
           </Suspense>
-        </SectionErrorBoundary>
+        </ErrorBoundary>
       </div>
     </div>
   );
