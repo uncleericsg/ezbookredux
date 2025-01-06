@@ -1,5 +1,24 @@
 # Acuity Integration Removal Plan
 
+## Progress Tracking (2025-01-06 12:38:50)
+
+### Completed:
+- [x] Removed unused acuity files:
+  - src/hooks/useAcuityTesting.ts
+  - src/services/acuityIntegration.ts
+  - src/components/admin/AcuitySettings.tsx
+  - src/hooks/useAcuitySettings.ts
+
+### In Progress:
+- [ ] Refactoring booking flow files:
+  - src/hooks/useAppointments.ts
+  - src/hooks/useTimeSlots.ts
+  - src/hooks/useAppointmentSuggestions.ts
+  - src/components/ServiceScheduling.tsx
+  - src/components/ServiceSummary.tsx
+  - src/components/admin/AMCPackageMapping.tsx
+  - src/components/admin/AMCPackageSettings.tsx
+
 ## Files to Remove/Modify
 
 ## Acuity Files Usage in Booking Flow
