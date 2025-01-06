@@ -1,10 +1,8 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { bookAppointment } from '@services/acuity';
 import { incrementVisitLabel } from '@services/repairShopr';
 import { validateBookingDetails } from '@utils/bookingValidation';
 import { BookingError } from '@utils/errors';
-import { validateBookingRequest } from '@utils/bookingValidation';
 import { toast } from 'sonner';
 import { RootState } from '@store';
 
@@ -36,21 +34,25 @@ export const useAppointments = () => {
       const validation = validateBookingDetails(user?.id, datetime, categoryId, isAMC);
       
       if (!validation.isValid) {
-        validation.errors.forEach(error => toast.error(error));
+        validation.errors.forEach((error: string) => toast.error(error));
         throw new Error(validation.errors[0]);
       }
 
       if (validation.warnings?.length) {
-        validation.warnings.forEach(warning => toast.warning(warning));
+        validation.warnings.forEach((warning: string) => toast.warning(warning));
       }
 
-      const appointmentId = await bookAppointment(datetime, {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone || '',
+      // TODO: Replace with local booking implementation
+      const appointmentId = await createLocalAppointment({
+        datetime,
+        userDetails: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone || '',
+          address: user.address || ''
+        },
         categoryId,
-        address: user.address || '',
         notes: `Scheduled via iAircon Easy Booking${isAMC ? ' (AMC Service)' : ''}`
       });
       
@@ -79,4 +81,21 @@ export const useAppointments = () => {
     loading,
     error,
   };
+};
+
+// Temporary local booking implementation
+const createLocalAppointment = async (bookingDetails: {
+  datetime: string;
+  userDetails: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  categoryId: string;
+  notes: string;
+}): Promise<string> => {
+  // TODO: Implement proper local booking logic
+  return Promise.resolve('local-appointment-id');
 };
