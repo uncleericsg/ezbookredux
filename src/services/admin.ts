@@ -114,3 +114,34 @@ export const restoreFromBackup = async (file: File): Promise<void> => {
     throw error;
   }
 };
+
+export const fetchAnalytics = async () => {
+  if (import.meta.env.DEV) {
+    // Return mock data in development
+    return {
+      totalBookings: 150,
+      completedBookings: 120,
+      pendingBookings: 30,
+      revenue: 15000,
+      topServices: [
+        { name: 'Chemical Wash', count: 45 },
+        { name: 'General Service', count: 35 },
+        { name: 'Repair', count: 25 }
+      ],
+      recentBookings: []
+    };
+  }
+
+  try {
+    const response = await axios.get('/api/admin/analytics', {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch analytics:', error);
+    toast.error('Failed to fetch analytics data');
+    throw error;
+  }
+};
