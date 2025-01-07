@@ -5,7 +5,7 @@ import * as SwitchPrimitives from '@radix-ui/react-switch';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@utils/cn';
 
-export type SwitchProps;
+export type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>;
 
 /**
  * Switch component for toggling between two states
@@ -35,7 +35,4 @@ const Switch = React.forwardRef<
 // Add displayName
 Switch.displayName = SwitchPrimitives.Root.displayName;
 
-// Both named and default exports at the bottom
 export { Switch };
-
-undefined.displayName = 'undefined';
