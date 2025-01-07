@@ -209,3 +209,48 @@ export const deleteBuildVersions = async (versionIds: string[]) => {
     throw error;
   }
 };
+
+export const fetchUsers = async () => {
+  if (import.meta.env.DEV) {
+    return [{
+      id: '1',
+      firstName: 'Regular',
+      lastName: 'User',
+      email: 'user@example.com',
+      phone: '12345678',
+      bio: 'Regular user account',
+      joinDate: '2023-01-01',
+      amcStatus: 'active' as const,
+      role: 'regular',
+      lastServiceDate: '2024-02-15',
+      nextServiceDate: null
+    }];
+  }
+
+  try {
+    const response = await axios.get('/api/admin/users');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    throw error;
+  }
+};
+
+export const deactivateUser = async (userId: string) => {
+  try {
+    await axios.post(`/api/admin/users/${userId}/deactivate`);
+  } catch (error) {
+    console.error('Failed to deactivate user:', error);
+    throw error;
+  }
+};
+
+export const updateUser = async (userId: string, updates: Partial<any>) => {
+  try {
+    const response = await axios.patch(`/api/admin/users/${userId}`, updates);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to update user:', error);
+    throw error;
+  }
+};
