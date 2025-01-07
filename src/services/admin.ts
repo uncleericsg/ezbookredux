@@ -145,3 +145,67 @@ export const fetchAnalytics = async () => {
     throw error;
   }
 };
+
+export const fetchBuildVersions = async () => {
+  if (import.meta.env.DEV) {
+    return [
+      {
+        id: '1',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        active: true,
+        size: 1024 * 1024,
+        changelog: 'Initial version'
+      }
+    ];
+  }
+
+  try {
+    const response = await axios.get('/api/admin/builds');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch build versions:', error);
+    throw error;
+  }
+};
+
+export const uploadBuildVersion = async (files: FileList, onProgress?: (progress: number) => void) => {
+  const formData = new FormData();
+  formData.append('build', files[0]);
+
+  try {
+    const response = await axios.post('/api/admin/builds/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress?.(progress);
+        }
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to upload build:', error);
+    throw error;
+  }
+};
+
+export const rollbackBuild = async (versionId: string) => {
+  try {
+    await axios.post(`/api/admin/builds/${versionId}/rollback`);
+  } catch (error) {
+    console.error('Failed to rollback build:', error);
+    throw error;
+  }
+};
+
+export const deleteBuildVersions = async (versionIds: string[]) => {
+  try {
+    await axios.post('/api/admin/builds/delete', { versionIds });
+  } catch (error) {
+    console.error('Failed to delete build versions:', error);
+    throw error;
+  }
+};
