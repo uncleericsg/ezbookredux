@@ -1,6 +1,73 @@
 # Centralized SEO Implementation Strategy
 
-## Core Structure
+## Implementation Phases
+
+### Phase 1: Frontend Development (Current)
+- Complete page structures
+- Finalize component hierarchy
+- Establish routing system
+- Define content areas
+- Set up data flow patterns
+
+### Phase 2: Backend SEO Management (Future)
+
+#### Database Structure
+```sql
+-- SEO Metadata
+CREATE TABLE seo_metadata (
+  page_id VARCHAR PRIMARY KEY,
+  path VARCHAR NOT NULL,
+  title VARCHAR NOT NULL,
+  description TEXT,
+  keywords TEXT[],
+  canonical_url VARCHAR,
+  robots_directives VARCHAR,
+  updated_at TIMESTAMP
+);
+
+-- Schema Data
+CREATE TABLE seo_schemas (
+  schema_id VARCHAR PRIMARY KEY,
+  page_id VARCHAR REFERENCES seo_metadata(page_id),
+  schema_type VARCHAR NOT NULL,
+  schema_data JSONB NOT NULL,
+  active BOOLEAN DEFAULT true,
+  version INTEGER,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+
+-- Content Management
+CREATE TABLE seo_content (
+  content_id VARCHAR PRIMARY KEY,
+  page_id VARCHAR REFERENCES seo_metadata(page_id),
+  section_type VARCHAR NOT NULL,
+  content JSONB NOT NULL,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+```
+
+#### API Structure
+```typescript
+// API Routes
+/api/seo
+├── /metadata
+│   ├── GET /:pageId    // Get page metadata
+│   ├── PUT /:pageId    // Update metadata
+│   └── PATCH /:pageId  // Partial update
+├── /schemas
+│   ├── GET /:pageId    // Get page schemas
+│   ├── POST /create    // Create new schema
+│   └── PUT /:schemaId  // Update schema
+└── /content
+    ├── GET /:pageId    // Get page content
+    ├── PUT /:contentId // Update content
+    └── POST /bulk      // Bulk updates
+```
+
+## Core Structure (Current)
 
 ```typescript
 src/
@@ -25,7 +92,7 @@ src/
         booking.ts           // Booking page schema
 ```
 
-## Base Schema Implementation
+## Base Schema Implementation (Current)
 
 ```typescript
 // src/components/seo/base/businessSchema.ts
@@ -61,116 +128,94 @@ export const generatePageSchema = (pageType: string, pageData: any) => {
 };
 ```
 
-## Usage Example
+## Future Integration Points
 
+1. Frontend Components:
 ```typescript
-// src/components/home/seo/index.ts
-import { generatePageSchema } from '../../seo/utils/schemaGenerator';
+// pages/[...slug].tsx
+export const getServerSideProps = async ({ params }) => {
+  const seoData = await fetchSEOData(params.slug);
+  return {
+    props: {
+      seoData,
+      // other props
+    }
+  };
+};
 
-export const homePageSchema = generatePageSchema('home', {
-  title: 'Singapore Aircon Services',
-  description: 'Professional aircon servicing...',
-  // ... other home-specific data
-});
-
-// src/components/chemical-wash/seo/index.ts
-export const chemicalWashSchema = generatePageSchema('service', {
-  serviceType: 'Chemical Wash',
-  price: '120.00',
-  // ... service-specific data
-});
+// components/SEO.tsx
+const SEO: React.FC<{ pageId: string }> = ({ pageId }) => {
+  const { data: seoData } = useSEOData(pageId);
+  
+  return (
+    <Head>
+      <title>{seoData.title}</title>
+      <meta name="description" content={seoData.description} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema) }}
+      />
+    </Head>
+  );
+};
 ```
 
-## Benefits of Centralized Approach
-
-1. Consistency
-- Unified business information
-- Standardized schema structure
-- Consistent SEO signals
-
-2. Maintainability
-- Single source of truth
-- Easy updates to shared data
-- Centralized validation
-
-3. Efficiency
-- Reusable components
-- Automated schema generation
-- Reduced duplication
-
-4. Flexibility
-- Easy to extend for new pages
-- Simple to customize
-- Page-specific optimizations
-
-## Implementation Steps
-
-1. Setup Base Structure
-```bash
-mkdir -p src/components/seo/{base,templates,utils,pages}
-```
-
-2. Create Base Schemas
+2. Admin Interface (Future):
 ```typescript
-// Core business information
-// Location data
-// Contact details
-// Service offerings
+// Admin routes for SEO management
+/admin/seo
+├── /pages          // Page metadata management
+├── /schemas        // Schema management
+├── /content        // Content management
+└── /analytics      // SEO performance tracking
 ```
 
-3. Implement Templates
-```typescript
-// Page type templates
-// Schema generators
-// Validation utilities
-```
+## Benefits of Phased Approach
 
-4. Apply to Pages
-```typescript
-// Import and use in components
-// Add page-specific data
-// Validate implementation
-```
+1. Frontend First:
+- Clear page structure
+- Defined content areas
+- Established routing
+- Stable component hierarchy
 
-## Maintenance
-
-1. Regular Updates
-- Weekly schema validation
-- Monthly content updates
-- Quarterly strategy review
-
-2. Monitoring
-- Track schema effectiveness
-- Monitor search rankings
-- Analyze user engagement
-
-3. Optimization
-- Update based on analytics
-- Enhance based on search trends
-- Improve based on user behavior
+2. Backend Integration:
+- Dynamic content management
+- Centralized control
+- Easy updates
+- Version control
+- A/B testing capability
 
 ## Best Practices
 
-1. Schema Organization
-- Keep base schemas separate
-- Use clear naming conventions
+1. Development Phase:
+- Document SEO requirements
+- Plan for future integration
+- Keep schemas organized
 - Maintain type safety
 
-2. Implementation
-- Validate all schemas
-- Test rich results
-- Monitor performance
+2. Backend Phase:
+- Implement versioning
+- Add validation
+- Set up monitoring
+- Enable analytics
 
-3. Updates
-- Document all changes
-- Version control schemas
-- Track effectiveness
+3. Maintenance:
+- Regular content updates
+- Performance monitoring
+- Schema validation
+- Analytics tracking
 
-This centralized approach ensures:
-- Consistent SEO implementation
-- Efficient development
-- Easy maintenance
-- Flexible customization
-- Scalable structure
+## Implementation Timeline
 
-The system can be easily extended for new pages while maintaining SEO best practices and optimization for each specific page type.
+1. Current Phase:
+- Complete frontend development
+- Document SEO requirements
+- Prepare schema structures
+
+2. Future Phase:
+- Set up database
+- Create API endpoints
+- Build admin interface
+- Implement monitoring
+
+This phased approach ensures proper foundation through frontend development before implementing the dynamic SEO management system.
