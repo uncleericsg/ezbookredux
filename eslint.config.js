@@ -197,9 +197,7 @@ export default [
         minimumDescriptionLength: 3
       }],
       '@typescript-eslint/consistent-type-assertions': ['warn', {
-        assertionStyle: 'as',
-        objectLiteralTypeAssertions: 'allow-as-parameter',
-        allowConstAssertions: true
+        assertionStyle: 'as'
       }],
       '@typescript-eslint/no-inferrable-types': 'warn',
       '@typescript-eslint/no-empty-interface': 'warn'
