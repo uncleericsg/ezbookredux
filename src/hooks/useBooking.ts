@@ -1,85 +1,145 @@
 import { useState } from 'react';
-import { TeamAssignmentService } from '../services/teams/teamAssignment';
-import { db } from '../lib/db';
-
-interface BookingData {
-    date: string;
-    serviceId: string;
-    customerId: string;
-    // Add other booking fields as needed
-}
-
-interface BookingResponse {
-    id: string;
-    date: string;
-    status: string;
-    // other public booking fields...
-}
+import type { 
+  BookingDetails, 
+  CreateBookingParams, 
+  UpdateBookingParams, 
+  BookingResponse 
+} from '@shared/types/booking';
+import {
+  createBooking as createBookingService,
+  updateBooking as updateBookingService,
+  getBookingById,
+  getBookingsByEmail,
+  getBookingsByCustomerId
+} from '@/services/bookingService';
+import { logger } from '@/utils/logger';
 
 export const useBooking = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const teamAssignmentService = new TeamAssignmentService();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const notifyTeamAssignment = async (booking: any, team: any) => {
-        // Implement internal notification logic here
-    };
+  const createBooking = async (params: CreateBookingParams): Promise<BookingResponse> => {
+    setLoading(true);
+    setError(null);
 
-    const createBooking = async (bookingData: BookingData): Promise<BookingResponse> => {
-        setLoading(true);
-        setError(null);
+    try {
+      const result = await createBookingService(params);
+      
+      if (result.error) {
+        setError(result.error.message);
+        throw new Error(result.error.message);
+      }
 
-        try {
-            // Create the booking first
-            const booking = await db.bookings.create({
-                data: bookingData
-            });
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create booking';
+      setError(message);
+      logger.error('Error in createBooking', { error: err });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Internally assign team without exposing to public
-            const team = await teamAssignmentService.getNextAvailableTeam(
-                bookingData.date
-            );
+  const updateBooking = async (bookingId: string, params: UpdateBookingParams): Promise<BookingResponse> => {
+    setLoading(true);
+    setError(null);
 
-            if (team) {
-                await teamAssignmentService.createTeamAssignment({
-                    bookingId: booking.id,
-                    teamId: team.id,
-                    assignedAt: new Date().toISOString(),
-                    manuallyAssigned: false
-                });
+    try {
+      const result = await updateBookingService(bookingId, params);
+      
+      if (result.error) {
+        setError(result.error.message);
+        throw new Error(result.error.message);
+      }
 
-                // Send internal notification to admin/staff
-                await notifyTeamAssignment(booking, team);
-            }
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update booking';
+      setError(message);
+      logger.error('Error in updateBooking', { error: err, bookingId });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Return only booking info to public, not team assignment
-            return {
-                id: booking.id,
-                date: booking.date,
-                status: 'confirmed',
-                // other public booking fields...
-            };
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to create booking');
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchBookingById = async (bookingId: string): Promise<BookingResponse> => {
+    setLoading(true);
+    setError(null);
 
-    const getBookingTeam = async (bookingId: string) => {
-        try {
-            return await teamAssignmentService.getTeamForBooking(bookingId);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to get booking team');
-            return null;
-        }
-    };
+    try {
+      const result = await getBookingById(bookingId);
+      
+      if (result.error) {
+        setError(result.error.message);
+        throw new Error(result.error.message);
+      }
 
-    return {
-        createBooking,
-        getBookingTeam,
-        loading,
-        error
-    };
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch booking';
+      setError(message);
+      logger.error('Error in fetchBookingById', { error: err, bookingId });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBookingsByEmail = async (email: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await getBookingsByEmail(email);
+      
+      if (result.error) {
+        setError(result.error.message);
+        throw new Error(result.error.message);
+      }
+
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch bookings';
+      setError(message);
+      logger.error('Error in fetchBookingsByEmail', { error: err, email });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBookingsByCustomerId = async (customerId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await getBookingsByCustomerId(customerId);
+      
+      if (result.error) {
+        setError(result.error.message);
+        throw new Error(result.error.message);
+      }
+
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch bookings';
+      setError(message);
+      logger.error('Error in fetchBookingsByCustomerId', { error: err, customerId });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    error,
+    createBooking,
+    updateBooking,
+    fetchBookingById,
+    fetchBookingsByEmail,
+    fetchBookingsByCustomerId
+  };
 };

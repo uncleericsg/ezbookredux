@@ -1,15 +1,10 @@
 export type ApiErrorCode = 
-  | 'NETWORK_ERROR'           // Network connectivity issues
-  | 'SERVICE_ERROR'           // Generic service errors
-  | 'UNAUTHORIZED'            // Authentication failures
-  | 'VALIDATION_ERROR'        // Input validation failures
-  | 'NOT_FOUND'              // Resource not found
-  | 'FORBIDDEN'              // Permission denied
-  | 'CONFLICT'               // Resource conflict
-  | 'RATE_LIMIT_EXCEEDED'    // API rate limit exceeded
-  | 'BAD_REQUEST'            // Invalid request
-  | 'INTERNAL_SERVER_ERROR'  // Server-side errors
-  | 'SERVICE_UNAVAILABLE';   // Service temporarily unavailable
+  | 'AUTH_REQUIRED'
+  | 'AUTH_INVALID'
+  | 'VALIDATION_ERROR'
+  | 'RATE_LIMIT_EXCEEDED'
+  | 'NOT_FOUND'
+  | 'SERVER_ERROR';
 
 export interface ApiError {
   code: ApiErrorCode;
@@ -19,7 +14,11 @@ export interface ApiError {
 
 export interface ApiResponse<T> {
   data?: T;
-  error?: ApiError;
+  error?: {
+    message: string;
+    code: string;
+    details?: any;
+  };
   meta?: {
     page?: number;
     limit?: number;

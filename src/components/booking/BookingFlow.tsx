@@ -1,361 +1,181 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
+import { toast } from 'sonner';
+import type { CreateBookingParams } from '@shared/types/booking';
+import { useAuth } from '@/hooks/useAuth';
+import { BookingProgress, BookingStep } from './BookingProgress';
+import { ServiceStep } from './ServiceStep';
+import { CustomerStep } from './CustomerStep';
+import { ScheduleStep } from './ScheduleStep';
+import { BookingStep as BookingConfirmStep } from './BookingStep';
+import { PaymentStep } from './PaymentStep';
+import { BookingConfirmation } from './BookingConfirmation';
 
-import CustomerForm from '@components/booking/CustomerForm';
-import { QuickBookingPrompt } from '@components/booking/QuickBookingPrompt';
-import { RadixDialog as Dialog } from '@components/organisms/Dialog';
-import BrandSelection from '@components/booking/BrandSelection';
-import IssueSelection from '@components/booking/IssueSelection';
-import { ServiceLimitations } from '@components/booking/ServiceLimitations';
-import BookingProgress from '@components/booking/BookingProgress';
-import PaymentStep from '@components/booking/PaymentStep';
-import ScheduleStep from '@components/booking/ScheduleStep';
-
-import { useAppSelector, useAppDispatch } from '@store/hooks';
-
-// Services
-import { fetchLastBooking, createBooking, updateBooking } from '@services/bookingService';
-import { validateBookingDetails, validateCustomerData } from '@services/validation';
-import { getServiceByAppointmentType } from '@services/serviceUtils';
-
-export interface CustomerFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  mobile: string;
-  floorUnit: string;
-  blockStreet: string;
-  postalCode: string;
-  condoName?: string;
-  lobbyTower?: string;
-  specialInstructions?: string;
+interface BookingFlowProps {
+  className?: string;
 }
 
-interface BookingData {
-  brands: string[];
-  issues: string[];
-  customerInfo: CustomerFormData | null;
-  otherIssue?: string;
-  scheduledDateTime?: Date;
-  scheduledTimeSlot?: string;
-  bookingId?: string;
-  selectedService?: {
-    id: string;
-    title: string;
-    price: number;
-    duration: string;
-    description?: string;
-  };
-  isAMC?: boolean;
-}
+const INITIAL_BOOKING_DATA: Partial<CreateBookingParams> = {
+  service_id: '',
+  service_title: '',
+  service_description: '',
+  service_price: 0,
+  service_duration: 0,
+  customer_first_name: '',
+  customer_last_name: '',
+  customer_email: '',
+  customer_mobile: '',
+  floor_unit: '',
+  block_street: '',
+  postal_code: '',
+  condo_name: '',
+  lobby_tower: '',
+  special_instructions: '',
+  scheduled_datetime: '',
+  scheduled_timeslot: '',
+  status: 'pending',
+  brands: [],
+  issues: []
+};
 
-const BOOKING_TIMEOUT = 900; // 15 minutes in seconds
+const BookingFlow: React.FC<BookingFlowProps> = ({ className }) => {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [currentStep, setCurrentStep] = useState<BookingStep>('service');
+  const [bookingData, setBookingData] = useState<Partial<CreateBookingParams>>(INITIAL_BOOKING_DATA);
 
-const BookingFlow = () => {
-  const { user, loading: authLoading } = useAppSelector((state) => state.auth);
-  const { isFeatureVisible } = useAppSelector((state) => state.admin);
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login', { replace: true });
-    }
-  }, [user, authLoading, navigate]);
-
-  // Show loading state while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  // Show nothing if not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
-
-  const [bookingData, setBookingData] = useState<BookingData>({
-    brands: [],
-    issues: [],
-    customerInfo: null,
-    selectedService: undefined,
-    isAMC: false
-  });
-  
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showQuickBooking, setShowQuickBooking] = useState(false);
-  const [previousBookingDetails, setPreviousBookingDetails] = useState<BookingDetails | null>(null);
-  const [timeoutWarningOpen, setTimeoutWarningOpen] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(BOOKING_TIMEOUT);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Define steps including the new schedule step
-  const steps = [
-    { id: 'brands', label: 'Select Brands' },
-    { id: 'issues', label: 'Select Issues' },
-    { id: 'customer', label: 'Customer Info' },
-    { id: 'schedule', label: 'Schedule' },
-    ...(isFeatureVisible('booking-payment') ? [{ id: 'payment', label: 'Payment' }] : [])
-  ];
-
+  // Initialize booking data with user information if available
   useEffect(() => {
     if (user) {
-      try {
-        const fetchPreviousBooking = async () => {
-          const lastBooking = await fetchLastBooking(user.id);
-          if (lastBooking) {
-            setPreviousBookingDetails(lastBooking);
-            setShowQuickBooking(isFeatureVisible('booking-quick'));
-          }
-        };
-        fetchPreviousBooking();
-      } catch (error) {
-        console.error('Error fetching previous booking:', error);
-      }
+      setBookingData(prev => ({
+        ...prev,
+        customer_email: user.email || prev.customer_email,
+        customer_first_name: user.firstName || prev.customer_first_name,
+        customer_last_name: user.lastName || prev.customer_last_name
+      }));
     }
-  }, [user, isFeatureVisible]);
+  }, [user]);
 
-  const handleCustomerFormSave = async (formData: CustomerFormData) => {
+  const handleNext = () => {
+    const steps: BookingStep[] = ['service', 'customer', 'schedule', 'booking', 'payment', 'confirmation'];
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1]);
+    }
+  };
+
+  const handleBack = () => {
+    const steps: BookingStep[] = ['service', 'customer', 'schedule', 'booking', 'payment', 'confirmation'];
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1]);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const handleUpdateBookingData = (data: Partial<CreateBookingParams>) => {
     setBookingData(prev => ({
       ...prev,
-      customerInfo: formData
+      ...data
     }));
-    setCurrentStep(prev => prev + 1);
   };
 
-  const handleScheduleComplete = async (dateTime: Date, timeSlot: string) => {
-    try {
-      if (!bookingData.customerInfo || !bookingData.selectedService) {
-        throw new Error('Missing customer info or service selection');
+  const renderStep = () => {
+    switch (currentStep) {
+      case 'service':
+        return (
+          <ServiceStep
+            onNext={handleNext}
+            onBack={handleBack}
+            bookingData={bookingData}
+            onUpdateBookingData={handleUpdateBookingData}
+          />
+        );
+      case 'customer':
+        return (
+          <CustomerStep
+            onNext={handleNext}
+            onBack={handleBack}
+            bookingData={bookingData}
+            onUpdateBookingData={handleUpdateBookingData}
+          />
+        );
+      case 'schedule':
+        return (
+          <ScheduleStep
+            onNext={handleNext}
+            onBack={handleBack}
+            bookingData={bookingData}
+            onUpdateBookingData={handleUpdateBookingData}
+          />
+        );
+      case 'booking':
+        return (
+          <BookingConfirmStep
+            onNext={handleNext}
+            onBack={handleBack}
+            bookingData={bookingData}
+            onUpdateBookingData={handleUpdateBookingData}
+          />
+        );
+      case 'payment':
+        return (
+          <PaymentStep
+            onNext={handleNext}
+            onBack={handleBack}
+            bookingData={bookingData}
+            onUpdateBookingData={handleUpdateBookingData}
+          />
+        );
+      case 'confirmation':
+        return (
+          <BookingConfirmation
+            booking={bookingData}
+            onViewBookings={() => router.push('/bookings')}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Session timeout warning
+  useEffect(() => {
+    const warningTimeout = setTimeout(() => {
+      if (currentStep !== 'confirmation') {
+        toast.warning('Your booking session will expire in 5 minutes', {
+          duration: 10000
+        });
       }
+    }, 15 * 60 * 1000); // 15 minutes
 
-      setIsLoading(true);
+    const sessionTimeout = setTimeout(() => {
+      if (currentStep !== 'confirmation') {
+        toast.error('Your booking session has expired', {
+          duration: 5000
+        });
+        router.push('/');
+      }
+    }, 20 * 60 * 1000); // 20 minutes
 
-      // Create booking only after schedule is selected
-      const bookingId = await createBooking({
-        brands: bookingData.brands,
-        issues: bookingData.issues,
-        customerInfo: bookingData.customerInfo,
-        scheduledDateTime: dateTime,
-        scheduledTimeSlot: timeSlot,
-        selectedService: bookingData.selectedService,
-        otherIssue: bookingData.otherIssue,
-        isAMC: bookingData.isAMC || false
-      });
-
-      console.log('Created booking with ID:', bookingId);
-
-      // Update booking data with the new booking ID and schedule
-      const updatedBookingData = {
-        ...bookingData,
-        bookingId,
-        scheduledDateTime: dateTime,
-        scheduledTimeSlot: timeSlot
-      };
-
-      // Ensure Redux store is updated with the new booking
-      dispatch(setCurrentBooking({
-        id: bookingId,
-        serviceType: bookingData.selectedService.title,
-        date: format(dateTime, 'PP'),
-        time: timeSlot,
-        status: 'Pending',
-        amount: bookingData.selectedService.price,
-        customerInfo: bookingData.customerInfo,
-        selectedService: bookingData.selectedService
-      }));
-
-      setBookingData(updatedBookingData);
-      setCurrentStep(prev => prev + 1);
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      toast.error('Failed to create booking. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuickBook = () => {
-    if (previousBookingDetails) {
-      setBookingData({
-        brands: previousBookingDetails.brands,
-        issues: previousBookingDetails.issues,
-        customerInfo: previousBookingDetails.customerInfo
-      });
-      setCurrentStep(3); // Go to schedule step
-    }
-  };
-
-  const handleBookingSubmit = async () => {
-    try {
-      // TODO: Implement booking submission
-      console.log('Submitting booking:', bookingData);
-      // Reset booking data and redirect to success page
-    } catch (error) {
-      console.error('Error submitting booking:', error);
-    }
-  };
-
-  // Format remaining time for display
-  const formatTimeRemaining = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // Show quick booking prompt if available
-  if (showQuickBooking && currentStep === 0) {
-    return (
-      <div className="max-w-md mx-auto">
-        <QuickBookingPrompt
-          previousBooking={previousBookingDetails}
-          onQuickBook={handleQuickBook}
-        />
-      </div>
-    );
-  }
-
-  // Transform user data to match CustomerForm's user prop interface
-  const transformedUser = user ? {
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    mobile: user.phone || '',
-    addresses: [/*{
-      id: '1',
-      floorUnit: previousBookingDetails?.customerInfo.floorUnit || user.address || '',
-      blockStreet: previousBookingDetails?.customerInfo.blockStreet || '',
-      postalCode: previousBookingDetails?.customerInfo.postalCode || '',
-      condoName: previousBookingDetails?.customerInfo.condoName || user.condoName,
-      lobbyTower: previousBookingDetails?.customerInfo.lobbyTower || user.lobbyTower,
-      isDefault: true
-    }*/]
-  } : undefined;
-
-  const renderPaymentStep = () => {
-    if (!bookingData.bookingId || !bookingData.selectedService) {
-      console.error('Missing required booking data:', {
-        bookingId: bookingData.bookingId,
-        selectedService: bookingData.selectedService
-      });
-      return null;
-    }
-
-    return (
-      <motion.div
-        key="payment"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <PaymentStep 
-          bookingData={bookingData}
-          onComplete={handleBookingSubmit}
-          onBack={() => setCurrentStep(prev => prev - 1)}
-        />
-      </motion.div>
-    );
-  };
+    return () => {
+      clearTimeout(warningTimeout);
+      clearTimeout(sessionTimeout);
+    };
+  }, [currentStep, router]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="fixed top-4 right-4 z-50">
-        <span className="text-sm text-gray-500">
-          Time remaining: {formatTimeRemaining(timeRemaining)}
-        </span>
-      </div>
+    <div className={className}>
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Progress Indicator */}
+        <BookingProgress currentStep={currentStep} />
 
-      <BookingProgress steps={steps} currentStep={currentStep} />
-
-      <AnimatePresence mode="wait">
-        {currentStep === 0 && (
-          <motion.div
-            key="brands"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <BrandSelection
-              onContinue={(brands) => {
-                setBookingData(prev => ({ ...prev, brands }));
-                setCurrentStep(1);
-              }}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 1 && (
-          <motion.div
-            key="issues"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <IssueSelection
-              onContinue={(issues, otherIssue) => {
-                setBookingData(prev => ({ ...prev, issues, otherIssue }));
-                setCurrentStep(2);
-              }}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 2 && (
-          <motion.div
-            key="customer"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <CustomerForm
-              onSave={handleCustomerFormSave}
-              user={transformedUser}
-              isAMC={isFeatureVisible('amc-features')}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 3 && bookingData.customerInfo && (
-          <motion.div
-            key="schedule"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <ScheduleStep
-              customerInfo={bookingData.customerInfo}
-              selectedService={bookingData.selectedService}
-              onScheduleSelect={handleScheduleComplete}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 4 && !isFeatureVisible('amc-features') && renderPaymentStep()}
-      </AnimatePresence>
-
-      <Dialog
-        open={timeoutWarningOpen}
-        onOpenChange={setTimeoutWarningOpen}
-        title="Booking Session Timeout"
-        description="Your booking session will expire soon. Would you like to continue?"
-      >
-        <div className="mt-4 flex justify-end space-x-2">
-          <button
-            onClick={() => {
-              setTimeoutWarningOpen(false);
-              setTimeRemaining(BOOKING_TIMEOUT);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Continue Booking
-          </button>
+        {/* Step Content */}
+        <div className="mt-8">
+          {renderStep()}
         </div>
-      </Dialog>
+      </div>
     </div>
   );
 };

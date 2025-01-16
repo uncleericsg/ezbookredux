@@ -15,9 +15,11 @@
       "@services/*": ["./server/services/*"],
       "@repositories/*": ["./server/repositories/*"],
       "@utils/*": ["./server/utils/*"],
-      "@config/*": ["./server/config/*"]
+      "@config/*": ["./server/config/*"],
+      "@types/*": ["./server/types/*"],
+      "@shared/*": ["./shared/*"]
     }
   },
-  "include": ["server/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["server/**/*", "shared/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

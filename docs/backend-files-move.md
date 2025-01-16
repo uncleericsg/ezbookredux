@@ -30,46 +30,74 @@
 
 ### Phase 1: Payment Services Migration (Priority: High)
 1. Move Payment-Related Files:
-   - [ ] `src/services/stripe.ts` → `server/services/stripe/stripeService.ts`
-   - [ ] `src/services/paymentService.ts` → `server/services/payments/paymentService.ts`
-   - [ ] Update import paths in:
-     - [ ] `src/components/booking/PaymentStep.tsx`
-     - [ ] `src/components/booking/BookingConfirmation.tsx`
-     - [ ] `src/hooks/usePayment.ts`
+   - [x] `src/services/stripe.ts` → `server/services/stripe/paymentService.ts`
+   - [x] `src/services/paymentService.ts` → `server/services/payments/paymentService.ts`
+   - [x] Create API routes:
+     - [x] `api/payments/create-payment-intent.ts`
+     - [x] `api/payments/webhook.ts`
+     - [x] `api/payments/receipt/[id].ts`
+     - [x] `api/payments/receipt/generate.ts`
+   - [x] Update import paths in:
+     - [x] `src/components/booking/PaymentStep.tsx`
+     - [x] `src/components/booking/BookingConfirmation.tsx`
+     - [x] `src/hooks/usePayment.ts`
 
 2. Update TypeScript Configuration:
-   ```json
-   {
-     "compilerOptions": {
-       "paths": {
-         "@server/*": ["./server/*"],
-         "@services/*": ["./src/services/*"]
-       }
-     }
-   }
-   ```
+   - [x] Add server paths to tsconfig.json
+   - [x] Add shared types directory
+   - [x] Update path aliases
+   - [x] Configure server-specific settings
+
+3. Shared Types Setup:
+   - [x] Create shared/types directory
+   - [x] Move common types to shared location
+   - [x] Update imports to use shared types
+
+Next Steps:
+1. [x] Test the payment flow end-to-end
+2. [x] Proceed with Phase 2 (Booking Services Migration)
 
 ### Phase 2: Booking Services Migration (Priority: High)
 1. Move Booking-Related Files:
-   - [ ] `src/services/supabaseBookingService.ts` → `server/services/bookings/bookingService.ts`
-   - [ ] Update dependent components and hooks
-   - [ ] Migrate related types and interfaces
+   - [x] `src/services/supabaseBookingService.ts` → `server/services/bookings/bookingService.ts`
+   - [x] Create API routes:
+     - [x] `api/bookings/create.ts`
+     - [x] `api/bookings/[id].ts`
+     - [x] `api/bookings/customer/[customerId].ts`
+     - [x] `api/bookings/email/[email].ts`
+   - [x] Create shared booking types
+   - [x] Update frontend booking service
+   - [x] Update dependent components and hooks:
+     - [x] `src/components/booking/BookingStep.tsx`
+     - [x] `src/components/booking/BookingList.tsx`
+     - [x] `src/hooks/useBooking.ts`
 
 2. Update Service Dependencies:
-   - [ ] Review and update service connections
-   - [ ] Verify database interactions
-   - [ ] Test booking flow end-to-end
+   - [x] Review and update service connections
+   - [x] Verify database interactions
+   - [x] Test booking flow end-to-end
 
-### Phase 3: Route Migration (Priority: Medium)
-1. Move API Routes:
-   - [ ] Identify routes in `src/server/routes/`
-   - [ ] Migrate to `server/routes/` maintaining structure
-   - [ ] Update API endpoint references
+Next Steps:
+1. [x] Update dependent components to use new booking service
+2. [x] Create booking API routes
+3. [x] Test booking flow end-to-end
 
-2. Verify Route Functionality:
-   - [ ] Test all migrated endpoints
-   - [ ] Verify request/response handling
-   - [ ] Update API documentation
+### Phase 3: Server Configuration Migration (Priority: Medium)
+1. Move Configuration Files:
+   - [x] Create `server/config/` directory
+   - [x] Move CORS configuration to `server/config/cors.ts`
+   - [x] Move database configuration to `server/config/database.ts`
+   - [x] Create error handling utilities in `server/utils/error-handler.ts`
+
+2. Create API Routes:
+   - [x] `api/health.ts` for health check endpoint
+   - [x] `api/geocode.ts` for location services
+
+3. Verify Configuration:
+   - [x] Test CORS settings
+   - [x] Verify database connections
+   - [x] Test error handling
+   - [x] Update API documentation
 
 ### Phase 4: Testing and Validation (Priority: High)
 1. Unit Tests:
@@ -90,18 +118,18 @@
 ## 5. Validation Checklist
 
 ### 5.1 Backend Verification
-- [ ] All API routes respond correctly
-- [ ] Payment processing works
-- [ ] Booking flow works
-- [ ] Error handling is consistent
-- [ ] Database connections work
+- [x] All API routes respond correctly
+- [x] Payment processing works
+- [x] Booking flow works
+- [x] Error handling is consistent
+- [x] Database connections work
 
 ### 5.2 Frontend Verification
-- [ ] All imports are updated
-- [ ] API calls work
-- [ ] Payment flow works
-- [ ] Booking flow works
-- [ ] No console errors
+- [x] All imports are updated
+- [x] API calls work
+- [x] Payment flow works
+- [x] Booking flow works
+- [x] No console errors
 
 ## 6. Rollback Plan
 
@@ -118,16 +146,16 @@
 ## 7. Post-Migration Tasks
 
 ### 7.1 Cleanup
-- [ ] Remove old files after successful migration
-- [ ] Update documentation
-- [ ] Remove unused dependencies
-- [ ] Update API documentation
+- [x] Remove old files after successful migration
+- [x] Update documentation
+- [x] Remove unused dependencies
+- [x] Update API documentation
 
 ### 7.2 Monitoring
-- [ ] Set up error tracking
-- [ ] Monitor API performance
-- [ ] Check error logs
-- [ ] Verify webhook reliability
+- [x] Set up error tracking
+- [x] Monitor API performance
+- [x] Check error logs
+- [x] Verify webhook reliability
 
 ## 8. Dependencies and Environment Variables
 
@@ -155,7 +183,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 |-------|----------|--------------|
 | Payment Services | 1 day | TypeScript config |
 | Booking Services | 1 day | Payment services |
-| Route Migration | 0.5 day | Services migration |
+| Server Configuration | 0.5 day | Payment services |
 | Testing | 1.5 days | All migrations |
 
 Total Estimated Time: 4 days

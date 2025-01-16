@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 import AdminHeader from '@admin/AdminHeader';
 import AdminNav from '@admin/AdminNav';
-
-import { useAppSelector } from '@store/index';
+import { useBooking } from '@/hooks/useBooking';
+import type { BookingDetails } from '@shared/types/booking';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminBookings = () => {
-  const { bookings } = useAppSelector((state) => state.booking);
+  const [bookings, setBookings] = useState<BookingDetails[]>([]);
+  const { loading, error, fetchBookingsByEmail } = useBooking();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadBookings = async () => {
+      if (!user?.email) return;
+
+      try {
+        const result = await fetchBookingsByEmail(user.email);
+        if (result.data) {
+          setBookings(result.data);
+        } else if (result.error) {
+          toast.error('Failed to load bookings');
+        }
+      } catch (err) {
+        toast.error('Error loading bookings');
+      }
+    };
+
+    loadBookings();
+  }, [user?.email, fetchBookingsByEmail]);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -17,7 +41,15 @@ const AdminBookings = () => {
         <div className="bg-gray-800 rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-bold text-white mb-6">All Bookings</h2>
           
-          {bookings.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-400 text-center py-8">
+              {error}
+            </div>
+          ) : bookings.length === 0 ? (
             <p className="text-gray-400">No bookings found</p>
           ) : (
             <div className="overflow-x-auto">
@@ -48,13 +80,13 @@ const AdminBookings = () => {
                         {booking.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {booking.customerName}
+                        {`${booking.customer_info.first_name} ${booking.customer_info.last_name}`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {booking.serviceType}
+                        {booking.service_title}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {new Date(booking.date).toLocaleDateString()}
+                        {format(new Date(booking.scheduled_datetime), 'PPP')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`px-2 py-1 rounded-full ${

@@ -6,7 +6,7 @@ import type {
   PaymentError,
   ApiResponse
 } from '@/types';
-import { logger } from '@/server/utils/logger';
+import { logger } from '@/utils/logger';
 
 const API_ENDPOINTS = {
   createPaymentIntent: '/api/payments/create-payment-intent',

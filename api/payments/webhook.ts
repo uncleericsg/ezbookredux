@@ -1,12 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
 import { buffer } from 'micro';
-import { paymentService } from '@/server/services/stripe/paymentService';
+import { paymentService } from '@/server/services/payments/paymentService';
+import { stripeService } from '@/server/services/payments/stripe/stripeService';
 import { logger } from '@/server/utils/logger';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
-});
+import { ApiError } from '@/server/utils/apiErrors';
 
 // Disable body parsing, need raw body for Stripe webhook
 export const config = {
@@ -20,32 +17,44 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({
+      error: {
+        message: 'Method not allowed',
+        code: 'METHOD_NOT_ALLOWED'
+      }
+    });
   }
 
   try {
     const rawBody = await buffer(req);
-    const signature = req.headers['stripe-signature'] as string;
+    const signature = req.headers['stripe-signature'];
 
-    if (!signature) {
-      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    if (!signature || Array.isArray(signature)) {
+      throw new ApiError('Missing or invalid stripe-signature header', 'VALIDATION_ERROR');
     }
 
-    const event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-
-    // Handle the event using payment service
+    const event = await stripeService.constructWebhookEvent(rawBody, signature);
     await paymentService.handleWebhookEvent(event);
     
     logger.info('Webhook processed successfully', { eventType: event.type });
     res.status(200).json({ received: true });
-  } catch (error: any) {
-    logger.error('Webhook error:', { error: error.message });
-    res.status(400).json({
-      error: `Webhook Error: ${error.message}`
+  } catch (error) {
+    logger.error('Webhook processing failed', { error });
+    
+    if (error instanceof ApiError) {
+      return res.status(400).json({
+        error: {
+          message: error.message,
+          code: error.code
+        }
+      });
+    }
+
+    return res.status(500).json({
+      error: {
+        message: 'Internal server error',
+        code: 'INTERNAL_SERVER_ERROR'
+      }
     });
   }
 } 

@@ -18,7 +18,6 @@ export type PaymentStatus =
   | 'processing'
   | 'succeeded'
   | 'failed'
-  | 'cancelled'
   | 'refunded';
 
 export interface PaymentError {
@@ -44,3 +43,63 @@ export type TransactionType =
   | 'refund'
   | 'chargeback'
   | 'adjustment';
+
+export interface Payment {
+  id: string;
+  booking_id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_intent_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePaymentIntentRequest {
+  amount: number;
+  currency?: string;  // default: 'sgd'
+  booking_id: string;
+  metadata?: Record<string, string>;
+}
+
+export interface CreatePaymentIntentResponse {
+  clientSecret: string;
+  intentId: string;
+}
+
+export interface RefundRequest {
+  amount?: number;  // Optional for partial refunds
+  reason?: string;
+}
+
+export interface PaymentDetailsResponse {
+  id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_intent_id: string;
+  created_at: string;
+  refunded_amount?: number;
+  booking: {
+    id: string;
+    reference: string;
+    service: {
+      title: string;
+    };
+  };
+  refunds?: {
+    id: string;
+    amount: number;
+    status: string;
+    created_at: string;
+  }[];
+}
+
+export interface PaymentListResponse {
+  id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  created_at: string;
+  booking_reference: string;
+}

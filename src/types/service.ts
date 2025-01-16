@@ -53,3 +53,47 @@ export type ServiceVisitStatus =
   | 'scheduled'
   | 'completed'
   | 'cancelled';
+
+export interface Service {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  usual_price: number | null;
+  duration_minutes: number;
+  padding_before_minutes: number;
+  padding_after_minutes: number;
+  is_active: boolean;
+}
+
+export interface CreateServiceRequest {
+  title: string;
+  description?: string;
+  price: number;
+  usual_price?: number;
+  duration_minutes: number;
+  padding_before_minutes?: number;
+  padding_after_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateServiceRequest {
+  title?: string;
+  description?: string | null;
+  price?: number;
+  usual_price?: number | null;
+  duration_minutes?: number;
+  padding_before_minutes?: number;
+  padding_after_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface ServiceResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  usual_price: number | null;
+  duration_minutes: number;
+  is_active: boolean;
+}

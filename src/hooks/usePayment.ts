@@ -1,45 +1,69 @@
 import { useState } from 'react';
 import { createPaymentIntent, confirmPayment } from '@services/stripe';
-import { toast } from 'sonner';
+import type { 
+  CreatePaymentIntentParams,
+  PaymentIntentResponse,
+  PaymentError 
+} from '@shared/types/payment';
+import { logger } from '@/utils/logger';
 
-export const usePayment = () => {
+interface UsePaymentOptions {
+  onSuccess?: (response: PaymentIntentResponse) => void;
+  onError?: (error: PaymentError) => void;
+}
+
+export const usePayment = (options?: UsePaymentOptions) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<PaymentError | null>(null);
 
-  const processPayment = async (amount: number, options?: {
-    currency?: string;
-    description?: string;
-    metadata?: Record<string, string>;
-  }) => {
+  const processPayment = async (params: CreatePaymentIntentParams) => {
     try {
       setLoading(true);
       setError(null);
 
-      const { clientSecret } = await createPaymentIntent(amount, options?.currency || 'sgd', {
-        description: options?.description,
-        metadata: options?.metadata
-      });
-
-      const result = await confirmPayment(clientSecret);
+      const response = await createPaymentIntent(params);
       
-      if (result.error) {
-        throw new Error(result.error.message);
+      if (response.error) {
+        setError(response.error);
+        options?.onError?.(response.error);
+        return null;
       }
 
-      return result.paymentIntent;
+      if (!response.data) {
+        throw new Error('No payment intent data received');
+      }
+
+      const confirmResponse = await confirmPayment(response.data.clientSecret);
+      
+      if (confirmResponse.error) {
+        setError(confirmResponse.error);
+        options?.onError?.(confirmResponse.error);
+        return null;
+      }
+
+      if (!confirmResponse.data) {
+        throw new Error('Payment confirmation failed');
+      }
+
+      options?.onSuccess?.(confirmResponse.data);
+      return confirmResponse.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Payment failed';
-      setError(message);
-      toast.error(message);
-      throw err;
+      const paymentError: PaymentError = {
+        message: err instanceof Error ? err.message : 'Payment processing failed',
+        code: 'PAYMENT_ERROR'
+      };
+      setError(paymentError);
+      options?.onError?.(paymentError);
+      logger.error('Payment processing failed', { error: err });
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
   return {
+    processPayment,
     loading,
     error,
-    processPayment
   };
 };

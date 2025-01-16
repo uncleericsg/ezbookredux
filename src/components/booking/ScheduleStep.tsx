@@ -91,254 +91,146 @@
  * - Duration handling enhanced
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { format, addDays, startOfDay, addMinutes, isFriday } from 'date-fns';
-import { Calendar } from '@components/Calendar';
-import { Loader2 } from 'lucide-react';
-import { BUSINESS_RULES } from '@constants/businessRules';
-import { useScrollToTop } from '@hooks/useScrollToTop';
-import styles from './ScheduleStep.module.css';
-
-interface TimeSlot {
-  time: string;
-  available: boolean;
-  isPeakHour: boolean;
-}
-
-interface CustomerInfo {
-  firstName: string;
-  lastName: string;
-  email: string;
-  mobile: string;
-  selectedAddressId: string;
-  address: {
-    address: string;
-    postalCode: string;
-    unitNumber: string;
-  };
-}
-
-interface PricingOption {
-  id: string;
-  title: string;
-  price: number;
-  duration: string;
-  description?: string;
-  isPromo?: boolean;
-  promoLabel?: string;
-  isSignature?: boolean;
-}
+import React, { useState } from 'react';
+import { format, addMinutes } from 'date-fns';
+import { toast } from 'sonner';
+import { HiOutlineCalendarDays, HiOutlineClock } from 'react-icons/hi2';
+import type { CreateBookingParams } from '@shared/types/booking';
+import { Calendar } from '@/components/ui/Calendar';
+import { TimeSlotPicker } from '@/components/ui/TimeSlotPicker';
+import { formatTimeSlot } from '@/utils/dates';
 
 interface ScheduleStepProps {
-  customerInfo: CustomerInfo;
-  selectedService: PricingOption;
-  onScheduleSelect: (date: Date, timeSlot: string) => void;
+  onNext: () => void;
+  onBack: () => void;
+  bookingData: Partial<CreateBookingParams>;
+  onUpdateBookingData: (data: Partial<CreateBookingParams>) => void;
+  className?: string;
 }
 
 const ScheduleStep: React.FC<ScheduleStepProps> = ({
-  customerInfo,
-  selectedService,
-  onScheduleSelect
+  onNext,
+  onBack,
+  bookingData,
+  onUpdateBookingData,
+  className
 }) => {
-  const scrollToTop = useScrollToTop([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    bookingData.scheduled_datetime ? new Date(bookingData.scheduled_datetime) : undefined
+  );
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | undefined>(
+    bookingData.scheduled_timeslot
+  );
 
-  useEffect(() => {
-    console.log('ScheduleStep - Component mounted with:', {
-      customerInfo,
-      selectedService,
-      customerAddress: customerInfo?.address,
-      serviceTitle: selectedService?.title
-    });
-  }, []); // Empty deps since we only want this on mount
-
-  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
-  const [selectedTime, setSelectedTime] = useState<string>('');
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const generateTimeSlots = (date: Date) => {
-    const slots: TimeSlot[] = [];
-    const startMinutes = BUSINESS_RULES.RECOMMENDED_HOURS.AMC.START * 60; // 9:30 AM
-    const endMinutes = 17 * 60; // 5:00 PM
-    
-    for (let minutes = startMinutes; minutes <= endMinutes; minutes += BUSINESS_RULES.BUFFER_TIME) {
-      const time = addMinutes(date, minutes);
-      const timeStr = format(time, 'HH:mm');
-      const hour = Math.floor(minutes / 60);
-      const isPeakHour = hour >= BUSINESS_RULES.PEAK_HOURS.START && 
-                        hour < BUSINESS_RULES.PEAK_HOURS.END;
-
-      slots.push({
-        time: timeStr,
-        available: true, // Will be updated by API
-        isPeakHour
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      onUpdateBookingData({
+        ...bookingData,
+        scheduled_datetime: date.toISOString()
       });
     }
-    return slots;
   };
 
-  useEffect(() => {
-    let mounted = true;
-    let abortController = new AbortController();
-    
-    const fetchAvailableSlots = async () => {
-      if (!mounted) return;
-      
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const slots = generateTimeSlots(selectedDate);
-        
-        const optimizedSlots = slots.map(slot => ({
-          ...slot,
-          available: Math.random() > (slot.isPeakHour ? 0.4 : 0.2)
-        }));
-
-        if (mounted && !abortController.signal.aborted) {
-          setAvailableSlots(optimizedSlots);
-          console.log('ScheduleStep - Slots generated:', optimizedSlots.length);
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Error fetching available slots:', error);
-        }
-      } finally {
-        if (mounted && !abortController.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (mounted) {
-      console.log('ScheduleStep - Fetching slots for date:', selectedDate);
-      fetchAvailableSlots();
-    }
-    
-    return () => {
-      mounted = false;
-      abortController.abort();
-    };
-  }, [selectedDate]);
-
-  const handleDateSelect = (date: Date | null) => {
-    if (date) {
-      console.log('ScheduleStep - Date selected:', date);
-      setSelectedDate(date);
-      setSelectedTime('');
+  const handleTimeSlotSelect = (timeSlot: string) => {
+    setSelectedTimeSlot(timeSlot);
+    if (selectedDate) {
+      onUpdateBookingData({
+        ...bookingData,
+        scheduled_timeslot: timeSlot
+      });
     }
   };
 
-  const handleTimeSelect = async (time: string) => {
-    console.log('ScheduleStep - Time selected:', time);
-    setSelectedTime(time);
-    setIsLoading(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const [hours, minutes] = time.split(':').map(Number);
-      const scheduledDateTime = new Date(selectedDate);
-      scheduledDateTime.setHours(hours, minutes);
-
-      console.log('ScheduleStep - Proceeding with datetime:', scheduledDateTime);
-      onScheduleSelect(scheduledDateTime, time);
-    } catch (error) {
-      console.error('Error processing time selection:', error);
-    } finally {
-      setIsLoading(false);
+  const handleNext = () => {
+    if (!selectedDate) {
+      toast.error('Please select a date');
+      return;
     }
-  };
 
-  const isWeekendDay = (date: Date) => {
-    return date.getDay() === 0; // Only Sundays are disabled
+    if (!selectedTimeSlot) {
+      toast.error('Please select a time slot');
+      return;
+    }
+
+    onNext();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={styles.scheduleContainer}
-    >
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className={`space-y-4 ${styles.calendarSection}`}>
-          <h3 className="text-lg font-semibold text-white">Select Date</h3>
+    <div className={className}>
+      <div className="space-y-8">
+        {/* Date Selection */}
+        <div className="bg-gray-800/90 rounded-lg p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <HiOutlineCalendarDays className="w-5 h-5 text-yellow-500" />
+            <h2 className="text-xl font-semibold text-white">
+              Select Date
+            </h2>
+          </div>
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
-            disabled={(date) => isWeekendDay(date) || date < new Date()}
-            className="rounded-md border border-gray-700 bg-gray-800"
+            className="rounded-md border border-gray-700"
+            disabled={(date) => date < new Date()}
           />
         </div>
 
-        <div className={`space-y-4 ${styles.timeSection}`}>
-          <h3 className="text-lg font-semibold text-white">Select Time</h3>
-          {isLoading ? (
-            <div className="flex items-center justify-center min-h-[300px]">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Processing your selection...</p>
-              </div>
-            </div>
-          ) : availableSlots.filter(slot => slot.available).length === 0 ? (
-            <div className="flex items-center justify-center min-h-[300px]">
-              <p className="text-gray-400">No available time slots for this date</p>
-            </div>
+        {/* Time Slot Selection */}
+        <div className="bg-gray-800/90 rounded-lg p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <HiOutlineClock className="w-5 h-5 text-yellow-500" />
+            <h2 className="text-xl font-semibold text-white">
+              Select Time
+            </h2>
+          </div>
+          {selectedDate ? (
+            <TimeSlotPicker
+              date={selectedDate}
+              selectedTimeSlot={selectedTimeSlot}
+              onSelectTimeSlot={handleTimeSlotSelect}
+              serviceDuration={bookingData.service_duration || 60}
+            />
           ) : (
-            <div className={styles.timeSlotGrid}>
-              {availableSlots
-                .filter(slot => slot.available)
-                .map((slot) => (
-                <button
-                  key={slot.time}
-                  onClick={() => handleTimeSelect(slot.time)}
-                  className={`p-3 rounded-md text-sm font-medium transition-colors
-                    ${selectedTime === slot.time
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-800 text-white hover:bg-gray-700'
-                    }
-                  `}
-                >
-                  {slot.time}
-                  {slot.isPeakHour ? (
-                    <span className="block text-xs text-yellow-500">Peak Hour</span>
-                  ) : (
-                    <span className="block text-xs text-green-500">Best Timing</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <p className="text-gray-400">
+              Please select a date first
+            </p>
           )}
         </div>
-      </div>
 
-      <div className={styles.tipContainer}>
-        <h4 className="font-medium text-white">Scheduling Tips:</h4>
-        <p className="text-sm text-gray-300 mb-3">
-          Please note that scheduled time slots indicate the estimated service start time. Actual arrival times may vary based on service duration and traffic conditions.
-        </p>
-        <div className="space-y-2 text-sm text-gray-300">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <div>
-              <p>Morning slots: Non-peak hours (9:30 AM - 1 PM)</p>
-              <p>Best time for punctual service</p>
+        {/* Selected Schedule Summary */}
+        {selectedDate && selectedTimeSlot && (
+          <div className="bg-gray-800/90 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Selected Schedule
+            </h3>
+            <div className="text-gray-300">
+              <p>Date: {format(selectedDate, 'PPP')}</p>
+              <p>Time: {formatTimeSlot(selectedTimeSlot, bookingData.service_duration || 60)}</p>
             </div>
           </div>
+        )}
 
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-            <div>
-              <p>Afternoon slots: Peak hours (2 PM - 6 PM)</p>
-              <p>May experience delays due to high demand</p>
-            </div>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center pt-4">
+          <button
+            onClick={onBack}
+            className="px-6 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black transition-colors"
+          >
+            Next
+          </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
+ScheduleStep.displayName = 'ScheduleStep';
 
 export default ScheduleStep;

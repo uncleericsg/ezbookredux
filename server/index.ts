@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+import { errorHandler, notFoundHandler } from './middleware/errorHandling';
 
 // Load config
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,6 +16,7 @@ process.env.PORT = String(config.default.server.port);
 
 // Import routes
 import stripeRouter from './routes/payments/stripe.js';
+import bookingRouter from './routes/bookings/index.js';
 
 const app = express();
 const port = process.env.PORT || '3001';
@@ -35,11 +37,16 @@ app.use(express.json());
 
 // Routes
 app.use('/api/payments', stripeRouter);
+app.use('/api/bookings', bookingRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Start server
 app.listen(Number(port), () => {
