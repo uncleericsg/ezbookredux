@@ -1,34 +1,36 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import https from 'https';
-import fs from 'fs';
-import path from 'path';
-import stripeRouter from './api/stripe';
 
-// Load environment variables
-dotenv.config();
+// Load config
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const config = await import('./config.json', { assert: { type: 'json' } });
+
+// Set environment variables from config
+process.env.STRIPE_SECRET_KEY = config.default.stripe.secretKey;
+process.env.STRIPE_WEBHOOK_SECRET = config.default.stripe.webhookSecret;
+process.env.NODE_ENV = config.default.server.nodeEnv;
+process.env.PORT = String(config.default.server.port);
+
+// Import routes
+import stripeRouter from './routes/payments/stripe.js';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || '3001';
 
-// Basic middleware
+// Configure CORS
 app.use(cors({
   origin: [
-    'https://localhost:5173', 
-    'http://localhost:5173',
-    'http://192.168.4.118:5173',
-    'https://192.168.4.118:5173'
+    'https://localhost:5173',
+    'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
+  credentials: true
 }));
 
-// Enable pre-flight requests
-app.options('*', cors());
-
+// Middleware
 app.use(express.json());
 
 // Routes
@@ -39,31 +41,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Server error:', err);
-  // Send detailed error in development
-  const error = process.env.NODE_ENV === 'development' 
-    ? { message: err.message, stack: err.stack, details: err }
-    : { message: 'Internal server error' };
-    
-  res.status(err.status || 500).json({ error });
-});
-
 // Start server
-if (process.env.NODE_ENV === 'development') {
-  // Use HTTP in development
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-  });
-} else {
-  // Use HTTPS in production
-  const options = {
-    key: fs.readFileSync(path.join(process.cwd(), 'localhost+1-key.pem')),
-    cert: fs.readFileSync(path.join(process.cwd(), 'localhost+1.pem')),
-  };
-  
-  https.createServer(options, app).listen(port, () => {
-    console.log(`Server running on https://localhost:${port}`);
-  });
-}
+app.listen(Number(port), () => {
+  console.log(`Server running on http://localhost:${port}`);
+});

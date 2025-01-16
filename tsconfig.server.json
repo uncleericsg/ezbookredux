@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/server",
+    "rootDir": "./server",
+    "types": ["node"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@server/*": ["./server/*"],
+      "@routes/*": ["./server/routes/*"],
+      "@services/*": ["./server/services/*"],
+      "@repositories/*": ["./server/repositories/*"],
+      "@utils/*": ["./server/utils/*"],
+      "@config/*": ["./server/config/*"]
+    }
+  },
+  "include": ["server/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,10 @@
+{
+  "stripe": {
+    "secretKey": "sk_test_oXDNyqD6Cq4wDQJBXcTQlUTn",
+    "webhookSecret": "whsec_dbcd721e6ebf935cf0b4e08d70a3991aa1582b87cdcfe9b7e908532e8c9a6e99"
+  },
+  "server": {
+    "port": 3001,
+    "nodeEnv": "development"
+  }
+} 

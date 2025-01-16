@@ -1,122 +1,14 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "composite": true,
+    "noEmit": false,
     "module": "ESNext",
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "allowJs": true,
-    "esModuleInterop": true,
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
-
-    /* Path Aliases */
-    "baseUrl": ".",
-    "paths": {
-      "*": ["src/*"],
-      "@admin/*": ["src/components/admin/*"],
-      "@api/*": ["api/*"],
-      "@auth/*": ["src/components/auth/*"],
-      "@booking/*": ["src/components/booking/*"],
-      "@common/*": ["src/components/common/*"],
-      "@components/*": ["src/components/*"],
-      "@config/*": ["src/config/*"],
-      "@constants/*": ["src/constants/*"],
-      "@data/*": ["src/data/*"],
-      "@dev/*": ["src/components/dev/*"],
-      "@error-boundary/*": ["src/components/error-boundary/*"],
-      "@google/*": ["src/services/google/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@icons/*": ["src/components/icons/*"],
-      "@lib/*": ["src/lib/*"],
-      "@locations/*": ["src/services/locations/*"],
-      "@modals/*": ["src/components/modals/*"],
-      "@mocks/*": ["src/mocks/*"],
-      "@notifications/*": ["src/components/notifications/*"],
-      "@onemap/*": ["src/services/onemap/*"],
-      "@pages/*": ["src/pages/*"],
-      "@payment/*": ["src/components/payment/*"],
-      "@profile/*": ["src/components/profile/*"],
-      "@redux-types/*": ["src/store/types/*"],
-      "@routes/*": ["src/routes/*"],
-      "@server/*": ["server/*"],
-      "@services/*": ["src/services/*"],
-      "@slices/*": ["src/store/slices/*"],
-      "@snapshots/*": ["src/snapshots/*"],
-      "@store": ["src/store"],
-      "@styles/*": ["src/styles/*"],
-      "@teams/*": ["src/services/teams/*"],
-      "@tech/*": ["src/components/tech/*"],
-      "@test/*": ["src/components/test/*"],
-      "@theme/*": ["src/theme/*"],
-      "@types/*": ["src/types/*"],
-      "@ui/*": ["src/components/ui/*"],
-      "@utils/*": ["src/utils/*"],
-      "@validation/*": ["src/services/validation/*"],
-      "@mockup/*": ["mockup/*"]
-    },
-
-    /* Types */
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
-    "types": [
-      "node",
-      "google.maps",
-      "vite/client",
-      "vitest",
-      "next"
-    ]
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist/app",
+    "rootDir": "./src",
+    "types": ["vite/client"]
   },
-  "include": [
-    "src",
-    "server/**/*",
-    "api/**/*",
-    "scripts",
-    "mockup",
-    "*.ts",
-    "*.tsx",
-    "*.mts",
-    "*.cts",
-    "src/types/global.d.ts",
-    "vite.config.ts",
-    "tailwind.config.ts",
-    "vitest.config.ts",
-    "vite-plugin-google-maps.ts",
-    "test/**/*.ts",
-    "test/**/*.tsx",
-    "eslint.config.js",
-    "server/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    ".git"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
