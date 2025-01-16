@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
+import { paymentService } from '@/server/services/stripe/paymentService';
+import { logger } from '@/server/utils/logger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-12-18.acacia'
@@ -35,26 +37,13 @@ export default async function handler(
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    // Handle different event types
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        // Handle successful payment
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        // Add your payment success logic here
-        break;
-
-      case 'payment_intent.payment_failed':
-        // Handle failed payment
-        const failedPayment = event.data.object as Stripe.PaymentIntent;
-        // Add your payment failure logic here
-        break;
-
-      // Add other event types as needed
-    }
-
+    // Handle the event using payment service
+    await paymentService.handleWebhookEvent(event);
+    
+    logger.info('Webhook processed successfully', { eventType: event.type });
     res.status(200).json({ received: true });
   } catch (error: any) {
-    console.error('Webhook error:', error.message);
+    logger.error('Webhook error:', { error: error.message });
     res.status(400).json({
       error: `Webhook Error: ${error.message}`
     });
