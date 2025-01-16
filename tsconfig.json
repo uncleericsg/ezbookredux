@@ -24,7 +24,21 @@
       "@services/*": ["src/services/*"],
       "@store/*": ["src/store/*"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@admin/*": ["src/components/admin/*"],
+      "@booking/*": ["src/components/booking/*"],
+      "@auth/*": ["src/components/auth/*"],
+      "@common/*": ["src/components/common/*"],
+      "@dev/*": ["src/components/dev/*"],
+      "@error-boundary/*": ["src/components/error-boundary/*"],
+      "@icons/*": ["src/components/icons/*"],
+      "@modals/*": ["src/components/modals/*"],
+      "@notifications/*": ["src/components/notifications/*"],
+      "@payment/*": ["src/components/payment/*"],
+      "@profile/*": ["src/components/profile/*"],
+      "@tech/*": ["src/components/tech/*"],
+      "@test/*": ["src/components/test/*"],
+      "@ui/*": ["src/components/ui/*"]
     }
   },
   "include": [
