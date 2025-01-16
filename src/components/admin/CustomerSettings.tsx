@@ -7,37 +7,21 @@ import { toast } from 'sonner';
 
 import { cn } from '@utils/cn';
 
-export interface CustomerConfig;
+export interface CustomerConfig {
+  requireMobileVerification: boolean;
+  requireEmailVerification: boolean;
+  allowGuestBookings: boolean;
+  maxBookingsPerCustomer: number;
+  customerFields: {
+    required: string[];
+    optional: string[];
+  };
+}
 
-export interface CustomerSettingsProps;
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface CustomerConfig {
-  registration: {
-    requireEmail: boolean;
-    requirePhone: boolean;
-    requireAddress: boolean;
-    verifyEmail: boolean;
-    verifyPhone: boolean;
-  };
-  preferences: {
-    allowNotifications: boolean;
-    allowMarketing: boolean;
-    allowSMS: boolean;
-    allowWhatsApp: boolean;
-  };
-  privacy: {
-    dataRetentionDays: number;
-    anonymizeInactive: boolean;
-    inactivePeriodDays: number;
-    gdprCompliance: boolean;
-  };
-  loyalty: {
-    enabled: boolean;
-    pointsPerBooking: number;
-    pointsPerDollar: number;
-    minimumPointsRedemption: number;
-  };
+export interface CustomerSettingsProps {
+  config: CustomerConfig;
+  onSave: (config: CustomerConfig) => void;
+  loading?: boolean;
 }
 
 const defaultConfig: CustomerConfig = {

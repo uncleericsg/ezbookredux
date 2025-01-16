@@ -1,7 +1,8 @@
 import { supabase } from '@services/supabase/client';
+import { initEnv } from '../utils/env';
 
-// Load environment variables
-dotenv.config();
+// Initialize environment variables
+initEnv();
 
 async function checkAddressTable() {
   try {

@@ -12,32 +12,17 @@ import { Label } from '@components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/Select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/Tabs';
 
-export interface BillingSettingsData;
-
-export interface BillingSettingsProps;
-
-;
-  invoiceSettings: {
-    companyName: string;
-    companyAddress: string;
-    companyEmail: string;
-    companyPhone: string;
-    vatNumber: string;
-    prefix: string;
-    footer: string;
-  };
-  notifications: {
-    paymentSuccess: boolean;
-    paymentFailed: boolean;
-    invoiceGenerated: boolean;
-    reminderEnabled: boolean;
-    reminderDays: number;
-  };
+export interface BillingSettingsData {
+  stripeEnabled: boolean;
+  stripePublishableKey: string;
+  stripeSecretKey: string;
+  currency: string;
+  taxRate: number;
 }
 
-interface BillingSettingsProps extends React.HTMLAttributes<HTMLDivElement> {
-  settings: BillingSettingsData;
-  onSave: (settings: BillingSettingsData) => Promise<void>;
+export interface BillingSettingsProps {
+  data: BillingSettingsData;
+  onSave: (data: BillingSettingsData) => void;
   loading?: boolean;
 }
 

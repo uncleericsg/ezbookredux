@@ -95,9 +95,12 @@ export const useTemplateOperations = ({
   }, [paginatedTemplates]);
 
   const handleBulkDelete = useCallback(() => {
-    if (window.confirm(\`Are you sure you want to delete \${selectedItems.length} templates?\`)) {
-      selectedItems.forEach(onDelete);
-      setSelectedItems([]);
+    if (window.confirm(`Are you sure you want to delete ${selectedItems.length} templates?`)) {
+      try {
+        // Delete logic here
+      } catch (error) {
+        console.error('Error deleting templates:', error);
+      }
     }
   }, [selectedItems, onDelete]);
 

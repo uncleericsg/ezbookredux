@@ -1,69 +1,65 @@
-// Base error class for all location-related errors
-export class LocationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'LocationError';
-  }
+export type ApiErrorCode = 
+  | 'VALIDATION_ERROR'
+  | 'PAYMENT_ERROR'
+  | 'NOT_FOUND'
+  | 'UNAUTHORIZED'
+  | 'SERVER_ERROR'
+  | 'NETWORK_ERROR'
+  | 'DATABASE_ERROR'
+  | 'AUTHENTICATION_ERROR'
+  | 'AUTHORIZATION_ERROR'
+  | 'RATE_LIMIT_ERROR'
+  | 'INVALID_REQUEST'
+  | 'RESOURCE_EXISTS'
+  | 'RESOURCE_NOT_FOUND'
+  | 'SERVICE_UNAVAILABLE'
+  | 'INVALID_CREDENTIALS'
+  | 'TOKEN_EXPIRED'
+  | 'INVALID_TOKEN'
+  | 'MISSING_REQUIRED_FIELD'
+  | 'INVALID_FORMAT'
+  | 'BOOKING_ERROR'
+  | 'PAYMENT_REQUIRED'
+  | 'INSUFFICIENT_FUNDS'
+  | 'INVALID_PAYMENT_METHOD'
+  | 'PAYMENT_DECLINED'
+  | 'INVALID_POSTAL_CODE'
+  | 'INVALID_PHONE_NUMBER'
+  | 'INVALID_EMAIL'
+  | 'INVALID_DATE'
+  | 'INVALID_TIME'
+  | 'SLOT_UNAVAILABLE'
+  | 'BOOKING_CONFLICT'
+  | 'INVALID_SERVICE'
+  | 'SERVICE_UNAVAILABLE'
+  | 'INVALID_ADDRESS'
+  | 'GEOCODING_ERROR'
+  | 'DISTANCE_ERROR'
+  | 'PRICING_ERROR'
+  | 'SERVICE_ERROR'
+  | 'FIREBASE_ERROR'
+  | 'STRIPE_ERROR'
+  | 'MAPS_ERROR';
+
+export interface ApiError {
+  code: ApiErrorCode;
+  message: string;
+  details?: Record<string, any>;
 }
 
-// Specific error types
-export class RegionNotFoundError extends LocationError {
-  constructor(address: string) {
-    super(`Unable to determine region for address: ${address}`);
-    this.name = 'RegionNotFoundError';
-  }
+export interface ErrorReport {
+  timestamp: string;
+  environment: string;
+  userId?: string;
+  sessionId?: string;
+  error: ApiError;
+  context?: Record<string, any>;
+  stackTrace?: string;
 }
 
-export class OptimizationError extends LocationError {
-  constructor(message: string, public readonly retryable: boolean = true) {
-    super(message);
-    this.name = 'OptimizationError';
-  }
+export interface NetworkError {
+  code: string;
+  isNetworkError: boolean;
 }
 
-export class RateLimitError extends LocationError {
-  constructor(public readonly retryAfter: number) {
-    super(`Rate limit exceeded. Please try again in ${retryAfter} seconds`);
-    this.name = 'RateLimitError';
-  }
-}
-
-export class NetworkError extends LocationError {
-  constructor(public readonly offline: boolean = false) {
-    super(offline ? 'No internet connection' : 'Network request failed');
-    this.name = 'NetworkError';
-  }
-}
-
-export class ValidationError extends LocationError {
-  constructor(public readonly validationErrors: string[]) {
-    super('Validation failed: ' + validationErrors.join(', '));
-    this.name = 'ValidationError';
-  }
-}
-
-// Error type guards
-export const isLocationError = (error: unknown): error is LocationError => {
-  return error instanceof LocationError;
-};
-
-export const isRateLimitError = (error: unknown): error is RateLimitError => {
-  return error instanceof RateLimitError;
-};
-
-export const isNetworkError = (error: unknown): error is NetworkError => {
-  return error instanceof NetworkError;
-};
-
-export const isRetryableError = (error: unknown): boolean => {
-  if (error instanceof OptimizationError) {
-    return error.retryable;
-  }
-  if (error instanceof NetworkError) {
-    return !error.offline;
-  }
-  if (error instanceof RateLimitError) {
-    return true;
-  }
-  return false;
-};
+// Remove specific error classes and their type guards as they're now handled through the ApiError interface

@@ -1,49 +1,37 @@
-declare module '@/components/ui/Dialog' {
-  export const Dialog: React.FC<any>;
-  export const DialogContent: React.FC<any>;
-  export const DialogHeader: React.FC<any>;
-  export const DialogTitle: React.FC<any>;
-  export const DialogDescription: React.FC<any>;
-  export const DialogFooter: React.FC<any>;
-}
+import { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 
-declare module '@/components/ui/Button' {
-  export const Button: React.FC<any>;
-}
+export type ButtonProps<T extends ElementType = 'button'> = {
+  as?: T;
+  children: ReactNode;
+  variant?: 'default' | 'primary' | 'secondary' | 'ghost' | 'link';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  disabled?: boolean;
+} & ComponentPropsWithoutRef<T>;
 
-declare module '@/components/ui/Checkbox' {
-  export const Checkbox: React.FC<any>;
-}
+export type InputProps<T extends ElementType = 'input'> = {
+  as?: T;
+  label?: string;
+  error?: string;
+  loading?: boolean;
+} & ComponentPropsWithoutRef<T>;
 
-declare module '@/components/ui/Progress' {
-  export const Progress: React.FC<any>;
-}
+export type SelectProps<T extends ElementType = 'select'> = {
+  as?: T;
+  label?: string;
+  error?: string;
+  options: Array<{ value: string; label: string }>;
+} & ComponentPropsWithoutRef<T>;
 
-declare module '@/components/ui/Select' {
-  export const Select: React.FC<any>;
-  export const SelectTrigger: React.FC<any>;
-  export const SelectValue: React.FC<any>;
-  export const SelectContent: React.FC<any>;
-  export const SelectItem: React.FC<any>;
-}
+export type TextareaProps<T extends ElementType = 'textarea'> = {
+  as?: T;
+  label?: string;
+  error?: string;
+  rows?: number;
+} & ComponentPropsWithoutRef<T>;
 
-declare module '@/components/ui/Textarea' {
-  export const Textarea: React.FC<any>;
-}
-
-declare module '@/components/ui/Tabs' {
-  export const Tabs: React.FC<any>;
-  export const TabsList: React.FC<any>;
-  export const TabsTrigger: React.FC<any>;
-  export const TabsContent: React.FC<any>;
-}
-
-declare module '@/components/ui/Badge' {
-  export const Badge: React.FC<any>;
-}
-
-declare module '@/components/ui/ScrollArea' {
-  export const ScrollArea: React.FC<any>;
-}
-
-undefined.displayName = 'undefined';
+export type FormProps<T extends ElementType = 'form'> = {
+  as?: T;
+  onSubmit?: (e: React.FormEvent) => void;
+  children: ReactNode;
+} & ComponentPropsWithoutRef<T>;

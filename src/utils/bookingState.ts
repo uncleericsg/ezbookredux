@@ -1,132 +1,59 @@
-import { BookingError } from '@utils/errors';
+import type { ApiError } from '@/utils/errors';
+import type { BookingState } from '@/types/booking';
 
-export type BookingStatus = 
-  | 'idle' 
-  | 'validating'
-  | 'submitting'
-  | 'retrying'
-  | 'confirmed'
-  | 'failed';
-
-export interface BookingState {
-  status: BookingStatus;
-  error?: string;
-  retryCount: number;
-  lastAttempt?: Date;
-  validationErrors: string[];
-  warnings: string[];
+export function handleBookingError(error: ApiError, state: BookingState): BookingState {
+  switch (error.code) {
+    case 'VALIDATION_ERROR':
+      return {
+        ...state,
+        error: 'Invalid booking details. Please check your input.',
+        loading: false
+      };
+    case 'SERVICE_ERROR':
+      return {
+        ...state,
+        error: 'Service is temporarily unavailable. Please try again later.',
+        loading: false
+      };
+    case 'PAYMENT_ERROR':
+      return {
+        ...state,
+        error: 'Payment processing failed. Please try again.',
+        loading: false
+      };
+    case 'UNAUTHORIZED':
+      return {
+        ...state,
+        error: 'Please log in to continue with your booking.',
+        loading: false
+      };
+    case 'RATE_LIMIT_ERROR':
+      return {
+        ...state,
+        error: 'Too many booking attempts. Please wait before trying again.',
+        loading: false
+      };
+    default:
+      return {
+        ...state,
+        error: 'An unexpected error occurred. Please try again.',
+        loading: false
+      };
+  }
 }
 
-export const createInitialState = (): BookingState => ({
-  status: 'idle',
-  retryCount: 0,
-  validationErrors: [],
-  warnings: [],
-});
-
-export const isBookingInProgress = (state: BookingState): boolean => {
-  return ['validating', 'submitting', 'retrying'].includes(state.status);
-};
-
-export const canRetry = (state: BookingState, maxRetries: number = 3): boolean => {
-  if (state.status !== 'failed') return false;
-  if (state.retryCount >= maxRetries) return false;
-  
-  // Check if last attempt was within 30 seconds
-  if (state.lastAttempt) {
-    const timeSinceLastAttempt = Date.now() - state.lastAttempt.getTime();
-    if (timeSinceLastAttempt < 30000) return false;
+export function validateBookingState(state: BookingState): boolean {
+  if (state.loading) {
+    return false;
   }
-  
+
+  if (state.error) {
+    return false;
+  }
+
+  if (!state.currentBooking) {
+    return false;
+  }
+
   return true;
-};
-
-export const transition = (
-  currentState: BookingState,
-  action: {
-    type: 'START_VALIDATION' | 'VALIDATION_COMPLETE' | 'START_BOOKING' | 
-          'BOOKING_SUCCESS' | 'BOOKING_FAILED' | 'RETRY' | 'RESET';
-    error?: string;
-    validationErrors?: string[];
-    warnings?: string[];
-  }
-): BookingState => {
-  switch (action.type) {
-    case 'START_VALIDATION':
-      if (isBookingInProgress(currentState)) {
-        throw new BookingError(
-          'Booking already in progress',
-          'BOOKING_IN_PROGRESS',
-          false,
-          true
-        );
-      }
-      return {
-        ...currentState,
-        status: 'validating',
-        error: undefined,
-        validationErrors: [],
-        warnings: [],
-      };
-
-    case 'VALIDATION_COMPLETE':
-      return {
-        ...currentState,
-        status: 'idle',
-        validationErrors: action.validationErrors || [],
-        warnings: action.warnings || [],
-      };
-
-    case 'START_BOOKING':
-      if (isBookingInProgress(currentState)) {
-        throw new BookingError(
-          'Booking already in progress',
-          'BOOKING_IN_PROGRESS',
-          false,
-          true
-        );
-      }
-      return {
-        ...currentState,
-        status: 'submitting',
-        error: undefined,
-      };
-
-    case 'BOOKING_SUCCESS':
-      return {
-        ...currentState,
-        status: 'confirmed',
-        error: undefined,
-        retryCount: 0,
-      };
-
-    case 'BOOKING_FAILED':
-      return {
-        ...currentState,
-        status: 'failed',
-        error: action.error,
-        lastAttempt: new Date(),
-      };
-
-    case 'RETRY':
-      if (!canRetry(currentState)) {
-        throw new BookingError(
-          'Maximum retry attempts reached',
-          'MAX_RETRIES',
-          false,
-          true
-        );
-      }
-      return {
-        ...currentState,
-        status: 'retrying',
-        retryCount: currentState.retryCount + 1,
-      };
-
-    case 'RESET':
-      return createInitialState();
-
-    default:
-      return currentState;
-  }
-};
+}

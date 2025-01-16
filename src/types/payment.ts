@@ -1,40 +1,46 @@
-export interface PaymentDetails {
+import type { BaseEntity } from './common';
+
+export interface PaymentDetails extends BaseEntity {
+  payment_intent_id: string;
   amount: number;
   currency: string;
-  description: string;
-  paymentMethod?: 'card' | 'paynow';
-  metadata?: Record<string, string>;
+  status: PaymentStatus;
+  booking_id: string;
+  customer_id?: string;
+  service_id: string;
+  tip_amount?: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface ServiceDetails {
-  type: string;
-  date: string;
-  time: string;
-  duration: number;
-}
-
-export interface TransactionRecord {
-  id: string;
-  date: string;
-  amount: number;
-  status: string;
-  description: string;
-  details: ServiceDetails;
-}
-
-export interface SavedPaymentMethod {
-  id: string;
-  last4: string;
-  brand: string;
-  expiryMonth: string;
-  expiryYear: string;
-}
+export type PaymentStatus =
+  | 'pending'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded';
 
 export interface PaymentError {
   code: string;
   message: string;
-  technical?: string;
-  paymentIntentId?: string;
+  payment_intent_id?: string;
+  details?: Record<string, unknown>;
 }
 
-export type PaymentStatus = 'idle' | 'processing' | 'success' | 'failed' | 'cancelled';
+export interface TransactionRecord extends BaseEntity {
+  payment_id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  type: TransactionType;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  created_at: Date;
+}
+
+export type TransactionType =
+  | 'payment'
+  | 'refund'
+  | 'chargeback'
+  | 'adjustment';

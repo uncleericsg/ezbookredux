@@ -1,31 +1,25 @@
 import { combineReducers } from '@reduxjs/toolkit';
+import type { RootState } from './types';
+import { adminReducer } from './slices/adminSlice';
+import { authReducer } from './slices/authSlice';
+import { bookingReducer } from './slices/bookingSlice';
+import { serviceReducer } from './slices/serviceSlice';
+import { userReducer } from './slices/userSlice';
 
-import adminReducer from './slices/adminSlice';
-import authReducer from './slices/authSlice';
-import bookingReducer from './slices/bookingSlice';
-import serviceReducer from './slices/serviceSlice';
-import technicianReducer from './slices/technicianSlice';
-import userReducer from './slices/userSlice';
-
-const appReducer = combineReducers({
+const appReducer = combineReducers<RootState>({
   admin: adminReducer,
   auth: authReducer,
   booking: bookingReducer,
   service: serviceReducer,
-  technician: technicianReducer,
-  user: userReducer,
+  user: userReducer
 });
 
-const rootReducer = (state: any, action: any) => {
-  if (action.type === RESET_STORE) {
+export const rootReducer = (state: RootState | undefined, action: any): RootState => {
+  // Handle logout by clearing the state
+  if (action.type === 'auth/logout') {
     state = undefined;
   }
   return appReducer(state, action);
 };
 
-export const RESET_STORE = 'RESET_STORE';
-export const resetStore = () => ({ type: RESET_STORE });
-
-export type RootState = ReturnType<typeof rootReducer>;
-
-export default rootReducer;
+export type { RootState };

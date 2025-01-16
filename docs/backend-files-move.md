@@ -28,82 +28,158 @@
 
 ## 4. Migration Phases
 
-### Phase 1: Preparation (Completed: 2025-01-16 06:34)
-1. [x] Create backup branch (backend-reorganization-20250116)
-2. [x] Update TypeScript configuration
-3. [x] Set up new directory structure
-4. [x] Create placeholder files
+### Phase 1: Payment Services Migration (Priority: High)
+1. Move Payment-Related Files:
+   - [ ] `src/services/stripe.ts` → `server/services/stripe/stripeService.ts`
+   - [ ] `src/services/paymentService.ts` → `server/services/payments/paymentService.ts`
+   - [ ] Update import paths in:
+     - [ ] `src/components/booking/PaymentStep.tsx`
+     - [ ] `src/components/booking/BookingConfirmation.tsx`
+     - [ ] `src/hooks/usePayment.ts`
 
-### Phase 2: File Relocation (In Progress)
-1. [x] Move core server files (server.ts → server/index.ts)
-2. [x] Migrate API routes (payments.ts → server/routes/payments.ts)
-3. [x] Relocate services (stripe.ts → server/services/stripe/stripeService.ts)
-4. [ ] Update configuration files
+2. Update TypeScript Configuration:
+   ```json
+   {
+     "compilerOptions": {
+       "paths": {
+         "@server/*": ["./server/*"],
+         "@services/*": ["./src/services/*"]
+       }
+     }
+   }
+   ```
 
-### Phase 3: Path Updates (1.5 hours)
-1. Update import paths
-2. Modify API endpoint references
-3. Adjust TypeScript aliases
-4. Update documentation
+### Phase 2: Booking Services Migration (Priority: High)
+1. Move Booking-Related Files:
+   - [ ] `src/services/supabaseBookingService.ts` → `server/services/bookings/bookingService.ts`
+   - [ ] Update dependent components and hooks
+   - [ ] Migrate related types and interfaces
 
-### Phase 4: Testing and Validation (2 hours)
-1. Run unit tests
-2. Execute integration tests
-3. Verify API endpoints
-4. Check frontend functionality
+2. Update Service Dependencies:
+   - [ ] Review and update service connections
+   - [ ] Verify database interactions
+   - [ ] Test booking flow end-to-end
 
-### Phase 5: Deployment and Monitoring (1 hour)
-1. Deploy to staging environment
-2. Monitor error logs
-3. Verify production readiness
-4. Schedule production deployment
+### Phase 3: Route Migration (Priority: Medium)
+1. Move API Routes:
+   - [ ] Identify routes in `src/server/routes/`
+   - [ ] Migrate to `server/routes/` maintaining structure
+   - [ ] Update API endpoint references
 
-## 5. Detailed Execution Plan
+2. Verify Route Functionality:
+   - [ ] Test all migrated endpoints
+   - [ ] Verify request/response handling
+   - [ ] Update API documentation
 
-### File Relocation Details
-| Current Path | New Path | Dependencies |
-|--------------|----------|--------------|
-| src/api/stripe.ts | server/services/stripe/stripeService.ts | Payment components |
-| src/server/routes/payments.ts | server/routes/payments.ts | API controllers |
-| src/lib/supabase.server.ts | server/config/database.ts | All database operations |
-| src/server.ts | server/index.ts | Main application entry |
+### Phase 4: Testing and Validation (Priority: High)
+1. Unit Tests:
+   - [ ] Create/update tests for migrated services
+   - [ ] Verify service interactions
+   - [ ] Test error handling
 
-### Path Update Strategy
-1. Use automated refactoring tools
-2. Manual verification of critical paths
-3. Update TypeScript configuration
-4. Validate with build process
+2. Integration Tests:
+   - [ ] Test payment flow
+   - [ ] Test booking flow
+   - [ ] Verify API endpoints
 
-## 6. Validation Procedures
-- [ ] API endpoint testing
-- [ ] Database connection verification
-- [ ] Payment flow testing
-- [ ] Error handling validation
-- [ ] Performance benchmarks
+3. End-to-End Tests:
+   - [ ] Complete booking process
+   - [ ] Payment processing
+   - [ ] Error scenarios
 
-## 7. Post-Migration Review
-- Analyze error logs
-- Review performance metrics
-- Update documentation
-- Conduct team knowledge transfer
+## 5. Validation Checklist
 
-## 8. Timeline
-| Phase | Duration | Start | End |
-|-------|----------|-------|-----|
-| Preparation | 1 hour | 2025-01-16 09:00 | 2025-01-16 10:00 |
-| File Relocation | 2 hours | 2025-01-16 10:00 | 2025-01-16 12:00 |
-| Path Updates | 1.5 hours | 2025-01-16 13:00 | 2025-01-16 14:30 |
-| Testing | 2 hours | 2025-01-16 14:30 | 2025-01-16 16:30 |
-| Deployment | 1 hour | 2025-01-16 16:30 | 2025-01-16 17:30 |
+### 5.1 Backend Verification
+- [ ] All API routes respond correctly
+- [ ] Payment processing works
+- [ ] Booking flow works
+- [ ] Error handling is consistent
+- [ ] Database connections work
 
-## 9. Potential Challenges
-- Complex dependency chains
-- Configuration file conflicts
-- Testing environment differences
-- Team coordination during migration
+### 5.2 Frontend Verification
+- [ ] All imports are updated
+- [ ] API calls work
+- [ ] Payment flow works
+- [ ] Booking flow works
+- [ ] No console errors
 
-## 10. Mitigation Strategies
-- Staged migration approach
-- Automated testing coverage
-- Clear communication plan
-- Rollback procedures
+## 6. Rollback Plan
+
+### 6.1 Preparation
+1. Create backup branch of current state
+2. Document all current API endpoints
+3. Keep old files until verification complete
+
+### 6.2 Rollback Steps
+1. Revert to backup branch
+2. Restore original file structure
+3. Verify original functionality
+
+## 7. Post-Migration Tasks
+
+### 7.1 Cleanup
+- [ ] Remove old files after successful migration
+- [ ] Update documentation
+- [ ] Remove unused dependencies
+- [ ] Update API documentation
+
+### 7.2 Monitoring
+- [ ] Set up error tracking
+- [ ] Monitor API performance
+- [ ] Check error logs
+- [ ] Verify webhook reliability
+
+## 8. Dependencies and Environment Variables
+
+### 8.1 Required Dependencies
+```json
+{
+  "@vercel/node": "latest",
+  "stripe": "^2023.10.16",
+  "@supabase/supabase-js": "latest"
+}
+```
+
+### 8.2 Environment Variables
+```env
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+## 9. Timeline
+
+| Phase | Duration | Dependencies |
+|-------|----------|--------------|
+| Payment Services | 1 day | TypeScript config |
+| Booking Services | 1 day | Payment services |
+| Route Migration | 0.5 day | Services migration |
+| Testing | 1.5 days | All migrations |
+
+Total Estimated Time: 4 days
+
+## 10. Next Steps
+
+1. Create backup branch:
+   ```bash
+   git checkout -b backend-reorganization-$(date +%Y%m%d)
+   ```
+
+2. Update TypeScript configuration
+3. Begin with Payment Services migration
+4. Run tests after each phase
+5. Document any issues or blockers
+
+## 11. Support and Resources
+
+### Documentation
+- Vercel API Routes: https://vercel.com/docs/serverless-functions/introduction
+- Stripe API: https://stripe.com/docs/api
+- Supabase: https://supabase.com/docs
+
+### Testing Resources
+- API Testing: Postman/Thunder Client
+- Frontend Testing: Chrome DevTools
+- Payment Testing: Stripe Test Cards

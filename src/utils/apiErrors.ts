@@ -5,38 +5,22 @@ export enum ApiErrorCode {
   // Authentication Errors
   UNAUTHORIZED = 'UNAUTHORIZED',
   FORBIDDEN = 'FORBIDDEN',
-  FIREBASE_AUTH_ERROR = 'FIREBASE_AUTH_ERROR',
-  FIREBASE_TOKEN_EXPIRED = 'FIREBASE_TOKEN_EXPIRED',
-  
-  // Database Errors
-  FIREBASE_DB_ERROR = 'FIREBASE_DB_ERROR',
-  FIREBASE_PERMISSION_DENIED = 'FIREBASE_PERMISSION_DENIED',
-  
-  // Email/Communication Errors
-  EMAIL_SEND_ERROR = 'EMAIL_SEND_ERROR',
-  EMAIL_TEMPLATE_ERROR = 'EMAIL_TEMPLATE_ERROR',
-  FCM_ERROR = 'FCM_ERROR',
-  
-  // Payment Errors
-  STRIPE_ERROR = 'STRIPE_ERROR',
-  STRIPE_CARD_ERROR = 'STRIPE_CARD_ERROR',
-  STRIPE_VALIDATION_ERROR = 'STRIPE_VALIDATION_ERROR',
-  
-  // Location/Maps Errors
-  MAPS_ERROR = 'MAPS_ERROR',
-  PLACES_ERROR = 'PLACES_ERROR',
-  ONEMAP_ERROR = 'ONEMAP_ERROR',
-  
-  // Integration Errors
-  ACUITY_ERROR = 'ACUITY_ERROR',
-  REPAIR_SHOPR_ERROR = 'REPAIR_SHOPR_ERROR',
   
   // Common Errors
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  NOT_FOUND = 'NOT_FOUND',
+  CONFLICT = 'CONFLICT',
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
   NETWORK_ERROR = 'NETWORK_ERROR',
-  RATE_LIMIT = 'RATE_LIMIT',
-  TIMEOUT = 'TIMEOUT',
-  SERVER_ERROR = 'SERVER_ERROR',
-  VALIDATION_ERROR = 'VALIDATION_ERROR'
+  SERVICE_ERROR = 'SERVICE_ERROR',
+  RATE_LIMIT_ERROR = 'RATE_LIMIT_ERROR',
+  BAD_REQUEST = 'BAD_REQUEST',
+
+  // Integration Errors
+  FIREBASE_ERROR = 'FIREBASE_ERROR',
+  STRIPE_ERROR = 'STRIPE_ERROR',
+  MAPS_ERROR = 'MAPS_ERROR'
 }
 
 export interface ApiErrorOptions {
@@ -82,42 +66,33 @@ export class ApiError extends Error {
   static fromFirebaseError(error: any, context?: string): ApiError {
     const options: ApiErrorOptions = { context, retryable: true };
     
-    switch (error.code) {
-      case 'auth/user-token-expired':
-        return new ApiError(
-          'Your session has expired. Please login again.',
-          ApiErrorCode.FIREBASE_TOKEN_EXPIRED,
-          { ...options, retryable: true }
-        );
-      case 'permission-denied':
-        return new ApiError(
-          'You don\'t have permission to perform this action',
-          ApiErrorCode.FIREBASE_PERMISSION_DENIED,
-          { ...options, retryable: false }
-        );
-      default:
-        return new ApiError(
-          error.message || 'Firebase operation failed',
-          ApiErrorCode.FIREBASE_DB_ERROR,
-          options,
-          error
-        );
+    if (error.code === 'auth/user-token-expired') {
+      return new ApiError(
+        'Your session has expired. Please login again.',
+        ApiErrorCode.UNAUTHORIZED,
+        { ...options, retryable: true }
+      );
     }
+    
+    if (error.code === 'permission-denied') {
+      return new ApiError(
+        'You don\'t have permission to perform this action',
+        ApiErrorCode.FORBIDDEN,
+        { ...options, retryable: false }
+      );
+    }
+    
+    return new ApiError(
+      error.message || 'Firebase operation failed',
+      ApiErrorCode.FIREBASE_ERROR,
+      options,
+      error
+    );
   }
 
   // Stripe Error Handlers
   static fromStripeError(error: any): ApiError {
     const options: ApiErrorOptions = { context: 'Stripe', retryable: false };
-    
-    if (error.type === 'StripeCardError') {
-      return new ApiError(
-        error.message,
-        ApiErrorCode.STRIPE_CARD_ERROR,
-        options,
-        error
-      );
-    }
-    
     return new ApiError(
       error.message || 'Payment processing failed',
       ApiErrorCode.STRIPE_ERROR,
@@ -161,12 +136,11 @@ export const handleApiError = async (error: unknown): Promise<void> => {
 
     // Handle specific error types
     switch (error.code) {
-      case ApiErrorCode.FIREBASE_TOKEN_EXPIRED:
-        // You would implement token refresh logic here
-        toast.warning('Refreshing your session...');
+      case ApiErrorCode.UNAUTHORIZED:
+        toast.warning('Please log in to continue');
         break;
 
-      case ApiErrorCode.RATE_LIMIT:
+      case ApiErrorCode.RATE_LIMIT_ERROR:
         const backoffTime = calculateBackoff(error.retryCount);
         toast.warning(`Rate limited. Retrying in ${backoffTime / 1000} seconds...`);
         await delay(backoffTime);

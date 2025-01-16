@@ -1,5 +1,20 @@
 import { LucideIcon } from 'lucide-react';
 
+export interface AdminData {
+  workingHours: {
+    start: string;
+    end: string;
+  };
+  bufferBetweenBookings: number;
+  allowGuestBookings: boolean;
+  showRevenueChart: boolean;
+  settings?: {
+    notifications: boolean;
+    analytics: boolean;
+    autoAssignment: boolean;
+  };
+}
+
 export interface AdminTabConfig {
   id: string;
   icon: LucideIcon;

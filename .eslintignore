@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+build/
+.next/
+.vercel/
+.vscode/
+public/
+*.d.ts
+vite.config.ts 

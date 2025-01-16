@@ -1,31 +1,35 @@
-import { useDispatch, useSelector } from 'react-redux';
-import type { TypedUseSelectorHook } from 'react-redux';
-import type { RootState, AppDispatch } from '@store';
+import { useAppSelector } from './store';
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
-const useAppDispatch = () => useDispatch<AppDispatch>();
-const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+// Service Selectors
+export const useSelectedService = () => useAppSelector(state => state.service.selectedService);
+export const useServiceCategories = () => useAppSelector(state => state.service.services);
+export const useServiceLoading = () => useAppSelector(state => state.service.loading);
+export const useServiceError = () => useAppSelector(state => state.service.error);
 
-// Common selectors
-const useAuth = () => useAppSelector((state) => state.auth);
-const useUser = () => useAppSelector((state) => state.user);
-const useAdmin = () => useAppSelector((state) => state.admin);
-const useTechnician = () => useAppSelector((state) => state.technician);
+// Booking Selectors
+export const useCurrentBooking = () => useAppSelector(state => state.booking.currentBooking);
+export const useBookings = () => useAppSelector(state => state.booking.bookings);
+export const useBookingFilters = () => useAppSelector(state => state.booking.filters);
+export const useBookingLoading = () => useAppSelector(state => state.booking.loading);
+export const useBookingError = () => useAppSelector(state => state.booking.error);
 
-// Specific technician selectors
-const useCurrentTechnician = () => useAppSelector((state) => state.technician.currentTechnician);
-const useTechnicianSchedules = () => useAppSelector((state) => state.technician.schedules);
-const useAllTechnicians = () => useAppSelector((state) => state.technician.technicians);
+// User Selectors
+export const useCurrentUser = () => useAppSelector(state => state.user.currentUser);
+export const useUserLoading = () => useAppSelector(state => state.user.loading);
+export const useUserError = () => useAppSelector(state => state.user.error);
 
-// Export all hooks
-export {
-  useAppDispatch,
-  useAppSelector,
-  useAuth,
-  useUser,
-  useAdmin,
-  useTechnician,
-  useCurrentTechnician,
-  useTechnicianSchedules,
-  useAllTechnicians
-};
+// Auth Selectors
+export const useAuthUser = () => useAppSelector(state => state.auth.user);
+export const useAuthLoading = () => useAppSelector(state => state.auth.loading);
+export const useAuthError = () => useAppSelector(state => state.auth.error);
+export const useIsAuthenticated = () => useAppSelector(state => state.auth.isAuthenticated);
+export const useAuthToken = () => useAppSelector(state => state.auth.token);
+export const usePaymentStatus = () => useAppSelector(state => state.auth.paymentStatus);
+export const useUserVerificationId = () => useAppSelector(state => state.auth.verificationId);
+export const useUserPhone = () => useAppSelector(state => state.auth.phone);
+
+// Admin Selectors
+export const useIsAdmin = () => useAppSelector(state => state.admin.isAdmin);
+export const useAdminData = () => useAppSelector(state => state.admin.adminData);
+export const useAdminLoading = () => useAppSelector(state => state.admin.loading);
+export const useAdminError = () => useAppSelector(state => state.admin.error);

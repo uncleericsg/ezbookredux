@@ -1,34 +1,55 @@
-export interface ServiceRequest {
-  id: string;
-  customerName: string;
-  serviceType: string;
-  scheduledTime: Date;
-  location: string;
-  contactNumber?: string;
-  email?: string;
-  notes?: string;
-  status: 'pending' | 'assigned' | 'in-progress' | 'completed';
-  assignedTeam?: string;
-  bookingReference: string;
-  specialInstructions?: string;
-  address: {
-    blockStreet: string;
-    floorUnit: string;
-    postalCode: string;
-    condoName?: string;
-    lobbyTower?: string;
-  };
-}
+import type { BaseEntity } from './common';
 
-export interface ServiceTeam {
-  id: string;
+export interface ServiceCategory extends BaseEntity {
   name: string;
-  members: string[];
-  availability: {
-    date: Date;
-    slots: string[];
-  }[];
-  currentAssignments: string[]; // Array of ServiceRequest IDs
+  description?: string;
+  parent_id?: string;
+  order: number;
+  is_active: boolean;
+  image_url?: string;
 }
 
-export type ServiceStatus = ServiceRequest['status'];
+export interface ServiceOption extends BaseEntity {
+  name: string;
+  description?: string;
+  category_id: string;
+  price: number;
+  duration: number;
+  is_active: boolean;
+  peak_hour_multiplier?: number;
+  features?: string[];
+  image_url?: string;
+}
+
+export interface ServiceRequest {
+  service_id: string;
+  customer_id?: string;
+  scheduled_date?: Date;
+  status?: ServiceRequestStatus;
+  payment_confirmed?: boolean;
+  tip_amount?: number;
+  total_amount?: number;
+}
+
+export type ServiceRequestStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
+
+export interface ServiceVisit extends BaseEntity {
+  user_id: string;
+  service_id: string;
+  visit_date: Date;
+  status: ServiceVisitStatus;
+  technician_id?: string;
+  notes?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export type ServiceVisitStatus = 
+  | 'scheduled'
+  | 'completed'
+  | 'cancelled';

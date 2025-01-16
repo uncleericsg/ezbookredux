@@ -1,133 +1,70 @@
-import type { LucideIcon } from 'lucide-react';
+// API Types
+export * from './api';
+export * from './webhook';
+export * from './payment';
+export * from './service';
+export * from './user';
+export * from './booking';
+export * from './auth';
 
-export interface TimeSlot {
+// Common Types
+export type Nullable<T> = T | null;
+
+export interface BaseEntity {
   id: string;
-  datetime: string;
-  available: boolean;
-  duration?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface FetchError extends Error {
-  status?: number;
-}
+// Error Types
+export type ApiErrorCode = 
+  | 'VALIDATION_ERROR'
+  | 'PAYMENT_ERROR'
+  | 'NOT_FOUND'
+  | 'UNAUTHORIZED'
+  | 'SERVER_ERROR'
+  | 'PRICING_ERROR'
+  | 'SERVICE_INIT_ERROR'
+  | 'FIREBASE_AUTH_ERROR'
+  | 'FIREBASE_DB_ERROR'
+  | 'STRIPE_ERROR'
+  | 'MAPS_ERROR'
+  | 'BOOKING_IN_PROGRESS'
+  | 'MAX_RETRIES';
 
-export interface ServiceCategory {
-  id: string;
-  name: string;
-  description?: string;
-  price: number | null;
-  duration: number;
-  type?: 'maintenance' | 'repair' | 'amc' | 'diagnostic';
-  icon: LucideIcon;
-  visible?: boolean;
-  order?: number;
-  parentId?: string;
-  visibilityType?: 'all' | 'amc';
-  rating?: number;
-  reviewCount?: number;
-  popular?: boolean;
-}
+export type PaymentStatus = 
+  | 'pending'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'canceled'
+  | 'requires_payment_method'
+  | 'requires_confirmation'
+  | 'requires_action';
 
-export interface Region {
-  id: string;
-  name: string;
-  center: {
-    lat: number;
-    lng: number;
-  };
-  radius: number;
-}
-
-export interface BookingValidation {
-  isValid: boolean;
-  errors: string[];
-  warnings?: string[];
-}
-
-export interface AppointmentType {
-  id: string;
-  name: string;
-  duration: number;
-  price?: number;
-  description?: string;
-  isAMC?: boolean;
-}
-
-export interface BookingDetails {
-  datetime: string;
-  categoryId: string;
-  userDetails: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
+// Service Types
+export interface ServiceVisit extends BaseEntity {
+  user_id: string;
+  service_id: string;
+  visit_date: string;
+  status: string;
   notes?: string;
 }
 
-export interface AMCPackage {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  duration: number;
-  visits: number;
-  appointmentTypeId?: string;
-  isActive?: boolean;
+// User Types
+export interface User extends BaseEntity {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user' | 'technician';
+  status: 'active' | 'inactive';
+  phone?: string;
 }
 
-export interface ServiceRatingProps {
-  onSubmit: (rating: number, feedback?: string) => Promise<void>;
-  onClose: () => void;
-  serviceId: string;
-}
-
+// Holiday Types
 export interface Holiday {
-  id: string;
+  date: string;
   name: string;
-  date: string;
-  type: string;
-}
-
-export interface HolidayGreeting {
-  id: string;
-  holiday: string;
-  date: string;
-  message: string;
-  enabled: boolean;
-  sendTime: string;
-}
-
-export interface CustomMessage {
-  id: string;
-  message: string;
-  scheduledDateTime: string;
-  recipients: string[];
-  status: 'pending' | 'sent' | 'failed';
-}
-
-export interface MessageSchedule {
-  content: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  frequency: 'once' | 'daily' | 'weekly' | 'monthly';
-  userType: 'all' | 'amc' | 'regular';
-}
-
-export interface MessageStats {
-  total: number;
-  sent: number;
-  pending: number;
-  failed: number;
-}
-
-export interface UseCustomMessagesResult {
-  messages: CustomMessage[];
-  loading: boolean;
-  error: string | null;
-  scheduleMessage: (schedule: MessageSchedule) => Promise<void>;
-  generateMessage: () => Promise<string>;
-  messageStats: MessageStats | undefined;
-  hasStats: boolean;
+  type: 'public' | 'school' | 'bank';
+  isWorkingDay: boolean;
 }

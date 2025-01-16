@@ -1,20 +1,12 @@
 'use client';
 
-import * as React from 'react';
+import { forwardRef } from 'react';
 import * as SwitchPrimitives from '@radix-ui/react-switch';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@utils/cn';
+import { cn } from '@/utils/cn';
 
-export type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>;
-
-/**
- * Switch component for toggling between two states
- * @example
- * <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
- */
-const Switch = React.forwardRef<
+const Switch = forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
-  SwitchProps
+  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
 >(({ className, ...props }, ref) => (
   <SwitchPrimitives.Root
     className={cn(
@@ -32,7 +24,6 @@ const Switch = React.forwardRef<
   </SwitchPrimitives.Root>
 ));
 
-// Add displayName
 Switch.displayName = SwitchPrimitives.Root.displayName;
 
 export { Switch };

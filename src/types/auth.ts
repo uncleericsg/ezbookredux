@@ -1,33 +1,62 @@
-// @integration-point Firebase Auth types
-export interface FirebaseUser {
-  uid: string;
-  phoneNumber: string | null;
-  emailVerified?: boolean;
+import type { UserProfile } from './user';
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
 }
 
-// @integration-point Supabase Data types
-export interface UserProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
+export interface LoginCredentials {
   email: string;
-  mobile: string;
-  addresses: Address[];
-  createdAt?: string;
-  updatedAt?: string;
+  password: string;
 }
 
-export interface Address {
-  id: string;
-  name: string;
-  floorUnit: string;
-  blockStreet: string;
-  postalCode: string;
-  isDefault?: boolean;
+export interface RegisterCredentials extends LoginCredentials {
+  first_name: string;
+  last_name: string;
+  phone?: string;
 }
 
-// Combined user type for the application
-export interface User extends Partial<FirebaseUser>, Partial<UserProfile> {
-  // Common required fields regardless of auth provider
-  id: string;  // This could be Firebase UID or Supabase ID
+export interface AuthResponse {
+  user: UserProfile;
+  token: string;
+  refresh_token: string;
+}
+
+export interface VerificationRequest {
+  type: 'email' | 'phone';
+  value: string;
+}
+
+export interface VerificationResponse {
+  verification_id: string;
+  expires_at: string;
+}
+
+export interface VerificationConfirmation {
+  verification_id: string;
+  code: string;
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetConfirmation {
+  token: string;
+  new_password: string;
+}
+
+export interface SessionInfo {
+  user: UserProfile;
+  token: string;
+  expires_at: string;
+  refresh_token: string;
+}
+
+export interface TokenRefreshResponse {
+  token: string;
+  expires_at: string;
 }

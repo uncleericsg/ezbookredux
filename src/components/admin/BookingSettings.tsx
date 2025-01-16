@@ -7,35 +7,22 @@ import { toast } from 'sonner';
 
 import { cn } from '@utils/cn';
 
-export interface BookingConfig;
-
-export interface BookingSettingsProps;
-
 export interface BookingConfig {
-  timeSlots: {
-    enabled: boolean;
-    duration: number;
-    startTime: string;
-    endTime: string;
-    breakDuration: number;
+  allowedDaysInAdvance: number;
+  minHoursBeforeBooking: number;
+  maxBookingsPerDay: number;
+  bufferBetweenBookings: number;
+  workingHours: {
+    start: string;
+    end: string;
   };
-  scheduling: {
-    minAdvanceBooking: number;
-    maxAdvanceBooking: number;
-    allowSameDay: boolean;
-    allowWeekends: boolean;
-  };
-  capacity: {
-    maxBookingsPerDay: number;
-    maxBookingsPerSlot: number;
-    overbookingBuffer: number;
-  };
-  restrictions: {
-    enabled: boolean;
-    maxBookingsPerUser: number;
-    cancellationPeriod: number;
-    blackoutDates: string[];
-  };
+  holidays: string[];
+}
+
+export interface BookingSettingsProps {
+  config: BookingConfig;
+  onSave: (config: BookingConfig) => void;
+  loading?: boolean;
 }
 
 const defaultConfig: BookingConfig = {

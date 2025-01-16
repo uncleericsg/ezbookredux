@@ -1,14 +1,17 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "noEmit": false,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./dist/node",
-    "rootDir": "./server",
-    "types": ["node"]
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
   },
-  "include": ["server/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tailwind.config.ts",
+    "vite-plugin-google-maps.ts",
+    "eslint.config.js"
+  ]
 }

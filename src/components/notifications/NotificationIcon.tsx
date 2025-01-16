@@ -10,10 +10,11 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
-export interface NotificationIconProps;
-
-
-;
+export interface NotificationIconProps {
+  count?: number;
+  onClick?: () => void;
+  className?: string;
+}
 
 NotificationIcon.displayName = 'NotificationIcon';
 const NotificationIcon: React.FC<NotificationIconProps> = ({

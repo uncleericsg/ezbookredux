@@ -14,10 +14,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../ui/Switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 
-export interface DashboardSettingsProps;
-
-
-  onSave: (settings: DashboardSettingsType) => Promise<void>;
+export interface DashboardSettingsProps {
+  config: {
+    showRevenueChart: boolean;
+    showBookingStats: boolean;
+    showCustomerStats: boolean;
+    defaultDateRange: string;
+    refreshInterval: number;
+  };
+  onSave: (config: any) => void;
   loading?: boolean;
 }
 

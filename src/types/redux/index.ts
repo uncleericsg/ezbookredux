@@ -1,19 +1,20 @@
 // Core Redux Types
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  role: 'customer' | 'admin' | 'technician';
-  phone?: string;
-  address?: string[];
-}
+import type { UserProfile, UserAddress } from '../user';
+import type { BaseEntity } from '../index';
+import type { AdminData } from '../admin';
+
+// Re-export the User type to maintain compatibility
+export type User = UserProfile;
 
 // Auth State
 export interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  paymentStatus: 'idle' | 'processing' | 'success' | 'error';
+  verificationId: string | null;
+  phone: string | null;
 }
 
 // Booking Types
@@ -40,10 +41,43 @@ export interface BookingState {
   };
 }
 
+// Admin State
+export interface AdminState {
+  adminData: AdminData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// Service State
+export interface ServiceState {
+  services: Array<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    duration: number;
+  }>;
+  loading: boolean;
+  error: string | null;
+}
+
+// User State
+export interface UserState {
+  currentUser: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+  paymentStatus: 'idle' | 'processing' | 'success' | 'error';
+  verificationId: string | null;
+  phone: string | null;
+}
+
 // Root State Type
 export interface RootState {
+  admin: AdminState;
   auth: AuthState;
   booking: BookingState;
+  service: ServiceState;
+  user: UserState;
 }
 
 // Store Types

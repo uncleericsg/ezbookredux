@@ -1,56 +1,44 @@
-interface PricingOption {
-  id: string;
-  title: string;
+import type { BaseEntity } from './common';
+
+export interface BookingDetails extends BaseEntity {
+  user_id: string;
+  service_id: string;
+  status: BookingStatus;
+  scheduled_date: Date;
+  address_id: string;
+  notes?: string;
+  technician_id?: string;
+  payment_id?: string;
   price: number;
-  duration: string;
-  description?: string;
-  isPromo?: boolean;
-  promoLabel?: string;
-  isSignature?: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
-interface SavedLocation {
-  id: string;
-  address: string;
-  postalCode: string;
-  unitNumber: string;
-  default: boolean;
+export type BookingStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
+
+export interface TimeSlot {
+  start_time: string;
+  end_time?: string;
+  is_available: boolean;
+  is_peak_hour: boolean;
+  is_buffer_time?: boolean;
+  price_multiplier?: number;
 }
 
-interface SavedDetails {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  locations: SavedLocation[];
+export interface BookingFilters {
+  status?: BookingStatus[];
+  dateRange?: [Date | null, Date | null];
+  technician_id?: string;
+  service_id?: string;
 }
 
-interface CustomerInfo {
-  firstName: string;
-  lastName: string;
-  email: string;
-  mobile: string;
-  selectedAddressId: string;
-  address: {
-    address: string;
-    postalCode: string;
-    unitNumber: string;
-  };
+export interface BookingValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
 }
-
-interface TimeSlot {
-  id: string;
-  startTime: string;
-  endTime: string;
-  available: boolean;
-  isAMC?: boolean;
-}
-
-// Export all types
-export type {
-  PricingOption,
-  SavedLocation,
-  SavedDetails,
-  CustomerInfo,
-  TimeSlot
-};

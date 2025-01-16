@@ -63,7 +63,7 @@
  */
 
 // React and hooks
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useScrollToTop } from '@hooks/useScrollToTop';
 import { useNavigate } from 'react-router-dom';
 
@@ -97,17 +97,15 @@ import { createBooking } from '@services/supabaseBookingService';
 import { getServiceByAppointmentType } from '@services/serviceUtils';
 
 // Types and Constants
-type ServiceType = 'repair' | 'maintenance' | 'installation';
-type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+import type { StripePaymentIntent, PaymentState, PaymentStepProps, StripePaymentStatus, PaymentStatus } from '@/types';
+import { logger } from '@/server/utils/logger';
 
 // Payment States and Types
 const PAYMENT_STATES = {
-  INITIAL: 'INITIAL',
-  INITIALIZING: 'INITIALIZING',
-  READY: 'READY',
-  SUCCESS: 'SUCCESS',
-  ERROR: 'ERROR',
-  CANCELLED: 'CANCELLED'
+  INITIAL: 'initial',
+  PROCESSING: 'processing',
+  SUCCESS: 'success',
+  ERROR: 'error',
 } as const;
 
 type PaymentStateType = typeof PAYMENT_STATES[keyof typeof PAYMENT_STATES];
@@ -130,14 +128,12 @@ interface StripePaymentResponse {
 
 // Type guard for PaymentIntent
 const isPaymentIntent = (obj: any): obj is StripePaymentIntent => {
-  return obj &&
-    typeof obj.id === 'string' &&
-    typeof obj.clientSecret === 'string';
+  return obj && typeof obj === 'object' && 'clientSecret' in obj && 'status' in obj;
 };
 
 // Helper to safely access payment intent
-const getPaymentIntentStatus = (intent: StripePaymentResponse): StripePaymentStatus => {
-  return (intent as StripePaymentIntent).status || 'requires_payment_method';
+const getPaymentIntentStatus = (intent: StripePaymentIntent): StripePaymentStatus => {
+  return intent.status;
 };
 
 interface PaymentState {
@@ -148,7 +144,7 @@ interface PaymentState {
 }
 
 const initialPaymentState: PaymentState = {
-  status: PAYMENT_STATES.INITIALIZING,
+  status: PAYMENT_STATES.INITIAL,
   clientSecret: null,
   error: null,
   tipAmount: 0
@@ -510,9 +506,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         setPaymentState((prev) => ({
           ...prev,
           clientSecret: paymentIntent.clientSecret,
-          status: PAYMENT_STATES.READY
+          status: PAYMENT_STATES.PROCESSING
         }));
-        stagesCompleted.current.push('state_updated_ready');
+        stagesCompleted.current.push('state_updated_processing');
 
       } catch (error) {
         paymentInitializedRef.current = false;
@@ -663,7 +659,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   }
 
   // Render payment form when ready
-  if (paymentState.status === PAYMENT_STATES.READY && paymentState.clientSecret) {
+  if (paymentState.status === PAYMENT_STATES.PROCESSING && paymentState.clientSecret) {
     const stripePromise = getStripe();
     return (
       <motion.div

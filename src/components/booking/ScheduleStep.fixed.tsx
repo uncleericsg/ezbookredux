@@ -11,27 +11,17 @@ import { Calendar } from '@/components/ui/Calendar';
 // Styles
 import styles from './ScheduleStep.module.css';
 
-export type FC } from 'react';
-
-export interface TimeSlot;
-
-export interface CustomerInfo;
-
-export interface PricingOption;
-
-export interface ScheduleStepProps;
-
-export interface RouteCache;
-
-
 // Types
-
+export interface TimeSlot {
+  time: string;
   available: boolean;
   isPeakHour: boolean;
   endTime?: string;
   isBufferTime?: boolean;
 }
 
+export interface CustomerInfo {
+  firstName: string;
   lastName: string;
   email: string;
   mobile: string;
@@ -41,6 +31,7 @@ export interface RouteCache;
   unitNumber: string;
 }
 
+export interface PricingOption {
   title: string;
   price: number;
   duration: number;
@@ -52,8 +43,19 @@ export interface RouteCache;
   paddingAfter?: number;
 }
 
+export interface ScheduleStepProps {
+  customerInfo: CustomerInfo;
   selectedService: PricingOption;
   onScheduleSelect: (date: Date, timeSlot: string, duration: number) => void;
+}
+
+export interface RouteCache {
+  postalCode: string;
+  region: string;
+  slots: {
+    date: string;
+    availableSlots: TimeSlot[];
+  }[];
 }
 
 const ScheduleStep: FC<ScheduleStepProps> = ({
@@ -161,4 +163,7 @@ const ScheduleStep: FC<ScheduleStepProps> = ({
   );
 };
 
-undefined.displayName = 'undefined';
+ScheduleStep.displayName = 'ScheduleStep';
+
+export { ScheduleStep };
+export default ScheduleStep;
