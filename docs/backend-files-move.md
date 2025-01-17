@@ -1,213 +1,154 @@
-# Backend Files Migration Plan
+# Backend Files Migration Strategy
 
-## 1. Objectives
-- Reorganize backend files into a clear, maintainable structure
-- Improve code organization and separation of concerns
-- Prepare for Vercel deployment
-- Ensure minimal disruption to existing functionality
+## Phase 1: Preparation
 
-## 2. Prerequisites
-- [ ] Verify all tests are passing
-- [ ] Create backup branch
-- [ ] Update development environment configuration
-- [ ] Review current API documentation
+### 1.1 Inventory Creation
+- List all files to be moved
+- Document current locations
+- Record file dependencies
 
-## 3. Risk Assessment
+#### Current File Locations:
+- API Endpoints: api/
+- Server Core: server/
+- Database: supabase/
+- Migrations: migrations/
+- Frontend Business Logic: src/
 
-### Potential Risks
-- Broken imports and references
-- API endpoint changes affecting frontend
-- Configuration file conflicts
-- Testing coverage gaps
+#### Identified Dependencies:
+1. Booking Service Dependency Chain:
+   - server/services/bookings/bookingService.ts
+     → server/config/supabase/client.ts
+       → server/config/supabase/types.ts
 
-### Mitigation Strategies
-- Comprehensive test suite
-- Automated import path updates
-- API versioning
-- Staged rollout plan
+2. Payment Service Dependency Chain:
+   - server/services/payments/paymentService.ts
+     → server/services/payments/providers/stripe/StripeCheckoutProvider.ts
+     → server/services/payments/repositories/PaymentSessionRepository.ts
+     → server/utils/logger
+     → server/utils/apiErrors
 
-## 4. Migration Phases
+3. Frontend Business Logic to Move:
+   - src/hooks/useBooking.ts
+   - src/hooks/usePayment.ts
+   - src/services/addressService.ts
+   - src/config/routes.ts
+   - src/middleware/authMiddleware.ts
 
-### Phase 1: Payment Services Migration (Priority: High)
-1. Move Payment-Related Files:
-   - [x] `src/services/stripe.ts` → `server/services/stripe/paymentService.ts`
-   - [x] `src/services/paymentService.ts` → `server/services/payments/paymentService.ts`
-   - [x] Create API routes:
-     - [x] `api/payments/create-payment-intent.ts`
-     - [x] `api/payments/webhook.ts`
-     - [x] `api/payments/receipt/[id].ts`
-     - [x] `api/payments/receipt/generate.ts`
-   - [x] Update import paths in:
-     - [x] `src/components/booking/PaymentStep.tsx`
-     - [x] `src/components/booking/BookingConfirmation.tsx`
-     - [x] `src/hooks/usePayment.ts`
+### 1.5 Error Handling Consolidation
+- Remove src/middleware/errorHandler.ts
+- Use existing server implementation: server/middleware/errorHandling.ts
 
-2. Update TypeScript Configuration:
-   - [x] Add server paths to tsconfig.json
-   - [x] Add shared types directory
-   - [x] Update path aliases
-   - [x] Configure server-specific settings
+### 1.2 Dependency Mapping
+- Create dependency graph
+- Identify all import paths
+- Document dependent components
 
-3. Shared Types Setup:
-   - [x] Create shared/types directory
-   - [x] Move common types to shared location
-   - [x] Update imports to use shared types
+### 1.3 Environment Setup
+- Create migration branch
+- Set up staging environment
+- Configure CI/CD pipeline
 
-Next Steps:
-1. [x] Test the payment flow end-to-end
-2. [x] Proceed with Phase 2 (Booking Services Migration)
+### 1.4 Backup Creation
+- Create database backup
+- Backup configuration files
+- Document current system state
 
-### Phase 2: Booking Services Migration (Priority: High)
-1. Move Booking-Related Files:
-   - [x] `src/services/supabaseBookingService.ts` → `server/services/bookings/bookingService.ts`
-   - [x] Create API routes:
-     - [x] `api/bookings/create.ts`
-     - [x] `api/bookings/[id].ts`
-     - [x] `api/bookings/customer/[customerId].ts`
-     - [x] `api/bookings/email/[email].ts`
-   - [x] Create shared booking types
-   - [x] Update frontend booking service
-   - [x] Update dependent components and hooks:
-     - [x] `src/components/booking/BookingStep.tsx`
-     - [x] `src/components/booking/BookingList.tsx`
-     - [x] `src/hooks/useBooking.ts`
+## Phase 2: Execution
 
-2. Update Service Dependencies:
-   - [x] Review and update service connections
-   - [x] Verify database interactions
-   - [x] Test booking flow end-to-end
+### 2.1 File Relocation
+- Create target directories
+- Move files to new locations
+- Update import paths
+- Update tsconfig.json paths
 
-Next Steps:
-1. [x] Update dependent components to use new booking service
-2. [x] Create booking API routes
-3. [x] Test booking flow end-to-end
+#### Files to Move:
+1. src/hooks/useBooking.ts → server/services/bookings/
+2. src/hooks/usePayment.ts → server/services/payments/
+3. src/services/addressService.ts → server/services/address/
+4. src/config/routes.ts → server/config/
 
-### Phase 3: Server Configuration Migration (Priority: Medium)
-1. Move Configuration Files:
-   - [x] Create `server/config/` directory
-   - [x] Move CORS configuration to `server/config/cors.ts`
-   - [x] Move database configuration to `server/config/database.ts`
-   - [x] Create error handling utilities in `server/utils/error-handler.ts`
+### 2.2 Dependency Updates
+- Update package.json
+- Verify package installations
+- Update environment variables
+- Update CI/CD configurations
 
-2. Create API Routes:
-   - [x] `api/health.ts` for health check endpoint
-   - [x] `api/geocode.ts` for location services
+### 2.3 Configuration Changes
+- Update server configurations
+- Update database settings
+- Update logging configurations
+- Update deployment scripts
 
-3. Verify Configuration:
-   - [x] Test CORS settings
-   - [x] Verify database connections
-   - [x] Test error handling
-   - [x] Update API documentation
+### 2.4 Initial Testing
+- Run unit tests
+- Verify API endpoints
+- Check frontend functionality
+- Monitor system logs
 
-### Phase 4: Testing and Validation (Priority: High)
-1. Unit Tests:
-   - [ ] Create/update tests for migrated services
-   - [ ] Verify service interactions
-   - [ ] Test error handling
+## Phase 3: Validation
 
-2. Integration Tests:
-   - [ ] Test payment flow
-   - [ ] Test booking flow
-   - [ ] Verify API endpoints
+### 3.1 Functional Testing
+- Test core features
+- Verify edge cases
+- Test error handling
+- Validate authentication flows
 
-3. End-to-End Tests:
-   - [ ] Complete booking process
-   - [ ] Payment processing
-   - [ ] Error scenarios
+### 3.2 Integration Testing
+- Test API integrations
+- Verify database operations
+- Test third-party services
+- Validate scheduled tasks
 
-## 5. Validation Checklist
+### 3.3 Performance Testing
+- Measure response times
+- Monitor resource usage
+- Test system scalability
+- Verify error rates
 
-### 5.1 Backend Verification
-- [x] All API routes respond correctly
-- [x] Payment processing works
-- [x] Booking flow works
-- [x] Error handling is consistent
-- [x] Database connections work
+## Phase 4: Finalization
 
-### 5.2 Frontend Verification
-- [x] All imports are updated
-- [x] API calls work
-- [x] Payment flow works
-- [x] Booking flow works
-- [x] No console errors
+### 4.1 Documentation Updates
+- Update API documentation
+- Update service documentation
+- Update deployment guides
+- Update README files
 
-## 6. Rollback Plan
+### 4.2 Code Review
+- Conduct peer review
+- Verify coding standards
+- Check security practices
+- Validate test coverage
 
-### 6.1 Preparation
-1. Create backup branch of current state
-2. Document all current API endpoints
-3. Keep old files until verification complete
+### 4.3 Deployment
+- Deploy to staging
+- Verify staging environment
+- Schedule production deployment
+- Monitor production system
 
-### 6.2 Rollback Steps
-1. Revert to backup branch
-2. Restore original file structure
-3. Verify original functionality
+## Phase 5: Rollback Plan
 
-## 7. Post-Migration Tasks
+### 5.1 Preparation
+- Document current state
+- Create rollback checklist
+- Prepare rollback scripts
 
-### 7.1 Cleanup
-- [x] Remove old files after successful migration
-- [x] Update documentation
-- [x] Remove unused dependencies
-- [x] Update API documentation
+### 5.2 Execution
+- Revert to migration branch
+- Restore database backup
+- Revert file moves
+- Restore configurations
 
-### 7.2 Monitoring
-- [x] Set up error tracking
-- [x] Monitor API performance
-- [x] Check error logs
-- [x] Verify webhook reliability
+### 5.3 Verification
+- Verify system functionality
+- Check API endpoints
+- Validate frontend features
+- Monitor system stability
 
-## 8. Dependencies and Environment Variables
+## Migration Timeline
 
-### 8.1 Required Dependencies
-```json
-{
-  "@vercel/node": "latest",
-  "stripe": "^2023.10.16",
-  "@supabase/supabase-js": "latest"
-}
-```
-
-### 8.2 Environment Variables
-```env
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-## 9. Timeline
-
-| Phase | Duration | Dependencies |
-|-------|----------|--------------|
-| Payment Services | 1 day | TypeScript config |
-| Booking Services | 1 day | Payment services |
-| Server Configuration | 0.5 day | Payment services |
-| Testing | 1.5 days | All migrations |
-
-Total Estimated Time: 4 days
-
-## 10. Next Steps
-
-1. Create backup branch:
-   ```bash
-   git checkout -b backend-reorganization-$(date +%Y%m%d)
-   ```
-
-2. Update TypeScript configuration
-3. Begin with Payment Services migration
-4. Run tests after each phase
-5. Document any issues or blockers
-
-## 11. Support and Resources
-
-### Documentation
-- Vercel API Routes: https://vercel.com/docs/serverless-functions/introduction
-- Stripe API: https://stripe.com/docs/api
-- Supabase: https://supabase.com/docs
-
-### Testing Resources
-- API Testing: Postman/Thunder Client
-- Frontend Testing: Chrome DevTools
-- Payment Testing: Stripe Test Cards
+| Phase       | Duration | Start Date   | End Date     |
+|-------------|----------|--------------|--------------|
+| Preparation | 1 day    | 2025-01-19   | 2025-01-19   |
+| Execution   | 1.5 days | 2025-01-20   | 2025-01-21   |
+| Validation  | 1 day    | 2025-01-22   | 2025-01-22   |
+| Finalization| 1 day    | 2025-01-23   | 2025-01-23   |
