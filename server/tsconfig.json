@@ -1,0 +1,43 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"outDir": "./dist",
+		"rootDir": "..",
+		"baseUrl": "..",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@server/*": ["./server/*"],
+			"@api/*": ["./api/*"],
+			"@shared/*": ["./shared/*"],
+			"@server/types/*": ["./server/types/*"],
+			"@server/utils/*": ["./server/utils/*"],
+			"@server/config/*": ["./server/config/*"],
+			"@server/services/*": ["./server/services/*"],
+			"@server/repositories/*": ["./server/repositories/*"],
+			"@server/middleware/*": ["./server/middleware/*"]
+		},
+		"types": ["node", "jest", "express"],
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"isolatedModules": true,
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
+	},
+	"include": [
+		"../server/**/*.ts",
+		"../shared/**/*.ts",
+		"../api/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/node_modules/*"
+	]
+}

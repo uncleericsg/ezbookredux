@@ -1,11 +1,11 @@
-import Stripe from 'stripe';
 import { logger } from '@server/utils/logger';
+import Stripe from 'stripe';
 import { ApiError } from '@server/utils/apiErrors';
 import { 
   ReceiptProvider,
   Receipt,
   GenerateReceiptParams 
-} from '../../interfaces/ReceiptProvider';
+} from '@server/services/payments/interfaces/ReceiptProvider';
 
 export class StripeReceiptProvider implements ReceiptProvider {
   private stripe: Stripe;

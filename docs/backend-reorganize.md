@@ -1,5 +1,5 @@
 # Backend Reorganization Progress
-Last Updated: January 17, 2024
+Last Updated: January 18, 2025
 
 ## Overall Progress
 
@@ -26,27 +26,45 @@ Last Updated: January 17, 2024
 ### 1. Service Layer Structure
 ```
 server/services/
-├── payments/
-│   ├── providers/
-│   │   └── stripe/
-│   │       └── StripeCheckoutProvider.ts   # Simplified payment handling
-│   └── PaymentService.ts                   # Payment orchestration
-├── repositories/
-│   └── payments/
-│       ├── interfaces/
-│       │   └── PaymentRepository.ts
-│       └── PaymentSessionRepository.ts
-└── shared/
-    ├── types/
-    └── utils/
+├── auth/
+│   └── AuthService.ts
+├── bookings/
+│   ├── BookingService.ts
+│   └── SupabaseBookingService.ts
+├── profile/
+│   └── ProfileService.ts
+├── reviews/
+│   └── ReviewService.ts
+├── scheduling/
+│   └── TimeSlotService.ts
+├── integrations/
+│   ├── google/
+│   │   ├── GoogleMapsService.ts
+│   │   └── GooglePlacesService.ts
+│   └── repairshopr/
+│       └── RepairShoprService.ts
+├── notifications/
+│   ├── NotificationService.ts
+│   └── FCMService.ts
+└── utils/
+    └── ServiceUtils.ts
 ```
 
 ### 2. API Layer Structure
 ```
 api/
-├── payments/
-│   ├── checkout.ts        # Payment initiation
-│   └── webhook.ts         # Stripe webhook handler
+├── auth/
+│   ├── login.ts
+│   └── register.ts
+├── bookings/
+│   ├── create.ts
+│   └── [id].ts
+├── profile/
+│   ├── [id].ts
+│   └── avatar.ts
+├── reviews/
+│   ├── create.ts
+│   └── [id].ts
 └── shared/
     ├── middleware/
     │   ├── auth.ts
@@ -81,76 +99,19 @@ api/
 
 ## Migration Strategy
 
-### Phase 1: Payment Service (Current Focus)
-
-1. Simplified Payment Flow
-```typescript
-interface PaymentSession {
-  id: string;
-  bookingId: string;
-  userId: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'expired' | 'failed';
-  stripeSessionId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-2. Database Schema
-```sql
-create table payment_sessions (
-  id uuid default uuid_generate_v4() primary key,
-  booking_id uuid references bookings(id),
-  user_id uuid references users(id),
-  amount integer not null,
-  currency text not null,
-  status text not null,
-  stripe_session_id text unique not null,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-```
-
-3. Service Implementation
-```typescript
-class PaymentService {
-  async initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult>;
-  async handleWebhook(payload: string, signature: string): Promise<void>;
-  async getPaymentStatus(sessionId: string): Promise<PaymentSession | null>;
-}
-```
+### Phase 1: Service Layer Consolidation (Current Focus)
+1. Move remaining services to server/services/
+2. Implement repository pattern for all services
+3. Standardize service interfaces
+4. Add proper error handling
+5. Implement service factory patterns
 
 ### Phase 2: API Standardization
-
-1. Response Format
-```typescript
-interface ApiResponse<T> {
-  data?: T;
-  error?: ApiError;
-  meta?: ResponseMetadata;
-}
-```
-
-2. Error Handling
-```typescript
-interface ApiError {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-}
-```
-
-3. Middleware Chain
-```typescript
-const handler = compose([
-  withAuth,
-  withValidation(schema),
-  withRateLimit,
-  withLogging
-]);
-```
+1. Standardize response format
+2. Implement request validation
+3. Add rate limiting
+4. Implement proper error handling
+5. Add API documentation
 
 ## Testing Strategy
 
@@ -175,9 +136,10 @@ const handler = compose([
 ## Next Steps
 
 ### Immediate Actions
-1. Create database migrations
-2. Implement success/cancel pages
-3. Set up testing infrastructure
+1. Complete service layer consolidation
+2. Implement repository pattern
+3. Add proper error handling
+4. Implement service factory patterns
 
 ### Short Term
 1. Standardize API responses
@@ -188,10 +150,3 @@ const handler = compose([
 1. Implement monitoring
 2. Add performance tracking
 3. Complete documentation
-
-## Notes
-- Simplified payment approach chosen for better maintainability
-- Focus on completing payment integration before other features
-- Document all architectural decisions
-- Keep comprehensive test coverage
-- Regular security audits

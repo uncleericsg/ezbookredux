@@ -1,17 +1,7 @@
-import { ApiError } from '@server/utils/apiErrors';
+import { ApiError, ErrorReport, ApiResponse } from '@server/types/error';
 import { errorReportingService } from '@server/utils/errorReporting';
 
-
 import type { Request, Response, NextFunction } from 'express';
-
-
-interface ErrorResponse {
-  status: number;
-  message: string;
-  code?: string;
-  details?: any;
-  timestamp: string;
-}
 
 export const errorHandler = (
   err: Error,
@@ -23,27 +13,30 @@ export const errorHandler = (
   errorReportingService.reportError(err, 'Backend Error Handler', req);
 
   // Handle specific error types
-  let status = 500;
-  let response: ErrorResponse = {
-    status,
-    message: 'Internal Server Error',
-    timestamp: new Date().toISOString(),
-  };
+  let response: ApiResponse<null>;
 
   if (err instanceof ApiError) {
-    status = err.statusCode;
     response = {
-      status,
-      message: err.message,
-      code: err.code,
-      details: err.details,
-      timestamp: new Date().toISOString(),
+      error: {
+        message: err.message,
+        code: err.code,
+        details: err.details,
+        timestamp: new Date().toISOString()
+      }
+    };
+  } else {
+    response = {
+      error: {
+        message: 'Internal Server Error',
+        code: 'INTERNAL_SERVER_ERROR',
+        timestamp: new Date().toISOString()
+      }
     };
   }
 
   // Log error details
   console.error(`[${new Date().toISOString()}] Error:`, {
-    status,
+    status: err instanceof ApiError ? err.getStatusCode() : 500,
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     path: req.path,
@@ -51,7 +44,7 @@ export const errorHandler = (
   });
 
   // Send error response
-  res.status(status).json(response);
+  res.status(err instanceof ApiError ? err.getStatusCode() : 500).json(response);
 };
 
 export const asyncHandler = (fn: Function) => 

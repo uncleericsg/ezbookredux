@@ -1,8 +1,8 @@
-import { supabaseClient } from '@/server/config/supabase/client';
-import { ApiError } from '@/server/utils/apiErrors';
-import { logger } from '@/server/utils/logger';
-import type { Database } from '@/server/config/supabase/types';
-import type { CreateBookingRequest, BookingStatus } from '@/types/bookings';
+import { supabaseClient } from '@server/config/supabase/client';
+import { ApiError } from '@server/types/error';
+import { logger } from '@server/utils/logger';
+import type { Database } from '@server/config/supabase/types';
+import type { CreateBookingRequest, BookingStatus } from '@shared/types/booking';
 
 type Booking = Database['public']['Tables']['bookings']['Row'];
 type Customer = Database['public']['Tables']['customers']['Row'];

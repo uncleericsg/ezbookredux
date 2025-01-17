@@ -188,4 +188,3 @@ interface ApiError {
 
 ### Internal Contacts
 - Technical: dev-team@example.com
-- Billing: billing@example.com 

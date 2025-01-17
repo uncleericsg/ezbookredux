@@ -1,6 +1,6 @@
 import { supabaseClient } from '@server/config/supabase/client';
-import { Address, CreateAddressRequest, UpdateAddressRequest } from '../types/address';
-import { createApiError } from '../utils/apiResponse';
+import { Address, CreateAddressRequest, UpdateAddressRequest } from '@shared/types/address';
+import { createApiError } from '@server/utils/apiResponse';
 
 export class AddressService {
   async listAddresses(userId: string): Promise<Address[]> {

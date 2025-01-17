@@ -1,85 +1,53 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "types": [
-      "@types/google.maps",
-      "node",
-      "jest",
-      "mocha",
-      "stripe"
-    ],
-    /* Bundler mode */
-    "moduleResolution": "bundler",
+    "types": ["@types/google.maps", "node", "jest", "mocha", "stripe"],
+    "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@hooks/*": [
-        "src/hooks/*"
-      ],
-      "@services/*": [
-        "src/services/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@config/*": [
-        "src/config/*"
-      ],
-      "@shared/*": [
-        "src/shared/*"
-      ],
-      "@server/*": [
-        "src/server/*"
-      ],
-      "@shared/types/*": [
-        "src/types/*"
-      ],
-      "@server/types/*": [
-        "src/types/*"
-      ],
-      "@server/utils/*": [
-        "src/utils/*"
-      ],
-      "@server/config/*": [
-        "src/config/*"
-      ],
-      "@admin/*": [
-        "src/components/admin/*"
-      ]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@config/*": ["./src/config/*"],
+      "@shared/*": ["./shared/*"],
+      "@server/*": ["./server/*"],
+      "@api/*": ["./api/*"],
+      "@server/types/*": ["./server/types/*"],
+      "@server/utils/*": ["./server/utils/*"],
+      "@server/config/*": ["./server/config/*"],
+      "@server/services/*": ["./server/services/*"],
+      "@server/repositories/*": ["./server/repositories/*"],
+      "@server/middleware/*": ["./server/middleware/*"],
+      "@admin/*": ["./src/components/admin/*"]
     },
     "allowJs": true,
     "incremental": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "server/**/*.ts",
+    "api/**/*.ts",
+    "shared/**/*.ts",
+    "shared/**/*.tsx"
   ],
   "references": [
     {
@@ -87,6 +55,11 @@
     }
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/node_modules/*"
   ]
 }
+

@@ -1,4 +1,3 @@
-import Stripe from 'stripe';
 import { logger } from '@server/utils/logger';
 import { ApiError } from '@server/utils/apiErrors';
 import { 
@@ -8,7 +7,8 @@ import {
   RefundParams,
   RefundResult,
   WebhookEvent 
-} from '../../interfaces/PaymentProvider';
+} from '@server/services/payments/interfaces/PaymentProvider';
+import Stripe from 'stripe';
 import { PaymentStatus } from '@shared/types/payment';
 
 export class StripePaymentProvider implements PaymentProvider {
