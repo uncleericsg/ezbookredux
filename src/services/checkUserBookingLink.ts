@@ -1,4 +1,4 @@
-import { supabase } from '@services/supabase/client';
+import { supabaseClient } from '@/server/config/supabase/client';
 
 // Load environment variables
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 async function checkUserBookingLink() {
   try {
     // Check users table structure
-    const { data: userColumns, error: userError } = await supabase
+    const { data: userColumns, error: userError } = await supabaseClient
       .from('users')
       .select('*')
       .limit(1);
@@ -19,7 +19,7 @@ async function checkUserBookingLink() {
     console.log('Users table structure:', Object.keys(userColumns?.[0] || {}));
 
     // Check if we need to add user_id to bookings table
-    const { error: alterError } = await supabase.rpc('alter_bookings_table', {
+    const { error: alterError } = await supabaseClient.rpc('alter_bookings_table', {
       sql_command: `
         -- Add user_id to bookings if it doesn't exist
         ALTER TABLE bookings 

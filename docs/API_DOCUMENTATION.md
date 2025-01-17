@@ -1,304 +1,293 @@
 # API Documentation
-Version: 1.0.1
-Last Updated: 2025-01-17
-
-## Table of Contents
-1. [Overview](#overview)
-2. [Authentication](#authentication)
-3. [Error Handling](#error-handling)
-4. [Rate Limiting](#rate-limiting)
-5. [API Endpoints](#api-endpoints)
-6. [Data Models](#data-models)
-7. [Middleware](#middleware)
-8. [Testing](#testing)
 
 ## Overview
 
-### Base URL
-```
-Development: http://localhost:3000/api
-Production: https://your-domain.com/api
-```
-
-### Response Format
-All responses follow this structure:
-```typescript
-interface ApiResponse<T> {
-  data?: T;
-  error?: {
-    message: string;
-    code: string;
-    details?: any;
-  };
-  meta?: {
-    page?: number;
-    limit?: number;
-    total?: number;
-  };
-}
-```
+This document outlines the API endpoints available in the application. All endpoints follow a standardized response format and error handling.
 
 ## Authentication
 
-### Bearer Token
-```http
+Most endpoints require authentication using a Bearer token. Include the token in the Authorization header:
+
+```
 Authorization: Bearer <token>
 ```
 
-Example:
-```javascript
-fetch('/api/bookings', {
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+## Response Format
+
+All API responses follow this standard format:
+
+### Success Response
+```json
+{
+  "data": <response_data>,
+  "meta": {
+    "total": <total_count>  // Optional, included in list responses
   }
-});
+}
 ```
 
-## Error Handling
-
-### Error Codes
-| Code | Description |
-|------|-------------|
-| AUTH_REQUIRED | Authentication is required |
-| AUTH_INVALID | Invalid authentication token |
-| VALIDATION_ERROR | Invalid request data |
-| RATE_LIMIT_EXCEEDED | Too many requests |
-| NOT_FOUND | Resource not found |
-| SERVER_ERROR | Internal server error |
-
-### Error Response Example
+### Error Response
 ```json
 {
   "error": {
-    "message": "Invalid request data",
-    "code": "VALIDATION_ERROR",
-    "details": {
-      "field": ["validation error message"]
-    }
+    "message": "Error description",
+    "code": "ERROR_CODE",
+    "details": {}  // Optional additional error details
   }
 }
 ```
 
-## Rate Limiting
+## Error Codes
 
-- Window: 15 minutes
-- Max Requests: 100 per IP
-- Headers:
-  - `X-RateLimit-Limit`
-  - `X-RateLimit-Remaining`
-  - `X-RateLimit-Reset`
+- `VALIDATION_ERROR` - Invalid input data
+- `NOT_FOUND` - Requested resource not found
+- `UNAUTHORIZED` - Authentication required or failed
+- `METHOD_NOT_ALLOWED` - HTTP method not supported
+- `SERVICE_ERROR` - External service error
+- `SERVER_ERROR` - Internal server error
 
-## API Endpoints
-
-### Implementation Status
-
-| Endpoint | Status | Priority |
-|----------|---------|-----------|
-| POST /api/bookings/create | ✅ Completed | High |
-| GET /api/bookings/{id} | ✅ Completed | High |
-| POST /api/payments/create-payment-intent | ✅ Completed | Medium |
-| POST /api/payments/webhook | ✅ Completed | Medium |
-| POST /api/reviews/create | ✅ Completed | Medium |
-| GET /api/reviews/{id} | ✅ Completed | Medium |
-| GET /api/profile | ✅ Completed | High |
-| PUT /api/profile | ✅ Completed | High |
-| PUT /api/profile/avatar | ✅ Completed | Medium |
-| GET /api/bookings/available-slots | ✅ Completed | High |
-| GET /api/bookings | ✅ Completed | High |
-| POST /api/bookings/{id}/cancel | ✅ Completed | High |
-| GET /api/payments/{id} | ✅ Completed | Medium |
-| POST /api/payments/{id}/refund | ✅ Completed | Medium |
-| GET /api/payments | ✅ Completed | Medium |
-| PUT /api/bookings/{id} | ✅ Completed | High |
-
-### Still To Be Implemented:
-
-1. Authentication & Authorization
-   - Middleware for protecting routes
-   - User session management
-   - Role-based access control
-
-2. Address Management
-   - GET /api/addresses - List user addresses
-   - POST /api/addresses - Create address
-   - PUT /api/addresses/{id} - Update address
-   - DELETE /api/addresses/{id} - Delete address
-
-3. Service Management
-   - GET /api/services - List available services
-   - GET /api/services/{id} - Get service details
-   - POST /api/services (admin) - Create service
-   - PUT /api/services/{id} (admin) - Update service
-
-4. User Profile
-   - GET /api/profile - Get user profile
-   - PUT /api/profile - Update user profile
-   - PUT /api/profile/avatar - Update profile picture
-
-5. Booking Management Extensions
-   - GET /api/bookings/available-slots - Get available time slots
-
-6. Additional Payment Features
-   - GET /api/payments/{id} - Get payment details
-   - POST /api/payments/{id}/refund - Process refund
-   - GET /api/payments - List payment history
-
-7. Review Management Extensions
-   - GET /api/reviews - List reviews
-   - PUT /api/reviews/{id} - Update review
-   - DELETE /api/reviews/{id} - Delete review
-
-8. Admin Features
-   - Dashboard statistics
-   - User management
-   - Service management
-   - Booking management
-
-9. Integration Features
-   - Email notifications
-   - SMS notifications
-   - Calendar integration
-   - Payment gateway webhooks
-
-10. Additional Features
-    - Rate limiting implementation
-    - Caching strategy
-    - Error logging
-    - Analytics tracking
+## Endpoints
 
 ### Bookings
 
-#### Create Booking
-```http
-POST /api/bookings/create
-```
+#### GET /api/bookings/[id]
+Get booking details by ID.
 
-Request Body:
-```typescript
-interface CreateBookingRequest {
-  serviceId: string;
-  date: string;  // ISO 8601
-  customerId: string;
-  notes?: string;
+**Authentication Required**: Yes
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "string",
+    "customer": {
+      "id": "string",
+      "email": "string",
+      "firstName": "string",
+      "lastName": "string"
+    },
+    "service": {
+      "id": "string",
+      "title": "string",
+      "price": "number"
+    },
+    "status": "string",
+    "date": "string",
+    "notes": "string",
+    "totalAmount": "number"
+  }
 }
 ```
 
-Response:
-```typescript
-interface CreateBookingResponse {
-  data: {
-    id: string;
-    status: 'pending' | 'confirmed';
-    bookingReference: string;
-    // ... other booking details
-  };
+#### POST /api/bookings/[id]
+Cancel a booking.
+
+**Authentication Required**: Yes
+
+**Request Body**:
+```json
+{
+  "action": "cancel"
 }
 ```
 
-#### Get Booking
-```http
-GET /api/bookings/{id}
+**Response**:
+```json
+{
+  "data": {
+    "success": true
+  }
+}
 ```
 
-Response:
-```typescript
-interface GetBookingResponse {
-  data: {
-    id: string;
-    customer: {
-      id: string;
-      name: string;
-      email: string;
-    };
-    service: {
-      id: string;
-      name: string;
-      price: number;
-    };
-    status: BookingStatus;
-    date: string;
-    // ... other fields
-  };
+#### POST /api/bookings/create
+Create a new booking.
+
+**Authentication Required**: Yes
+
+**Request Body**:
+```json
+{
+  "serviceId": "string",
+  "date": "string",
+  "notes": "string"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "string",
+    "status": "pending",
+    "totalAmount": "number"
+  }
+}
+```
+
+#### GET /api/bookings/email/[email]
+Get bookings by customer email.
+
+**Authentication Required**: Yes
+
+**Query Parameters**:
+- `status` (optional) - Filter by booking status
+- `startDate` (optional) - Filter by start date
+- `endDate` (optional) - Filter by end date
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "service": {
+        "id": "string",
+        "title": "string"
+      },
+      "status": "string",
+      "date": "string",
+      "totalAmount": "number"
+    }
+  ],
+  "meta": {
+    "total": "number"
+  }
+}
+```
+
+#### GET /api/bookings/customer/[customerId]
+Get bookings by customer ID.
+
+**Authentication Required**: Yes
+**Authorization**: Customer can only view their own bookings
+
+**Query Parameters**:
+- `status` (optional) - Filter by booking status
+- `startDate` (optional) - Filter by start date
+- `endDate` (optional) - Filter by end date
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "service": {
+        "id": "string",
+        "title": "string"
+      },
+      "status": "string",
+      "date": "string",
+      "totalAmount": "number"
+    }
+  ],
+  "meta": {
+    "total": "number"
+  }
 }
 ```
 
 ### Payments
 
-#### Create Payment Intent
-```http
-POST /api/payments/create-payment-intent
-```
+#### POST /api/payments/webhook
+Handle Stripe webhook events.
 
-Request Body:
-```typescript
-interface CreatePaymentIntentRequest {
-  amount: number;
-  currency?: string;  // default: 'sgd'
-  bookingId: string;
-  metadata?: Record<string, string>;
+**Authentication Required**: No (Uses Stripe signature verification)
+
+**Request Body**: Stripe event object
+
+**Response**:
+```json
+{
+  "received": true
 }
 ```
 
-Response:
-```typescript
-interface CreatePaymentIntentResponse {
-  data: {
-    clientSecret: string;
-    intentId: string;
-  };
+### Geocoding
+
+#### GET /api/geocode
+Geocode a postal code to address details.
+
+**Authentication Required**: Yes
+
+**Query Parameters**:
+- `postalCode` - Singapore postal code
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "formatted_address": "string",
+      "geometry": {
+        "location": {
+          "lat": "number",
+          "lng": "number"
+        }
+      },
+      "place_id": "string"
+    }
+  ],
+  "meta": {
+    "total": "number"
+  }
 }
 ```
 
-#### Webhook Handler
-```http
-POST /api/payments/webhook
-```
+### Health Check
 
-Supported Events:
-- `payment_intent.succeeded`
-- `payment_intent.failed`
-- `payment_intent.canceled`
-```
+#### GET /api/health
+Check API health status.
 
-## Data Models
+**Authentication Required**: No
 
-### Booking
-```typescript
-interface Booking {
-  id: string;
-  customerId: string;
-  serviceId: string;
-  status: BookingStatus;
-  date: string;
-  createdAt: string;
-  updatedAt: string;
-  metadata?: Record<string, any>;
+**Response**:
+```json
+{
+  "data": {
+    "status": "healthy",
+    "timestamp": "string",
+    "uptime": "number",
+    "environment": "string"
+  }
 }
-
-type BookingStatus = 
-  | 'pending'
-  | 'confirmed'
-  | 'completed'
-  | 'cancelled';
 ```
 
-### Payment
-```typescript
-interface Payment {
-  id: string;
-  bookingId: string;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  paymentIntentId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+## Error Handling
 
-type PaymentStatus = 
-  | 'pending'
-  | 'processing'
-  | 'succeeded'
-  | 'failed'
-  | 'refunded';
+All endpoints use standardized error handling:
+
+1. Validation errors return 400 status code
+2. Authentication errors return 401 status code
+3. Authorization errors return 403 status code
+4. Not found errors return 404 status code
+5. Method not allowed errors return 405 status code
+6. Server errors return 500 status code
+
+## Logging
+
+All API endpoints include logging:
+
+1. Request information (method, path, query parameters)
+2. Authentication status
+3. Error details (when applicable)
+4. Response timing
+5. User ID (when authenticated)
+
+## Rate Limiting
+
+API endpoints are rate-limited based on:
+
+1. IP address
+2. User ID (when authenticated)
+3. Endpoint specific limits
+
+## Environment Variables
+
+Required environment variables:
+
+```env
+GOOGLE_MAPS_API_KEY=<key>  # Required for geocoding
+STRIPE_SECRET_KEY=<key>    # Required for payments
+STRIPE_WEBHOOK_SECRET=<key> # Required for webhook verification

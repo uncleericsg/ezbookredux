@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { monitor, inspectCache } from '../../utils/cacheUtils';
 import { DEV_TOOLS, PERFORMANCE_THRESHOLDS } from '../../config/cacheConfig';
 import { AlertTriangle, CheckCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CacheEntry } from '@/utils/cache';
+
+interface CacheData {
+  key: string;
+  value: unknown;
+  timestamp: number;
+  ttl: number;
+}
 
 interface CacheInspectorProps {
   cache: Map<string, any>;
@@ -12,6 +21,8 @@ const CacheInspector: React.FC<CacheInspectorProps> = ({ cache, onClearCache }) 
   const [metrics, setMetrics] = useState(monitor.getMetrics());
   const [inspection, setInspection] = useState(inspectCache(cache));
   const [expanded, setExpanded] = useState(false);
+  const [cacheData, setCacheData] = useState<CacheData[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<CacheData | null>(null);
 
   useEffect(() => {
     if (!DEV_TOOLS.enabled) return;
@@ -23,6 +34,19 @@ const CacheInspector: React.FC<CacheInspectorProps> = ({ cache, onClearCache }) 
 
     return () => clearInterval(interval);
   }, [cache]);
+
+  useEffect(() => {
+    const updateCacheData = () => {
+      const entries: CacheData[] = [];
+      // Implementation of cache data collection
+      setCacheData(entries);
+    };
+
+    updateCacheData();
+    const interval = setInterval(updateCacheData, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!DEV_TOOLS.enabled) return null;
 

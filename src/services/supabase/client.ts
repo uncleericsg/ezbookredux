@@ -1,21 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
-// Client-side only
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Client-side environment variables missing:', {
-    VITE_SUPABASE_URL: supabaseUrl ? 'defined' : 'undefined',
-    VITE_SUPABASE_ANON_KEY: supabaseKey ? 'present' : 'missing'
-  });
-  throw new Error('Missing Supabase environment variables in browser');
+  throw new Error('Missing Supabase environment variables');
 }
 
-// Initialize client-side Supabase client
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true
-  }
-});
+// Create the main client
+export const supabaseClient = createClient<Database>(supabaseUrl, supabaseKey);
+
+// Create admin client with service role if available
+export const supabaseAdmin = supabaseServiceKey 
+  ? createClient<Database>(supabaseUrl, supabaseServiceKey)
+  : supabaseClient;

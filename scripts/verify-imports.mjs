@@ -27,10 +27,24 @@ const validImportPatterns = [
   /^@\/server\/middleware\//,
   /^@\/server\/types\//,
   /^@\/server\/utils\//,
+  /^@\/server\/config\//,
+  /^@\/server\/migrations\//,
   /^@\/api\//,
+  /^@\/lib\//,
+  /^@\/hooks\//,
+  /^@\/components\//,
+  /^@\/services\//,
   /^\.{1,2}\//, // Relative imports
   ...Object.keys(pathAliases).map(alias => new RegExp(`^${alias}`))
 ];
+
+// Directories to exclude
+const excludeDirs = ['node_modules', '.git', '.next', 'dist', 'build'];
+
+// Function to check if path should be excluded
+function shouldExcludePath(path) {
+  return excludeDirs.some(dir => path.includes(`/${dir}/`) || path.includes(`\\${dir}\\`));
+}
 
 // Cache for resolved paths
 const resolvedPaths = new Map();
@@ -127,6 +141,8 @@ function verifyImports(directory) {
   
   for (const file of files) {
     const fullPath = join(directory, file);
+    if (shouldExcludePath(fullPath)) continue;
+    
     const stat = statSync(fullPath);
     
     if (stat.isDirectory()) {
@@ -143,16 +159,30 @@ function verifyImports(directory) {
   return { errors: allErrors, warnings: allWarnings };
 }
 
-// Run verification
-const { errors, warnings } = verifyImports(join(projectRoot, 'src'));
+// Run verification for all relevant directories
+const dirsToScan = ['src', 'api', 'server'].map(dir => join(projectRoot, dir));
+let allErrors = [];
+let allWarnings = [];
+
+for (const directory of dirsToScan) {
+  try {
+    const { errors, warnings } = verifyImports(directory);
+    allErrors = allErrors.concat(errors);
+    allWarnings = allWarnings.concat(warnings);
+  } catch (error) {
+    if (error.code !== 'ENOENT') { // Ignore if directory doesn't exist yet
+      throw error;
+    }
+  }
+}
 
 // Generate report
-if (errors.length > 0 || warnings.length > 0) {
+if (allErrors.length > 0 || allWarnings.length > 0) {
   console.log('\nImport Verification Report:\n');
   
-  if (errors.length > 0) {
+  if (allErrors.length > 0) {
     console.log('Errors:');
-    errors.forEach((error, index) => {
+    allErrors.forEach((error, index) => {
       console.log(`\n${index + 1}. ${error.type}`);
       console.log(`   File: ${error.file}`);
       console.log(`   Import: ${error.import}`);
@@ -162,9 +192,9 @@ if (errors.length > 0 || warnings.length > 0) {
     });
   }
 
-  if (warnings.length > 0) {
+  if (allWarnings.length > 0) {
     console.log('\nWarnings:');
-    warnings.forEach((warning, index) => {
+    allWarnings.forEach((warning, index) => {
       console.log(`\n${index + 1}. ${warning.type}`);
       console.log(`   File: ${warning.file}`);
       console.log(`   Import: ${warning.import}`);

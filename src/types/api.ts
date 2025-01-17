@@ -4,7 +4,11 @@ export type ApiErrorCode =
   | 'VALIDATION_ERROR'
   | 'RATE_LIMIT_EXCEEDED'
   | 'NOT_FOUND'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  | 'BAD_REQUEST'
+  | 'STRIPE_WEBHOOK_ERROR'
+  | 'STRIPE_PAYMENT_INTENT_ERROR'
+  | 'STRIPE_STATUS_UPDATE_ERROR';
 
 export interface ApiError {
   code: ApiErrorCode;
@@ -59,5 +63,14 @@ export interface ErrorReport {
   user?: {
     id: string;
     email: string;
+  };
+}
+
+export interface WebhookResponse {
+  received?: boolean;
+  error?: {
+    message: string;
+    code: ApiErrorCode;
+    details?: Record<string, unknown>;
   };
 } 

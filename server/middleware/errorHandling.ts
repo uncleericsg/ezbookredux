@@ -1,114 +1,140 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { ApiError, isApiError } from '@server/utils/apiErrors';
 import { logger } from '@server/utils/logger';
 
-// Custom error class for API errors
-export class APIError extends Error {
-  constructor(
-    public message: string,
-    public code: string,
-    public status: number = 400,
-    public details?: any
+export interface ErrorHandlerConfig {
+  logErrors?: boolean;
+  includeErrorDetails?: boolean;
+}
+
+const defaultConfig: ErrorHandlerConfig = {
+  logErrors: true,
+  includeErrorDetails: process.env.NODE_ENV !== 'production'
+};
+
+export function errorHandler(config: ErrorHandlerConfig = defaultConfig) {
+  return async function handleError(
+    error: unknown,
+    req: NextApiRequest,
+    res: NextApiResponse
   ) {
-    super(message);
-    this.name = 'APIError';
-  }
+    const apiError = isApiError(error) ? error : ApiError.fromError(error);
+    const { statusCode, code, message, details } = apiError;
+
+    // Log the error if configured to do so
+    if (config.logErrors) {
+      const logMetadata = {
+        error,
+        errorDetails: details,
+        requestInfo: {
+          method: req.method,
+          url: req.url,
+          query: req.query,
+          headers: req.headers,
+          body: req.body
+        }
+      };
+
+      if (statusCode >= 500) {
+        logger.error('Server error occurred', logMetadata);
+      } else {
+        logger.warn('Client error occurred', logMetadata);
+      }
+    }
+
+    // Prepare the error response
+    const errorResponse = {
+      error: {
+        code,
+        message,
+        ...(config.includeErrorDetails && details && { details })
+      }
+    };
+
+    // Send the error response
+    res.status(statusCode).json(errorResponse);
+  };
 }
 
-// Error response interface
-interface ErrorResponse {
-  error: {
-    message: string;
-    code: string;
-    details?: any;
+export function withErrorHandling(handler: Function, config?: ErrorHandlerConfig) {
+  return async function wrappedHandler(req: NextApiRequest, res: NextApiResponse) {
+    try {
+      await handler(req, res);
+    } catch (error) {
+      await errorHandler(config)(error, req, res);
+    }
   };
 }
 
-// Not found error handler
-export const notFoundHandler = (req: Request, res: Response) => {
-  const response: ErrorResponse = {
-    error: {
-      message: `Cannot ${req.method} ${req.path}`,
-      code: 'ROUTE_NOT_FOUND'
+export function handleApiErrors(handler: Function) {
+  return async function wrappedHandler(req: NextApiRequest, res: NextApiResponse) {
+    try {
+      // Check if response has already been sent
+      if (res.writableEnded) {
+        return;
+      }
+
+      await handler(req, res);
+
+      // Check if handler didn't send a response
+      if (!res.writableEnded) {
+        throw new ApiError('No response sent from handler', 'INTERNAL_SERVER_ERROR');
+      }
+    } catch (error) {
+      // Check if response has already been sent
+      if (res.writableEnded) {
+        logger.error('Error occurred after response was sent', { error });
+        return;
+      }
+
+      await errorHandler()(error, req, res);
     }
   };
-  res.status(404).json(response);
-};
+}
 
-// Global error handler
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  logger.error('Error caught in global error handler', {
-    error: err,
-    path: req.path,
-    method: req.method
-  });
-
-  // Handle Zod validation errors
-  if (err instanceof ZodError) {
-    const response: ErrorResponse = {
-      error: {
-        message: 'Validation error',
-        code: 'VALIDATION_ERROR',
-        details: err.errors
+export function validateRequest(schema: any) {
+  return async function validate(req: NextApiRequest, res: NextApiResponse, next: Function) {
+    try {
+      const { body, query, params } = req;
+      
+      if (schema.body) {
+        await schema.body.validateAsync(body, { abortEarly: false });
       }
-    };
-    return res.status(400).json(response);
-  }
-
-  // Handle custom API errors
-  if (err instanceof APIError) {
-    const response: ErrorResponse = {
-      error: {
-        message: err.message,
-        code: err.code,
-        details: err.details
+      
+      if (schema.query) {
+        await schema.query.validateAsync(query, { abortEarly: false });
       }
-    };
-    return res.status(err.status).json(response);
-  }
-
-  // Handle database connection errors
-  if (err.message?.includes('database') || err.message?.includes('connection')) {
-    const response: ErrorResponse = {
-      error: {
-        message: 'Database error occurred',
-        code: 'DATABASE_ERROR'
+      
+      if (schema.params) {
+        await schema.params.validateAsync(params, { abortEarly: false });
       }
-    };
-    return res.status(503).json(response);
-  }
 
-  // Handle rate limit errors
-  if (err.message?.includes('rate limit')) {
-    const response: ErrorResponse = {
-      error: {
-        message: 'Too many requests',
-        code: 'RATE_LIMIT_EXCEEDED'
-      }
-    };
-    return res.status(429).json(response);
-  }
-
-  // Default error response
-  const response: ErrorResponse = {
-    error: {
-      message: process.env.NODE_ENV === 'production' 
-        ? 'Internal server error' 
-        : err.message,
-      code: 'INTERNAL_SERVER_ERROR'
+      return next();
+    } catch (error) {
+      throw new ApiError(
+        'Request validation failed',
+        'VALIDATION_ERROR',
+        { originalError: error }
+      );
     }
   };
-  res.status(500).json(response);
-};
+}
 
-// Async route handler wrapper
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+export function notFoundHandler() {
+  return function handle404(req: NextApiRequest, res: NextApiResponse) {
+    throw new ApiError(
+      `Cannot ${req.method} ${req.url}`,
+      'NOT_FOUND'
+    );
   };
-}; 
+}
+
+export function methodNotAllowedHandler(allowedMethods: string[]) {
+  return function handle405(req: NextApiRequest, res: NextApiResponse) {
+    res.setHeader('Allow', allowedMethods);
+    throw new ApiError(
+      `Method ${req.method} not allowed`,
+      'BAD_REQUEST'
+    );
+  };
+} 

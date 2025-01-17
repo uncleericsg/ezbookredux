@@ -1,29 +1,15 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-interface AdminData {
-  totalUsers?: number;
-  activeBookings?: number;
-  pendingBookings?: number;
-  completedBookings?: number;
-  recentActivities?: Array<{
-    id: string;
-    type: string;
-    userId: string;
-    timestamp: string;
-  }>;
-}
-
-interface AdminState {
-  isAdmin: boolean;
-  adminData: AdminData | null;
-  loading: boolean;
-  error: string | null;
-}
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { User } from '@shared/types/user';
+import type { AdminState } from '../types/state.types';
 
 const initialState: AdminState = {
+  adminData: {
+    settings: {},
+    stats: {},
+  },
+  currentUser: null,
   isAdmin: false,
-  adminData: null,
-  loading: false,
+  isLoading: false,
   error: null,
 };
 
@@ -31,36 +17,34 @@ const adminSlice = createSlice({
   name: 'admin',
   initialState,
   reducers: {
-    setIsAdmin: (state, action: PayloadAction<boolean>) => {
-      state.isAdmin = action.payload;
-      if (!action.payload) {
-        state.adminData = null;
-      }
-    },
-    setAdminData: (state, action: PayloadAction<AdminData | null>) => {
+    setAdminData: (state, action: PayloadAction<AdminState['adminData']>) => {
       state.adminData = action.payload;
     },
+    setCurrentUser: (state, action: PayloadAction<User | null>) => {
+      state.currentUser = action.payload;
+    },
+    setIsAdmin: (state, action: PayloadAction<boolean>) => {
+      state.isAdmin = action.payload;
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+      state.isLoading = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    resetAdmin: (state) => {
-      state.isAdmin = false;
-      state.adminData = null;
-      state.loading = false;
-      state.error = null;
+    clearAdminState: (state) => {
+      Object.assign(state, initialState);
     },
   },
 });
 
-export const { 
-  setIsAdmin, 
+export const {
   setAdminData,
+  setCurrentUser,
+  setIsAdmin,
   setLoading,
   setError,
-  resetAdmin
+  clearAdminState,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

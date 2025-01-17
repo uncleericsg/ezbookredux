@@ -1,32 +1,39 @@
+/// <reference types="@types/google.maps" />
+
 import { Loader } from '@googlemaps/js-api-loader';
+import { logger } from '@/lib/logger';
+import type { ErrorMetadata } from '@/types/error';
 
-let mapsLoader: Loader | null = null;
-let loadingPromise: Promise<void> | null = null;
+let loadingPromise: Promise<typeof google> | null = null;
 
-export const initializeGoogleMaps = async (): Promise<void> => {
+export async function initGoogleMaps(apiKey: string): Promise<typeof google> {
   if (loadingPromise) {
     return loadingPromise;
   }
 
-  if (!mapsLoader) {
-    mapsLoader = new Loader({
-      apiKey: import.meta.env.VITE_GOOGLE_PLACES_API_KEY,
-      version: 'weekly',
-      libraries: ['places'],
-      region: 'SG',
-      language: 'en',
-    });
-  }
+  const loader = new Loader({
+    apiKey,
+    version: 'weekly',
+    libraries: ['places', 'geometry']
+  });
 
-  loadingPromise = mapsLoader.load()
+  loadingPromise = loader.load()
     .then(() => {
-      window.googleMapsLoaded = true;
+      logger.info('Google Maps API loaded successfully');
+      return google;
     })
-    .catch((error) => {
-      console.error('Error loading Google Maps:', error);
-      loadingPromise = null; // Reset for retry
+    .catch((error: Error) => {
+      logger.error('Failed to load Google Maps API', {
+        message: error.message,
+        details: error.stack
+      } as ErrorMetadata);
+      loadingPromise = null;
       throw error;
     });
 
   return loadingPromise;
-};
+}
+
+export function getGoogleMaps(): typeof google | null {
+  return window.google || null;
+}

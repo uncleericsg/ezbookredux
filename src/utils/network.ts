@@ -20,12 +20,12 @@ export class NetworkUtils {
       
       const response = await fetch(url, {
         method: 'HEAD',
-        mode: 'no-cors',
+        cache: 'no-cache',
         signal: controller.signal
       });
       
       clearTimeout(timeout);
-      return true;
+      return response.ok;
     } catch {
       return false;
     }

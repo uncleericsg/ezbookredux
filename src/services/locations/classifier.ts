@@ -1,155 +1,114 @@
-import { REGION_CENTERS, type Region } from './regions';
-import { z } from 'zod';
-import { LRUCache } from 'lru-cache';
-import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+import type { ErrorMetadata } from '@/types/error';
 
-// Validation schemas
-const addressSchema = z.object({
-  street: z.string().min(1, 'Street address is required'),
-  postalCode: z.string().regex(/^[0-9]{6}$/, 'Invalid postal code format'),
-  unit: z.string().optional(),
-  building: z.string().optional()
-});
+export interface Region {
+  name: string;
+  postalCodes: string[];
+  boundaries: {
+    center: {
+      lat: number;
+      lng: number;
+    };
+    radius: number;
+  };
+}
 
-type Address = z.infer<typeof addressSchema>;
+export type RegionKey = 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' | 'CENTRAL';
 
-// LRU Cache configuration
-const cache = new LRUCache<string, Region>({
-  max: 500, // Store up to 500 entries
-  ttl: 1000 * 60 * 60, // 1 hour TTL
-  updateAgeOnGet: true,
-  allowStale: true
-});
-
-const REGION_KEYWORDS = {
-  west: ['jurong', 'clementi', 'bukit batok', 'choa chu kang', 'boon lay'],
-  north: ['yishun', 'woodlands', 'sembawang', 'admiralty', 'marsiling'],
-  central: ['novena', 'toa payoh', 'bishan', 'ang mo kio', 'thomson'],
-  northeast: ['hougang', 'sengkang', 'punggol', 'serangoon', 'kovan'],
-  east: ['tampines', 'pasir ris', 'bedok', 'changi', 'simei']
-} as const;
-
-// Extended postal code ranges
-const POSTAL_RANGES: Record<Region, Array<[number, number]>> = {
-  west: [[60, 64], [65, 68]],
-  north: [[72, 73], [75, 76], [77, 78]],
-  central: [[20, 23], [24, 27], [28, 30]],
-  northeast: [[53, 55], [56, 57], [82, 83]],
-  east: [[46, 52], [81, 81], [48, 51]]
+const REGIONS: Record<RegionKey, Region> = {
+  NORTH: {
+    name: 'North',
+    postalCodes: ['65', '66', '67', '68', '69', '70', '71', '72', '73', '75', '76', '77', '78', '79', '80'],
+    boundaries: {
+      center: { lat: 1.429, lng: 103.836 },
+      radius: 5
+    }
+  },
+  SOUTH: {
+    name: 'South',
+    postalCodes: ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'],
+    boundaries: {
+      center: { lat: 1.270, lng: 103.819 },
+      radius: 3
+    }
+  },
+  EAST: {
+    name: 'East',
+    postalCodes: ['42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52'],
+    boundaries: {
+      center: { lat: 1.352, lng: 103.940 },
+      radius: 4
+    }
+  },
+  WEST: {
+    name: 'West',
+    postalCodes: ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+    boundaries: {
+      center: { lat: 1.333, lng: 103.743 },
+      radius: 6
+    }
+  },
+  CENTRAL: {
+    name: 'Central',
+    postalCodes: ['31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41'],
+    boundaries: {
+      center: { lat: 1.364, lng: 103.833 },
+      radius: 3
+    }
+  }
 };
 
-class RegionClassificationError extends Error {
-  constructor(
-    message: string,
-    public readonly code: 'INVALID_ADDRESS' | 'INVALID_POSTAL' | 'REGION_NOT_FOUND'
-  ) {
-    super(message);
-    this.name = 'RegionClassificationError';
+export function getRegionFromPostalCode(postalCode: string): RegionKey | null {
+  try {
+    if (!postalCode || postalCode.length < 2) {
+      return null;
+    }
+
+    const prefix = postalCode.substring(0, 2);
+    const region = Object.entries(REGIONS).find(([_, details]) => 
+      details.postalCodes.includes(prefix)
+    );
+
+    return region ? (region[0] as RegionKey) : null;
+  } catch (error) {
+    logger.error('Failed to get region from postal code', {
+      message: error instanceof Error ? error.message : String(error),
+      details: error instanceof Error ? error.stack : undefined
+    } as ErrorMetadata);
+    return null;
   }
 }
 
-const validateAddress = (address: string): Address => {
-  try {
-    // Extract postal code
-    const postalCode = extractPostalCode(address);
-    if (!postalCode) {
-      throw new RegionClassificationError(
-        'No valid postal code found in address',
-        'INVALID_POSTAL'
-      );
-    }
+export function getRegionBoundaries(region: RegionKey): Region['boundaries'] | null {
+  return REGIONS[region]?.boundaries || null;
+}
 
-    // Basic address parsing
-    const street = address.replace(/singapore\s*\d{6}/i, '').trim();
-    
-    return addressSchema.parse({
-      street,
-      postalCode,
-      unit: extractUnit(address),
-      building: extractBuilding(address)
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new RegionClassificationError(
-        'Invalid address format',
-        'INVALID_ADDRESS'
-      );
-    }
-    throw error;
-  }
-};
+export function isLocationInRegion(lat: number, lng: number, region: RegionKey): boolean {
+  const boundaries = getRegionBoundaries(region);
+  if (!boundaries) return false;
 
-export const determineRegion = (address: string): Region => {
-  try {
-    // Check cache first
-    const cacheKey = address.toLowerCase().trim();
-    const cachedRegion = cache.get(cacheKey);
-    if (cachedRegion) {
-      return cachedRegion;
-    }
+  const distance = getDistanceFromLatLonInKm(
+    lat,
+    lng,
+    boundaries.center.lat,
+    boundaries.center.lng
+  );
 
-    // Validate address
-    const validatedAddress = validateAddress(address);
-    const addressLower = address.toLowerCase();
-    
-    // Check for exact keyword matches first
-    for (const [region, keywords] of Object.entries(REGION_KEYWORDS)) {
-      if (keywords.some(keyword => addressLower.includes(keyword))) {
-        cache.set(cacheKey, region as Region);
-        return region as Region;
-      }
-    }
-    
-    // Use postal code for region determination
-    const region = getRegionFromPostalCode(validatedAddress.postalCode);
-    if (region) {
-      cache.set(cacheKey, region);
-      return region;
-    }
-    
-    throw new RegionClassificationError(
-      'Could not determine region',
-      'REGION_NOT_FOUND'
-    );
-  } catch (error) {
-    console.error('Region determination failed:', error);
-    if (error instanceof RegionClassificationError) {
-      toast.error(error.message);
-    }
-    return 'northeast'; // Fallback to northeast
-  }
-};
+  return distance <= boundaries.radius;
+}
 
-const extractPostalCode = (address: string): string => {
-  const match = address.match(/\b\d{6}\b/);
-  if (!match) {
-    throw new RegionClassificationError(
-      'No valid postal code found',
-      'INVALID_POSTAL'
-    );
-  }
-  return match[0];
-};
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
-const extractUnit = (address: string): string | undefined => {
-  const match = address.match(/#\d+-\d+|#\d+/);
-  return match?.[0];
-};
-
-const extractBuilding = (address: string): string | undefined => {
-  // Extract text before unit number or postal code
-  const match = address.match(/([^#\d]+)(?:#|$|\d{6})/);
-  return match?.[1]?.trim();
-};
-
-const getRegionFromPostalCode = (postalCode: string): Region | null => {
-  const prefix = parseInt(postalCode.slice(0, 2));
-  
-  for (const [region, ranges] of Object.entries(POSTAL_RANGES)) {
-    if (ranges.some(([start, end]) => prefix >= start && prefix <= end)) {
-      return region as Region;
-    }
-  }
-  
-  return null;
-};
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}

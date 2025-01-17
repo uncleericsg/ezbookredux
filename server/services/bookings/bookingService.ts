@@ -1,183 +1,160 @@
-import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
-import type { Database } from '@server/types/database';
-import type {
-  BookingDetails,
-  CreateBookingParams,
-  UpdateBookingParams,
-  BookingResponse,
-  BookingsListResponse
-} from '@shared/types/booking';
-import { logger } from '@server/utils/logger';
+import { supabaseClient } from '@/server/config/supabase/client';
+import { ApiError } from '@/server/utils/apiErrors';
+import { logger } from '@/server/utils/logger';
+import type { Database } from '@/server/config/supabase/types';
+import type { CreateBookingRequest, BookingStatus } from '@/types/bookings';
 
-const supabase = createClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+type Booking = Database['public']['Tables']['bookings']['Row'];
+type Customer = Database['public']['Tables']['customers']['Row'];
+type Service = Database['public']['Tables']['services']['Row'];
 
-export async function createBooking(params: CreateBookingParams): Promise<BookingResponse> {
-  try {
-    const bookingId = uuidv4();
-    const now = new Date().toISOString();
+export class BookingService {
+  async createBooking(data: CreateBookingRequest) {
+    try {
+      logger.info('Creating new booking', { data });
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert({
-        id: bookingId,
-        ...params,
-        created_at: now,
-        updated_at: now
-      })
-      .select()
-      .single();
+      // Verify service exists
+      const { data: service, error: serviceError } = await supabaseClient
+        .from('services')
+        .select('*')
+        .eq('id', data.serviceId)
+        .single();
 
-    if (error) {
-      logger.error('Failed to create booking', { error, params });
-      return {
-        error: {
-          message: error.message,
-          code: 'BOOKING_CREATE_ERROR'
-        }
-      };
-    }
-
-    logger.info('Booking created successfully', { bookingId });
-    return { data };
-  } catch (error) {
-    logger.error('Error in createBooking', { error });
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Failed to create booking',
-        code: 'BOOKING_CREATE_ERROR'
+      if (serviceError || !service) {
+        throw new ApiError('Service not found', 'NOT_FOUND');
       }
-    };
+
+      // Create booking
+      const { data: booking, error: bookingError } = await supabaseClient
+        .from('bookings')
+        .insert({
+          service_id: data.serviceId,
+          customer_id: data.customerId,
+          date: data.date,
+          notes: data.notes,
+          status: 'pending',
+          total_amount: service.price
+        })
+        .select()
+        .single();
+
+      if (bookingError) {
+        logger.error('Failed to create booking', { error: bookingError });
+        throw new ApiError('Failed to create booking', 'SERVER_ERROR');
+      }
+
+      return booking;
+    } catch (error) {
+      logger.error('Error in createBooking', { error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to create booking', 'SERVER_ERROR');
+    }
+  }
+
+  async getBooking(id: string) {
+    try {
+      const { data: booking, error } = await supabaseClient
+        .from('bookings')
+        .select(`
+          *,
+          customer:customers(*),
+          service:services(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error || !booking) {
+        throw new ApiError('Booking not found', 'NOT_FOUND');
+      }
+
+      return booking;
+    } catch (error) {
+      logger.error('Error in getBooking', { error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to get booking', 'SERVER_ERROR');
+    }
+  }
+
+  async listBookings(customerId: string, status?: BookingStatus, fromDate?: string, toDate?: string) {
+    try {
+      let query = supabaseClient
+        .from('bookings')
+        .select(`
+          *,
+          customer:customers(*),
+          service:services(*)
+        `)
+        .eq('customer_id', customerId);
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      if (fromDate) {
+        query = query.gte('date', fromDate);
+      }
+
+      if (toDate) {
+        query = query.lte('date', toDate);
+      }
+
+      const { data: bookings, error } = await query;
+
+      if (error) {
+        throw new ApiError('Failed to list bookings', 'SERVER_ERROR');
+      }
+
+      return bookings || [];
+    } catch (error) {
+      logger.error('Error in listBookings', { error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to list bookings', 'SERVER_ERROR');
+    }
+  }
+
+  async cancelBooking(id: string, customerId: string) {
+    try {
+      // Verify booking exists and belongs to customer
+      const { data: booking, error: getError } = await supabaseClient
+        .from('bookings')
+        .select('*')
+        .eq('id', id)
+        .eq('customer_id', customerId)
+        .single();
+
+      if (getError || !booking) {
+        throw new ApiError('Booking not found', 'NOT_FOUND');
+      }
+
+      if (booking.status === 'cancelled') {
+        throw new ApiError('Booking is already cancelled', 'VALIDATION_ERROR');
+      }
+
+      // Update booking status
+      const { error: updateError } = await supabaseClient
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+
+      if (updateError) {
+        throw new ApiError('Failed to cancel booking', 'SERVER_ERROR');
+      }
+
+      return { success: true };
+    } catch (error) {
+      logger.error('Error in cancelBooking', { error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError('Failed to cancel booking', 'SERVER_ERROR');
+    }
   }
 }
 
-export async function updateBooking(
-  bookingId: string,
-  params: UpdateBookingParams
-): Promise<BookingResponse> {
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .update({
-        ...params,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId)
-      .select()
-      .single();
+// Export singleton instance
+export const bookingService = new BookingService();
 
-    if (error) {
-      logger.error('Failed to update booking', { error, bookingId, params });
-      return {
-        error: {
-          message: error.message,
-          code: 'BOOKING_UPDATE_ERROR'
-        }
-      };
-    }
-
-    logger.info('Booking updated successfully', { bookingId });
-    return { data };
-  } catch (error) {
-    logger.error('Error in updateBooking', { error });
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Failed to update booking',
-        code: 'BOOKING_UPDATE_ERROR'
-      }
-    };
-  }
-}
-
-export async function getBookingById(bookingId: string): Promise<BookingResponse> {
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('id', bookingId)
-      .single();
-
-    if (error) {
-      logger.error('Failed to get booking', { error, bookingId });
-      return {
-        error: {
-          message: error.message,
-          code: 'BOOKING_NOT_FOUND'
-        }
-      };
-    }
-
-    return { data };
-  } catch (error) {
-    logger.error('Error in getBookingById', { error });
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Failed to get booking',
-        code: 'BOOKING_FETCH_ERROR'
-      }
-    };
-  }
-}
-
-export async function getBookingsByEmail(email: string): Promise<BookingsListResponse> {
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('customer_info->email', email)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      logger.error('Failed to get bookings by email', { error, email });
-      return {
-        error: {
-          message: error.message,
-          code: 'BOOKINGS_FETCH_ERROR'
-        }
-      };
-    }
-
-    return { data: data || [] };
-  } catch (error) {
-    logger.error('Error in getBookingsByEmail', { error });
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Failed to get bookings',
-        code: 'BOOKINGS_FETCH_ERROR'
-      }
-    };
-  }
-}
-
-export async function getBookingsByCustomerId(customerId: string): Promise<BookingsListResponse> {
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      logger.error('Failed to get bookings by customer ID', { error, customerId });
-      return {
-        error: {
-          message: error.message,
-          code: 'BOOKINGS_FETCH_ERROR'
-        }
-      };
-    }
-
-    return { data: data || [] };
-  } catch (error) {
-    logger.error('Error in getBookingsByCustomerId', { error });
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Failed to get bookings',
-        code: 'BOOKINGS_FETCH_ERROR'
-      }
-    };
-  }
-} 
+// Export individual functions for convenience
+export const createBooking = (data: CreateBookingRequest) => bookingService.createBooking(data);
+export const getBooking = (id: string) => bookingService.getBooking(id);
+export const listBookings = (customerId: string, status?: BookingStatus, fromDate?: string, toDate?: string) => 
+  bookingService.listBookings(customerId, status, fromDate, toDate);
+export const cancelBooking = (id: string, customerId: string) => bookingService.cancelBooking(id, customerId); 

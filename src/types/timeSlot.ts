@@ -1,25 +1,80 @@
+import type { Database } from './database';
+
 export interface TimeSlot {
-  start_time: string;  // ISO 8601
-  end_time: string;    // ISO 8601
-  is_available: boolean;
-  is_peak_hour: boolean;
-  price_multiplier: number;
-  service_id?: string;
-  technician_id?: string;
+  id: string;
+  serviceId: string | null;
+  technicianId: string | null;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  isPeakHour: boolean;
+  priceMultiplier: number;
+  status: TimeSlotStatus;
+  blockReason: string | null;
+  duration: number | null;
+  created_at: string;
+  updated_at: string;
+  metadata: TimeSlotMetadata | null;
 }
 
-export interface GetTimeSlotsRequest {
-  service_id: string;
-  date: string;        // YYYY-MM-DD
-  technician_id?: string;
+export type TimeSlotStatus = 'available' | 'booked' | 'blocked';
+
+export interface TimeSlotMetadata extends Record<string, unknown> {
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
-export interface TimeSlotConfig {
-  peak_hours_start: number;    // 0-23
-  peak_hours_end: number;      // 0-23
-  peak_price_multiplier: number;
-  min_booking_notice_hours: number;
-  max_advance_booking_days: number;
-  working_hours_start: number; // 0-23
-  working_hours_end: number;   // 0-23
+export interface CreateTimeSlotRequest {
+  serviceId?: string | null;
+  technicianId?: string | null;
+  startTime: string;
+  endTime: string;
+  isAvailable?: boolean;
+  isPeakHour?: boolean;
+  priceMultiplier?: number;
+  status?: TimeSlotStatus;
+  blockReason?: string | null;
+  duration?: number | null;
+  metadata?: TimeSlotMetadata | null;
+}
+
+export interface UpdateTimeSlotRequest extends Partial<CreateTimeSlotRequest> {
+  id: string;
+}
+
+export function mapDatabaseTimeSlot(dbTimeSlot: Database['public']['Tables']['time_slots']['Row']): TimeSlot {
+  return {
+    id: dbTimeSlot.id,
+    serviceId: dbTimeSlot.serviceId,
+    technicianId: dbTimeSlot.technicianId,
+    startTime: dbTimeSlot.startTime,
+    endTime: dbTimeSlot.endTime,
+    isAvailable: dbTimeSlot.isAvailable,
+    isPeakHour: dbTimeSlot.isPeakHour,
+    priceMultiplier: dbTimeSlot.priceMultiplier,
+    status: dbTimeSlot.status as TimeSlotStatus,
+    blockReason: dbTimeSlot.blockReason,
+    duration: dbTimeSlot.duration,
+    created_at: dbTimeSlot.created_at,
+    updated_at: dbTimeSlot.updated_at,
+    metadata: dbTimeSlot.metadata as TimeSlotMetadata | null
+  };
+}
+
+export function mapTimeSlotToDatabase(timeSlot: CreateTimeSlotRequest): Database['public']['Tables']['time_slots']['Insert'] {
+  return {
+    serviceId: timeSlot.serviceId ?? null,
+    technicianId: timeSlot.technicianId ?? null,
+    startTime: timeSlot.startTime,
+    endTime: timeSlot.endTime,
+    isAvailable: timeSlot.isAvailable ?? true,
+    isPeakHour: timeSlot.isPeakHour ?? false,
+    priceMultiplier: timeSlot.priceMultiplier ?? 1,
+    status: timeSlot.status ?? 'available',
+    blockReason: timeSlot.blockReason ?? null,
+    duration: timeSlot.duration ?? null,
+    metadata: timeSlot.metadata ?? null
+  };
 } 

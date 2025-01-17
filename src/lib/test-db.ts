@@ -1,8 +1,8 @@
-import { supabase } from './supabase.server';
+import { supabaseClient } from '@/server/config/supabase/client';
 
 async function testConnection() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('payments')
       .select('*')
       .limit(1);

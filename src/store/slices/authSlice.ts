@@ -1,17 +1,12 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-
-interface AuthState {
-  isAuthenticated: boolean;
-  token: string | null;
-  loading: boolean;
-  error: string | null;
-}
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { User } from '@shared/types/user';
+import type { AuthState } from '../types/state.types';
 
 const initialState: AuthState = {
   isAuthenticated: false,
   token: null,
-  loading: false,
+  user: null,
+  isLoading: false,
   error: null,
 };
 
@@ -21,24 +16,32 @@ const authSlice = createSlice({
   reducers: {
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload;
-      if (!action.payload) {
-        state.token = null;
-      }
     },
     setToken: (state, action: PayloadAction<string | null>) => {
       state.token = action.payload;
     },
+    setUser: (state, action: PayloadAction<User | null>) => {
+      state.user = action.payload;
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+      state.isLoading = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    clearAuth: (state) => {
-      return initialState;
+    clearAuthState: (state) => {
+      Object.assign(state, initialState);
     },
   },
 });
 
-export const { setAuthenticated, setToken, setLoading, setError, clearAuth } = authSlice.actions;
+export const {
+  setAuthenticated,
+  setToken,
+  setUser,
+  setLoading,
+  setError,
+  clearAuthState,
+} = authSlice.actions;
+
 export default authSlice.reducer;

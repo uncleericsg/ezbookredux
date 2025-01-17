@@ -1,26 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabaseClient } from '@server/config/supabase/client';
 import { Review, CreateReviewRequest, GetReviewResponse } from '../types/review';
 import { createApiError } from '../utils/apiResponse';
-import { Database } from '../types/supabase';
 
 export class ReviewService {
-  private supabase;
-
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-
-    this.supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-  }
-
   async createReview(userId: string, data: CreateReviewRequest): Promise<Review> {
     try {
       // Verify booking exists and belongs to user
-      const { data: booking, error: bookingError } = await this.supabase
+      const { data: booking, error: bookingError } = await supabaseClient
         .from('bookings')
         .select('id, status')
         .eq('id', data.booking_id)
@@ -36,7 +22,7 @@ export class ReviewService {
       }
 
       // Check if review already exists
-      const { data: existingReview } = await this.supabase
+      const { data: existingReview } = await supabaseClient
         .from('reviews')
         .select()
         .eq('booking_id', data.booking_id)
@@ -47,7 +33,7 @@ export class ReviewService {
       }
 
       // Create review
-      const { data: review, error } = await this.supabase
+      const { data: review, error } = await supabaseClient
         .from('reviews')
         .insert({
           booking_id: data.booking_id,
@@ -70,7 +56,7 @@ export class ReviewService {
 
   async getReview(id: string): Promise<GetReviewResponse> {
     try {
-      const { data: review, error } = await this.supabase
+      const { data: review, error } = await supabaseClient
         .from('reviews')
         .select(`
           *,

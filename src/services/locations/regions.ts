@@ -29,38 +29,60 @@
  * @END_AI_INSTRUCTION
  */
 
-export const REGION_CENTERS = {
-  west: { latitude: 1.3329, longitude: 103.7436 },    // Jurong East
-  north: { latitude: 1.4291, longitude: 103.8354 },   // Yishun
-  central: { latitude: 1.3139, longitude: 103.8379 }, // Novena
-  northeast: { latitude: 1.3868, longitude: 103.8914 },// Hougang
-  east: { latitude: 1.3236, longitude: 103.9273 },    // Tampines
-} as const;
+import type { TimeSlot } from '@/types/timeSlot';
+import { logger } from '@/lib/logger';
+import type { ErrorMetadata } from '@/types/error';
+import { classifyRegion, type RegionKey } from './classifier';
 
-export type Region = keyof typeof REGION_CENTERS;
-
-// Region priority by day of week (1 = Monday, etc.)
-export const REGION_PRIORITY: Record<number, Region[]> = {
-  1: ['west', 'north', 'central', 'northeast', 'east'],    // Monday
-  2: ['east', 'northeast', 'central', 'north', 'west'],    // Tuesday
-  3: ['west', 'north', 'central', 'northeast', 'east'],    // Wednesday
-  4: ['east', 'northeast', 'central', 'north', 'west'],    // Thursday
-  5: ['west', 'north', 'central', 'northeast', 'east'],    // Friday
-  6: ['east', 'northeast', 'central', 'north', 'west'],    // Saturday
-} as const;
-
-interface Coordinates {
-  latitude: number;
-  longitude: number;
+export interface Coordinates {
+  lat: number;
+  lng: number;
 }
 
-function getDistanceFromLatLonInKm(coord1: Coordinates, coord2: Coordinates): number {
+export interface Region {
+  name: string;
+  center: Coordinates;
+  radius: number;
+}
+
+export const MIN_DISTANCE_KM = 0.5;
+export const MAX_DISTANCE_KM = 30;
+
+export const REGIONS: Record<string, Region> = {
+  NORTH: {
+    name: 'North',
+    center: { lat: 1.4290, lng: 103.8360 },
+    radius: 5
+  },
+  SOUTH: {
+    name: 'South',
+    center: { lat: 1.2789, lng: 103.8536 },
+    radius: 5
+  },
+  EAST: {
+    name: 'East',
+    center: { lat: 1.3520, lng: 103.9530 },
+    radius: 5
+  },
+  WEST: {
+    name: 'West',
+    center: { lat: 1.3350, lng: 103.7440 },
+    radius: 5
+  },
+  CENTRAL: {
+    name: 'Central',
+    center: { lat: 1.3521, lng: 103.8198 },
+    radius: 5
+  }
+};
+
+export function getDistanceFromLatLonInKm(coords1: Coordinates, coords2: Coordinates): number {
   const R = 6371; // Radius of the earth in km
-  const dLat = deg2rad(coord2.latitude - coord1.latitude);
-  const dLon = deg2rad(coord2.longitude - coord1.longitude);
+  const dLat = deg2rad(coords2.lat - coords1.lat);
+  const dLon = deg2rad(coords2.lng - coords1.lng);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(coord1.latitude)) * Math.cos(deg2rad(coord2.latitude)) *
+    Math.cos(deg2rad(coords1.lat)) * Math.cos(deg2rad(coords2.lat)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
@@ -70,104 +92,99 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
-// Distance constraints in kilometers
-export const MIN_DISTANCE_KM = 5;
-export const MAX_DISTANCE_KM = 8;
-
 export function getDistanceWeight(distance: number): number {
-  if (distance < MIN_DISTANCE_KM) {
-    return 1; // Highest priority for close distances
-  } else if (distance > MAX_DISTANCE_KM) {
-    return 0; // Not available beyond max distance
-  } else {
-    // Linear scaling between 5-8km
-    return 1 - ((distance - MIN_DISTANCE_KM) / (MAX_DISTANCE_KM - MIN_DISTANCE_KM) * 0.9);
-  }
+  if (distance <= MIN_DISTANCE_KM) return 1;
+  if (distance >= MAX_DISTANCE_KM) return 0;
+  return 1 - (distance - MIN_DISTANCE_KM) / (MAX_DISTANCE_KM - MIN_DISTANCE_KM);
 }
 
-export interface RegionResult {
-  region: Region | null;
-  distance: number;
-  withinRadius: boolean;
-}
-
-export async function determineRegion(address: string): Promise<RegionResult> {
+export function getRegionFromAddress(address: string): RegionKey | null {
   try {
-    // Implement rate limiting
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTime;
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-      await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
-    }
-    lastRequestTime = Date.now();
-
-    // Use the Google Places API to get coordinates for the address
-    const geocoder = new google.maps.Geocoder();
-    const result = await new Promise<google.maps.GeocoderResult | null>((resolve, reject) => {
-      geocoder.geocode({ address }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
-          resolve(results[0]);
-        } else if (status === google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
-          reject(new Error('Google Places API rate limit exceeded. Please try again in a few minutes.'));
-        } else if (status === google.maps.GeocoderStatus.ZERO_RESULTS) {
-          reject(new Error('No results found for this address. Please check the address and try again.'));
-        } else {
-          reject(new Error(`Failed to geocode address: ${status}`));
-        }
-      });
-    });
-
-    if (!result) {
-      throw new Error('No results found for address');
+    if (!address) {
+      return null;
     }
 
-    const location = result.geometry.location;
-    const coordinates: Coordinates = {
-      latitude: location.lat(),
-      longitude: location.lng()
-    };
-
-    // Find the nearest region center
-    let nearestRegion: Region | null = null;
-    let shortestDistance = Infinity;
-
-    for (const [region, center] of Object.entries(REGION_CENTERS)) {
-      const distance = getDistanceFromLatLonInKm(coordinates, center);
-      if (distance < shortestDistance) {
-        shortestDistance = distance;
-        nearestRegion = region as Region;
+    // Extract postal code from address
+    const postalCodeMatch = address.match(/Singapore\s+(\d{6})/);
+    if (!postalCodeMatch) {
+      // Try alternative format
+      const altMatch = address.match(/\b\d{6}\b/);
+      if (!altMatch) {
+        return guessRegionFromAddress(address);
       }
+      return classifyRegion(altMatch[0]);
     }
 
-    return {
-      region: nearestRegion,
-      distance: shortestDistance,
-      withinRadius: shortestDistance <= MAX_DISTANCE_KM
-    };
+    return classifyRegion(postalCodeMatch[1]);
   } catch (error) {
-    console.error('Error determining region:', error);
-    return {
-      region: null,
-      distance: Infinity,
-      withinRadius: false
-    };
+    logger.error('Error determining region from address', {
+      error: error instanceof Error ? error.message : String(error),
+      address
+    } satisfies ErrorMetadata);
+    return null;
   }
 }
 
-export function filterSlotsByDistance(slots: TimeSlot[], distance: number): TimeSlot[] {
-  const weight = getDistanceWeight(distance);
-  if (weight === 0) {
-    return slots.map(slot => ({
-      ...slot,
-      available: false
-    }));
+function guessRegionFromAddress(address: string): RegionKey | null {
+  const addressLower = address.toLowerCase();
+
+  // Central region indicators
+  if (addressLower.includes('orchard') || 
+      addressLower.includes('novena') || 
+      addressLower.includes('newton')) {
+    return 'CENTRAL';
   }
-  return slots.map(slot => ({
-    ...slot,
-    weight // Add weight to each slot for sorting/prioritization
-  }));
+
+  // East region indicators
+  if (addressLower.includes('tampines') || 
+      addressLower.includes('bedok') || 
+      addressLower.includes('pasir ris')) {
+    return 'EAST';
+  }
+
+  // West region indicators
+  if (addressLower.includes('jurong') || 
+      addressLower.includes('clementi') || 
+      addressLower.includes('bukit batok')) {
+    return 'WEST';
+  }
+
+  // North region indicators
+  if (addressLower.includes('woodlands') || 
+      addressLower.includes('yishun') || 
+      addressLower.includes('sembawang')) {
+    return 'NORTH';
+  }
+
+  // South region indicators
+  if (addressLower.includes('sentosa') || 
+      addressLower.includes('harbourfront') || 
+      addressLower.includes('marina')) {
+    return 'SOUTH';
+  }
+
+  return null;
 }
 
-// Rate limiting state
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 100; // Minimum time between requests in ms
+export function filterSlotsByRegion(slots: TimeSlot[], region: RegionKey): TimeSlot[] {
+  try {
+    if (!region || !REGIONS[region]) return slots;
+
+    return slots.filter(slot => {
+      if (!slot.metadata?.location) return false;
+      
+      const slotLocation = slot.metadata.location;
+      const regionData = REGIONS[region];
+      const distance = getDistanceFromLatLonInKm(slotLocation, regionData.center);
+      
+      return distance <= regionData.radius;
+    });
+  } catch (error) {
+    logger.error('Error filtering slots by region', {
+      error: error instanceof Error ? error.message : String(error),
+      region,
+      slotsCount: slots.length
+    } satisfies ErrorMetadata);
+    return slots;
+  }
+}

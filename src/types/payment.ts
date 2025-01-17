@@ -1,48 +1,71 @@
 import type { BaseEntity } from './common';
 
 export interface PaymentDetails extends BaseEntity {
-  payment_intent_id: string;
+  id: string;
+  user_id: string;
+  booking_id: string;
   amount: number;
   currency: string;
+  payment_method: string;
   status: PaymentStatus;
-  booking_id: string;
-  customer_id?: string;
-  service_id: string;
-  tip_amount?: number;
-  created_at: Date;
-  updated_at: Date;
+  refund_id?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
-export type PaymentStatus =
-  | 'pending'
-  | 'processing'
-  | 'succeeded'
-  | 'failed'
-  | 'refunded';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export interface PaymentError {
   code: string;
   message: string;
-  payment_intent_id?: string;
-  details?: Record<string, unknown>;
+  type: 'card_error' | 'validation_error' | 'api_error';
+  param?: string;
 }
 
-export interface TransactionRecord extends BaseEntity {
-  payment_id: string;
+export interface PaymentIntentResponse {
+  id: string;
+  client_secret: string;
   amount: number;
   currency: string;
   status: PaymentStatus;
-  type: TransactionType;
-  description?: string;
-  metadata?: Record<string, unknown>;
-  created_at: Date;
 }
 
-export type TransactionType =
-  | 'payment'
-  | 'refund'
-  | 'chargeback'
-  | 'adjustment';
+export interface CreatePaymentIntentParams {
+  amount: number;
+  currency: string;
+  payment_method_types: string[];
+  metadata?: Record<string, string>;
+}
+
+export interface StripePaymentIntent {
+  id: string;
+  client_secret: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_method?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface TransactionRecord extends BaseEntity {
+  id: string;
+  payment_id: string;
+  type: 'payment' | 'refund';
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  processor_id: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Payment {
   id: string;
@@ -102,4 +125,48 @@ export interface PaymentListResponse {
   status: PaymentStatus;
   created_at: string;
   booking_reference: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  type: 'card' | 'bank_transfer';
+  last4: string;
+  brand?: string;
+  isDefault: boolean;
+  expiryMonth?: number;
+  expiryYear?: number;
+  createdAt: string;
+}
+
+export interface PaymentIntent {
+  id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod: string | null;
+  clientSecret: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  userId: string;
+  bookingId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethodId: string | null;
+  paymentIntentId: string | null;
+  refundId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface PaymentConfig {
+  currency: string;
+  supportedPaymentMethods: string[];
+  minimumAmount: number;
+  maximumAmount: number;
+  processingFee?: number;
 }

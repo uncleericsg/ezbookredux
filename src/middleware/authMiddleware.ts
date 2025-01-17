@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseClient } from '@server/config/supabase/client';
 import { createApiError } from '../utils/apiResponse';
 import { Database } from '../types/supabase';
 
@@ -10,11 +10,6 @@ export interface AuthenticatedRequest extends NextApiRequest {
     email: string;
   };
 }
-
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export function withAuth(
   handler: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>,
@@ -31,7 +26,7 @@ export function withAuth(
       }
 
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
       if (authError || !user) {
         return res.status(401).json(
@@ -40,7 +35,7 @@ export function withAuth(
       }
 
       // Get user profile with role
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
         .select('role')
         .eq('id', user.id)

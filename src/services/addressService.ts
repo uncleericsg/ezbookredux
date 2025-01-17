@@ -1,25 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabaseClient } from '@server/config/supabase/client';
 import { Address, CreateAddressRequest, UpdateAddressRequest } from '../types/address';
 import { createApiError } from '../utils/apiResponse';
-import { Database } from '../types/supabase';
 
 export class AddressService {
-  private supabase;
-
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-
-    this.supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-  }
-
   async listAddresses(userId: string): Promise<Address[]> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabaseClient
         .from('addresses')
         .select('*')
         .eq('user_id', userId)
@@ -37,14 +23,14 @@ export class AddressService {
     try {
       // If this is the first address or marked as default, handle default status
       if (data.is_default) {
-        await this.supabase
+        await supabaseClient
           .from('addresses')
           .update({ is_default: false })
           .eq('user_id', userId)
           .eq('is_default', true);
       }
 
-      const { data: address, error } = await this.supabase
+      const { data: address, error } = await supabaseClient
         .from('addresses')
         .insert({
           ...data,
@@ -66,7 +52,7 @@ export class AddressService {
   async updateAddress(userId: string, addressId: string, data: UpdateAddressRequest): Promise<Address> {
     try {
       // Verify address belongs to user
-      const { data: existing } = await this.supabase
+      const { data: existing } = await supabaseClient
         .from('addresses')
         .select()
         .eq('id', addressId)
@@ -79,14 +65,14 @@ export class AddressService {
 
       // Handle default status updates
       if (data.is_default) {
-        await this.supabase
+        await supabaseClient
           .from('addresses')
           .update({ is_default: false })
           .eq('user_id', userId)
           .eq('is_default', true);
       }
 
-      const { data: address, error } = await this.supabase
+      const { data: address, error } = await supabaseClient
         .from('addresses')
         .update(data)
         .eq('id', addressId)
@@ -105,7 +91,7 @@ export class AddressService {
 
   async deleteAddress(userId: string, addressId: string): Promise<void> {
     try {
-      const { error } = await this.supabase
+      const { error } = await supabaseClient
         .from('addresses')
         .delete()
         .eq('id', addressId)

@@ -1,46 +1,35 @@
-import type { TimeSlot, BookingValidation } from '@/types/booking';
-import { validateBookingTime } from '@/utils/validation';
+import type { BookingValidation, TimeSlot } from '@/types/booking';
 
-export function validateBookingSlot(
-  slot: TimeSlot | null,
-  options: {
-    minHoursBefore?: number;
-    maxDaysAhead?: number;
-  } = {}
-): BookingValidation {
-  if (!slot) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Time slot is required']
-      }
-    };
+export function validateBookingTime(timeSlot: TimeSlot | null): BookingValidation {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Check if time slot exists
+  if (!timeSlot) {
+    errors.push('Invalid time slot - missing date or time');
+    return { isValid: false, errors, warnings };
   }
 
-  const timeValidation = validateBookingTime(slot);
-  if (!timeValidation.isValid) {
-    return timeValidation;
+  // Validate date format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(timeSlot.startTime.split('T')[0])) {
+    errors.push('Invalid date format');
   }
 
-  if (!slot.is_available) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Selected time slot is not available']
-      }
-    };
+  // Validate time format
+  const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  if (!timeRegex.test(timeSlot.startTime.split('T')[1].slice(0, 5))) {
+    errors.push('Invalid time format');
   }
 
-  const errors: { schedule?: string[] } = {};
-  const warnings: { schedule?: string[]; price?: string[] } = {};
-
-  if (slot.price_multiplier > 1) {
-    warnings.price = ['This is a peak hour slot with higher pricing'];
+  // Check for peak hour pricing
+  if (timeSlot.isPeakHour) {
+    warnings.push('Peak hour pricing applies to this time slot');
   }
 
   return {
-    isValid: Object.keys(errors).length === 0,
-    errors: Object.keys(errors).length > 0 ? errors : undefined,
-    warnings: Object.keys(warnings).length > 0 ? warnings : undefined
+    isValid: errors.length === 0,
+    errors,
+    warnings
   };
 }

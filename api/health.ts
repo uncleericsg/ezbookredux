@@ -1,26 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { logger } from '@/server/utils/logger';
+import { ApiError } from '@/server/utils/apiErrors';
 
-type HealthCheckResponse = {
+interface HealthCheckData {
   status: string;
   timestamp: string;
   uptime: number;
   environment: string | undefined;
-} | {
-  status: string;
-  error: string;
-};
+}
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<HealthCheckResponse>
+  res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ status: 'error', error: 'Method not allowed' });
+    throw new ApiError('Method not allowed', 'METHOD_NOT_ALLOWED');
   }
 
   try {
-    const healthCheck = {
+    const healthCheck: HealthCheckData = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
@@ -28,12 +26,28 @@ export default async function handler(
     };
 
     logger.info('Health check successful', healthCheck);
-    res.status(200).json(healthCheck);
+    
+    return res.status(200).json({
+      data: healthCheck
+    });
   } catch (error) {
     logger.error('Health check failed', { error });
-    res.status(500).json({ 
-      status: 'unhealthy',
-      error: 'Health check failed'
+    
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        error: {
+          message: error.message,
+          code: error.code,
+          details: error.details
+        }
+      });
+    }
+    
+    return res.status(500).json({
+      error: {
+        message: 'Health check failed',
+        code: 'SERVER_ERROR'
+      }
     });
   }
 } 

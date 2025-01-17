@@ -22,205 +22,77 @@
  * for unexpected errors, while handling expected errors at the component level.
  */
 
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@config/routes';
-import EmptyState from '../common/EmptyState';
-const ServiceCard = React.lazy(() => import('./ServiceCard'));
-const PremiumServiceCard = React.lazy(() => import('./PremiumServiceCard'));
-const ServiceInfoSection = React.lazy(() => import('./ServiceInfoSection'));
-const WhatsAppContactCard = React.lazy(() => import('./WhatsAppContactCard'));
-import useServiceData from '../../hooks/useServiceData';
-import usePremiumServiceData from '../../hooks/usePremiumServiceData';
-import { pageContainer, pageItem, loadingAnimation } from './pageAnimations';
-import { cardContainer, cardItem } from './cardAnimations';
+import { ROUTES } from '@/config/routes';
+import { ServiceCard } from './ServiceCard';
+import { PremiumServiceCard } from './PremiumServiceCard';
+import { LoadingSpinner } from '../common/LoadingSpinner';
+import { useServices } from '@/hooks/useServices';
+import { usePremiumServices } from '@/hooks/usePremiumServices';
+import { Service } from '@shared/types/service';
 import styles from './PriceSelectionPage.module.css';
 
-const LoadingSpinner = () => (
-  <div className={styles.loadingContainer}>
-    <motion.div
-      className={styles.loadingSpinner}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{
-        opacity: [0.5, 1, 0.5],
-        scale: [1, 1.2, 1],
-        rotate: [0, 180, 360]
-      }}
-      transition={{
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-    />
-  </div>
-);
-
-const PriceSelectionPage: React.FC = () => {
+export const PriceSelectionPage = () => {
   const navigate = useNavigate();
-  const { services, isLoading: isServicesLoading, error: servicesError } = useServiceData();
-  const { premiumServices, isLoading: isPremiumLoading, error: premiumError } = usePremiumServiceData();
-  
-  const isLoading = isServicesLoading || isPremiumLoading;
+  const { services, loading: servicesLoading } = useServices();
+  const { services: premiumServices, loading: premiumLoading } = usePremiumServices();
 
-  const handleServiceSelect = (service: typeof services[0]) => {
+  const handleServiceSelect = (service: Service) => {
     if (service.id === "powerjet-chemical") {
       navigate(ROUTES.BOOKING.POWERJET_CHEMICAL);
-      window.scrollTo(0, 0);
-      return;
+    } else {
+      navigate(`${ROUTES.BOOKING.SERVICE}/${service.id}`);
     }
-    if (service.id === "gas-leakage") {
-      navigate(ROUTES.BOOKING.GAS_LEAK);
-      window.scrollTo(0, 0);
-      return;
-    }
-
-    navigate(ROUTES.BOOKING.FIRST_TIME, {
-      state: {
-        selectedService: service,
-        fromPriceSelection: true
-      }
-    });
-    window.scrollTo(0, 0);
   };
 
-  if (servicesError || premiumError) {
-    return (
-      <div className={styles.errorContainer}>
-        <h2>Error loading services</h2>
-        <p>{servicesError?.message || premiumError?.message}</p>
-      </div>
-    );
-  }
-
-  if (services.length === 0 && premiumServices.length === 0 && !isLoading) {
-    return (
-      <EmptyState
-        title="No Services Available"
-        description="We're currently unable to load our service options. Please try again later."
-      />
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <motion.div
-        className={styles.loadingContainer}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div
-          className={styles.loadingSpinner}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{
-            opacity: [0.5, 1, 0.5],
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      </motion.div>
-    );
+  if (servicesLoading || premiumLoading) {
+    return <LoadingSpinner />;
   }
 
   return (
-    <motion.div
-      variants={pageContainer}
-      initial="hidden"
-      animate="show"
+    <motion.div 
+      className={styles.container}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className={styles.pageContainer}
     >
-      <div className={styles.gradientOverlay}></div>
-      <div className={styles.contentWrapper}>
-        <div className={styles.titleSection}>
-          <motion.h1
-            className={styles.pageTitle}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            First Time Customer Offer
-          </motion.h1>
-          <motion.p
-            className={styles.pageSubtitle}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            For HDB & Condo only
-          </motion.p>
-        </div>
-        <ServiceInfoSection />
-
-        <motion.div
-          variants={cardContainer}
-          initial="hidden"
-          animate="show"
-          className={styles.cardGrid}
-        >
+      <h1>Select a Service</h1>
+      
+      <section className={styles.servicesSection}>
+        <h2>Standard Services</h2>
+        <motion.div className={styles.servicesGrid}>
           {services.map((service) => (
-            <Suspense fallback={<LoadingSpinner />}>
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onClick={handleServiceSelect}
-              />
-            </Suspense>
-          ))}
-          
-          <Suspense fallback={<LoadingSpinner />}>
-            <WhatsAppContactCard />
-          </Suspense>
-        </motion.div>
-
-        <div className={styles.premiumSection}>
-          <motion.h2
-            className={styles.sectionTitle}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Premium Services
-          </motion.h2>
-          <motion.p
-            className={styles.sectionSubtitle}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            Professional Powerjet Wash & Specialized Services
-          </motion.p>
-        </div>
-
-        <motion.div
-          variants={cardContainer}
-          initial="hidden"
-          animate="show"
-          className={styles.cardGrid}
-        >
-          {premiumServices.map((service) => (
-            <Suspense fallback={<LoadingSpinner />}>
-              <PremiumServiceCard
-                key={service.id}
-                service={service}
-                onClick={handleServiceSelect}
-              />
-            </Suspense>
+            <motion.div key={service.id} className={styles.serviceCard}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <ServiceCard
+                  service={service}
+                  onClick={handleServiceSelect}
+                />
+              </Suspense>
+            </motion.div>
           ))}
         </motion.div>
-      </div>
+      </section>
+
+      {premiumServices.length > 0 && (
+        <section className={styles.premiumSection}>
+          <h2>Premium Services</h2>
+          <motion.div className={styles.servicesGrid}>
+            {premiumServices.map((service) => (
+              <motion.div key={service.id} className={styles.serviceCard}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PremiumServiceCard
+                    service={service}
+                    onClick={handleServiceSelect}
+                  />
+                </Suspense>
+              </motion.div>
+            ))}
+          </motion.div>
+        </section>
+      )}
     </motion.div>
   );
 };

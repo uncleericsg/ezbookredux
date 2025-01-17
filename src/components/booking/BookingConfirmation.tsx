@@ -1,38 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, CreditCard } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@store';
 import PasswordCreationModal from '@components/auth/PasswordCreationModal';
 import { ROUTES } from '@config/routes';
-import { getPaymentReceipt } from '@services/paymentService';
 import { toast } from 'sonner';
-import type { PaymentDetails, PaymentIntentResponse } from '@shared/types/payment';
-import { logger } from '@/utils/logger';
+import { logger } from '@/server/utils/logger';
 
 interface BookingConfirmationProps {
   onCreateAccount?: (password: string) => Promise<boolean>;
-  paymentIntent?: PaymentIntentResponse;
+  sessionId?: string;
   onDownloadReceipt?: () => void;
   email?: string;
-  booking?: PaymentDetails;
+}
+
+interface SessionStatus {
+  status: string;
+  metadata: {
+    bookingId: string;
+    amount: string;
+    currency: string;
+    service: string;
+    date: string;
+  };
+  receiptUrl?: string;
 }
 
 const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   onCreateAccount,
-  paymentIntent,
+  sessionId,
   onDownloadReceipt,
   email: propEmail,
-  booking: propBooking
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { bookingId } = useParams();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [sessionData, setSessionData] = useState<SessionStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   const { currentUser } = useAppSelector((state) => state.user);
   const email = propEmail || currentUser?.email;
+
+  useEffect(() => {
+    const fetchSessionStatus = async () => {
+      try {
+        if (!sessionId) return;
+        
+        const response = await fetch(`/api/payments/status?session_id=${sessionId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch session status');
+        }
+        
+        const data = await response.json();
+        setSessionData(data);
+      } catch (error) {
+        logger.error('Failed to fetch session status', { error });
+        toast.error('Failed to load payment details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSessionStatus();
+  }, [sessionId]);
 
   const handleViewBookings = () => {
     if (!currentUser) {
@@ -59,38 +91,28 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     }
   };
 
-  const handleDownload = async () => {
-    try {
-      setIsDownloading(true);
-      
-      if (!paymentIntent?.paymentIntentId) {
-        throw new Error('No payment reference found');
-      }
-
-      const response = await getPaymentReceipt(paymentIntent.paymentIntentId);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download receipt');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${paymentIntent.paymentIntentId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      onDownloadReceipt?.();
-    } catch (error) {
-      logger.error('Failed to download receipt', { error });
-      toast.error('Failed to download receipt. Please try again.');
-    } finally {
-      setIsDownloading(false);
+  const handleDownload = () => {
+    if (!sessionData?.receiptUrl) {
+      toast.error('Receipt not available yet');
+      return;
     }
+    
+    // Open receipt in new tab (Stripe hosted receipt)
+    window.open(sessionData.receiptUrl, '_blank');
+    onDownloadReceipt?.();
   };
+
+  if (isLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg text-center"
+      >
+        <p>Loading payment details...</p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -109,14 +131,14 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         </p>
       </div>
 
-      {propBooking && (
+      {sessionData && (
         <div className="space-y-6 mb-8">
           <div className="flex items-start space-x-4">
             <Calendar className="w-6 h-6 text-gray-400 mt-1" />
             <div>
               <p className="font-medium text-gray-900">Appointment Details</p>
-              <p className="text-gray-600">{propBooking.service_id}</p>
-              <p className="text-gray-600">{new Date(propBooking.created_at).toLocaleDateString()}</p>
+              <p className="text-gray-600">{sessionData.metadata.service}</p>
+              <p className="text-gray-600">{sessionData.metadata.date}</p>
             </div>
           </div>
 
@@ -124,21 +146,22 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             <CreditCard className="w-6 h-6 text-gray-400 mt-1" />
             <div>
               <p className="font-medium text-gray-900">Payment Details</p>
-              <p className="text-gray-600">Amount: ${propBooking.amount}</p>
-              <p className="text-gray-600">Status: {propBooking.status}</p>
+              <p className="text-gray-600">Amount: ${parseInt(sessionData.metadata.amount) / 100}</p>
+              <p className="text-gray-600">Status: {sessionData.status}</p>
             </div>
           </div>
         </div>
       )}
 
       <div className="space-y-4">
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-        >
-          {isDownloading ? 'Downloading...' : 'Download Receipt'}
-        </button>
+        {sessionData?.receiptUrl && (
+          <button
+            onClick={handleDownload}
+            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            View Receipt
+          </button>
+        )}
 
         <button
           onClick={handleViewBookings}

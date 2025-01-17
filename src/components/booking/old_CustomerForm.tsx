@@ -6,7 +6,7 @@ import { useFirebaseValidation } from '../../hooks/useFirebaseValidation';
 import { OTPInput } from '../common/OTPInput';
 import { findEmailTypo, EmailSuggestion } from '../../utils/emailUtils';
 import { createBooking } from '../../services/bookingService';
-import { supabase } from '../../lib/supabase';
+import { supabaseClient } from '@/server/config/supabase/client';
 import { profileService } from '../../services/supabase/profileService';
 import { bookingService } from '../../services/supabase/bookingService';
 import { toast } from 'react-hot-toast';
@@ -246,7 +246,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
 
     setIsCheckingUser(true);
     try {
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await supabaseClient
         .from('profiles')
         .select('email')
         .eq('email', email)
@@ -270,7 +270,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
 
     setIsCheckingUser(true);
     try {
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await supabaseClient
         .from('profiles')
         .select('mobile')
         .eq('mobile', digitsOnly)
@@ -295,7 +295,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
     setIsSubmitting(true);
     try {
       // Create user account
-      const { data: userData, error } = await supabase.auth.signUp({
+      const { data: userData, error } = await supabaseClient.auth.signUp({
         email: formData.email,
         password: Math.random().toString(36).slice(-8),
         options: {
@@ -310,7 +310,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
       if (error) throw error;
 
       // Get service category ID
-      const { data: serviceCategory, error: categoryError } = await supabase
+      const { data: serviceCategory, error: categoryError } = await supabaseClient
         .from('service_categories')
         .select('id')
         .eq('name', props.isAMC ? 'AMC' : 'Regular Service')
@@ -319,7 +319,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
       if (categoryError) throw categoryError;
 
       // Get available time slot
-      const { data: timeSlot, error: timeSlotError } = await supabase
+      const { data: timeSlot, error: timeSlotError } = await supabaseClient
         .from('time_slots')
         .select('id')
         .eq('is_active', true)
@@ -329,7 +329,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = (props) => {
       if (timeSlotError) throw timeSlotError;
 
       // Create booking
-      const { data: newBooking, error: bookingError } = await supabase
+      const { data: newBooking, error: bookingError } = await supabaseClient
         .from('bookings')
         .insert([{
           user_id: userData.user?.id,

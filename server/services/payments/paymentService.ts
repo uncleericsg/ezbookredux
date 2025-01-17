@@ -1,61 +1,90 @@
-import { stripeService } from './stripe/stripeService';
-import { receiptService } from './stripe/receiptService';
-import { logger } from '@/server/utils/logger';
-import { ApiError } from '@/server/utils/apiErrors';
-import type { Stripe } from 'stripe';
+import { StripeCheckoutProvider } from '@server/services/payments/providers/stripe/StripeCheckoutProvider';
+import { PaymentSessionRepository } from '@server/services/payments/repositories/PaymentSessionRepository';
+import { logger } from '@server/utils/logger';
+import { ApiError } from '@server/utils/apiErrors';
 
 export class PaymentService {
-  async createPaymentIntent(amount: number, currency: string = 'sgd', metadata: Record<string, any> = {}) {
+  private checkoutProvider: StripeCheckoutProvider;
+  private sessionRepository: PaymentSessionRepository;
+
+  constructor() {
+    this.checkoutProvider = new StripeCheckoutProvider();
+    this.sessionRepository = new PaymentSessionRepository();
+  }
+
+  async initiatePayment(params: {
+    bookingId: string;
+    userId: string;
+    amount: number;
+    currency: string;
+    customerEmail: string;
+    successUrl: string;
+    cancelUrl: string;
+    metadata?: Record<string, string>;
+  }) {
     try {
-      return await stripeService.createPaymentIntent(amount, currency, metadata);
+      logger.info('Initiating payment for booking', { bookingId: params.bookingId });
+      
+      const session = await this.checkoutProvider.createCheckoutSession(params);
+      
+      await this.sessionRepository.createSession({
+        stripeSessionId: session.id,
+        bookingId: params.bookingId,
+        userId: params.userId,
+        amount: params.amount,
+        currency: params.currency,
+        status: session.paymentStatus,
+      });
+
+      return {
+        sessionId: session.id,
+        checkoutUrl: session.url
+      };
     } catch (error) {
-      logger.error('Payment service: Failed to create payment intent', { error });
-      throw error instanceof ApiError ? error : new ApiError('Failed to create payment', 'PAYMENT_ERROR');
+      logger.error('Failed to initiate payment', { error, bookingId: params.bookingId });
+      throw new ApiError('Failed to initiate payment', 'PAYMENT_INITIATION_FAILED');
     }
   }
 
-  async handleWebhookEvent(event: Stripe.Event) {
+  async handleWebhook(rawBody: string, signature: string) {
     try {
-      switch (event.type) {
-        case 'payment_intent.succeeded':
-          await this.handlePaymentSuccess(event.data.object as Stripe.PaymentIntent);
-          break;
-        case 'payment_intent.payment_failed':
-          await this.handlePaymentFailure(event.data.object as Stripe.PaymentIntent);
-          break;
-        default:
-          logger.info(`Unhandled event type: ${event.type}`);
+      logger.info('Processing webhook event');
+      
+      const event = await this.checkoutProvider.handleWebhook(rawBody, signature);
+      
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as any;
+        await this.sessionRepository.updateSessionStatus(
+          session.id,
+          'completed'
+        );
+        logger.info('Payment completed successfully', { sessionId: session.id });
+      }
+      
+      if (event.type === 'checkout.session.expired') {
+        const session = event.data.object as any;
+        await this.sessionRepository.updateSessionStatus(
+          session.id,
+          'expired'
+        );
+        logger.info('Payment session expired', { sessionId: session.id });
       }
     } catch (error) {
-      logger.error('Payment service: Failed to handle webhook event', { error, eventType: event.type });
-      throw error instanceof ApiError ? error : new ApiError('Failed to process webhook', 'WEBHOOK_ERROR');
+      logger.error('Failed to process webhook', { error });
+      throw new ApiError('Failed to process webhook', 'WEBHOOK_PROCESSING_FAILED');
     }
   }
 
-  async generateReceipt(paymentIntentId: string) {
-    return await receiptService.generateReceipt(paymentIntentId);
+  async getPaymentStatus(sessionId: string) {
+    try {
+      const session = await this.checkoutProvider.getSession(sessionId);
+      return {
+        status: session.paymentStatus,
+        metadata: session.metadata
+      };
+    } catch (error) {
+      logger.error('Failed to get payment status', { error, sessionId });
+      throw new ApiError('Failed to get payment status', 'PAYMENT_STATUS_FAILED');
+    }
   }
-
-  async getReceiptById(paymentIntentId: string) {
-    return await receiptService.getReceiptById(paymentIntentId);
-  }
-
-  private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
-    logger.info('Payment succeeded', { 
-      paymentIntentId: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency
-    });
-    // Add any additional success handling logic here
-  }
-
-  private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
-    logger.error('Payment failed', {
-      paymentIntentId: paymentIntent.id,
-      error: paymentIntent.last_payment_error
-    });
-    // Add any additional failure handling logic here
-  }
-}
-
-export const paymentService = new PaymentService(); 
+} 

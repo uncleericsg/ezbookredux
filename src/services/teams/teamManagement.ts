@@ -1,101 +1,63 @@
-import { Team, TeamMember } from './types';
-import { db } from '../../lib/db';
+import { supabaseClient } from '@/config/supabase/client';
+import { handleNotFoundError } from '@/utils/apiErrors';
+import type { Team, CreateTeamRequest, UpdateTeamRequest } from '@/types/team';
+import { mapTeamToDatabase, mapTeamUpdateToDatabase, mapDatabaseTeam } from '@/types/team';
 
-export const teamManagement = {
-    // Team CRUD operations
-    async createTeam(name: string): Promise<Team> {
-        return await db.teams.create({
-            data: {
-                name,
-                active: true,
-                members: []
-            }
-        });
-    },
+export async function createTeam(data: CreateTeamRequest): Promise<Team> {
+  const { data: team, error } = await supabaseClient
+    .from('teams')
+    .insert(mapTeamToDatabase(data))
+    .select()
+    .single();
 
-    async getTeam(teamId: string): Promise<Team | null> {
-        return await db.teams.findUnique({
-            where: { id: teamId }
-        });
-    },
+  if (error) throw error;
+  if (!team) throw handleNotFoundError('Failed to create team');
 
-    async getAllTeams(): Promise<Team[]> {
-        return await db.teams.findMany();
-    },
+  return mapDatabaseTeam(team);
+}
 
-    async updateTeam(teamId: string, data: Partial<Team>): Promise<Team> {
-        return await db.teams.update({
-            where: { id: teamId },
-            data
-        });
-    },
+export async function updateTeam(id: string, data: UpdateTeamRequest): Promise<Team> {
+  const { data: team, error } = await supabaseClient
+    .from('teams')
+    .update(mapTeamUpdateToDatabase(data))
+    .eq('id', id)
+    .select()
+    .single();
 
-    async deleteTeam(teamId: string): Promise<void> {
-        await db.teams.delete({
-            where: { id: teamId }
-        });
-    },
+  if (error) throw error;
+  if (!team) throw handleNotFoundError('Team not found');
 
-    // Team member management
-    async addTeamMember(teamId: string, member: TeamMember): Promise<Team> {
-        const team = await this.getTeam(teamId);
-        if (!team) throw new Error('Team not found');
+  return mapDatabaseTeam(team);
+}
 
-        return await db.teams.update({
-            where: { id: teamId },
-            data: {
-                members: [...team.members, member]
-            }
-        });
-    },
+export async function getTeam(id: string): Promise<Team> {
+  const { data: team, error } = await supabaseClient
+    .from('teams')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    async removeTeamMember(teamId: string, memberId: string): Promise<Team> {
-        const team = await this.getTeam(teamId);
-        if (!team) throw new Error('Team not found');
+  if (error) throw error;
+  if (!team) throw handleNotFoundError('Team not found');
 
-        return await db.teams.update({
-            where: { id: teamId },
-            data: {
-                members: team.members.filter(m => m.id !== memberId)
-            }
-        });
-    },
+  return mapDatabaseTeam(team);
+}
 
-    async updateTeamMember(
-        teamId: string,
-        memberId: string,
-        updates: Partial<TeamMember>
-    ): Promise<Team> {
-        const team = await this.getTeam(teamId);
-        if (!team) throw new Error('Team not found');
+export async function listTeams(): Promise<Team[]> {
+  const { data: teams, error } = await supabaseClient
+    .from('teams')
+    .select('*')
+    .order('name');
 
-        return await db.teams.update({
-            where: { id: teamId },
-            data: {
-                members: team.members.map(m => 
-                    m.id === memberId ? { ...m, ...updates } : m
-                )
-            }
-        });
-    },
+  if (error) throw error;
+  return (teams || []).map(mapDatabaseTeam);
+}
 
-    // Team status management
-    async setTeamStatus(teamId: string, active: boolean): Promise<Team> {
-        return await db.teams.update({
-            where: { id: teamId },
-            data: { active }
-        });
-    },
+export async function deleteTeam(id: string): Promise<void> {
+  const { error } = await supabaseClient
+    .from('teams')
+    .delete()
+    .eq('id', id);
 
-    // Manual assignment override
-    async reassignBooking(bookingId: string, newTeamId: string): Promise<void> {
-        await db.teamAssignments.update({
-            where: { bookingId },
-            data: {
-                teamId: newTeamId,
-                manuallyAssigned: true,
-                assignedAt: new Date().toISOString()
-            }
-        });
-    }
-};
+  if (error) throw error;
+}

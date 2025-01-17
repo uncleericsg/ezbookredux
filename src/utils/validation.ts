@@ -1,62 +1,34 @@
-import type { TimeSlot, BookingValidation } from '@/types/booking';
+import type { TimeSlot } from '@/types/timeSlot';
+import type { ErrorMetadata } from '@/types/error';
+import { logger } from '@/lib/logger';
 
-export function isValidDate(date: string): boolean {
-  const d = new Date(date);
-  return d instanceof Date && !isNaN(d.getTime());
-}
+export function validateTimeSlot(slot: TimeSlot): boolean {
+  try {
+    if (!slot.startTime || !slot.endTime) {
+      logger.error('Invalid time slot:', {
+        message: 'Missing required fields',
+        details: { slotId: slot.id }
+      } satisfies ErrorMetadata);
+      return false;
+    }
 
-export function isValidTime(time: string): boolean {
-  const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-  return timeRegex.test(time);
-}
+    const startTime = new Date(slot.startTime);
+    const endTime = new Date(slot.endTime);
 
-export function validateBookingTime(slot: TimeSlot | null): BookingValidation {
-  if (!slot) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Time slot is required']
-      }
-    };
+    if (startTime >= endTime) {
+      logger.error('Invalid time slot:', {
+        message: 'End time must be after start time',
+        details: { slotId: slot.id }
+      } satisfies ErrorMetadata);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error('Error validating time slot:', {
+      message: error instanceof Error ? error.message : String(error),
+      details: { slotId: slot.id }
+    } satisfies ErrorMetadata);
+    return false;
   }
-
-  if (!slot.datetime) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Invalid time slot format']
-      }
-    };
-  }
-
-  if (!isValidDate(slot.datetime.split('T')[0])) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Invalid date format']
-      }
-    };
-  }
-
-  if (!isValidTime(slot.datetime.split('T')[1].split('.')[0])) {
-    return {
-      isValid: false,
-      errors: {
-        schedule: ['Invalid time format']
-      }
-    };
-  }
-
-  const errors: { schedule?: string[] } = {};
-  const warnings: { schedule?: string[]; price?: string[] } = {};
-
-  if (slot.price_multiplier > 1) {
-    warnings.price = ['This is a peak hour slot with higher pricing'];
-  }
-
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors: Object.keys(errors).length > 0 ? errors : undefined,
-    warnings: Object.keys(warnings).length > 0 ? warnings : undefined
-  };
 }

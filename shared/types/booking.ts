@@ -13,66 +13,53 @@ export interface CustomerInfo {
   special_instructions?: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
 
 export interface BookingDetails {
-  id?: string;
-  
-  // Customer Information
-  customer_info: CustomerInfo;
-  
-  // Address Information
-  address_id?: string;
-  address_snapshot?: Address;
-  
-  // Service Information
-  service_id: string;
-  service_title: string;
-  service_price: number;
-  service_duration: string;
-  service_description?: string;
-  
-  // Booking Details
-  brands: string[];
-  issues: string[];
-  other_issue?: string;
-  is_amc: boolean;
-  
-  // Schedule Information
-  scheduled_datetime: Date;
-  scheduled_timeslot: string;
-  
-  // Status and Timestamps
-  status?: BookingStatus;
-  created_at?: string;
-  updated_at?: string;
-  
-  // Payment Information
-  payment_status?: string;
-  payment_intent_id?: string;
-  total_amount?: number;
-  tip_amount?: number;
-  
-  // Additional Metadata
-  metadata?: Record<string, any>;
+  id: string;
+  customerId: string;
+  serviceId: string;
+  date: string;
+  status: BookingStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CreateBookingParams extends Omit<BookingDetails, 'id' | 'created_at' | 'updated_at'> {}
+export type BookingResponse = BookingDetails;
 
-export interface UpdateBookingParams extends Partial<BookingDetails> {}
+export interface BookingFilters {
+  status?: BookingStatus;
+  startDate?: Date;
+  endDate?: Date;
+  service?: string;
+}
 
-export interface BookingResponse {
-  data?: BookingDetails;
-  error?: {
-    message: string;
-    code: string;
+export interface CreateBookingParams extends Omit<BookingDetails, 'id' | 'createdAt' | 'updatedAt'> {
+  customerInfo?: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+export interface UpdateBookingParams extends Partial<Omit<BookingDetails, 'id' | 'createdAt' | 'updatedAt'>> {
+  customerInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
   };
 }
 
 export interface BookingsListResponse {
-  data?: BookingDetails[];
-  error?: {
-    message: string;
-    code: string;
-  };
+  bookings: BookingResponse[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface BookingError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
 } 

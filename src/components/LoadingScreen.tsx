@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-
-import { Spinner } from '@components/ui/spinner';
+import { Spinner } from './ui/spinner';
 
 interface LoadingScreenProps {
   message?: string;
@@ -18,10 +17,19 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
   return (
     <div className={`${containerClass} flex items-center justify-center`}>
-      <div className="text-center">
-        <Spinner size="xl" variant="yellow" className="mx-auto" />
-        <h1 className="text-xl font-semibold mt-4 text-yellow-400">{message}</h1>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col items-center gap-4 p-4 text-center"
+      >
+        <Spinner size="lg" />
+        {message && (
+          <p className="text-muted-foreground text-sm">{message}</p>
+        )}
+      </motion.div>
     </div>
   );
 };
+
+export default LoadingScreen;

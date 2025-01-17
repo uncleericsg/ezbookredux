@@ -1,21 +1,57 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 
+interface Field {
+  name: string;
+  type: string;
+  isId?: boolean;
+  isUnique?: boolean;
+  isRequired?: boolean;
+  hasDefaultValue?: boolean;
+  default?: unknown;
+  relationName?: string;
+}
+
+interface Model {
+  name: string;
+  fields: Field[];
+}
+
 async function generateSchemaDoc() {
   const prisma = new PrismaClient();
-  const dmmf = await prisma._getDmmf();
+  
+  // Get the Prisma schema metadata
+  const models = Object.keys(Prisma.ModelName).map(modelName => {
+    const dmmf = (Prisma.dmmf as any).datamodel.models.find(
+      (m: any) => m.name === modelName
+    );
+    
+    return {
+      name: modelName,
+      fields: dmmf.fields.map((field: any) => ({
+        name: field.name,
+        type: field.type,
+        isId: field.isId,
+        isUnique: field.isUnique,
+        isRequired: field.isRequired,
+        hasDefaultValue: field.hasDefaultValue,
+        default: field.default,
+        relationName: field.relationName
+      }))
+    };
+  });
   
   let markdown = '# Database Schema\n\n';
   
   // Generate models documentation
   markdown += '## Models\n\n';
-  dmmf.datamodel.models.forEach(model => {
+  models.forEach((model: Model) => {
     markdown += `### ${model.name}\n\n`;
     markdown += '| Field | Type | Attributes |\n';
     markdown += '|-------|------|------------|\n';
     
-    model.fields.forEach(field => {
+    model.fields.forEach((field: Field) => {
       const attributes = [];
       if (field.isId) attributes.push('Primary Key');
       if (field.isUnique) attributes.push('Unique');
@@ -31,7 +67,7 @@ async function generateSchemaDoc() {
   
   // Generate relationships documentation
   markdown += '## Relationships\n\n';
-  dmmf.datamodel.models.forEach(model => {
+  models.forEach((model: Model) => {
     const relations = model.fields.filter(f => f.relationName);
     if (relations.length > 0) {
       markdown += `### ${model.name} Relationships\n\n`;
@@ -42,9 +78,15 @@ async function generateSchemaDoc() {
     }
   });
   
+  // Ensure docs directory exists
+  const docsDir = path.join(process.cwd(), 'docs');
+  if (!fs.existsSync(docsDir)) {
+    fs.mkdirSync(docsDir);
+  }
+  
   // Write to file
   fs.writeFileSync(
-    path.join(process.cwd(), 'docs', 'database-schema.md'),
+    path.join(docsDir, 'database-schema.md'),
     markdown
   );
   

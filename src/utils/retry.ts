@@ -1,46 +1,25 @@
-import { isRetryableError } from './errors';
+export async function retry<T>(
+  operation: () => Promise<T>,
+  maxAttempts = 3,
+  delayMs = 1000
+): Promise<T> {
+  let attempts = 0;
+  let lastError: Error | null = null;
 
-export interface RetryOptions {
-  maxAttempts?: number;
-  delayMs?: number;
-  shouldRetry?: (error: unknown) => boolean;
-  onRetry?: (attempt: number, maxAttempts: number) => void;
-}
-
-const DEFAULT_OPTIONS: Required<RetryOptions> = {
-  maxAttempts: 3,
-  delayMs: 1000,
-  shouldRetry: isRetryableError,
-  onRetry: () => {}
-};
-
-export const withRetry = async <T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {}
-): Promise<T | null> => {
-  const { maxAttempts, delayMs, shouldRetry, onRetry } = { ...DEFAULT_OPTIONS, ...options };
-  let lastError: unknown;
-  let attempt = 1;
-
-  while (attempt <= maxAttempts) {
+  while (attempts < maxAttempts) {
     try {
-      return await fn();
+      return await operation();
     } catch (error) {
-      lastError = error;
+      attempts++;
+      lastError = error instanceof Error ? error : new Error(String(error));
       
-      if (attempt === maxAttempts || !shouldRetry(error)) {
-        throw error;
+      if (attempts === maxAttempts) {
+        throw lastError;
       }
-
-      onRetry(attempt, maxAttempts);
       
-      // Exponential backoff
-      const backoffTime = delayMs * Math.pow(2, attempt - 1);
-      await new Promise(resolve => setTimeout(resolve, backoffTime));
-      
-      attempt++;
+      await new Promise(resolve => setTimeout(resolve, delayMs * attempts));
     }
   }
 
-  return null;
-};
+  throw lastError || new Error('Max retry attempts reached');
+}

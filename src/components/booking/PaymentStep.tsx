@@ -72,9 +72,12 @@ import type {
   PaymentDetails,
   PaymentError,
   PaymentIntentResponse,
-  CreatePaymentIntentParams
+  CreatePaymentIntentParams,
+  StripePaymentIntent,
+  StripePaymentStatus,
 } from '@shared/types/payment';
-import { logger } from '@/utils/logger';
+import type { BookingStatus } from '@shared/types/booking';
+import { logger } from '@/server/utils/logger';
 
 // Utils
 import { cn } from '@utils/cn';
@@ -100,14 +103,10 @@ import { setError, setPaymentStatus } from '../../store/slices/userSlice';
 import { setCurrentBooking, updateBooking } from '../../store/slices/bookingSlice';
 
 // Services
-import { getStripe } from '@services/stripe';
-import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
-import { createBooking } from '@services/supabaseBookingService';
-import { getServiceByAppointmentType } from '@services/serviceUtils';
-
-// Types and Constants
-import type { StripePaymentIntent, PaymentState, PaymentStepProps, StripePaymentStatus, PaymentStatus } from '@/types';
-import { logger } from '@/server/utils/logger';
+import { getStripe } from '@/server/services/stripe/stripeService';
+import { createPaymentIntent, addToServiceQueue } from '@/server/services/payments/paymentService';
+import { createBooking } from '@/server/services/bookings/bookingService';
+import { getServiceByAppointmentType } from '@/server/services/bookings/serviceUtils';
 
 // Payment States and Types
 const PAYMENT_STATES = {
@@ -131,22 +130,6 @@ const mapPaymentStatus = (status: PaymentStatus): PaymentStateType => {
       return PAYMENT_STATES.IDLE;
   }
 };
-
-// Stripe types
-type StripePaymentStatus = 'requires_payment_method' | 'processing' | 'succeeded' | 'failed';
-
-// Stripe API response types
-interface StripePaymentIntent {
-  id: string;
-  clientSecret: string;
-  status: StripePaymentStatus;
-  amount?: number;
-}
-
-interface StripePaymentResponse {
-  id: string;
-  clientSecret: string;
-}
 
 // Type guard for PaymentIntent
 const isPaymentIntent = (obj: any): obj is StripePaymentIntent => {

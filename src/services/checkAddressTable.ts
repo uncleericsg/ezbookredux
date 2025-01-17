@@ -1,4 +1,4 @@
-import { supabase } from '@services/supabase/client';
+import { supabaseClient } from '@/server/config/supabase/client';
 import { initEnv } from '../utils/env';
 
 // Initialize environment variables
@@ -8,7 +8,7 @@ async function checkAddressTable() {
   try {
     // Get table structure
     console.log('Checking addresses table structure...');
-    const { data: addressData, error: addressError } = await supabase
+    const { data: addressData, error: addressError } = await supabaseClient
       .from('addresses')
       .select('*')
       .limit(1);
@@ -21,7 +21,7 @@ async function checkAddressTable() {
     console.log('Address table columns:', addressData ? Object.keys(addressData[0] || {}) : 'No data');
 
     // Get table definition
-    const { data: tableInfo, error: tableError } = await supabase
+    const { data: tableInfo, error: tableError } = await supabaseClient
       .rpc('get_table_definition', { table_name: 'addresses' });
 
     if (tableError) {

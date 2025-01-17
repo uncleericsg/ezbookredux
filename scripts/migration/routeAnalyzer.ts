@@ -69,6 +69,15 @@ export class RouteAnalyzer {
     }
   }
 
+  private getAttributeName(name: ts.JsxAttributeName): string {
+    if (ts.isIdentifier(name)) {
+      return name.text;
+    } else if (ts.isJsxNamespacedName(name)) {
+      return `${name.namespace.text}:${name.name.text}`;
+    }
+    return '';
+  }
+
   private extractRouteInfo(node: ts.JsxElement | ts.JsxSelfClosingElement): RouteInfo | null {
     const attributes = ts.isJsxElement(node) ? 
       node.openingElement.attributes.properties : 
@@ -81,7 +90,7 @@ export class RouteAnalyzer {
 
     attributes.forEach(attr => {
       if (ts.isJsxAttribute(attr)) {
-        const attrName = attr.name.text;
+        const attrName = this.getAttributeName(attr.name);
         const value = attr.initializer;
 
         if (attrName === 'path' && value && ts.isStringLiteral(value)) {

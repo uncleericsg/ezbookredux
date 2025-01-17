@@ -4,40 +4,38 @@
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
-  PRICING: '/service-pricing',
+  REGISTER: '/register',
+  PROFILE: '/profile',
+  DASHBOARD: '/dashboard',
   ADMIN: {
     ROOT: '/admin',
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
+    BOOKINGS: '/admin/bookings',
+    SETTINGS: '/admin/settings',
     SERVICES: '/admin/services',
-    TEAMS: '/admin/teams',
-    NOTIFICATIONS: '/admin/notifications',
-    HOMEPAGE: '/admin/homepage',
-    AMC: '/admin/amc',
-    ANALYTICS: '/admin/analytics',
-    BRANDING: '/admin/branding',
-    PUSH: '/admin/push',
-    SETTINGS: '/admin/settings'
+    TEAMS: '/admin/teams'
   },
-  PROFILE: '/profile',
-  DASHBOARD: '/dashboard',
-  NOTIFICATIONS: '/notifications',
   BOOKING: {
     ROOT: '/booking',
+    NEW: '/booking/new',
+    CONFIRM: '/booking/confirm',
+    SUCCESS: '/booking/success',
     FIRST_TIME: '/booking/first-time',
-    SERVICE: '/booking/service',
-    CONFIRMATION: '/booking/confirmation/:bookingId',
-    RETURN_CUSTOMER: '/booking/return-customer',
-    PRICE_SELECTION: '/booking/price-selection',
-    POWERJET_CHEMICAL: '/booking/powerjet-chemical-wash',
-    GAS_LEAK: '/booking/gas-check-leak',
-    NEW: '/booking/new'
+    POWERJET_CHEMICAL: '/booking/powerjet-chemical',
+    GAS_LEAK: '/booking/gas-leak'
   },
-  AMC: {
-    PACKAGES: '/amc/packages',
-    SUBSCRIPTION: '/amc/subscription-flow',
-    SIGNUP: '/amc/signup'
+  SERVICES: {
+    ROOT: '/services',
+    HISTORY: '/services/history',
+    SCHEDULE: '/services/schedule'
   },
+  PAYMENTS: {
+    ROOT: '/payments',
+    HISTORY: '/payments/history',
+    SUCCESS: '/payments/success',
+    CANCEL: '/payments/cancel'
+  }
 } as const;
 
 // Routes that require authentication

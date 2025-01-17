@@ -1,77 +1,92 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { 
-  getDistanceFromLatLonInKm, 
-  filterSlotsByDistance, 
-  MIN_DISTANCE_KM,
-  MAX_DISTANCE_KM,
-  getDistanceWeight
-} from '../regions';
-import { TimeSlot } from '../../../types';
+import { describe, expect, it } from 'vitest';
+import type { TimeSlot } from '@/types/timeSlot';
+import { getRegionFromPostalCode, isLocationInRegion, RegionKey } from '../classifier';
 
-describe('Location Services', () => {
-  describe('getDistanceWeight', () => {
-    it('should return 1 for distances under MIN_DISTANCE_KM', () => {
-      expect(getDistanceWeight(MIN_DISTANCE_KM - 1)).toBe(1);
-      expect(getDistanceWeight(MIN_DISTANCE_KM - 0.5)).toBe(1);
+describe('Region Classification', () => {
+  describe('getRegionFromPostalCode', () => {
+    it('should correctly classify postal codes to regions', () => {
+      expect(getRegionFromPostalCode('650101')).toBe('NORTH');
+      expect(getRegionFromPostalCode('089123')).toBe('SOUTH');
+      expect(getRegionFromPostalCode('469001')).toBe('EAST');
+      expect(getRegionFromPostalCode('120001')).toBe('WEST');
+      expect(getRegionFromPostalCode('310001')).toBe('CENTRAL');
     });
 
-    it('should return scaled weight for distances between MIN and MAX', () => {
-      const midPoint = (MIN_DISTANCE_KM + MAX_DISTANCE_KM) / 2; // 6.5km
-      const midWeight = getDistanceWeight(midPoint);
-      expect(midWeight).toBeCloseTo(0.45, 2);
-
-      const quarterPoint = MIN_DISTANCE_KM + (MAX_DISTANCE_KM - MIN_DISTANCE_KM) * 0.25; // 5.75km
-      const quarterWeight = getDistanceWeight(quarterPoint);
-      expect(quarterWeight).toBeCloseTo(0.675, 2);
-    });
-
-    it('should return 0 for distances beyond MAX_DISTANCE_KM', () => {
-      expect(getDistanceWeight(MAX_DISTANCE_KM + 0.1)).toBe(0);
-      expect(getDistanceWeight(MAX_DISTANCE_KM + 1)).toBe(0);
+    it('should return null for invalid postal codes', () => {
+      expect(getRegionFromPostalCode('')).toBeNull();
+      expect(getRegionFromPostalCode('1')).toBeNull();
+      expect(getRegionFromPostalCode('999999')).toBeNull();
     });
   });
 
-  describe('filterSlotsByDistance', () => {
-    const mockSlots: TimeSlot[] = [
-      {
-        id: '1',
-        datetime: '2024-01-01T09:00:00Z',
-        available: true
+  describe('isLocationInRegion', () => {
+    it('should correctly identify locations within regions', () => {
+      // North region test
+      expect(isLocationInRegion(1.429, 103.836, 'NORTH')).toBe(true);
+      expect(isLocationInRegion(1.439, 103.846, 'NORTH')).toBe(true);
+      expect(isLocationInRegion(1.419, 103.826, 'NORTH')).toBe(true);
+
+      // South region test
+      expect(isLocationInRegion(1.270, 103.819, 'SOUTH')).toBe(true);
+      expect(isLocationInRegion(1.280, 103.829, 'SOUTH')).toBe(true);
+      expect(isLocationInRegion(1.260, 103.809, 'SOUTH')).toBe(true);
+
+      // East region test
+      expect(isLocationInRegion(1.352, 103.940, 'EAST')).toBe(true);
+      expect(isLocationInRegion(1.362, 103.950, 'EAST')).toBe(true);
+      expect(isLocationInRegion(1.342, 103.930, 'EAST')).toBe(true);
+    });
+
+    it('should correctly identify locations outside regions', () => {
+      // Test points far from any region
+      expect(isLocationInRegion(1.0, 103.0, 'NORTH')).toBe(false);
+      expect(isLocationInRegion(2.0, 104.0, 'SOUTH')).toBe(false);
+      expect(isLocationInRegion(1.5, 104.5, 'EAST')).toBe(false);
+    });
+  });
+
+  describe('Time Slot Region Classification', () => {
+    const createTimeSlot = (lat: number, lng: number): TimeSlot => ({
+      id: '1',
+      startTime: '2024-01-20T09:00:00Z',
+      endTime: '2024-01-20T10:00:00Z',
+      isAvailable: true,
+      isPeakHour: false,
+      priceMultiplier: 1,
+      serviceId: null,
+      technicianId: null,
+      status: 'available',
+      blockReason: null,
+      metadata: {
+        location: { lat, lng }
       },
-      {
-        id: '2',
-        datetime: '2024-01-01T10:00:00Z',
-        available: true
-      }
-    ];
-
-    it('should assign weight 1 for distances under MIN_DISTANCE_KM', () => {
-      const distance = MIN_DISTANCE_KM - 1;
-      const filteredSlots = filterSlotsByDistance(mockSlots, distance);
-      expect(filteredSlots[0].weight).toBe(1);
-      expect(filteredSlots[1].weight).toBe(1);
+      duration: 60,
+      createdAt: '2024-01-20T00:00:00Z',
+      updatedAt: '2024-01-20T00:00:00Z'
     });
 
-    it('should assign scaled weights for distances between MIN and MAX', () => {
-      const distance = (MIN_DISTANCE_KM + MAX_DISTANCE_KM) / 2; // 6.5km
-      const filteredSlots = filterSlotsByDistance(mockSlots, distance);
-      expect(filteredSlots[0].weight).toBeCloseTo(0.45, 2);
-      expect(filteredSlots[1].weight).toBeCloseTo(0.45, 2);
-    });
+    it('should correctly classify time slots based on location', () => {
+      const northSlot = createTimeSlot(1.429, 103.836);
+      const southSlot = createTimeSlot(1.270, 103.819);
+      const eastSlot = createTimeSlot(1.352, 103.940);
 
-    it('should mark slots as unavailable when beyond MAX_DISTANCE_KM', () => {
-      const distance = MAX_DISTANCE_KM + 1;
-      const filteredSlots = filterSlotsByDistance(mockSlots, distance);
-      expect(filteredSlots.every(slot => !slot.available)).toBe(true);
-    });
-  });
+      expect(isLocationInRegion(
+        northSlot.metadata?.location?.lat || 0,
+        northSlot.metadata?.location?.lng || 0,
+        'NORTH'
+      )).toBe(true);
 
-  describe('getDistanceFromLatLonInKm', () => {
-    it('should calculate correct distance between two points', () => {
-      const point1 = { latitude: 1.3329, longitude: 103.7436 }; // Jurong East
-      const point2 = { latitude: 1.4291, longitude: 103.8354 }; // Yishun
-      const distance = getDistanceFromLatLonInKm(point1, point2);
-      expect(distance).toBeCloseTo(11.5, 1);
+      expect(isLocationInRegion(
+        southSlot.metadata?.location?.lat || 0,
+        southSlot.metadata?.location?.lng || 0,
+        'SOUTH'
+      )).toBe(true);
+
+      expect(isLocationInRegion(
+        eastSlot.metadata?.location?.lat || 0,
+        eastSlot.metadata?.location?.lng || 0,
+        'EAST'
+      )).toBe(true);
     });
   });
 });

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import AdminHeader from '@admin/AdminHeader';
 import AdminNav from '@admin/AdminNav';
 import { useBooking } from '@/hooks/useBooking';
-import type { BookingDetails } from '@shared/types/booking';
+import type { BookingDetails } from '@server/types/booking';
 import { useAuth } from '@/hooks/useAuth';
 
 const AdminBookings = () => {

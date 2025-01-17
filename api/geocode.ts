@@ -1,6 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { logger } from '@/server/utils/logger';
+import type { NextApiResponse } from 'next';
+import { withAuth } from '@/api/shared/middleware';
 import { ApiError } from '@/server/utils/apiErrors';
+import { logger } from '@/server/utils/logger';
+import type { AuthenticatedRequest } from '@/api/shared/types';
 
 interface GeocodeResult {
   formatted_address: string;
@@ -30,39 +32,18 @@ interface GeocodeResponse {
   status: string;
 }
 
-interface ApiResponse<T> {
-  data?: T;
-  error?: {
-    message: string;
-    code: string;
-  };
-  meta?: {
-    total: number;
-  };
-}
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ApiResponse<GeocodeResult[]>>
+async function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      error: {
-        message: 'Method not allowed',
-        code: 'METHOD_NOT_ALLOWED'
-      }
-    });
+    throw new ApiError('Method not allowed', 'METHOD_NOT_ALLOWED');
   }
 
   const { postalCode } = req.query;
 
   if (!postalCode || Array.isArray(postalCode)) {
-    return res.status(400).json({
-      error: {
-        message: 'Postal code is required and must be a string',
-        code: 'INVALID_PARAMETER'
-      }
-    });
+    throw new ApiError('Postal code is required and must be a string', 'VALIDATION_ERROR');
   }
 
   try {
@@ -96,7 +77,8 @@ export default async function handler(
 
     logger.info('Geocoding successful', {
       postalCode,
-      resultsCount: data.results.length
+      resultsCount: data.results.length,
+      userId: req.user.id
     });
 
     return res.status(200).json({
@@ -106,13 +88,14 @@ export default async function handler(
       }
     });
   } catch (error) {
-    logger.error('Geocoding failed', { error, postalCode });
-
+    logger.error('Geocoding failed', { error, postalCode, userId: req.user.id });
+    
     if (error instanceof ApiError) {
-      return res.status(500).json({
+      return res.status(error.statusCode).json({
         error: {
           message: error.message,
-          code: error.code
+          code: error.code,
+          details: error.details
         }
       });
     }
@@ -120,8 +103,10 @@ export default async function handler(
     return res.status(500).json({
       error: {
         message: 'Internal server error',
-        code: 'INTERNAL_SERVER_ERROR'
+        code: 'SERVER_ERROR'
       }
     });
   }
-} 
+}
+
+export default withAuth(handler); 

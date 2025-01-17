@@ -1,60 +1,87 @@
-import type { BaseEntity } from './common';
-
-export type BookingStatus = 
-  | 'pending'
-  | 'confirmed'
-  | 'completed'
-  | 'cancelled';
+import type { Database } from './database';
 
 export interface Booking {
   id: string;
-  user_id: string;
-  service_id: string;
-  address_id: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  padding_start: string;
-  padding_end: string;
+  userId: string;
+  serviceId: string;
+  scheduledAt: string;
   status: BookingStatus;
-  payment_status: string;
-  payment_id: string | null;
-  total_amount: number;
-  notes: string | null;
+  totalAmount: number;
+  notes?: string | null;
   created_at: string;
   updated_at: string;
+  metadata?: BookingMetadata | null;
 }
 
 export interface CreateBookingRequest {
-  service_id: string;
-  address_id: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  notes?: string;
+  userId: string;
+  serviceId: string;
+  scheduledAt: string;
+  totalAmount: number;
+  notes?: string | null;
+  metadata?: BookingMetadata | null;
 }
 
-export interface CreateBookingResponse {
+export interface UpdateBookingRequest {
   id: string;
-  status: BookingStatus;
-  bookingReference: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  total_amount: number;
+  userId?: string;
+  serviceId?: string;
+  scheduledAt?: string;
+  status?: BookingStatus;
+  totalAmount?: number;
+  notes?: string | null;
+  metadata?: BookingMetadata | null;
 }
 
-export interface TimeSlot {
-  start_time: string;
-  end_time?: string;
-  is_available: boolean;
-  is_peak_hour: boolean;
-  is_buffer_time?: boolean;
-  price_multiplier?: number;
+export interface BookingMetadata extends Record<string, unknown> {
+  padding_start?: number;
+  padding_end?: number;
 }
 
-export interface BookingFilters {
-  status?: BookingStatus[];
-  date_from?: string;
-  date_to?: string;
-  service_id?: string;
+export function mapDatabaseBooking(dbBooking: any): Booking {
+  return {
+    id: dbBooking.id,
+    userId: dbBooking.userId,
+    serviceId: dbBooking.serviceId,
+    scheduledAt: dbBooking.scheduledAt,
+    status: dbBooking.status as BookingStatus,
+    totalAmount: dbBooking.totalAmount,
+    notes: dbBooking.notes,
+    created_at: dbBooking.created_at,
+    updated_at: dbBooking.updated_at,
+    metadata: dbBooking.metadata as BookingMetadata | null
+  };
+}
+
+export function mapBookingToDatabase(booking: CreateBookingRequest | UpdateBookingRequest): Record<string, unknown> {
+  const dbBooking: Record<string, unknown> = {};
+
+  if ('id' in booking) {
+    dbBooking.id = booking.id;
+  }
+  if ('userId' in booking) {
+    dbBooking.userId = booking.userId;
+  }
+  if ('serviceId' in booking) {
+    dbBooking.serviceId = booking.serviceId;
+  }
+  if ('scheduledAt' in booking) {
+    dbBooking.scheduledAt = booking.scheduledAt;
+  }
+  if ('status' in booking) {
+    dbBooking.status = booking.status;
+  }
+  if ('totalAmount' in booking) {
+    dbBooking.totalAmount = booking.totalAmount;
+  }
+  if ('notes' in booking) {
+    dbBooking.notes = booking.notes;
+  }
+  if ('metadata' in booking) {
+    dbBooking.metadata = booking.metadata;
+  }
+
+  return dbBooking;
 }
 
 export interface BookingValidation {
@@ -63,51 +90,23 @@ export interface BookingValidation {
   warnings: string[];
 }
 
-export interface BookingCustomer {
-  id: string;
-  name: string | null;
-  email: string;
-}
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
-export interface BookingService {
-  id: string;
-  name: string;
-  price: number;
-}
-
-export interface GetBookingResponse {
-  id: string;
-  customer: BookingCustomer;
-  service: BookingService;
-  status: BookingStatus;
-  date: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  total_amount: number;
-  payment_status: string;
-  notes: string | null;
-}
-
-export interface BookingListResponse {
-  id: string;
-  scheduled_start: string;
-  scheduled_end: string;
-  status: BookingStatus;
-  total_amount: number;
-  service: {
-    id: string;
-    title: string;
-  };
-  address: {
-    id: string;
-    block_street: string;
-    postal_code: string;
-  };
-}
-
-export interface UpdateBookingRequest {
-  scheduled_start?: string;
-  scheduled_end?: string;
-  notes?: string | null;
+export interface BookingFilters {
   status?: BookingStatus;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface BookingListResponse extends Booking {
+  service: {
+    title: string;
+    description?: string | null;
+  };
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+  } | null;
 }

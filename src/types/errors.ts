@@ -1,45 +1,22 @@
-export type ApiErrorCode = 
-  | 'VALIDATION_ERROR'
-  | 'PAYMENT_ERROR'
-  | 'NOT_FOUND'
-  | 'UNAUTHORIZED'
-  | 'SERVER_ERROR'
-  | 'NETWORK_ERROR'
-  | 'DATABASE_ERROR'
-  | 'AUTHENTICATION_ERROR'
-  | 'AUTHORIZATION_ERROR'
-  | 'RATE_LIMIT_ERROR'
+export type ApiErrorCode =
   | 'INVALID_REQUEST'
-  | 'RESOURCE_EXISTS'
-  | 'RESOURCE_NOT_FOUND'
-  | 'SERVICE_UNAVAILABLE'
-  | 'INVALID_CREDENTIALS'
-  | 'TOKEN_EXPIRED'
-  | 'INVALID_TOKEN'
-  | 'MISSING_REQUIRED_FIELD'
-  | 'INVALID_FORMAT'
-  | 'BOOKING_ERROR'
+  | 'UNAUTHORIZED'
   | 'PAYMENT_REQUIRED'
-  | 'INSUFFICIENT_FUNDS'
-  | 'INVALID_PAYMENT_METHOD'
-  | 'PAYMENT_DECLINED'
-  | 'INVALID_POSTAL_CODE'
-  | 'INVALID_PHONE_NUMBER'
-  | 'INVALID_EMAIL'
-  | 'INVALID_DATE'
-  | 'INVALID_TIME'
-  | 'SLOT_UNAVAILABLE'
-  | 'BOOKING_CONFLICT'
-  | 'INVALID_SERVICE'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'CONFLICT'
+  | 'RATE_LIMIT_ERROR'
+  | 'INTERNAL_SERVER_ERROR'
   | 'SERVICE_UNAVAILABLE'
-  | 'INVALID_ADDRESS'
-  | 'GEOCODING_ERROR'
-  | 'DISTANCE_ERROR'
+  | 'FIREBASE_AUTH_ERROR'
+  | 'FIREBASE_DB_ERROR'
+  | 'STRIPE_ERROR'
+  | 'MAPS_ERROR'
   | 'PRICING_ERROR'
   | 'SERVICE_ERROR'
-  | 'FIREBASE_ERROR'
-  | 'STRIPE_ERROR'
-  | 'MAPS_ERROR';
+  | 'PAYMENT_ERROR'
+  | 'SERVICE_INIT_ERROR';
 
 export interface ApiError {
   code: ApiErrorCode;
@@ -48,18 +25,15 @@ export interface ApiError {
 }
 
 export interface ErrorReport {
+  message: string;
+  code: ApiErrorCode;
+  stack?: string;
   timestamp: string;
   environment: string;
-  userId?: string;
-  sessionId?: string;
-  error: ApiError;
   context?: Record<string, any>;
-  stackTrace?: string;
 }
 
-export interface NetworkError {
-  code: string;
-  isNetworkError: boolean;
+export interface ApiResponse<T> {
+  data?: T;
+  error?: ApiError;
 }
-
-// Remove specific error classes and their type guards as they're now handled through the ApiError interface

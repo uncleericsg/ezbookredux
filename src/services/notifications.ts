@@ -1,65 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
-import { ENV } from '@/config/env';
-import type { Database } from '@/types/database';
 import type { Notification, NotificationPreferences } from '@/types/notifications';
-import { handleUnknownError } from '@/utils/errorHandling';
+import { logger } from '@/utils/logger';
+import { ErrorMetadata } from '@/types/error';
 
-const supabase = createClient<Database>(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
-
-export async function getNotifications(userId: string): Promise<Notification[]> {
+export async function sendNotification(notification: Notification): Promise<void> {
   try {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    const response = await fetch('/api/notifications/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(notification)
+    });
 
-    if (error) throw error;
-    return data || [];
+    if (!response.ok) {
+      throw new Error(`Failed to send notification: ${response.statusText}`);
+    }
   } catch (error) {
-    throw handleUnknownError(error);
+    logger.error('Error sending notification:', error as ErrorMetadata);
+    throw error;
   }
 }
 
-export async function markNotificationAsRead(id: string): Promise<void> {
+export async function updateNotificationPreferences(
+  userId: string, 
+  preferences: NotificationPreferences
+): Promise<NotificationPreferences> {
   try {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id);
+    const response = await fetch(`/api/users/${userId}/notification-preferences`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(preferences)
+    });
 
-    if (error) throw error;
+    if (!response.ok) {
+      throw new Error(`Failed to update notification preferences: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (error) {
-    throw handleUnknownError(error);
+    logger.error('Error updating notification preferences:', error as ErrorMetadata);
+    throw error;
   }
 }
 
 export async function getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
   try {
-    const { data, error } = await supabase
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const response = await fetch(`/api/users/${userId}/notification-preferences`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get notification preferences: ${response.statusText}`);
+    }
 
-    if (error) throw error;
-    return data || { email: true, push: true, sms: false };
+    return await response.json();
   } catch (error) {
-    throw handleUnknownError(error);
-  }
-}
-
-export async function updateNotificationPreferences(
-  userId: string,
-  preferences: Partial<NotificationPreferences>
-): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('notification_preferences')
-      .upsert({ user_id: userId, ...preferences });
-
-    if (error) throw error;
-  } catch (error) {
-    throw handleUnknownError(error);
+    logger.error('Error getting notification preferences:', error as ErrorMetadata);
+    throw error;
   }
 }

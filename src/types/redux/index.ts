@@ -1,5 +1,5 @@
 // Core Redux Types
-import type { UserProfile, UserAddress } from '../user';
+import type { UserProfile } from '../user';
 import type { BaseEntity } from '../index';
 import type { AdminData } from '../admin';
 
@@ -63,8 +63,8 @@ export interface ServiceState {
 
 // User State
 export interface UserState {
-  currentUser: UserProfile | null;
-  loading: boolean;
+  user: UserProfile | null;
+  isLoading: boolean;
   error: string | null;
   paymentStatus: 'idle' | 'processing' | 'success' | 'error';
   verificationId: string | null;

@@ -1,10 +1,33 @@
 // @integration-point Data service for Supabase operations
 // This file will contain all Supabase database operations
 
-import type { User } from '@types';
+import type { User } from '@/types/user';
+
+interface Address {
+  id: string;
+  name: string;
+  floorUnit: string;
+  blockStreet: string;
+  postalCode: string;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface Booking {
+  id: string;
+  userId: string;
+  serviceType: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  date: string;
+  time: string;
+  address: Address;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 // Mock data for development
-const mockBookings = [
+const mockBookings: Booking[] = [
   {
     id: 'booking-1',
     userId: 'user-1',
@@ -23,16 +46,13 @@ const mockBookings = [
 ];
 
 // @integration-point Booking operations
-// TODO: Replace with Supabase queries
 export const bookingOperations = {
-  // Get user's bookings
-  getUserBookings: async (userId: string) => {
+  getUserBookings: async (userId: string): Promise<Booking[]> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return mockBookings.filter(booking => booking.userId === userId);
   },
 
-  // Create new booking
-  createBooking: async (bookingData: any) => {
+  createBooking: async (bookingData: Omit<Booking, 'id' | 'createdAt'>): Promise<Booking> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       ...bookingData,
@@ -41,8 +61,7 @@ export const bookingOperations = {
     };
   },
 
-  // Update booking
-  updateBooking: async (bookingId: string, data: any) => {
+  updateBooking: async (bookingId: string, data: Partial<Booking>): Promise<Booking> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       ...mockBookings[0],
@@ -54,10 +73,8 @@ export const bookingOperations = {
 };
 
 // @integration-point Address operations
-// TODO: Replace with Supabase queries
 export const addressOperations = {
-  // Get user's addresses
-  getUserAddresses: async (userId: string) => {
+  getUserAddresses: async (userId: string): Promise<Address[]> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return [{
       id: 'addr-1',
@@ -69,8 +86,7 @@ export const addressOperations = {
     }];
   },
 
-  // Add new address
-  addAddress: async (userId: string, addressData: any) => {
+  addAddress: async (addressData: Omit<Address, 'id' | 'createdAt'>): Promise<Address> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       ...addressData,
@@ -79,39 +95,40 @@ export const addressOperations = {
     };
   },
 
-  // Update address
-  updateAddress: async (addressId: string, data: any) => {
+  updateAddress: async (addressId: string, data: Partial<Address>): Promise<Address> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       id: addressId,
       ...data,
       updatedAt: new Date().toISOString()
-    };
+    } as Address;
   }
 };
 
 // @integration-point Profile operations
-// TODO: Replace with Supabase queries
 export const profileOperations = {
-  // Get user profile
-  getProfile: async (userId: string) => {
+  getProfile: async (userId: string): Promise<User> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       id: userId,
       firstName: 'Test',
       lastName: 'User',
       email: 'test@example.com',
-      phone: '1234567890'
+      phone: '1234567890',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   },
 
-  // Update profile
-  updateProfile: async (userId: string, data: Partial<User>) => {
+  updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       id: userId,
       ...data,
-      updatedAt: new Date().toISOString()
-    };
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as User;
   }
 };

@@ -1,4 +1,4 @@
-import { supabase } from '@services/supabase/client';
+import { supabaseClient } from '@/server/config/supabase/client';
 
 // Load environment variables
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 async function checkSchema() {
   try {
     // Get list of all tables
-    const { data: tables, error: tablesError } = await supabase
+    const { data: tables, error: tablesError } = await supabaseClient
       .rpc('get_schema_info');
 
     if (tablesError) {
@@ -50,7 +50,7 @@ async function checkSchema() {
     const tablesToCheck = ['bookings', 'addresses', 'users', 'profiles'];
     
     for (const table of tablesToCheck) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from(table)
         .select('*')
         .limit(1);

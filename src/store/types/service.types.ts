@@ -1,4 +1,14 @@
-import type { ServiceCategory, ServiceOption } from '../../types/service';
+import type { ServiceCategory } from '../../types/serviceCategory';
+
+export interface ServiceOption {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
+  categoryId: string;
+  isAvailable: boolean;
+}
 
 export interface ServiceState {
   services: ServiceCategory[];

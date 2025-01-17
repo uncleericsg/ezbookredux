@@ -1,38 +1,18 @@
-import React, { lazy, Suspense } from 'react';
-import { LoadingState } from '../components/booking/components/LoadingState';
+import React, { Suspense } from 'react';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
-// Lazy load components
-const OptimizedBookingFlow = lazy(() => 
-  import('../components/booking/OptimizedBookingFlow').then(module => ({
-    default: module.OptimizedBookingFlow
+// Using dynamic import with type assertion to ensure proper typing
+const OptimizedBookingFlow = React.lazy(() => 
+  import('@/components/booking/OptimizedBookingFlow').then(module => ({
+    default: module.default || module
   }))
 );
 
-// Preload component function
-export const preloadBookingComponents = () => {
-  const preloadComponents = [
-    import('../components/booking/BrandSelection'),
-    import('../components/booking/IssueSelection'),
-    import('../components/booking/CustomerForm'),
-  ];
-
-  return Promise.all(preloadComponents);
-};
-
-// Optimized booking route configuration
 export const optimizedBookingRoute = {
-  path: 'booking',
+  path: 'optimized',
   element: (
-    <Suspense fallback={<LoadingState />}>
+    <Suspense fallback={<LoadingScreen />}>
       <OptimizedBookingFlow />
     </Suspense>
-  ),
-  loader: async () => {
-    // Start preloading components
-    preloadBookingComponents().catch(console.error);
-    return null;
-  },
-  handle: {
-    crumb: () => 'Booking',
-  },
+  )
 };

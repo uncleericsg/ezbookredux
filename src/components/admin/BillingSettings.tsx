@@ -1,29 +1,52 @@
 'use client';
 
 import { Save } from 'lucide-react';
+import { PaymentService } from '@server/services/payments/paymentService';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-import { Button } from '@components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/Card';
-import { Input } from '@components/ui/Input';
-import { Label } from '@components/ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/Select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/Tabs';
+import { Button } from '@components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
+import { Input } from '@components/ui/input';
+import { Label } from '@components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export interface BillingSettingsData {
+interface BillingSettingsData {
   stripeEnabled: boolean;
   stripePublishableKey: string;
   stripeSecretKey: string;
   currency: string;
   taxRate: number;
+  paymentMethods: {
+    creditCard: boolean;
+    payNow: boolean;
+    bankTransfer: boolean;
+  };
+  invoiceSettings: {
+    companyName: string;
+    companyAddress: string;
+    companyEmail: string;
+    companyPhone: string;
+    vatNumber: string;
+    prefix: string;
+    footer: string;
+  };
+  notifications: {
+    paymentSuccess: boolean;
+    paymentFailed: boolean;
+    invoiceGenerated: boolean;
+    reminderEnabled: boolean;
+    reminderDays: number;
+  };
 }
 
-export interface BillingSettingsProps {
-  data: BillingSettingsData;
+interface BillingSettingsProps {
+  settings: BillingSettingsData;
   onSave: (data: BillingSettingsData) => void;
   loading?: boolean;
+  className?: string;
 }
 
 const BillingSettings = ({
@@ -42,7 +65,25 @@ const BillingSettings = ({
 
   const handleSave = async () => {
     try {
+      // Validate Stripe keys if enabled
+      if (settings.stripeEnabled) {
+        if (!settings.stripePublishableKey || !settings.stripeSecretKey) {
+          throw new Error('Stripe keys are required when Stripe is enabled');
+        }
+      }
+
+      // Save settings
       await onSave(settings);
+      
+      // Update payment service configuration
+      if (settings.stripeEnabled) {
+        const paymentService = new PaymentService();
+        await paymentService.updateConfiguration({
+          publishableKey: settings.stripePublishableKey,
+          secretKey: settings.stripeSecretKey
+        });
+      }
+
       toast.success('Billing settings saved successfully');
     } catch (error) {
       toast.error('Failed to save billing settings');

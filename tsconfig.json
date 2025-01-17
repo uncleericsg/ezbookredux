@@ -1,57 +1,92 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": [
+      "@types/google.maps",
+      "node",
+      "jest",
+      "mocha",
+      "stripe"
+    ],
+    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
+    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@services/*": ["src/services/*"],
-      "@store/*": ["src/store/*"],
-      "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"],
-      "@admin/*": ["src/components/admin/*"],
-      "@booking/*": ["src/components/booking/*"],
-      "@auth/*": ["src/components/auth/*"],
-      "@common/*": ["src/components/common/*"],
-      "@dev/*": ["src/components/dev/*"],
-      "@error-boundary/*": ["src/components/error-boundary/*"],
-      "@icons/*": ["src/components/icons/*"],
-      "@modals/*": ["src/components/modals/*"],
-      "@notifications/*": ["src/components/notifications/*"],
-      "@payment/*": ["src/components/payment/*"],
-      "@profile/*": ["src/components/profile/*"],
-      "@tech/*": ["src/components/tech/*"],
-      "@test/*": ["src/components/test/*"],
-      "@ui/*": ["src/components/ui/*"]
-    }
+      "@/*": [
+        "src/*"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@services/*": [
+        "src/services/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ],
+      "@config/*": [
+        "src/config/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@server/*": [
+        "src/server/*"
+      ],
+      "@shared/types/*": [
+        "src/types/*"
+      ],
+      "@server/types/*": [
+        "src/types/*"
+      ],
+      "@server/utils/*": [
+        "src/utils/*"
+      ],
+      "@server/config/*": [
+        "src/config/*"
+      ],
+      "@admin/*": [
+        "src/components/admin/*"
+      ]
+    },
+    "allowJs": true,
+    "incremental": true,
+    "esModuleInterop": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts",
-    "**/*.config.ts",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "vite.config.ts",
-    "vitest.config.ts",
-    "tailwind.config.ts",
-    "vite-plugin-google-maps.ts"
+    "src"
   ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

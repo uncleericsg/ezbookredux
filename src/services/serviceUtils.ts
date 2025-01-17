@@ -1,85 +1,100 @@
-import { supabase } from '@lib/supabase';
-import { isValidUUID } from '@utils/validation';
+import { supabaseClient } from '@/config/supabase/client';
+import { logger } from '@/lib/logger';
+import { handleNotFoundError, handleValidationError } from '@/utils/apiErrors';
+import type { Service } from '@/types/service';
 
-export interface ServiceDetails {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  duration: string;
-  appointment_type_id: string;
-  usual_price?: number;
-  is_premium?: boolean;
+export interface ServiceDetails extends Omit<Service, 'metadata'> {
+  // All fields are already in the Service interface
 }
 
-/**
- * Get service details from Supabase by appointment type ID
- * @param appointmentTypeId The frontend service id that maps to appointment_type_id
- */
-export const getServiceByAppointmentType = async (appointmentTypeId: string): Promise<ServiceDetails | null> => {
-  try {
-    console.log('Looking up service with appointmentTypeId:', appointmentTypeId);
-    
-    const { data: service, error } = await supabase
-      .from('services')
-      .select('*')
-      .eq('appointment_type_id', appointmentTypeId)
-      .single();
+export function mapDatabaseService(dbService: Service): ServiceDetails {
+  return {
+    id: dbService.id,
+    title: dbService.title,
+    description: dbService.description,
+    price: dbService.price,
+    duration: dbService.duration,
+    categoryId: dbService.categoryId,
+    isActive: dbService.isActive,
+    created_at: dbService.created_at,
+    updated_at: dbService.updated_at
+  };
+}
 
-    if (error) {
-      console.error('Error finding service:', error);
-      console.log('Query details:', {
-        table: 'services',
-        field: 'appointment_type_id',
-        value: appointmentTypeId,
-        error: error.message
-      });
-      return null;
-    }
-
-    if (!service) {
-      console.log('No service found with appointment_type_id:', appointmentTypeId);
-      return null;
-    }
-
-    return service;
-  } catch (error) {
-    console.error('Error in getServiceByAppointmentType:', error);
+export async function getServiceById(id: string): Promise<ServiceDetails | null> {
+  if (!isValidUUID(id)) {
+    logger.warn('Invalid UUID format', { id });
     return null;
   }
-};
 
-/**
- * Get service details from Supabase by ID
- * @param id The service UUID
- */
-export const getServiceById = async (id: string): Promise<ServiceDetails | null> => {
-  try {
-    // Validate UUID format first
-    if (!isValidUUID(id)) {
-      console.error('Invalid UUID format:', id);
-      return null;
-    }
+  const { data: service, error } = await supabaseClient
+    .from('services')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    const { data: service, error } = await supabase
-      .from('services')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error finding service:', error);
-      console.log('Query details:', {
-        table: 'services',
-        field: 'id',
-        value: id
-      });
-      return null;
-    }
-
-    return service;
-  } catch (error) {
-    console.error('Error in getServiceById:', error);
-    return null;
+  if (error) {
+    handleNotFoundError('Service not found');
   }
-};
+
+  return service ? mapDatabaseService(service) : null;
+}
+
+export function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+export async function validateServiceId(serviceId: string): Promise<boolean> {
+  if (!isValidUUID(serviceId)) {
+    handleValidationError('Invalid service ID format');
+  }
+
+  const { data: service, error } = await supabaseClient
+    .from('services')
+    .select('id')
+    .eq('id', serviceId)
+    .single();
+
+  if (error || !service) {
+    handleNotFoundError('Service not found');
+  }
+
+  return true;
+}
+
+export async function validateTechnicianId(technicianId: string): Promise<boolean> {
+  if (!isValidUUID(technicianId)) {
+    handleValidationError('Invalid technician ID format');
+  }
+
+  const { data: technician, error } = await supabaseClient
+    .from('technicians')
+    .select('id')
+    .eq('id', technicianId)
+    .single();
+
+  if (error || !technician) {
+    handleNotFoundError('Technician not found');
+  }
+
+  return true;
+}
+
+export async function validateBookingId(bookingId: string): Promise<boolean> {
+  if (!isValidUUID(bookingId)) {
+    handleValidationError('Invalid booking ID format');
+  }
+
+  const { data: booking, error } = await supabaseClient
+    .from('bookings')
+    .select('id')
+    .eq('id', bookingId)
+    .single();
+
+  if (error || !booking) {
+    handleNotFoundError('Booking not found');
+  }
+
+  return true;
+}

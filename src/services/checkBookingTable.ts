@@ -1,4 +1,4 @@
-import { supabase } from '@services/supabase/client';
+import { supabaseClient } from '@/server/config/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables
@@ -14,7 +14,7 @@ if (!supabaseUrl || !supabaseKey) {
 async function checkBookingTable() {
   try {
     // First, get an existing service ID
-    const { data: services, error: servicesError } = await supabase
+    const { data: services, error: servicesError } = await supabaseClient
       .from('services')
       .select('id')
       .limit(1)
@@ -62,7 +62,7 @@ async function checkBookingTable() {
     };
 
     // Try to insert the test booking
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('bookings')
       .insert([testBooking])
       .select()
@@ -76,7 +76,7 @@ async function checkBookingTable() {
     console.log('Successfully created test booking:', data);
 
     // Clean up test data
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseClient
       .from('bookings')
       .delete()
       .eq('id', data.id);

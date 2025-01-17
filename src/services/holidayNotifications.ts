@@ -1,60 +1,77 @@
-import { addDays, startOfDay, parseISO, isValid } from 'date-fns';
-import { z } from 'zod';
-import type { Holiday } from '../types';
-import { fetchPublicHolidays } from './publicHolidays';
+import { addDays, startOfDay, format, parse } from 'date-fns';
+import { logger } from '@/utils/logger';
+import { ErrorMetadata } from '@/types/error';
 
-const NOTIFICATION_WINDOW = 30; // days
-const SUPPORTED_LOCALES = ['en', 'zh', 'ms', 'ta'] as const;
+interface Holiday {
+  id: string;
+  name: string;
+  date: string;
+  type: 'public' | 'religious' | 'cultural';
+  isWorkingDay: boolean;
+}
 
-export class HolidayNotificationService {
-  private static instance: HolidayNotificationService;
-  private holidays: Map<string, Holiday> = new Map();
+interface HolidayNotification {
+  id: string;
+  holidayId: string;
+  userId: string;
+  type: 'reminder' | 'greeting';
+  status: 'scheduled' | 'sent' | 'failed';
+  scheduledFor: string;
+  sentAt?: string;
+}
 
-  private constructor() {}
-
-  public static getInstance(): HolidayNotificationService {
-    if (!HolidayNotificationService.instance) {
-      HolidayNotificationService.instance = new HolidayNotificationService();
-    }
-    return HolidayNotificationService.instance;
-  }
-
-  public async getUpcomingHolidays(): Promise<Holiday[]> {
-    try {
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
-      
-      const [currentYearHolidays, nextYearHolidays] = await Promise.all([
-        fetchPublicHolidays(currentYear),
-        fetchPublicHolidays(nextYear)
-      ]);
-
-      const today = startOfDay(new Date());
-      const futureDate = addDays(today, NOTIFICATION_WINDOW);
-      
-      return [...currentYearHolidays, ...nextYearHolidays]
-        .filter(holiday => {
-          const holidayDate = parseISO(holiday.date);
-          return isValid(holidayDate) && 
-                 holidayDate >= today && 
-                 holidayDate <= futureDate;
-        })
-        .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
-    } catch (error) {
-      console.error('Failed to fetch upcoming holidays:', error);
-      throw error;
-    }
-  }
-
-  public async validateHoliday(holiday: Holiday): Promise<boolean> {
-    const holidayDate = parseISO(holiday.date);
-    if (!isValid(holidayDate)) return false;
-
+export async function getUpcomingHolidays(): Promise<Holiday[]> {
+  try {
     const today = startOfDay(new Date());
-    const futureDate = addDays(today, NOTIFICATION_WINDOW);
-    
-    return holidayDate >= today && holidayDate <= futureDate;
+    const nextMonth = addDays(today, 30);
+
+    const holidays = await fetch('/api/holidays').then(res => res.json());
+
+    return holidays.filter((holiday: Holiday) => {
+      const holidayDate = parse(holiday.date, 'yyyy-MM-dd', new Date());
+      return holidayDate >= today && holidayDate <= nextMonth;
+    });
+  } catch (error) {
+    logger.error('Failed to fetch upcoming holidays', error as ErrorMetadata);
+    return [];
   }
 }
 
-export const holidayNotificationService = HolidayNotificationService.getInstance();
+export async function scheduleHolidayNotifications(userId: string, holidays: Holiday[]): Promise<void> {
+  try {
+    for (const holiday of holidays) {
+      const holidayDate = parse(holiday.date, 'yyyy-MM-dd', new Date());
+      const reminderDate = addDays(holidayDate, -2);
+
+      await createHolidayNotification({
+        holidayId: holiday.id,
+        userId,
+        type: 'reminder',
+        status: 'scheduled',
+        scheduledFor: format(reminderDate, 'yyyy-MM-dd')
+      });
+
+      await createHolidayNotification({
+        holidayId: holiday.id,
+        userId,
+        type: 'greeting',
+        status: 'scheduled',
+        scheduledFor: format(holidayDate, 'yyyy-MM-dd')
+      });
+    }
+  } catch (error) {
+    logger.error('Failed to schedule holiday notifications', error as ErrorMetadata);
+  }
+}
+
+async function createHolidayNotification(notification: Omit<HolidayNotification, 'id'>): Promise<void> {
+  try {
+    await fetch('/api/notifications/holiday', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(notification)
+    });
+  } catch (error) {
+    logger.error('Failed to create holiday notification', error as ErrorMetadata);
+  }
+}

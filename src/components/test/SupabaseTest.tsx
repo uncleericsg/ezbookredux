@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabaseClient } from '@/server/config/supabase/client';
 
 interface TestData {
   users?: any[];
@@ -30,14 +30,14 @@ const SupabaseTest = () => {
           { data: bookings, error: bookingsError },
           { data: reviews, error: reviewsError }
         ] = await Promise.all([
-          supabase.from('users').select('*'),
-          supabase.from('services').select('*'),
-          supabase.from('bookings').select(`
+          supabaseClient.from('users').select('*'),
+          supabaseClient.from('services').select('*'),
+          supabaseClient.from('bookings').select(`
             *,
             customer:users(email, first_name, last_name),
             service:services(title, price)
           `),
-          supabase.from('reviews').select(`
+          supabaseClient.from('reviews').select(`
             *,
             customer:users(email),
             booking:bookings(

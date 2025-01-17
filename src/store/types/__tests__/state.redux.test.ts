@@ -1,17 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
-import type { RootState } from '../state.types';
+import type { RootState } from '../redux';
 
 describe('Redux State Types', () => {
   it('should have the correct state structure', () => {
     const store = configureStore({
       reducer: {
-        admin: (state = { isAdmin: false, adminData: null, loading: false, error: null }) => state,
-        auth: (state = { isAuthenticated: false, token: null, loading: false, error: null }) => state,
-        user: (state = { currentUser: null, loading: false, error: null }) => state,
-        booking: (state = {}) => state,
-        service: (state = {}) => state,
-        technician: (state = {}) => state,
+        admin: (state = { adminData: null, loading: false, error: null }) => state,
+        auth: (state = { 
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+          paymentStatus: 'idle',
+          verificationId: null,
+          phone: null
+        }) => state,
+        user: (state = { 
+          user: null,
+          isLoading: false,
+          error: null,
+          paymentStatus: 'idle',
+          verificationId: null,
+          phone: null
+        }) => state,
+        booking: (state = {
+          bookings: [],
+          currentBooking: null,
+          loading: false,
+          error: null,
+          filters: {}
+        }) => state,
+        service: (state = {
+          services: [],
+          loading: false,
+          error: null
+        }) => state
       },
     });
 
@@ -23,21 +47,20 @@ describe('Redux State Types', () => {
     expect(state).toHaveProperty('user');
     expect(state).toHaveProperty('booking');
     expect(state).toHaveProperty('service');
-    expect(state).toHaveProperty('technician');
 
     // Test type safety
-    expect(state.admin.isAdmin).toBe(false);
+    expect(state.admin.adminData).toBeNull();
     expect(state.auth.isAuthenticated).toBe(false);
-    expect(state.user.currentUser).toBeNull();
+    expect(state.user.user).toBeNull();
   });
 
   it('should maintain type safety with state updates', () => {
     const store = configureStore({
       reducer: {
-        admin: (state = { isAdmin: false }, action) => {
+        admin: (state = { adminData: null, loading: false, error: null }, action) => {
           switch (action.type) {
-            case 'admin/setAdmin':
-              return { ...state, isAdmin: action.payload };
+            case 'admin/setAdminData':
+              return { ...state, adminData: action.payload };
             default:
               return state;
           }
@@ -45,10 +68,24 @@ describe('Redux State Types', () => {
       },
     });
 
-    // This would cause a TypeScript error if types are wrong
-    store.dispatch({ type: 'admin/setAdmin', payload: true });
+    store.dispatch({ type: 'admin/setAdminData', payload: { id: '1', role: 'admin' } });
     const state = store.getState() as RootState;
     
-    expect(state.admin.isAdmin).toBe(true);
+    expect(state.admin.adminData).toEqual({ id: '1', role: 'admin' });
+  });
+
+  it('should handle null user state', () => {
+    const state = {
+      user: {
+        user: null,
+        isLoading: false,
+        error: null,
+        paymentStatus: 'idle' as const,
+        verificationId: null,
+        phone: null
+      }
+    };
+
+    expect(state.user.user).toBeNull();
   });
 });

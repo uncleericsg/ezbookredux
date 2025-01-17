@@ -1,74 +1,53 @@
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+import { ErrorMetadata } from '../types/error';
 
-interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  metadata?: Record<string, any>;
+export interface Logger {
+  info(message: string, metadata?: Record<string, any>): void;
+  warn(message: string, metadata?: Record<string, any>): void;
+  error(message: string, metadata?: ErrorMetadata): void;
+  debug(message: string, metadata?: Record<string, any>): void;
 }
 
-class Logger {
-  private static instance: Logger;
-  private environment: string;
-
-  private constructor() {
-    this.environment = process.env.NODE_ENV || 'development';
+const formatMetadata = (metadata?: Record<string, any>): string => {
+  if (!metadata) return '';
+  try {
+    return JSON.stringify(metadata, null, 2);
+  } catch (err) {
+    return String(metadata);
   }
+};
 
-  public static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
-
-  private formatLog(level: LogLevel, message: string, metadata?: Record<string, any>): LogEntry {
+const formatError = (error: unknown): ErrorMetadata => {
+  if (error instanceof Error) {
     return {
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      metadata: {
-        environment: this.environment,
-        ...metadata
-      }
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
     };
   }
+  return {
+    message: String(error),
+  };
+};
 
-  private output(entry: LogEntry): void {
-    const logString = `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${entry.message}`;
-    
-    switch (entry.level) {
-      case 'error':
-        console.error(logString, entry.metadata);
-        break;
-      case 'warn':
-        console.warn(logString, entry.metadata);
-        break;
-      case 'debug':
-        if (this.environment === 'development') {
-          console.debug(logString, entry.metadata);
-        }
-        break;
-      default:
-        console.log(logString, entry.metadata);
+class ConsoleLogger implements Logger {
+  info(message: string, metadata?: Record<string, any>): void {
+    console.info(`[INFO] ${message}${formatMetadata(metadata)}`);
+  }
+
+  warn(message: string, metadata?: Record<string, any>): void {
+    console.warn(`[WARN] ${message}${formatMetadata(metadata)}`);
+  }
+
+  error(message: string, metadata?: ErrorMetadata): void {
+    const formattedError = metadata instanceof Error ? formatError(metadata) : metadata;
+    console.error(`[ERROR] ${message}${formatMetadata(formattedError)}`);
+  }
+
+  debug(message: string, metadata?: Record<string, any>): void {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[DEBUG] ${message}${formatMetadata(metadata)}`);
     }
-  }
-
-  public info(message: string, metadata?: Record<string, any>): void {
-    this.output(this.formatLog('info', message, metadata));
-  }
-
-  public warn(message: string, metadata?: Record<string, any>): void {
-    this.output(this.formatLog('warn', message, metadata));
-  }
-
-  public error(message: string, metadata?: Record<string, any>): void {
-    this.output(this.formatLog('error', message, metadata));
-  }
-
-  public debug(message: string, metadata?: Record<string, any>): void {
-    this.output(this.formatLog('debug', message, metadata));
   }
 }
 
-export const logger = Logger.getInstance(); 
+export const logger: Logger = new ConsoleLogger(); 

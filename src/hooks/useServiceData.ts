@@ -1,27 +1,37 @@
-import { useState, useEffect } from 'react';
-import { ServiceOption } from '../components/booking/serviceTypes';
+import { useEffect, useState } from 'react';
+import { Service } from '@shared/types/service';
 
-const useServiceData = () => {
-  const [services, setServices] = useState<ServiceOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const mockServices: Service[] = [
+  {
+    id: 'service-1',
+    name: 'Regular Service 1',
+    description: 'Description for regular service 1',
+    price: 99.99,
+    duration: 60
+  },
+  // Add more mock services as needed
+];
+
+export const useServiceData = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const loadData = async () => {
+    const fetchServices = async () => {
       try {
-        const module = await import('../components/booking/servicesData');
-        setServices(module.serviceOptions);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setServices(mockServices);
       } catch (err) {
-        setError(err as Error);
+        setError(err instanceof Error ? err : new Error('Failed to fetch services'));
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    loadData();
+    fetchServices();
   }, []);
 
-  return { services, isLoading, error };
+  return { services, loading, error };
 };
-
-export default useServiceData;

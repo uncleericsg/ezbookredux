@@ -78,3 +78,64 @@ export interface ProcessedTemplate {
   errors: string[];
   sanitizedMessage: string;
 }
+
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+  whatsapp: boolean;
+  telegram?: boolean;
+  scheduleReminders: boolean;
+  serviceUpdates: boolean;
+  marketingMessages: boolean;
+  holidayGreetings: boolean;
+}
+
+export interface Notification {
+  userId: string;
+  type: 'reminder' | 'update' | 'marketing' | 'greeting' | 'alert';
+  message: string;
+  metadata?: {
+    title?: string;
+    body?: string;
+    image?: string;
+    link?: string;
+    [key: string]: any;
+  };
+}
+
+export interface NotificationType {
+  id: string;
+  name: string;
+  description: string;
+  category: 'service' | 'booking' | 'marketing' | 'system';
+  channels: Array<keyof NotificationPreferences>;
+  isEnabled: boolean;
+}
+
+export interface NotificationTemplate {
+  id: string;
+  type: NotificationType['id'];
+  title: string;
+  body: string;
+  variables: string[];
+  isActive: boolean;
+  metadata?: {
+    previewText?: string;
+    imageUrl?: string;
+    buttonText?: string;
+    buttonUrl?: string;
+    [key: string]: any;
+  };
+}
+
+export interface NotificationStats {
+  total: number;
+  unread: number;
+  categories: {
+    [key in NotificationType['category']]: {
+      total: number;
+      unread: number;
+    };
+  };
+}

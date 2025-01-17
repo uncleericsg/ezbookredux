@@ -1,25 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabaseClient } from '@server/config/supabase/client';
 import { Profile, UpdateProfileRequest } from '../types/profile';
 import { createApiError } from '../utils/apiResponse';
-import { Database } from '../types/supabase';
 
 export class ProfileService {
-  private supabase;
-
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-
-    this.supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-  }
-
   async getProfile(userId: string): Promise<Profile> {
     try {
-      const { data: profile, error } = await this.supabase
+      const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -37,7 +23,7 @@ export class ProfileService {
 
   async updateProfile(userId: string, data: UpdateProfileRequest): Promise<Profile> {
     try {
-      const { data: profile, error } = await this.supabase
+      const { data: profile, error } = await supabaseClient
         .from('profiles')
         .update(data)
         .eq('id', userId)
@@ -60,7 +46,7 @@ export class ProfileService {
       const filePath = `avatars/${userId}.${fileExt}`;
 
       // Upload file to storage
-      const { error: uploadError } = await this.supabase
+      const { error: uploadError } = await supabaseClient
         .storage
         .from('public')
         .upload(filePath, file, {
@@ -71,7 +57,7 @@ export class ProfileService {
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = this.supabase
+      const { data: { publicUrl } } = supabaseClient
         .storage
         .from('public')
         .getPublicUrl(filePath);

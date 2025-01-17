@@ -1,58 +1,76 @@
-import { Team } from '@services/teams/types';
+import { supabaseClient } from '@/config/supabase/client';
+import { logger } from '@/lib/logger';
+import { handleNotFoundError } from '@/utils/apiErrors';
+import type { Team } from '@/types/team';
+import type { Notification } from '@/types/notifications';
 
-interface BookingNotification {
-    bookingId: string;
-    date: string;
-    location: string;
-    serviceType: string;
-    customerName: string;
-    // other relevant booking details
-}
+export class TeamNotificationService {
+  constructor() {
+    this.sendAdminDashboardNotification = this.sendAdminDashboardNotification.bind(this);
+    this.sendTeamEmail = this.sendTeamEmail.bind(this);
+  }
 
-export const teamNotifications = {
-    async notifyTeamAssignment(booking: BookingNotification, team: Team) {
-        // Send internal notification to admin dashboard
-        await this.sendAdminDashboardNotification(booking, team);
-        
-        // Send email to team leader/admin
-        await this.sendTeamEmail(booking, team);
-    },
+  async notifyTeam(team: Team, notification: Notification): Promise<void> {
+    logger.info('Sending team notification', { teamId: team.id });
 
-    private async sendAdminDashboardNotification(booking: BookingNotification, team: Team) {
-        // Implementation for admin dashboard notification
-        // This could be through WebSocket, internal API, etc.
-        await db.notifications.create({
-            data: {
-                type: 'TEAM_ASSIGNMENT',
-                title: `New Booking Assigned to ${team.name}`,
-                content: `Booking #${booking.bookingId} for ${booking.customerName} on ${booking.date} has been assigned to ${team.name}`,
-                status: 'unread',
-                teamId: team.id,
-                bookingId: booking.bookingId,
-                createdAt: new Date().toISOString()
-            }
-        });
-    },
-
-    private async sendTeamEmail(booking: BookingNotification, team: Team) {
-        // Implementation for sending email to team leader/admin
-        // This could use your email service of choice
-        const emailContent = `
-            New booking assigned to ${team.name}
-            
-            Booking Details:
-            - Booking ID: ${booking.bookingId}
-            - Date: ${booking.date}
-            - Location: ${booking.location}
-            - Service: ${booking.serviceType}
-            - Customer: ${booking.customerName}
-        `;
-
-        // Send email using your email service
-        // await emailService.send({
-        //     to: team.leaderEmail,
-        //     subject: `New Booking Assignment - ${booking.bookingId}`,
-        //     content: emailContent
-        // });
+    try {
+      await Promise.all([
+        this.sendAdminDashboardNotification(team, notification),
+        this.sendTeamEmail(team, notification)
+      ]);
+    } catch (error) {
+      logger.error('Failed to send team notification', {
+        message: error instanceof Error ? error.message : String(error),
+        details: { teamId: team.id }
+      });
+      throw error;
     }
-};
+  }
+
+  private async sendAdminDashboardNotification(team: Team, notification: Notification): Promise<void> {
+    logger.info('Sending admin dashboard notification', { teamId: team.id });
+
+    const { error } = await supabaseClient
+      .from('notifications')
+      .insert({
+        team_id: team.id,
+        type: notification.type,
+        message: notification.message,
+        metadata: notification.metadata
+      });
+
+    if (error) {
+      logger.error('Failed to send admin dashboard notification', {
+        message: error.message,
+        details: { teamId: team.id }
+      });
+      throw error;
+    }
+  }
+
+  private async sendTeamEmail(team: Team, notification: Notification): Promise<void> {
+    logger.info('Sending team email', { teamId: team.id });
+
+    const emailContent = {
+      subject: notification.subject,
+      body: notification.message,
+      metadata: notification.metadata
+    };
+
+    const { error } = await supabaseClient
+      .from('emails')
+      .insert({
+        team_id: team.id,
+        content: emailContent,
+        status: 'pending'
+      });
+
+    if (error) {
+      logger.error('Failed to send team email', {
+        message: error.message,
+        details: { teamId: team.id }
+      });
+      throw error;
+    }
+  }
+}

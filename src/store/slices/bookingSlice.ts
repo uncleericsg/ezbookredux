@@ -1,11 +1,37 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { BookingState, Booking } from '@types/redux';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { PaymentStatus } from '@shared/types/payment';
+
+export interface BookingDetails {
+  id: string;
+  userId: string;
+  serviceId: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  amount: number;
+  currency: string;
+  paymentStatus: PaymentStatus;
+  metadata?: Record<string, any>;
+}
+
+interface BookingState {
+  currentBooking: BookingDetails | null;
+  bookings: BookingDetails[];
+  paymentStatus: PaymentStatus | null;
+  isLoading: boolean;
+  error: string | null;
+  filters: {
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  };
+}
 
 const initialState: BookingState = {
-  bookings: [],
   currentBooking: null,
-  loading: false,
+  bookings: [],
+  paymentStatus: null,
+  isLoading: false,
   error: null,
   filters: {}
 };
@@ -14,42 +40,46 @@ export const bookingSlice = createSlice({
   name: 'booking',
   initialState,
   reducers: {
-    setBookings: (state, action: PayloadAction<Booking[]>) => {
-      state.bookings = action.payload;
-    },
-    setCurrentBooking: (state, action: PayloadAction<Booking | null>) => {
+    setCurrentBooking: (state: BookingState, action: PayloadAction<BookingDetails | null>) => {
       state.currentBooking = action.payload;
     },
-    addBooking: (state, action: PayloadAction<Booking>) => {
+    addBooking: (state: BookingState, action: PayloadAction<BookingDetails>) => {
       state.bookings.push(action.payload);
     },
-    updateBooking: (state, action: PayloadAction<Booking>) => {
-      const index = state.bookings.findIndex(b => b.id === action.payload.id);
+    updateBooking: (state: BookingState, action: PayloadAction<BookingDetails>) => {
+      const index = state.bookings.findIndex((booking: BookingDetails) => booking.id === action.payload.id);
       if (index !== -1) {
         state.bookings[index] = action.payload;
       }
     },
-    deleteBooking: (state, action: PayloadAction<string>) => {
-      state.bookings = state.bookings.filter(b => b.id !== action.payload);
+    removeBooking: (state: BookingState, action: PayloadAction<string>) => {
+      state.bookings = state.bookings.filter((booking: BookingDetails) => booking.id !== action.payload);
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+    setBookings: (state: BookingState, action: PayloadAction<BookingDetails[]>) => {
+      state.bookings = action.payload;
     },
-    setError: (state, action: PayloadAction<string | null>) => {
+    setPaymentStatus: (state: BookingState, action: PayloadAction<PaymentStatus>) => {
+      state.paymentStatus = action.payload;
+    },
+    setLoading: (state: BookingState, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state: BookingState, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setFilters: (state, action: PayloadAction<BookingState['filters']>) => {
+    setFilters: (state: BookingState, action: PayloadAction<BookingState['filters']>) => {
       state.filters = action.payload;
     }
   }
 });
 
 export const {
-  setBookings,
   setCurrentBooking,
   addBooking,
   updateBooking,
-  deleteBooking,
+  removeBooking,
+  setBookings,
+  setPaymentStatus,
   setLoading,
   setError,
   setFilters

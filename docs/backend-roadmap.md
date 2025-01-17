@@ -1,112 +1,212 @@
 # Backend Reorganization Roadmap
+Last Updated: January 17, 2024
 
-## Current Status
-- Backend directory structure completed
-- Core services implemented (payment, receipts)
-- Error handling infrastructure in place
-- API routes created for payment processing
-- TypeScript configuration updated
-- Initial documentation completed
-- Logger utility implemented
-- Service layer separation completed
+## Current Status Analysis
 
-## Completed Tasks
-- [x] Create config files (cors.ts, database.ts)
-- [x] Implement services layer (paymentService.ts, receiptService.ts)
-- [x] Create utilities (error-handler.ts, apiErrors.ts, errorReporting.ts, logger.ts)
-- [x] Implement API routes
-- [x] Update TypeScript configuration
-- [x] Create initial roadmap
-- [x] Split payment and receipt services
-- [x] Implement webhook handling
-- [x] Create comprehensive API documentation
-- [x] Document services and utilities
+### Completed (✅)
+- Basic API routes structure
+- Core endpoints implementation
+- Error handling utilities
+- Type definitions
+- Logger implementation
+- Basic middleware layer
+- Supabase configuration centralization
+- Payment provider interface design
+- Stripe Checkout integration
 
-## 1. Frontend Integration (Priority: High)
-- [ ] Update import paths in frontend components
-  - [ ] Update PaymentStep.tsx
-  - [ ] Update BookingConfirmation.tsx
-  - [ ] Update usePayment.ts hook
-- [ ] Verify API endpoint compatibility
-- [ ] Update TypeScript configuration for frontend
-- [ ] Test all frontend-backend interactions
+### In Progress (🚧)
+- Service layer consolidation
+- API standardization
+- Database layer finalization
+- Testing infrastructure
+- Payment session tracking
 
-## 2. Testing Implementation (Priority: High)
-- [ ] Create unit tests for services
-  - [ ] Payment service tests
-  - [ ] Receipt service tests
-  - [ ] Logger utility tests
-- [ ] Implement integration tests for API routes
-  - [ ] Payment endpoints
-  - [ ] Receipt endpoints
-  - [ ] Webhook handling
-- [ ] Set up end-to-end testing
-- [ ] Configure test coverage reporting
+### Issues Identified
+1. Service Layer Duplication
+   - Legacy payment services need cleanup
+   - Mixed service responsibilities
+   - Inconsistent provider patterns
 
-## 3. Monitoring Setup (Priority: Medium)
-- [ ] Configure error tracking
-  - [ ] Set up error reporting service
-  - [ ] Integrate with logger
-- [ ] Set up performance monitoring
-  - [ ] API response times
-  - [ ] Payment processing times
-- [ ] Implement logging strategy
-  - [x] Create logger utility
-  - [ ] Configure production logging
-  - [ ] Set up log aggregation
-- [ ] Configure alerts and notifications
+2. Directory Structure Inconsistencies
+   - Provider-specific code not properly isolated
+   - Unclear service boundaries
+   - Inconsistent naming patterns
 
-## 4. Documentation Updates (Priority: Medium)
-- [x] Document new directory structure
-- [x] Update API documentation
-- [x] Document services and utilities
-- [ ] Create migration guide
-- [ ] Update developer onboarding docs
+## Phase 1: Service Layer Reorganization (Priority: HIGHEST)
+Status: 🚧 In Progress
 
-## 5. Deployment Strategy (Priority: High)
-- [ ] Configure Vercel deployment
-  - [ ] Set up environment variables
-  - [ ] Configure build settings
-- [ ] Set up environment variables
-  - [ ] Development
-  - [ ] Staging
-  - [ ] Production
-- [ ] Implement CI/CD pipeline
-  - [ ] Add GitHub Actions workflow
-  - [ ] Configure deployment stages
-- [ ] Configure rollback procedures
+### 1.1 Payment Service Architecture (Current Focus)
+```typescript
+server/services/
+├── payments/
+│   ├── providers/
+│   │   └── stripe/
+│   │       └── StripeCheckoutProvider.ts
+│   └── PaymentService.ts
+└── repositories/
+    └── payments/
+        └── PaymentSessionRepository.ts
+```
 
-## Blockers & Dependencies
-- Frontend team availability for integration testing
-- Vercel configuration access
-- Monitoring service API keys
+Tasks:
+- [x] Design payment provider interfaces
+- [x] Implement Stripe Checkout provider
+- [x] Create payment session repository
+- [ ] Add database migrations
+- [ ] Implement success/cancel pages
 
-## Resource Allocation
-- 2 developers for frontend integration (3 days)
-- 1 QA engineer for testing implementation (4 days)
-- 1 DevOps engineer for deployment setup (2 days)
+### 1.2 Implementation Cleanup
+- [ ] Remove legacy Stripe implementation
+- [ ] Clean up unused receipt services
+- [ ] Update service dependencies
+- [ ] Remove duplicate code
 
-## Timeline
-- Frontend Integration: 3 days (High Priority)
-- Testing Implementation: 4 days (High Priority)
-- Deployment Strategy: 2 days (High Priority)
-- Monitoring Setup: 1 day (Medium Priority)
-- Documentation Updates: Completed ✅
+### 1.3 Repository Layer
+- [x] Implement PaymentRepository
+- [ ] Add database transaction support
+- [ ] Create repository interfaces
+- [ ] Add data validation
+
+## Phase 2: API Standardization (Priority: HIGH)
+Status: 📅 Pending
+
+### 2.1 Response Format
+```typescript
+interface ApiResponse<T> {
+  data?: T;
+  error?: ApiError;
+  meta?: ResponseMetadata;
+}
+```
+
+Tasks:
+- [ ] Create response wrapper
+- [ ] Standardize error formats
+- [ ] Add response metadata
+- [ ] Implement pagination
+
+### 2.2 Middleware Enhancement
+- [ ] Update authentication middleware
+- [ ] Add request validation
+- [ ] Implement rate limiting
+- [ ] Add request logging
+
+### 2.3 API Routes Reorganization
+```typescript
+api/
+├── payments/
+│   ├── checkout.ts
+│   └── webhook.ts
+└── shared/
+    └── middleware/
+```
+
+## Phase 3: Testing Infrastructure (Priority: HIGH)
+Status: 📅 Pending
+
+### 3.1 Unit Testing
+- [ ] Set up testing framework
+- [ ] Create service test suites
+- [ ] Add repository tests
+- [ ] Implement provider tests
+
+### 3.2 Integration Testing
+- [ ] Set up test database
+- [ ] Create API test suites
+- [ ] Add webhook test cases
+- [ ] Test error scenarios
+
+### 3.3 Test Utilities
+- [ ] Create test factories
+- [ ] Add mock providers
+- [ ] Create test helpers
+- [ ] Set up test data seeding
+
+## Implementation Plan
+
+### Week 1: Payment Service (Current)
+```markdown
+Days 1-2: ✅ Payment Architecture
+- Created interfaces
+- Implemented Stripe Checkout
+- Set up repositories
+
+Days 3-4: 🚧 Implementation
+- Database migrations
+- Success/cancel pages
+- Clean up legacy code
+
+Day 5: 📅 Testing
+- Unit tests
+- Integration tests
+- Webhook testing
+```
+
+### Week 2: API & Testing
+```markdown
+Days 1-2: API Standardization
+- Update response formats
+- Enhance middleware
+- Reorganize routes
+
+Days 3-5: Testing Infrastructure
+- Set up framework
+- Create test suites
+- Add integration tests
+```
+
+## Success Criteria
+
+### 1. Code Organization
+- [x] Clear service boundaries
+- [x] No code duplication
+- [x] Consistent patterns
+- [x] Type safety
+
+### 2. Payment Processing
+- [x] Simplified payment flow
+- [x] Secure payment handling
+- [x] Proper error handling
+- [ ] Complete testing coverage
+
+### 3. API Quality
+- [ ] Standardized responses
+- [x] Proper error handling
+- [ ] Request validation
+- [ ] Documentation
 
 ## Next Immediate Steps
-1. **Frontend Integration**
-   - Begin updating frontend components with new import paths
-   - Create integration examples for frontend team
-   - Schedule integration testing session
 
-2. **Testing Setup**
-   - Set up testing framework (Jest/Vitest)
-   - Create first batch of unit tests for payment service
-   - Set up test database for integration tests
+1. Database Setup
+   ```sql
+   -- Create payment_sessions table
+   create table payment_sessions (
+     id uuid default uuid_generate_v4() primary key,
+     booking_id uuid references bookings(id),
+     user_id uuid references users(id),
+     amount integer not null,
+     currency text not null,
+     status text not null,
+     stripe_session_id text unique not null,
+     created_at timestamp with time zone default now(),
+     updated_at timestamp with time zone default now()
+   );
+   ```
 
-3. **Deployment Preparation**
-   - Gather required environment variables
-   - Document deployment requirements
-   - Create deployment checklist
+2. Frontend Integration
+   ```typescript
+   // Create success/cancel pages
+   // Implement payment initiation
+   // Add loading states
+   ```
 
-Total Estimated Time: 9 days (reduced from 11 days due to completed documentation)
+3. Testing Setup
+   - Choose testing framework
+   - Create initial test suites
+   - Set up test database
+
+## Notes
+- Simplified payment approach chosen for better maintainability
+- Focus on completing payment integration before other features
+- Document all architectural decisions
+- Keep comprehensive test coverage

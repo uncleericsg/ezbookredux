@@ -1,58 +1,63 @@
-import type { User } from '@/types/user';
-import type { ServiceCategory, ServiceOption } from '@/types/service';
-import type { BookingDetails } from '@/types/booking';
+import type { User } from '@shared/types/user';
+import type { PaymentStatus } from '@shared/types/payment';
+import type { BookingDetails } from '../slices/bookingSlice';
+import type { ServiceProvider, ServiceVisit } from '@/types/services';
 
 export interface AdminState {
-  isAdmin: boolean;
   adminData: {
-    workingHours: {
-      start: string;
-      end: string;
-    };
-    bufferBetweenBookings: number;
-    allowGuestBookings: boolean;
-    showRevenueChart: boolean;
-  } | null;
-  loading: boolean;
+    settings: Record<string, any>;
+    stats: Record<string, any>;
+  };
+  currentUser: User | null;
+  isLoading: boolean;
   error: string | null;
+  isAdmin: boolean;
 }
 
 export interface AuthState {
-  user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  paymentStatus: 'idle' | 'processing' | 'success' | 'error';
-  verificationId: string | null;
-  phone: string | null;
-}
-
-export interface ServiceState {
-  services: ServiceCategory[];
-  selectedService: ServiceOption | null;
-  loading: boolean;
+  token: string | null;
+  user: User | null;
+  isLoading: boolean;
   error: string | null;
 }
 
 export interface BookingState {
   currentBooking: BookingDetails | null;
   bookings: BookingDetails[];
-  filters: {
-    status: string[];
-    dateRange: [Date | null, Date | null];
-  };
-  loading: boolean;
+  paymentStatus: PaymentStatus | null;
+  isLoading: boolean;
   error: string | null;
+  filters: {
+    status: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
+
+export interface ServiceState {
+  services: ServiceProvider[];
+  isLoading: boolean;
+  error: string | null;
+  selectedService: string | null;
+  currentService: ServiceVisit | null;
+  filters: {
+    category: string | null;
+    status: string | null;
+    date: string | null;
+  };
 }
 
 export interface UserState {
-  currentUser: User | null;
-  loading: boolean;
+  user: User | null;
+  isLoading: boolean;
   error: string | null;
+  paymentStatus: PaymentStatus | null;
+  verificationId: string | null;
+  phone: string | null;
 }
 
-export interface RootState {
+export interface AppState {
   admin: AdminState;
   auth: AuthState;
   booking: BookingState;
@@ -60,4 +65,4 @@ export interface RootState {
   user: UserState;
 }
 
-export type { User, ServiceCategory, ServiceOption, BookingDetails };
+export type RootState = AppState;
