@@ -1,21 +1,64 @@
+'use client';
+
 import { format } from 'date-fns';
 import { Edit, ChevronLeft, ChevronRight, Save, X, UserX } from 'lucide-react';
 import React, { useState } from 'react';
 
-import UserStatusToggle from '@admin/UserStatusToggle';
-
-import type { User } from '@types/index';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import UserStatusToggle from './UserStatusToggle';
+import { User } from '@shared/types/user';
 
 interface UserTableProps {
+  /**
+   * List of users
+   */
   users: User[];
+
+  /**
+   * Current page number
+   */
   currentPage: number;
+
+  /**
+   * Total number of pages
+   */
   totalPages: number;
+
+  /**
+   * Number of items per page
+   */
   itemsPerPage: number;
+
+  /**
+   * Page change callback
+   */
   onPageChange: (page: number) => void;
+
+  /**
+   * Items per page change callback
+   */
   onItemsPerPageChange: (items: number) => void;
+
+  /**
+   * Edit user callback
+   */
   onEdit: (user: User) => void;
+
+  /**
+   * Deactivate user callback
+   */
   onDeactivate: (userId: string) => Promise<void>;
+
+  /**
+   * Save user callback
+   */
   onSave: (userId: string, data: Partial<User>) => Promise<void>;
+
+  /**
+   * Loading state
+   */
   loading?: boolean;
 }
 
@@ -80,13 +123,13 @@ const UserTable: React.FC<UserTableProps> = ({
                   <td className="p-4">
                     {editingUser === user.id ? (
                       <div className="flex space-x-2">
-                        <input
+                        <Input
                           type="text"
                           value={editForm.firstName}
                           onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
                           className="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-24"
                         />
-                        <input
+                        <Input
                           type="text"
                           value={editForm.lastName}
                           onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
@@ -99,7 +142,7 @@ const UserTable: React.FC<UserTableProps> = ({
                   </td>
                   <td className="p-4">
                     {editingUser === user.id ? (
-                      <input
+                      <Input
                         type="email"
                         value={editForm.email}
                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
@@ -125,30 +168,29 @@ const UserTable: React.FC<UserTableProps> = ({
                     <div className="flex items-center space-x-2">
                       {editingUser === user.id ? (
                         <React.Fragment>
-                          <button
+                          <Button
                             onClick={() => handleSave(user.id)}
-                            className="btn-icon text-green-400"
+                            className="text-green-400"
                             title="Save changes"
                           >
                             <Save className="h-4 w-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={handleCancel}
-                            className="btn-icon text-gray-400"
+                            className="text-gray-400"
                             title="Cancel"
                           >
                             <X className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </React.Fragment>
                       ) : (
                         <React.Fragment>
-                          <button
+                          <Button
                             onClick={() => handleEdit(user)}
-                            className="btn-icon"
                             title="Edit user"
                           >
                             <Edit className="h-4 w-4" />
-                          </button>
+                          </Button>
                           <UserStatusToggle
                             userId={user.id}
                             isActive={user.amcStatus === 'active'}
@@ -202,37 +244,36 @@ const UserTable: React.FC<UserTableProps> = ({
               <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-600">
                 {editingUser === user.id ? (
                   <React.Fragment>
-                    <button
+                    <Button
                       onClick={() => handleSave(user.id)}
-                      className="btn-icon text-green-400"
+                      className="text-green-400"
                       title="Save changes"
                     >
                       <Save className="h-5 w-5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={handleCancel}
-                      className="btn-icon text-gray-400"
+                      className="text-gray-400"
                       title="Cancel"
                     >
                       <X className="h-5 w-5" />
-                    </button>
+                    </Button>
                   </React.Fragment>
                 ) : (
                   <React.Fragment>
-                    <button
+                    <Button
                       onClick={() => onEdit(user)}
-                      className="btn-icon"
                       title="Edit user"
                     >
                       <Edit className="h-5 w-5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => onDeactivate(user.id)}
-                      className="btn-icon text-red-400"
+                      className="text-red-400"
                       title="Deactivate user"
                     >
                       <UserX className="h-5 w-5" />
-                    </button>
+                    </Button>
                   </React.Fragment>
                 )}
               </div>
@@ -243,35 +284,39 @@ const UserTable: React.FC<UserTableProps> = ({
 
       <div className="p-4 border-t border-gray-700 flex items-center justify-between">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 md:py-1.5 w-full md:w-auto text-base md:text-sm"
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value: string) => onItemsPerPageChange(Number(value))}
           >
-            <option value={25}>25 per page</option>
-            <option value={50}>50 per page</option>
-            <option value={100}>100 per page</option>
-          </select>
+            <SelectTrigger className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 md:py-1.5 w-full md:w-auto text-base md:text-sm">
+              <SelectValue placeholder="Items per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
           <span className="text-base md:text-sm text-gray-400">
             Page {currentPage} of {totalPages}
           </span>
         </div>
 
         <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          <button
+          <Button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="btn-icon disabled:opacity-50 p-3 md:p-2"
+            className="disabled:opacity-50 p-3 md:p-2"
           >
             <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="btn-icon disabled:opacity-50 p-3 md:p-2"
+            className="disabled:opacity-50 p-3 md:p-2"
           >
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

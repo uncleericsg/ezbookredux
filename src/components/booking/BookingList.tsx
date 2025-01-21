@@ -7,11 +7,11 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineClipboardDocumentList
 } from 'react-icons/hi2';
-import type { BookingDetails } from '@shared/types/booking';
-import { useBooking } from '@/hooks/useBooking';
-import { useAuth } from '@/hooks/useAuth';
-import { formatPrice } from '@/utils/formatters';
-import { formatTimeSlot } from '@/utils/dates';
+import type { BookingData } from '../../types/booking-flow';
+import { useBooking } from '../../hooks/useBooking';
+import { useAuth } from '../../hooks/useAuth';
+import { formatPrice } from '../../utils/formatters';
+import { formatTimeSlot } from '../../utils/dates';
 
 interface BookingListProps {
   className?: string;
@@ -19,7 +19,7 @@ interface BookingListProps {
 }
 
 const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
-  const [bookings, setBookings] = useState<BookingDetails[]>([]);
+  const [bookings, setBookings] = useState<BookingData[]>([]);
   const { loading, error, fetchBookingsByEmail } = useBooking();
   const { user } = useAuth();
 
@@ -28,12 +28,13 @@ const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
       if (!user?.email) return;
 
       try {
-        const result = await fetchBookingsByEmail(user.email);
-        if (result.data) {
-          setBookings(limit ? result.data.slice(0, limit) : result.data);
-        } else if (result.error) {
-          toast.error('Failed to load bookings');
-        }
+        const results = await fetchBookingsByEmail(user.email);
+        const validBookings = results
+          .filter(result => result.data)
+          .map(result => result.data!)
+          .slice(0, limit);
+        
+        setBookings(validBookings);
       } catch (err) {
         toast.error('Error loading bookings');
       }
@@ -71,16 +72,16 @@ const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
       <div className="space-y-4">
         {bookings.map((booking) => (
           <div
-            key={booking.id}
+            key={booking.serviceId}
             className="bg-gray-800/90 rounded-lg shadow-sm p-6"
           >
             {/* Service Info */}
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-white">
-                {booking.service_title}
+                {booking.serviceTitle}
               </h3>
               <p className="text-yellow-400 font-medium">
-                {formatPrice(booking.service_price)}
+                {formatPrice(booking.servicePrice)}
               </p>
             </div>
 
@@ -93,10 +94,10 @@ const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
                   <HiOutlineCalendarDays className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-white">
-                      {format(new Date(booking.scheduled_datetime), 'PPP')}
+                      {format(new Date(booking.date), 'PPP')}
                     </p>
                     <p className="text-gray-400">
-                      {formatTimeSlot(booking.scheduled_timeslot, booking.service_duration)}
+                      {formatTimeSlot(booking.time, booking.duration)}
                     </p>
                   </div>
                 </div>
@@ -157,4 +158,4 @@ const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
 
 BookingList.displayName = 'BookingList';
 
-export default BookingList; 
+export default BookingList;

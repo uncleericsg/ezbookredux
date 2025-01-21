@@ -1,41 +1,25 @@
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+'use client';
+
+import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Save, Plus, Trash2, Loader2, GripVertical, Link, Image, ChevronRight, ChevronDown } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useSettingsForm } from '../../hooks/useSettingsForm';
+import { useSettingsForm } from '@/hooks/useSettingsForm';
+import { 
+  HomepageSettings, 
+  ServiceCategory, 
+  CategoryWithChildren,
+  CardSettings
+} from '@shared/types/homepage-settings';
+import { defaultAppointmentTypes } from '@shared/types/appointment';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CategoryMappingModal from './CategoryMappingModal';
 
-import type { AppointmentType } from '../../types';
-import type { ServiceCategory } from '../../types';
-
-interface CategoryWithChildren extends ServiceCategory {
-  children?: CategoryWithChildren[];
-}
-
-interface CardSettings {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  ctaText: string;
-  ctaLink: string;
-  appointmentTypeId?: string;
-  order: number;
-  visible: boolean;
-  customStyles?: {
-    backgroundColor?: string;
-    textColor?: string;
-    buttonColor?: string;
-  };
-  visibilityType: 'all' | 'amc';
-}
-
-interface HomepageSettings {
-  cards: CardSettings[];
-  categories: ServiceCategory[];
-}
-
+// Default settings
 const defaultSettings: HomepageSettings = {
   cards: [
     {
@@ -58,7 +42,8 @@ const defaultSettings: HomepageSettings = {
       price: 80,
       icon: 'AirVent',
       visible: true,
-      order: 1
+      order: 1,
+      appointmentTypeId: 'regular-service'
     },
     {
       id: 'repair',
@@ -68,7 +53,8 @@ const defaultSettings: HomepageSettings = {
       price: 120,
       icon: 'Wrench',
       visible: true,
-      order: 2
+      order: 2,
+      appointmentTypeId: 'repair-service'
     },
     {
       id: 'amc',
@@ -78,33 +64,11 @@ const defaultSettings: HomepageSettings = {
       price: null,
       icon: 'ShieldCheck',
       visible: true,
-      order: 0
+      order: 0,
+      appointmentTypeId: 'amc-service'
     }
   ]
 };
-
-// Local appointment types
-const appointmentTypes: AppointmentType[] = [
-  {
-    id: 'regular-service',
-    name: 'Regular Service',
-    duration: 60,
-    description: 'Standard air conditioning service'
-  },
-  {
-    id: 'amc-service',
-    name: 'AMC Service Visit',
-    duration: 90,
-    description: 'Maintenance service for AMC customers',
-    isAMC: true
-  },
-  {
-    id: 'repair-service',
-    name: 'Repair Service',
-    duration: 120,
-    description: 'Diagnostic and repair service'
-  }
-];
 
 const fetchHomepageSettings = async (): Promise<HomepageSettings> => {
   // In a real app, this would be an API call
@@ -162,7 +126,7 @@ const HomepageManager: React.FC = () => {
       price: null,
       parentId,
       visible: true,
-      order: settings.categories.filter(c => c.parentId === parentId).length + 1
+      order: settings.categories.filter((c: ServiceCategory) => c.parentId === parentId).length + 1
     };
 
     updateSettings({
@@ -170,7 +134,7 @@ const HomepageManager: React.FC = () => {
     });
   };
 
-  const handleCategoryDragEnd = (result: any) => {
+  const handleCategoryDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
     // Create a copy of categories and sort by order
@@ -231,7 +195,11 @@ const HomepageManager: React.FC = () => {
     return roots;
   };
 
-  const renderCategory = (category: CategoryWithChildren, level = 0, dragHandleProps?: any) => {
+  const renderCategory = (
+    category: CategoryWithChildren, 
+    level = 0, 
+    dragHandleProps: DraggableProvided['dragHandleProps']
+  ) => {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories.has(category.id);
 
@@ -261,11 +229,11 @@ const HomepageManager: React.FC = () => {
             )}
             
             <div className="flex items-center space-x-2">
-              <input
+              <Input
                 type="text"
                 value={category.name || ''}
                 onChange={(e) => {
-                  const updatedCategories = settings.categories.map(cat =>
+                  const updatedCategories = settings.categories.map((cat: ServiceCategory) =>
                     cat.id === category.id ? { ...cat, name: e.target.value } : cat
                   );
                   updateSettings({ categories: updatedCategories });
@@ -273,43 +241,48 @@ const HomepageManager: React.FC = () => {
                 className="bg-transparent border-none focus:ring-0 flex-1"
               />
               <div className="flex items-center space-x-2">
-                <select
+                <Select
                   value={category.visibilityType || 'all'}
-                  onChange={(e) => {
-                    const updatedCategories = settings.categories.map(cat =>
-                      cat.id === category.id ? { ...cat, visibilityType: e.target.value as 'all' | 'amc' } : cat
+                  onValueChange={(value: 'all' | 'amc') => {
+                    const updatedCategories = settings.categories.map((cat: ServiceCategory) =>
+                      cat.id === category.id ? { ...cat, visibilityType: value } : cat
                     );
                     updateSettings({ categories: updatedCategories });
                   }}
-                  className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm"
                 >
-                  <option value="all">All Users</option>
-                  <option value="amc">AMC Only</option>
-                </select>
+                  <SelectTrigger className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm">
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="amc">AMC Only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
           
           <div className="flex items-center space-x-2">
-            <button
+            <Button
               onClick={() => addCategory(category.id)}
-              className="btn-icon"
-              title="Add sub-category">
+              className="p-1 hover:bg-gray-700 rounded"
+              title="Add sub-category"
+            >
               <Plus className="h-4 w-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setMappingCategory(category)}
-              className="btn-icon"
+              className="p-1 hover:bg-gray-700 rounded"
               title="Map to appointment type"
             >
               <Link className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {isExpanded && hasChildren && (
           <div className="ml-4">
-            {category.children!.map(child => renderCategory(child, level + 1))}
+            {category.children!.map(child => renderCategory(child, level + 1, dragHandleProps))}
           </div>
         )}
       </div>
@@ -328,25 +301,38 @@ const HomepageManager: React.FC = () => {
     }
   };
 
+  const handleAppointmentTypeMapping = (appointmentTypeId: string) => {
+    if (!mappingCategory) return;
+
+    const updatedCategories = settings.categories.map((cat: ServiceCategory) =>
+      cat.id === mappingCategory.id ? { ...cat, appointmentTypeId } : cat
+    );
+    updateSettings({ categories: updatedCategories });
+    handleSave().catch(() => {
+      toast.error('Failed to save appointment type mapping');
+    });
+    setMappingCategory(null);
+    toast.success('Category mapping updated');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Service Categories */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Service Categories</h2>
-          <button
-            type="button"
+          <Button
             onClick={() => addCategory()}
-            className="btn-icon bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
             title="Add Category"
           >
             <Plus className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <DragDropContext onDragEnd={handleCategoryDragEnd}>
           <Droppable droppableId="categories">
-            {(provided) => (
+            {(provided: DroppableProvided) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
@@ -358,7 +344,7 @@ const HomepageManager: React.FC = () => {
                     draggableId={category.id}
                     index={index}
                   >
-                    {(provided, snapshot) => (
+                    {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
@@ -383,8 +369,7 @@ const HomepageManager: React.FC = () => {
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Homepage Cards</h2>
-          <button
-            type="button"
+          <Button
             onClick={() => {
               const newCard: CardSettings = {
                 id: `card-${Date.now()}`,
@@ -401,14 +386,14 @@ const HomepageManager: React.FC = () => {
                 cards: [...settings.cards, newCard]
               });
             }}
-            className="btn-icon bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
             title="Add Card"
           >
             <Plus className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
-        <DragDropContext onDragEnd={(result) => {
+        <DragDropContext onDragEnd={(result: DropResult) => {
           if (!result.destination) return;
           
           const items = Array.from(settings.cards);
@@ -423,15 +408,15 @@ const HomepageManager: React.FC = () => {
           updateSettings({ cards: updatedItems });
         }}>
           <Droppable droppableId="cards">
-            {(provided) => (
+            {(provided: DroppableProvided) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
                 className="space-y-4"
               >
-                {settings.cards.map((card, index) => (
+                {settings.cards.map((card: CardSettings, index: number) => (
                   <Draggable key={card.id} draggableId={card.id} index={index}>
-                    {(provided) => (
+                    {(provided: DraggableProvided) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
@@ -443,11 +428,11 @@ const HomepageManager: React.FC = () => {
                           </div>
                           
                           <div className="flex-1 space-y-4">
-                            <input
+                            <Input
                               type="text"
                               value={card.title}
                               onChange={(e) => {
-                                const updatedCards = settings.cards.map(c =>
+                                const updatedCards = settings.cards.map((c: CardSettings) =>
                                   c.id === card.id ? { ...c, title: e.target.value } : c
                                 );
                                 updateSettings({ cards: updatedCards });
@@ -459,7 +444,7 @@ const HomepageManager: React.FC = () => {
                             <textarea
                               value={card.description}
                               onChange={(e) => {
-                                const updatedCards = settings.cards.map(c =>
+                                const updatedCards = settings.cards.map((c: CardSettings) =>
                                   c.id === card.id ? { ...c, description: e.target.value } : c
                                 );
                                 updateSettings({ cards: updatedCards });
@@ -470,17 +455,17 @@ const HomepageManager: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                <Label className="block text-sm font-medium text-gray-300 mb-1">
                                   <div className="flex items-center space-x-2">
                                     <Link className="h-4 w-4 text-blue-400" />
                                     <span>CTA Text</span>
                                   </div>
-                                </label>
-                                <input
+                                </Label>
+                                <Input
                                   type="text"
                                   value={card.ctaText}
                                   onChange={(e) => {
-                                    const updatedCards = settings.cards.map(c =>
+                                    const updatedCards = settings.cards.map((c: CardSettings) =>
                                       c.id === card.id ? { ...c, ctaText: e.target.value } : c
                                     );
                                     updateSettings({ cards: updatedCards });
@@ -491,17 +476,17 @@ const HomepageManager: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                <Label className="block text-sm font-medium text-gray-300 mb-1">
                                   <div className="flex items-center space-x-2">
                                     <Link className="h-4 w-4 text-blue-400" />
                                     <span>CTA Link</span>
                                   </div>
-                                </label>
-                                <input
+                                </Label>
+                                <Input
                                   type="text"
                                   value={card.ctaLink}
                                   onChange={(e) => {
-                                    const updatedCards = settings.cards.map(c =>
+                                    const updatedCards = settings.cards.map((c: CardSettings) =>
                                       c.id === card.id ? { ...c, ctaLink: e.target.value } : c
                                     );
                                     updateSettings({ cards: updatedCards });
@@ -513,17 +498,17 @@ const HomepageManager: React.FC = () => {
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">
+                              <Label className="block text-sm font-medium text-gray-300 mb-1">
                                 <div className="flex items-center space-x-2">
                                   <Image className="h-4 w-4 text-blue-400" />
                                   <span>Image URL</span>
                                 </div>
-                              </label>
-                              <input
+                              </Label>
+                              <Input
                                 type="text"
                                 value={card.imageUrl || ''}
                                 onChange={(e) => {
-                                  const updatedCards = settings.cards.map(c =>
+                                  const updatedCards = settings.cards.map((c: CardSettings) =>
                                     c.id === card.id ? { ...c, imageUrl: e.target.value } : c
                                   );
                                   updateSettings({ cards: updatedCards });
@@ -534,26 +519,30 @@ const HomepageManager: React.FC = () => {
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-1">
+                              <Label className="block text-sm font-medium text-gray-300 mb-1">
                                 Appointment Type
-                              </label>
-                              <select
+                              </Label>
+                              <Select
                                 value={card.appointmentTypeId || ''}
-                                onChange={(e) => {
-                                  const updatedCards = settings.cards.map(c =>
-                                    c.id === card.id ? { ...c, appointmentTypeId: e.target.value } : c
+                                onValueChange={(value: string) => {
+                                  const updatedCards = settings.cards.map((c: CardSettings) =>
+                                    c.id === card.id ? { ...c, appointmentTypeId: value } : c
                                   );
                                   updateSettings({ cards: updatedCards });
                                 }}
-                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
                               >
-                                <option value="">None</option>
-                                {appointmentTypes.map(type => (
-                                  <option key={type.id} value={type.id}>
-                                    {type.name} ({type.duration} mins)
-                                  </option>
-                                ))}
-                              </select>
+                                <SelectTrigger className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                  <SelectValue placeholder="Select appointment type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">None</SelectItem>
+                                  {defaultAppointmentTypes.map(type => (
+                                    <SelectItem key={type.id} value={type.id}>
+                                      {type.name} ({type.duration} mins)
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
 
                             <div className="flex items-center justify-between">
@@ -563,7 +552,7 @@ const HomepageManager: React.FC = () => {
                                   id={`visible-${card.id}`}
                                   checked={card.visible}
                                   onChange={(e) => {
-                                    const updatedCards = settings.cards.map(c =>
+                                    const updatedCards = settings.cards.map((c: CardSettings) =>
                                       c.id === card.id ? { ...c, visible: e.target.checked } : c
                                     );
                                     updateSettings({ cards: updatedCards });
@@ -575,17 +564,16 @@ const HomepageManager: React.FC = () => {
                                 </label>
                               </div>
 
-                              <button
-                                type="button"
+                              <Button
                                 onClick={() => {
-                                  const updatedCards = settings.cards.filter(c => c.id !== card.id);
+                                  const updatedCards = settings.cards.filter((c: CardSettings) => c.id !== card.id);
                                   updateSettings({ cards: updatedCards });
                                 }}
-                                className="btn-icon text-red-400"
+                                className="text-red-400 hover:text-red-500"
                                 title="Delete card"
                               >
                                 <Trash2 className="h-4 w-4" />
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -602,10 +590,10 @@ const HomepageManager: React.FC = () => {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="btn btn-primary flex items-center space-x-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
         >
           {loading ? (
             <>
@@ -618,18 +606,15 @@ const HomepageManager: React.FC = () => {
               <span>Save Changes</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {mappingCategory && (
         <CategoryMappingModal
           category={mappingCategory}
-          appointmentTypes={appointmentTypes}
+          appointmentTypes={defaultAppointmentTypes}
           onClose={() => setMappingCategory(null)}
-          onSave={() => {
-            setMappingCategory(null);
-            toast.success('Category mapping updated');
-          }}
+          onSave={handleAppointmentTypeMapping}
         />
       )}
     </form>

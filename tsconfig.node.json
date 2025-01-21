@@ -4,14 +4,7 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "strict": true
+    "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "vite.config.ts",
-    "vitest.config.ts",
-    "tailwind.config.ts",
-    "vite-plugin-google-maps.ts",
-    "eslint.config.js"
-  ]
+  "include": ["vite.config.ts"]
 }

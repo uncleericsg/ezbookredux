@@ -1,57 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import type { CreateBookingParams } from '@shared/types/booking';
-import { useAuth } from '@/hooks/useAuth';
-import { BookingProgress, BookingStep } from './BookingProgress';
-import { ServiceStep } from './ServiceStep';
-import { CustomerStep } from './CustomerStep';
-import { ScheduleStep } from './ScheduleStep';
-import { BookingStep as BookingConfirmStep } from './BookingStep';
-import { PaymentStep } from './PaymentStep';
+import type { 
+  BookingStep, 
+  BookingData, 
+  BaseStepProps,
+  PaymentStepProps,
+  BookingConfirmationProps 
+} from '../../types/booking-flow';
+import { INITIAL_BOOKING_DATA } from '../../types/booking-flow';
+import { useAuth } from '../../hooks/useAuth';
+import BookingProgress from './BookingProgress';
+import ServiceStep from './ServiceStep';
+import CustomerStep from './CustomerStep';
+import ScheduleStep from './ScheduleStep';
+import BookingConfirmStep from './BookingStep';
+import PaymentStep from './PaymentStep';
 import { BookingConfirmation } from './BookingConfirmation';
 
 interface BookingFlowProps {
   className?: string;
 }
 
-const INITIAL_BOOKING_DATA: Partial<CreateBookingParams> = {
-  service_id: '',
-  service_title: '',
-  service_description: '',
-  service_price: 0,
-  service_duration: 0,
-  customer_first_name: '',
-  customer_last_name: '',
-  customer_email: '',
-  customer_mobile: '',
-  floor_unit: '',
-  block_street: '',
-  postal_code: '',
-  condo_name: '',
-  lobby_tower: '',
-  special_instructions: '',
-  scheduled_datetime: '',
-  scheduled_timeslot: '',
-  status: 'pending',
-  brands: [],
-  issues: []
-};
-
 const BookingFlow: React.FC<BookingFlowProps> = ({ className }) => {
   const router = useRouter();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<BookingStep>('service');
-  const [bookingData, setBookingData] = useState<Partial<CreateBookingParams>>(INITIAL_BOOKING_DATA);
+  const [bookingData, setBookingData] = useState<BookingData>(INITIAL_BOOKING_DATA);
+  const [paymentReference, setPaymentReference] = useState<string>();
 
   // Initialize booking data with user information if available
   useEffect(() => {
     if (user) {
       setBookingData(prev => ({
         ...prev,
-        customer_email: user.email || prev.customer_email,
-        customer_first_name: user.firstName || prev.customer_first_name,
-        customer_last_name: user.lastName || prev.customer_last_name
+        customerInfo: {
+          ...prev.customerInfo,
+          email: user.email || prev.customerInfo.email,
+          firstName: user.firstName || prev.customerInfo.firstName,
+          lastName: user.lastName || prev.customerInfo.lastName,
+          phone: prev.customerInfo.phone
+        }
       }));
     }
   }, [user]);
@@ -70,69 +59,62 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ className }) => {
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1]);
     } else {
-      router.push('/');
+      void router.push('/');
     }
   };
 
-  const handleUpdateBookingData = (data: Partial<CreateBookingParams>) => {
+  const handleUpdateBookingData = (data: Partial<BookingData>) => {
     setBookingData(prev => ({
       ...prev,
-      ...data
+      ...data,
+      brands: data.brands || prev.brands,
+      issues: data.issues || prev.issues
     }));
+  };
+
+  const handlePaymentComplete = (reference: string) => {
+    setPaymentReference(reference);
+    handleNext();
+  };
+
+  const handleViewBookings = useCallback(async () => {
+    try {
+      await router.push('/bookings');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      toast.error('Failed to navigate to bookings page');
+    }
+  }, [router]);
+
+  const stepProps: BaseStepProps = {
+    onNext: handleNext,
+    onBack: handleBack,
+    bookingData,
+    onUpdateBookingData: handleUpdateBookingData
+  };
+
+  const paymentProps: PaymentStepProps = {
+    ...stepProps,
+    onComplete: handlePaymentComplete
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case 'service':
-        return (
-          <ServiceStep
-            onNext={handleNext}
-            onBack={handleBack}
-            bookingData={bookingData}
-            onUpdateBookingData={handleUpdateBookingData}
-          />
-        );
+        return <ServiceStep {...stepProps} />;
       case 'customer':
-        return (
-          <CustomerStep
-            onNext={handleNext}
-            onBack={handleBack}
-            bookingData={bookingData}
-            onUpdateBookingData={handleUpdateBookingData}
-          />
-        );
+        return <CustomerStep {...stepProps} />;
       case 'schedule':
-        return (
-          <ScheduleStep
-            onNext={handleNext}
-            onBack={handleBack}
-            bookingData={bookingData}
-            onUpdateBookingData={handleUpdateBookingData}
-          />
-        );
+        return <ScheduleStep {...stepProps} />;
       case 'booking':
-        return (
-          <BookingConfirmStep
-            onNext={handleNext}
-            onBack={handleBack}
-            bookingData={bookingData}
-            onUpdateBookingData={handleUpdateBookingData}
-          />
-        );
+        return <BookingConfirmStep {...stepProps} />;
       case 'payment':
-        return (
-          <PaymentStep
-            onNext={handleNext}
-            onBack={handleBack}
-            bookingData={bookingData}
-            onUpdateBookingData={handleUpdateBookingData}
-          />
-        );
+        return <PaymentStep {...paymentProps} />;
       case 'confirmation':
         return (
           <BookingConfirmation
             booking={bookingData}
-            onViewBookings={() => router.push('/bookings')}
+            onViewBookings={handleViewBookings}
           />
         );
       default:
@@ -155,7 +137,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ className }) => {
         toast.error('Your booking session has expired', {
           duration: 5000
         });
-        router.push('/');
+        void router.push('/');
       }
     }, 20 * 60 * 1000); // 20 minutes
 

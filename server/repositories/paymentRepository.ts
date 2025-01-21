@@ -1,214 +1,331 @@
-import { Database } from '@server/types/database';
-import { logger } from '@server/utils/logger';
-import { ApiError, ApiErrorCode } from '@server/utils/apiErrors';
-import { PaymentStatus } from '@shared/types/payment';
-import {
-  Payment,
-  CreatePaymentParams,
-  PaymentListParams,
-  PaymentWithBooking
-} from '@server/types/payment';
+import { BaseRepository } from './baseRepository';
+import type {
+  Filter,
+  CreateInput,
+  UpdateInput,
+  RepositoryOptions
+} from '@shared/types/repository';
+import type { Payment } from '@shared/types/payment';
+import { DatabaseError } from '@shared/types/error';
+import { PrismaClient, Prisma } from '@prisma/client';
 
-export class PaymentRepository {
-  constructor(
-    private readonly db: Database,
-    private readonly logger: typeof logger
-  ) {}
+// Initialize Prisma client
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
 
-  async createPayment(data: CreatePaymentParams): Promise<Payment> {
+type TransactionPrismaClient = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+
+/**
+ * Payment repository implementation
+ */
+export class PaymentRepository extends BaseRepository<Payment> {
+  constructor(options: RepositoryOptions) {
+    super({
+      ...options,
+      table: 'payments',
+      softDelete: true,
+      defaultOrderBy: { createdAt: 'desc' }
+    });
+  }
+
+  /**
+   * Find first payment matching filter
+   */
+  async findFirst(filter?: Filter<Payment>): Promise<Payment | null> {
     try {
-      const { data: payment, error } = await this.db
-        .from('payments')
-        .insert({
-          booking_id: data.bookingId,
-          amount: data.amount,
-          currency: data.currency,
-          status: 'pending',
-          payment_intent_id: data.paymentIntentId,
-          metadata: data.metadata
-        })
-        .select()
-        .single();
+      const result = await prisma.payment.findFirst({
+        where: this.buildWhereClause(filter?.where),
+        include: {
+          ...this.buildIncludeClause(filter?.include),
+          booking: Boolean(filter?.include?.booking)
+        },
+        orderBy: this.buildOrderByClause(filter?.orderBy)
+      });
 
-      if (error) {
-        this.logger.error('Failed to create payment record', { error, data });
-        throw new ApiError('Failed to create payment record', ApiErrorCode.DATABASE_ERROR);
-      }
-
-      this.logger.info('Created payment record', { paymentId: payment.id });
-      return payment;
+      return result ? this.mapToDomain(result) : null;
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error creating payment', { error });
-      throw new ApiError('Failed to create payment', ApiErrorCode.SERVER_ERROR);
+      throw this.handleError(error);
     }
   }
 
-  async updateStatus(id: string, status: PaymentStatus): Promise<void> {
+  /**
+   * Find all payments matching filter
+   */
+  async findAll(filter?: Filter<Payment>): Promise<Payment[]> {
     try {
-      const { error } = await this.db
-        .from('payments')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      const results = await prisma.payment.findMany({
+        where: this.buildWhereClause(filter?.where),
+        include: {
+          ...this.buildIncludeClause(filter?.include),
+          booking: Boolean(filter?.include?.booking)
+        },
+        orderBy: this.buildOrderByClause(filter?.orderBy),
+        skip: filter?.skip,
+        take: filter?.take
+      });
 
-      if (error) {
-        this.logger.error('Failed to update payment status', { error, id, status });
-        throw new ApiError('Failed to update payment status', ApiErrorCode.DATABASE_ERROR);
-      }
-
-      this.logger.info('Updated payment status', { paymentId: id, status });
+      return results.map((result) => this.mapToDomain(result));
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error updating payment status', { error });
-      throw new ApiError('Failed to update payment status', ApiErrorCode.SERVER_ERROR);
+      throw this.handleError(error);
     }
   }
 
-  async getPaymentDetails(id: string): Promise<PaymentWithBooking> {
+  /**
+   * Count payments matching filter
+   */
+  async count(filter?: Filter<Payment>): Promise<number> {
     try {
-      const { data: payment, error } = await this.db
-        .from('payments')
-        .select(`
-          *,
-          booking:bookings (
-            id,
-            reference:id,
-            service:services (
-              title
-            ),
-            customer:customers (
-              id,
-              email,
-              full_name
-            )
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        this.logger.error('Failed to fetch payment details', { error, id });
-        throw new ApiError('Failed to fetch payment details', ApiErrorCode.DATABASE_ERROR);
-      }
-
-      if (!payment) {
-        throw new ApiError('Payment not found', ApiErrorCode.NOT_FOUND);
-      }
-
-      this.logger.info('Fetched payment details', { paymentId: id });
-      return payment;
+      return await prisma.payment.count({
+        where: this.buildWhereClause(filter?.where)
+      });
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error fetching payment details', { error });
-      throw new ApiError('Failed to fetch payment details', ApiErrorCode.SERVER_ERROR);
+      throw this.handleError(error);
     }
   }
 
-  async listPayments(params: PaymentListParams): Promise<Payment[]> {
+  /**
+   * Create new payment
+   */
+  protected async createEntity(data: CreateInput<Payment>): Promise<Payment> {
     try {
-      let query = this.db
-        .from('payments')
-        .select(`
-          id,
-          amount,
-          currency,
-          status,
-          created_at,
-          updated_at,
-          payment_intent_id,
-          booking:bookings (
-            id,
-            reference:id
-          )
-        `);
+      const result = await prisma.payment.create({
+        data: this.mapToDatabase(data),
+        include: { booking: true }
+      });
 
-      // Add filters
-      if (params.customerId) {
-        query = query.eq('customer_id', params.customerId);
-      }
-
-      if (params.status) {
-        query = query.eq('status', params.status);
-      }
-
-      // Add sorting
-      query = query.order('created_at', { ascending: false });
-
-      // Add pagination
-      if (params.limit) {
-        query = query.limit(params.limit);
-      }
-
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 10) - 1);
-      }
-
-      const { data: payments, error } = await query;
-
-      if (error) {
-        this.logger.error('Failed to list payments', { error, params });
-        throw new ApiError('Failed to list payments', ApiErrorCode.DATABASE_ERROR);
-      }
-
-      this.logger.info('Listed payments', { count: payments?.length });
-      return payments || [];
+      return this.mapToDomain(result);
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error listing payments', { error });
-      throw new ApiError('Failed to list payments', ApiErrorCode.SERVER_ERROR);
+      throw this.handleError(error);
     }
   }
 
-  async getPaymentByIntentId(paymentIntentId: string): Promise<Payment | null> {
+  /**
+   * Create multiple payments
+   */
+  protected async createManyEntities(data: CreateInput<Payment>[]): Promise<Payment[]> {
     try {
-      const { data: payment, error } = await this.db
-        .from('payments')
-        .select()
-        .eq('payment_intent_id', paymentIntentId)
-        .single();
+      await prisma.payment.createMany({
+        data: data.map((item) => this.mapToDatabase(item))
+      });
 
-      if (error) {
-        this.logger.error('Failed to fetch payment by intent ID', { error, paymentIntentId });
-        throw new ApiError('Failed to fetch payment', ApiErrorCode.DATABASE_ERROR);
-      }
+      // Fetch created payments
+      const payments = await this.findAll({
+        where: {
+          and: [
+            { field: 'createdAt', operator: 'gte', value: new Date(Date.now() - 1000) }
+          ]
+        },
+        take: data.length,
+        include: { booking: true }
+      });
 
-      return payment;
+      return payments;
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error fetching payment by intent ID', { error });
-      throw new ApiError('Failed to fetch payment', ApiErrorCode.SERVER_ERROR);
+      throw this.handleError(error);
     }
   }
 
-  async updatePaymentMetadata(id: string, metadata: Record<string, any>): Promise<void> {
+  /**
+   * Update payment by ID
+   */
+  protected async updateEntity(id: string, data: UpdateInput<Payment>): Promise<Payment> {
     try {
-      const { error } = await this.db
-        .from('payments')
-        .update({ 
-          metadata,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      const result = await prisma.payment.update({
+        where: { id },
+        data: this.mapToDatabase(data),
+        include: { booking: true }
+      });
 
-      if (error) {
-        this.logger.error('Failed to update payment metadata', { error, id });
-        throw new ApiError('Failed to update payment metadata', ApiErrorCode.DATABASE_ERROR);
-      }
-
-      this.logger.info('Updated payment metadata', { paymentId: id });
+      return this.mapToDomain(result);
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      this.logger.error('Unexpected error updating payment metadata', { error });
-      throw new ApiError('Failed to update payment metadata', ApiErrorCode.SERVER_ERROR);
+      if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
+        throw new DatabaseError('Payment not found', 'RECORD_NOT_FOUND');
+      }
+      throw this.handleError(error);
     }
+  }
+
+  /**
+   * Update multiple payments matching filter
+   */
+  protected async updateManyEntities(filter: Filter<Payment>, data: UpdateInput<Payment>): Promise<number> {
+    try {
+      const result = await prisma.payment.updateMany({
+        where: this.buildWhereClause(filter.where),
+        data: this.mapToDatabase(data)
+      });
+      return result.count;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Delete payment by ID
+   */
+  protected async deleteEntity(id: string): Promise<void> {
+    try {
+      await prisma.payment.delete({
+        where: { id }
+      });
+    } catch (error) {
+      if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
+        throw new DatabaseError('Payment not found', 'RECORD_NOT_FOUND');
+      }
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Delete multiple payments matching filter
+   */
+  protected async deleteManyEntities(filter: Filter<Payment>): Promise<number> {
+    try {
+      const result = await prisma.payment.deleteMany({
+        where: this.buildWhereClause(filter.where)
+      });
+      return result.count;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Execute raw query
+   */
+  async query<R = unknown>(sql: string, params?: unknown[]): Promise<R> {
+    try {
+      const result = await prisma.$queryRawUnsafe<R>(sql, ...(params || []));
+      return result;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Execute raw command
+   */
+  async execute(sql: string, params?: unknown[]): Promise<void> {
+    try {
+      await prisma.$executeRawUnsafe(sql, ...(params || []));
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Start transaction
+   */
+  async transaction<R>(callback: (transaction: PaymentRepository) => Promise<R>): Promise<R> {
+    return prisma.$transaction(async (prismaTransaction: TransactionPrismaClient) => {
+      const repository = new PaymentRepository({
+        ...this.options,
+        config: {
+          ...this.options.config,
+          prisma: prismaTransaction as unknown as PrismaClient
+        }
+      });
+      return callback(repository);
+    });
+  }
+
+  /**
+   * Map domain model to database model
+   */
+  private mapToDatabase(data: Partial<Payment>): any {
+    const {
+      booking,
+      providerShipping,
+      providerBillingDetails,
+      providerPaymentMethodDetails,
+      providerMetadata,
+      errorDetails,
+      disputeEvidence,
+      metadata,
+      ...rest
+    } = data;
+
+    return {
+      ...rest,
+      ...(providerShipping && {
+        providerShippingAddress: JSON.stringify(providerShipping.address),
+        providerShippingName: providerShipping.name,
+        providerShippingCarrier: providerShipping.carrier,
+        providerShippingPhone: providerShipping.phone,
+        providerShippingTrackingNumber: providerShipping.tracking_number
+      }),
+      ...(providerBillingDetails && {
+        providerBillingAddress: JSON.stringify(providerBillingDetails.address),
+        providerBillingEmail: providerBillingDetails.email,
+        providerBillingName: providerBillingDetails.name,
+        providerBillingPhone: providerBillingDetails.phone
+      }),
+      ...(providerPaymentMethodDetails && {
+        providerPaymentMethodDetailsJson: JSON.stringify(providerPaymentMethodDetails)
+      }),
+      ...(providerMetadata && { providerMetadataJson: JSON.stringify(providerMetadata) }),
+      ...(errorDetails && { errorDetailsJson: JSON.stringify(errorDetails) }),
+      ...(disputeEvidence && { disputeEvidenceJson: JSON.stringify(disputeEvidence) }),
+      ...(metadata && { metadataJson: JSON.stringify(metadata) })
+    };
+  }
+
+  /**
+   * Map database model to domain model
+   */
+  private mapToDomain(data: any): Payment {
+    const {
+      providerShippingAddress,
+      providerShippingName,
+      providerShippingCarrier,
+      providerShippingPhone,
+      providerShippingTrackingNumber,
+      providerBillingAddress,
+      providerBillingEmail,
+      providerBillingName,
+      providerBillingPhone,
+      providerPaymentMethodDetailsJson,
+      providerMetadataJson,
+      errorDetailsJson,
+      disputeEvidenceJson,
+      metadataJson,
+      ...rest
+    } = data;
+
+    return {
+      ...rest,
+      ...(providerShippingAddress && {
+        providerShipping: {
+          address: JSON.parse(providerShippingAddress),
+          name: providerShippingName,
+          carrier: providerShippingCarrier,
+          phone: providerShippingPhone,
+          tracking_number: providerShippingTrackingNumber
+        }
+      }),
+      ...(providerBillingAddress && {
+        providerBillingDetails: {
+          address: JSON.parse(providerBillingAddress),
+          email: providerBillingEmail,
+          name: providerBillingName,
+          phone: providerBillingPhone
+        }
+      }),
+      ...(providerPaymentMethodDetailsJson && {
+        providerPaymentMethodDetails: JSON.parse(providerPaymentMethodDetailsJson)
+      }),
+      ...(providerMetadataJson && { providerMetadata: JSON.parse(providerMetadataJson) }),
+      ...(errorDetailsJson && { errorDetails: JSON.parse(errorDetailsJson) }),
+      ...(disputeEvidenceJson && { disputeEvidence: JSON.parse(disputeEvidenceJson) }),
+      ...(metadataJson && { metadata: JSON.parse(metadataJson) })
+    };
   }
 }
-
-// Export singleton instance
-export const paymentRepository = new PaymentRepository(
-  global.supabase as Database,
-  logger
-); 

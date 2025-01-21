@@ -14,7 +14,13 @@ export const ROUTES = {
     BOOKINGS: '/admin/bookings',
     SETTINGS: '/admin/settings',
     SERVICES: '/admin/services',
-    TEAMS: '/admin/teams'
+    TEAMS: '/admin/teams',
+    NOTIFICATIONS: '/admin/notifications',
+    HOMEPAGE: '/admin/homepage',
+    AMC: '/admin/amc',
+    ANALYTICS: '/admin/analytics',
+    BRANDING: '/admin/branding',
+    PUSH: '/admin/push'
   },
   BOOKING: {
     ROOT: '/booking',
@@ -23,7 +29,9 @@ export const ROUTES = {
     SUCCESS: '/booking/success',
     FIRST_TIME: '/booking/first-time',
     POWERJET_CHEMICAL: '/booking/powerjet-chemical',
-    GAS_LEAK: '/booking/gas-leak'
+    GAS_LEAK: '/booking/gas-leak',
+    PRICE_SELECTION: '/booking/price-selection',
+    CONFIRMATION: '/booking/confirmation'
   },
   SERVICES: {
     ROOT: '/services',
@@ -35,7 +43,15 @@ export const ROUTES = {
     HISTORY: '/payments/history',
     SUCCESS: '/payments/success',
     CANCEL: '/payments/cancel'
-  }
+  },
+  AMC: {
+    ROOT: '/amc',
+    SIGNUP: '/amc/signup',
+    SUBSCRIPTION: '/amc/subscription',
+    PACKAGES: '/amc/packages',
+    DASHBOARD: '/amc/dashboard'
+  },
+  NOTIFICATIONS: '/notifications'
 } as const;
 
 // Routes that require authentication
@@ -154,6 +170,22 @@ export const ROUTE_METADATA = {
   [ROUTES.ADMIN.SETTINGS]: {
     title: 'Settings',
     breadcrumb: 'Settings',
+  },
+  [ROUTES.ADMIN.HOMEPAGE]: {
+    title: 'Homepage Manager',
+    breadcrumb: 'Homepage',
+  },
+  [ROUTES.ADMIN.AMC]: {
+    title: 'AMC Management',
+    breadcrumb: 'AMC',
+  },
+  [ROUTES.ADMIN.BRANDING]: {
+    title: 'Branding Settings',
+    breadcrumb: 'Branding',
+  },
+  [ROUTES.ADMIN.PUSH]: {
+    title: 'Push Notifications',
+    breadcrumb: 'Push',
   },
   [ROUTES.PROFILE]: {
     title: 'User Profile',

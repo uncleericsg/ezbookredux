@@ -1,41 +1,57 @@
 import { useState } from 'react';
-import type { 
-  BookingDetails, 
-  CreateBookingParams, 
-  UpdateBookingParams, 
-  BookingResponse 
-} from '@shared/types/booking';
-import {
-  createBooking as createBookingService,
-  updateBooking as updateBookingService,
-  getBookingById,
-  getBookingsByEmail,
-  getBookingsByCustomerId
-} from '@/services/bookingService';
-import { logger } from '@/utils/logger';
+import type { BookingData } from '../types/booking-flow';
+import type { BookingStatus } from '@shared/types/booking';
+
+interface BookingError {
+  message: string;
+  code?: string;
+}
+
+interface BookingResponse {
+  data?: BookingData;
+  error?: BookingError;
+}
+
+interface UpdateBookingParams {
+  status?: BookingStatus;
+  date?: string;
+  time?: string;
+  serviceId?: string;
+  serviceTitle?: string;
+  servicePrice?: number;
+  serviceDuration?: number;
+}
 
 export const useBooking = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createBooking = async (params: CreateBookingParams): Promise<BookingResponse> => {
+  const createBooking = async (params: BookingData): Promise<BookingResponse> => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await createBookingService(params);
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/bookings/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      });
+
+      const result = await response.json();
       
-      if (result.error) {
-        setError(result.error.message);
-        throw new Error(result.error.message);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to create booking');
       }
 
-      return result;
+      return { data: result };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create booking';
       setError(message);
-      logger.error('Error in createBooking', { error: err });
-      throw err;
+      console.error('Error in createBooking', { error: err });
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
@@ -46,19 +62,27 @@ export const useBooking = () => {
     setError(null);
 
     try {
-      const result = await updateBookingService(bookingId, params);
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      });
+
+      const result = await response.json();
       
-      if (result.error) {
-        setError(result.error.message);
-        throw new Error(result.error.message);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update booking');
       }
 
-      return result;
+      return { data: result };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update booking';
       setError(message);
-      logger.error('Error in updateBooking', { error: err, bookingId });
-      throw err;
+      console.error('Error in updateBooking', { error: err, bookingId });
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
@@ -69,65 +93,68 @@ export const useBooking = () => {
     setError(null);
 
     try {
-      const result = await getBookingById(bookingId);
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/bookings/${bookingId}`);
+      const result = await response.json();
       
-      if (result.error) {
-        setError(result.error.message);
-        throw new Error(result.error.message);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch booking');
       }
 
-      return result;
+      return { data: result };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch booking';
       setError(message);
-      logger.error('Error in fetchBookingById', { error: err, bookingId });
-      throw err;
+      console.error('Error in fetchBookingById', { error: err, bookingId });
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBookingsByEmail = async (email: string) => {
+  const fetchBookingsByEmail = async (email: string): Promise<BookingResponse[]> => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await getBookingsByEmail(email);
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/bookings/customer?email=${email}`);
+      const result = await response.json();
       
-      if (result.error) {
-        setError(result.error.message);
-        throw new Error(result.error.message);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch bookings');
       }
 
-      return result;
+      return result.map((booking: BookingData) => ({ data: booking }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch bookings';
       setError(message);
-      logger.error('Error in fetchBookingsByEmail', { error: err, email });
-      throw err;
+      console.error('Error in fetchBookingsByEmail', { error: err, email });
+      return [{ error: { message } }];
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBookingsByCustomerId = async (customerId: string) => {
+  const fetchBookingsByCustomerId = async (customerId: string): Promise<BookingResponse[]> => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await getBookingsByCustomerId(customerId);
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/bookings/customer/${customerId}`);
+      const result = await response.json();
       
-      if (result.error) {
-        setError(result.error.message);
-        throw new Error(result.error.message);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch bookings');
       }
 
-      return result;
+      return result.map((booking: BookingData) => ({ data: booking }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch bookings';
       setError(message);
-      logger.error('Error in fetchBookingsByCustomerId', { error: err, customerId });
-      throw err;
+      console.error('Error in fetchBookingsByCustomerId', { error: err, customerId });
+      return [{ error: { message } }];
     } finally {
       setLoading(false);
     }

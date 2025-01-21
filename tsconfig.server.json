@@ -1,25 +1,24 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/server",
-    "rootDir": "./server",
-    "types": ["node"],
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowImportingTsExtensions": true,
+    "target": "ES2020",
+    "module": "CommonJS",
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@server/*": ["./server/*"],
-      "@routes/*": ["./server/routes/*"],
-      "@services/*": ["./server/services/*"],
-      "@repositories/*": ["./server/repositories/*"],
-      "@utils/*": ["./server/utils/*"],
-      "@config/*": ["./server/config/*"],
-      "@types/*": ["./server/types/*"],
-      "@shared/*": ["./shared/*"]
+      "@/*": ["server/*"],
+      "@shared/*": ["shared/*"]
     }
   },
-  "include": ["server/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "server/**/*.ts",
+    "api/**/*.ts",
+    "shared/**/*.ts"
+  ]
 }

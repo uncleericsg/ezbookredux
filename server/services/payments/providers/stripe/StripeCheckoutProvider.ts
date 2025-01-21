@@ -1,22 +1,25 @@
 import Stripe from 'stripe';
 import { logger } from '@server/utils/logger';
 import { ApiError } from '@server/utils/apiErrors';
+import { 
+  CreateCheckoutRequest, 
+  CheckoutResponse, 
+  PaymentStatus,
+  PaymentCurrency,
+  StripeWebhookEvent
+} from '@shared/types/payment';
 
-export interface CreateCheckoutParams {
-  bookingId: string;
+export interface CreateCheckoutParams extends CreateCheckoutRequest {
   userId: string;
-  amount: number;
-  currency: string;
-  customerEmail: string;
   successUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
 }
 
-export interface CheckoutSession {
+export interface StripeSession {
   id: string;
   url: string;
-  paymentStatus: string;
+  paymentStatus: PaymentStatus;
   metadata: Record<string, string>;
 }
 
@@ -30,7 +33,7 @@ export class StripeCheckoutProvider {
     });
   }
 
-  async createCheckoutSession(params: CreateCheckoutParams): Promise<CheckoutSession> {
+  async createCheckoutSession(params: CreateCheckoutParams): Promise<StripeSession> {
     try {
       const { 
         amount, 
@@ -49,19 +52,19 @@ export class StripeCheckoutProvider {
         customer_email: customerEmail,
         metadata: {
           ...metadata,
-          bookingId,
-          userId
+          booking_id: bookingId,
+          user_id: userId
         },
         success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancelUrl,
         line_items: [{
           price_data: {
-            currency,
+            currency: currency.toLowerCase(),
             product_data: {
               name: 'Appointment Booking',
               metadata: {
-                bookingId,
-                userId
+                booking_id: bookingId,
+                user_id: userId
               }
             },
             unit_amount: amount,
@@ -79,7 +82,7 @@ export class StripeCheckoutProvider {
       return {
         id: session.id,
         url: session.url!,
-        paymentStatus: session.payment_status,
+        paymentStatus: this.mapPaymentStatus(session.payment_status),
         metadata: session.metadata
       };
     } catch (error) {
@@ -91,32 +94,15 @@ export class StripeCheckoutProvider {
     }
   }
 
-  async handleWebhook(payload: string, signature: string): Promise<void> {
+  async handleWebhook(payload: string, signature: string): Promise<StripeWebhookEvent> {
     try {
       const event = this.stripe.webhooks.constructEvent(
         payload,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
-      );
+      ) as StripeWebhookEvent;
 
-      switch (event.type) {
-        case 'checkout.session.completed':
-          const session = event.data.object as Stripe.Checkout.Session;
-          // Here you would update your booking status
-          // The bookingId is available in session.metadata.bookingId
-          logger.info('Payment completed', {
-            sessionId: session.id,
-            bookingId: session.metadata.bookingId
-          });
-          break;
-        
-        case 'checkout.session.expired':
-          // Handle expired checkout sessions
-          logger.info('Checkout session expired', {
-            sessionId: event.data.object.id
-          });
-          break;
-      }
+      return event;
     } catch (error) {
       logger.error('Failed to handle webhook', { error });
       throw new ApiError(
@@ -126,14 +112,14 @@ export class StripeCheckoutProvider {
     }
   }
 
-  async getSession(sessionId: string): Promise<CheckoutSession> {
+  async getSession(sessionId: string): Promise<StripeSession> {
     try {
       const session = await this.stripe.checkout.sessions.retrieve(sessionId);
       
       return {
         id: session.id,
         url: session.url!,
-        paymentStatus: session.payment_status,
+        paymentStatus: this.mapPaymentStatus(session.payment_status),
         metadata: session.metadata
       };
     } catch (error) {
@@ -142,6 +128,21 @@ export class StripeCheckoutProvider {
         'Failed to retrieve checkout session',
         'STRIPE_SESSION_ERROR'
       );
+    }
+  }
+
+  private mapPaymentStatus(stripeStatus: string): PaymentStatus {
+    switch (stripeStatus) {
+      case 'paid':
+      case 'complete':
+        return 'completed';
+      case 'expired':
+        return 'expired';
+      case 'unpaid':
+      case 'failed':
+        return 'failed';
+      default:
+        return 'pending';
     }
   }
 } 

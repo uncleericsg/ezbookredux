@@ -1,78 +1,108 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseClient } from '@/server/config/supabase/client';
-import { createApiError } from '@/server/utils/apiResponse';
-import type { AuthenticatedRequest } from './types';
+import type { Request, Response, NextFunction } from 'express';
+import { supabaseClient } from '@server/config/supabase/client';
+import { ApiError } from '@server/utils/apiErrors';
+import { logger } from '@server/utils/logger';
+import type { 
+  AuthenticatedRequest,
+  MiddlewareFunction,
+  UserRole,
+  UserProfile
+} from '@shared/types/middleware';
 
-// Add shared middleware for common validations
-export const validateMethod = (method: string) => (
-  req: NextApiRequest,
-  res: NextApiResponse,
-  next: () => void
+/**
+ * Validates HTTP method for the request
+ */
+export const validateMethod = (method: string): MiddlewareFunction => (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
   if (req.method !== method) {
-    return res.status(405).json({
-      error: {
-        message: 'Method not allowed',
-        code: 'METHOD_NOT_ALLOWED'
-      }
-    });
+    throw new ApiError('Method not allowed', 'FORBIDDEN');
   }
   next();
 };
 
-export function withAuth(
-  handler: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>,
-  requiredRoles?: ('admin' | 'service_provider' | 'customer')[]
-) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+/**
+ * Authentication middleware that validates user token and role
+ */
+export function withAuth(requiredRoles?: UserRole[]): MiddlewareFunction {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
 
       if (!authHeader) {
-        return res.status(401).json(
-          createApiError('Missing authorization header', 'AUTH_REQUIRED')
-        );
+        throw new ApiError('Missing authorization header', 'UNAUTHORIZED');
       }
 
       const token = authHeader.replace('Bearer ', '');
       const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
       if (authError || !user) {
-        return res.status(401).json(
-          createApiError('Invalid authentication token', 'AUTH_INVALID')
-        );
+        throw new ApiError('Invalid authentication token', 'UNAUTHORIZED');
       }
 
       // Get user profile with role
       const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
-        .select('*')
+        .select('id, email, role, firstName, lastName, phone, created_at, updated_at')
         .eq('id', user.id)
         .single();
 
       if (profileError || !profile) {
-        return res.status(401).json(
-          createApiError('User profile not found', 'AUTH_INVALID')
-        );
+        throw new ApiError('User profile not found', 'UNAUTHORIZED');
       }
 
       // Check role if required
       if (requiredRoles && !requiredRoles.includes(profile.role)) {
-        return res.status(403).json(
-          createApiError('Insufficient permissions', 'AUTH_INVALID')
-        );
+        throw new ApiError('Insufficient permissions', 'FORBIDDEN');
       }
 
-      // Add user to request
-      (req as AuthenticatedRequest).user = profile;
+      // Transform and add user to request
+      const userProfile: UserProfile = {
+        id: profile.id,
+        email: profile.email,
+        role: profile.role as UserRole,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        createdAt: profile.created_at,
+        updatedAt: profile.updated_at
+      };
 
-      // Call the handler
-      return handler(req as AuthenticatedRequest, res);
+      // Type assertion to handle property assignment
+      (req as AuthenticatedRequest).user = userProfile;
+
+      // Continue to next middleware/handler
+      next();
     } catch (error) {
-      console.error('Auth middleware error:', error);
-      return res.status(500).json(
-        createApiError('Authentication failed', 'SERVER_ERROR')
-      );
+      logger.error('Auth middleware error', { error });
+      next(error);
     }
   };
-} 
+}
+
+/**
+ * Higher-order function to wrap route handlers with authentication
+ */
+export function withAuthHandler<T>(
+  handler: (req: AuthenticatedRequest, res: Response) => Promise<T>,
+  requiredRoles?: UserRole[]
+) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Apply auth middleware first
+      await new Promise<void>((resolve, reject) => {
+        withAuth(requiredRoles)(req, res, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      // Then call the handler with the authenticated request
+      await handler(req as AuthenticatedRequest, res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

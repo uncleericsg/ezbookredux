@@ -4,34 +4,38 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { HiOutlineUser, HiOutlineEnvelope, HiOutlinePhone, HiOutlineHome } from 'react-icons/hi2';
 import * as z from 'zod';
-import type { CreateBookingParams } from '@shared/types/booking';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
+import type { CustomerInfo } from '@/types/customer';
+import type { BaseStepProps } from '../../types/booking-flow';
+import { Input } from '@components/ui/input';
+import { Textarea } from '@components/ui/textarea';
+
+interface CustomerFormData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  mobile: string;
+  floor_unit?: string | null;
+  block_street: string;
+  postal_code: string;
+  condo_name?: string | null;
+  lobby_tower?: string | null;
+  special_instructions?: string | null;
+}
 
 const customerSchema = z.object({
   first_name: z.string().min(2, 'First name is required'),
   last_name: z.string().min(2, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   mobile: z.string().min(8, 'Valid phone number is required'),
-  floor_unit: z.string().optional(),
+  floor_unit: z.string().optional().nullable(),
   block_street: z.string().min(5, 'Address is required'),
   postal_code: z.string().min(6, 'Valid postal code is required'),
-  condo_name: z.string().optional(),
-  lobby_tower: z.string().optional(),
-  special_instructions: z.string().optional()
+  condo_name: z.string().optional().nullable(),
+  lobby_tower: z.string().optional().nullable(),
+  special_instructions: z.string().optional().nullable()
 });
 
-type CustomerFormData = z.infer<typeof customerSchema>;
-
-interface CustomerStepProps {
-  onNext: () => void;
-  onBack: () => void;
-  bookingData: Partial<CreateBookingParams>;
-  onUpdateBookingData: (data: Partial<CreateBookingParams>) => void;
-  className?: string;
-}
-
-const CustomerStep: React.FC<CustomerStepProps> = ({
+export const CustomerStep: React.FC<BaseStepProps> = ({
   onNext,
   onBack,
   bookingData,
@@ -45,33 +49,41 @@ const CustomerStep: React.FC<CustomerStepProps> = ({
   } = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      first_name: bookingData.customer_first_name || '',
-      last_name: bookingData.customer_last_name || '',
-      email: bookingData.customer_email || '',
-      mobile: bookingData.customer_mobile || '',
-      floor_unit: bookingData.floor_unit || '',
-      block_street: bookingData.block_street || '',
-      postal_code: bookingData.postal_code || '',
-      condo_name: bookingData.condo_name || '',
-      lobby_tower: bookingData.lobby_tower || '',
-      special_instructions: bookingData.special_instructions || ''
+      first_name: bookingData.customerInfo.firstName,
+      last_name: bookingData.customerInfo.lastName,
+      email: bookingData.customerInfo.email,
+      mobile: bookingData.customerInfo.phone,
+      floor_unit: bookingData.customerInfo.address.floorUnit || null,
+      block_street: bookingData.customerInfo.address.blockStreet,
+      postal_code: bookingData.customerInfo.address.postalCode,
+      condo_name: bookingData.customerInfo.address.condoName || null,
+      lobby_tower: bookingData.customerInfo.address.lobbyTower || null,
+      special_instructions: bookingData.customerInfo.specialInstructions || null
     }
   });
 
   const onSubmit = async (data: CustomerFormData) => {
     try {
+      const customerInfo: CustomerInfo = {
+        id: bookingData.customerInfo.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        phone: data.mobile,
+        address: {
+          floorUnit: data.floor_unit || undefined,
+          blockStreet: data.block_street,
+          postalCode: data.postal_code,
+          condoName: data.condo_name || undefined,
+          lobbyTower: data.lobby_tower || undefined,
+          region: bookingData.customerInfo.address.region
+        },
+        specialInstructions: data.special_instructions || undefined
+      };
+
       onUpdateBookingData({
         ...bookingData,
-        customer_first_name: data.first_name,
-        customer_last_name: data.last_name,
-        customer_email: data.email,
-        customer_mobile: data.mobile,
-        floor_unit: data.floor_unit,
-        block_street: data.block_street,
-        postal_code: data.postal_code,
-        condo_name: data.condo_name,
-        lobby_tower: data.lobby_tower,
-        special_instructions: data.special_instructions
+        customerInfo
       });
       onNext();
     } catch (error) {
@@ -264,6 +276,4 @@ const CustomerStep: React.FC<CustomerStepProps> = ({
   );
 };
 
-CustomerStep.displayName = 'CustomerStep';
-
-export default CustomerStep; 
+export default CustomerStep;

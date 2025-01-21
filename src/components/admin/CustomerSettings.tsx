@@ -2,78 +2,41 @@
 
 import { motion } from 'framer-motion';
 import { Save, Loader2, User, Mail, Phone, Shield } from 'lucide-react';
-import React, { useState } from 'react';
+import * as React from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@utils/cn';
+import { 
+  CustomerConfig,
+  CustomerSettingsProps,
+  defaultCustomerConfig 
+} from '@shared/types/customer';
 
-export interface CustomerConfig {
-  requireMobileVerification: boolean;
-  requireEmailVerification: boolean;
-  allowGuestBookings: boolean;
-  maxBookingsPerCustomer: number;
-  customerFields: {
-    required: string[];
-    optional: string[];
-  };
-}
+const CustomerSettings: React.FC<CustomerSettingsProps> = ({
+  config: initialConfig = defaultCustomerConfig,
+  onSave,
+  loading: externalLoading = false
+}) => {
+  const [config, setConfig] = React.useState<CustomerConfig>(initialConfig);
+  const [loading, setLoading] = React.useState(false);
 
-export interface CustomerSettingsProps {
-  config: CustomerConfig;
-  onSave: (config: CustomerConfig) => void;
-  loading?: boolean;
-}
-
-const defaultConfig: CustomerConfig = {
-  registration: {
-    requireEmail: true,
-    requirePhone: true,
-    requireAddress: false,
-    verifyEmail: true,
-    verifyPhone: false,
-  },
-  preferences: {
-    allowNotifications: true,
-    allowMarketing: false,
-    allowSMS: true,
-    allowWhatsApp: true,
-  },
-  privacy: {
-    dataRetentionDays: 365,
-    anonymizeInactive: true,
-    inactivePeriodDays: 730,
-    gdprCompliance: true,
-  },
-  loyalty: {
-    enabled: true,
-    pointsPerBooking: 100,
-    pointsPerDollar: 1,
-    minimumPointsRedemption: 1000,
-  },
-};
-
-const CustomerSettings = () => {
-  const [config, setConfig] = useState(defaultConfig);
-
-  const [loading, setLoading] = useState(false);
+  const isLoading = loading || externalLoading;
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 1000);
-      });
+      await onSave(config);
       toast.success('Customer settings saved successfully');
     } catch (error) {
       toast.error('Failed to save customer settings');
+      console.error('Save error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    setConfig(defaultConfig);
+    setConfig(defaultCustomerConfig);
     toast.success('Settings reset to default');
   };
 
@@ -465,17 +428,19 @@ const CustomerSettings = () => {
         <div className="flex items-center justify-end space-x-4">
           <button
             onClick={handleReset}
+            disabled={isLoading}
             className={cn(
               'rounded-md px-4 py-2 text-sm font-medium',
               'bg-gray-700 text-gray-100 transition-colors',
-              'hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500'
+              'hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500',
+              'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             Reset to Default
           </button>
           <button
             onClick={handleSave}
-            disabled={loading}
+            disabled={isLoading}
             className={cn(
               'inline-flex items-center rounded-md px-4 py-2',
               'bg-blue-500 text-white transition-colors',
@@ -483,7 +448,7 @@ const CustomerSettings = () => {
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
-            {loading ? (
+            {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Saving...</span>
@@ -503,4 +468,4 @@ const CustomerSettings = () => {
 
 CustomerSettings.displayName = 'CustomerSettings';
 
-undefined.displayName = 'undefined';
+export default CustomerSettings;

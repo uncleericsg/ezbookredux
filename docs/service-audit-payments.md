@@ -1,228 +1,142 @@
-# Payment Services Audit
-Last Updated: January 17, 2024
+# Payment Service Audit
 
-## Current Implementation Locations
+## Overview
+The payment service has been simplified to use Stripe Checkout and Supabase for data storage. This document outlines the current implementation and recent changes.
 
-### Frontend Services
-1. `src/services/paymentService.ts`
-   - Primary payment processing logic
-   - Stripe integration
-   - Booking verification
-   - Payment status management
+## Architecture
 
-2. `src/services/stripe.ts`
-   - Stripe-specific implementations
-   - Webhook handling
-   - Payment intent creation
-
-### Server Services
-1. `server/services/payments/stripe/stripeService.ts`
-   - Core Stripe integration
-   - Payment intent creation
-   - Basic error handling
-
-2. `server/services/payments/paymentService.ts`
-   - Payment processing
-   - Status management
-
-### API Endpoints
-1. `api/payments/webhook.ts`
-   - Webhook handling
-   - Using centralized Stripe service
-
-2. `api/payments/create-payment-intent.ts`
-   - Payment intent creation
-   - Mixed usage of services
-
-## Business Logic Components
-
-### Payment Processing
-- [ ] Payment intent creation
-- [ ] Payment verification
-- [ ] Status updates
-- [ ] Error handling
-- [ ] Receipt generation
-- [ ] Refund processing
-
-### Booking Integration
-- [ ] Booking status verification
-- [ ] Payment status updates
-- [ ] Amount calculation
-- [ ] Currency handling
-
-### Stripe Integration
-- [ ] Customer management
-- [ ] Payment method handling
-- [ ] Webhook processing
-- [ ] Event handling
-- [ ] Error mapping
-
-## Data Access Patterns
-
-### Direct Database Access (via Supabase)
-```typescript
-// Current Pattern (Frontend)
-const { data, error } = await supabaseClient
-  .from('bookings')
-  .select('id, payment_status, total_amount')
-  .eq('id', bookingId);
-
-// Current Pattern (Server)
-const { data, error } = await this.db
-  .from('payments')
-  .insert(paymentData);
+### Components
+```
+server/
+├── services/
+│   ├── payments/
+│   │   ├── providers/
+│   │   │   └── stripe/
+│   │   │       └── StripeCheckoutProvider.ts   # Stripe integration
+│   │   └── PaymentService.ts                   # Main payment orchestrator
+│   └── repositories/
+│       └── payments/
+│           └── PaymentSessionRepository.ts      # Supabase operations
+└── api/
+    └── payments/
+        ├── checkout.ts                         # Checkout endpoint
+        └── webhook.ts                          # Webhook handler
 ```
 
-### Required Tables
-1. payments
-   - Payment records
-   - Status tracking
-   - Amount information
+## Recent Changes
 
-2. bookings
-   - Payment status
-   - Total amount
-   - Customer information
+1. Database Layer
+   - Migrated from Prisma to Supabase for payment_sessions table
+   - Added proper error handling for Supabase operations
+   - Removed payment_sessions from Prisma schema
+   - Using Supabase migrations for schema management
 
-3. customers
-   - Payment methods
-   - Billing information
+2. Payment Flow
+   - Using Stripe Checkout for payment processing
+   - Simplified payment flow:
+     1. Create checkout session
+     2. Redirect to Stripe hosted page
+     3. Handle webhook events
+   - Improved error handling and logging
 
-## External Service Integrations
+3. Data Storage
+   - Payment sessions stored in Supabase
+   - Schema follows Stripe Checkout requirements
+   - Proper indexing for performance
+   - Consistent status tracking
 
-### Stripe
-1. Current Implementation:
-   - Direct integration in frontend
-   - Partial server implementation
-   - Webhook handling
+## Current Implementation
 
-2. Required Features:
-   - Payment intent creation
-   - Payment method handling
-   - Customer management
-   - Webhook processing
-   - Error handling
+### 1. Payment Service
+- Orchestrates payment flow
+- Handles session creation and management
+- Processes webhook events
+- Updates booking status based on payment events
 
-### Email Service
-1. Current Implementation:
-   - Receipt sending
-   - Payment notifications
+### 2. Stripe Checkout Provider
+- Creates Stripe checkout sessions
+- Handles webhook event verification
+- Maps Stripe statuses to internal statuses
+- Manages success/cancel URLs
 
-2. Required Features:
-   - Payment confirmation
-   - Receipt generation
-   - Error notifications
+### 3. Payment Session Repository
+- Manages payment session data in Supabase
+- Handles CRUD operations
+- Provides proper error handling
+- Maintains data consistency
 
-## Dependent Components
+## Security
 
-### Frontend Components
-1. Checkout Flow
-   - Payment form
-   - Status display
-   - Error handling
+1. Data Handling
+   - No card data touches our servers
+   - All sensitive data handled by Stripe
+   - Proper environment variable management
 
-2. Booking Management
-   - Payment status display
-   - Payment actions
-   - Refund handling
+2. Webhook Security
+   - Signature verification required
+   - Idempotency built-in
+   - Proper error handling
 
-### API Dependencies
-1. Booking API
+3. Session Management
+   - Sessions expire after 24 hours
+   - One-time use only
+   - Proper status tracking
+
+## Error Handling
+
+1. Database Errors
+   - Proper error catching
+   - Detailed error logging
+   - Consistent error responses
+
+2. Stripe Errors
+   - Webhook verification errors
+   - Session creation errors
+   - Payment processing errors
+
+3. Application Errors
+   - Validation errors
+   - Authorization errors
+   - Business logic errors
+
+## Testing
+
+1. Test Cards
+   - Success: 4242 4242 4242 4242
+   - Authentication: 4000 0027 6000 3184
+   - Decline: 4000 0000 0000 0002
+
+2. Webhook Testing
+   - Local testing with Stripe CLI
+   - Event verification
    - Status updates
-   - Amount verification
 
-2. Customer API
-   - Payment method management
-   - Billing information
+## Future Improvements
 
-## Migration Tasks
+1. Features
+   - [ ] Automated refund handling
+   - [ ] Custom email templates
+   - [ ] Payment analytics
 
-### 1. Server Implementation
-```typescript
-[ ] Create PaymentService class
-[ ] Implement payment intent creation
-[ ] Add booking verification
-[ ] Add status management
-[ ] Implement receipt generation
-[ ] Add refund processing
+2. Technical
+   - [ ] Enhanced error reporting
+   - [ ] Retry mechanism for failed updates
+   - [ ] Payment status monitoring
+
+## Dependencies
+- Stripe SDK
+- Supabase Client
+- Express
+- TypeScript
+
+## Environment Variables
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### 2. API Standardization
-```typescript
-[ ] Update webhook endpoint
-[ ] Standardize payment intent creation
-[ ] Add payment verification endpoint
-[ ] Implement refund endpoint
-[ ] Add receipt generation endpoint
-```
-
-### 3. Frontend Updates
-```typescript
-[ ] Create PaymentAPI client
-[ ] Update checkout flow
-[ ] Implement error handling
-[ ] Add loading states
-[ ] Update status management
-```
-
-## Testing Requirements
-
-### Unit Tests
-1. Payment Processing
-   - Intent creation
-   - Status updates
-   - Error handling
-
-2. Stripe Integration
-   - Webhook processing
-   - Event handling
-   - Error scenarios
-
-### Integration Tests
-1. Payment Flow
-   - Complete checkout process
-   - Status updates
-   - Receipt generation
-
-2. Error Handling
-   - Failed payments
-   - Invalid amounts
-   - Network errors
-
-## Security Considerations
-
-### Data Protection
-- [ ] Sensitive data handling
-- [ ] PCI compliance
-- [ ] Error message security
-
-### Authentication
-- [ ] API endpoint protection
-- [ ] Webhook verification
-- [ ] User authorization
-
-## Next Steps
-
-1. Immediate Actions
-   ```
-   [ ] Review current implementation details
-   [ ] Document missing functionality
-   [ ] Create test environment
-   [ ] Set up monitoring
-   ```
-
-2. Implementation Priority
-   ```
-   1. Core payment processing
-   2. Webhook handling
-   3. Status management
-   4. Receipt generation
-   ```
-
-3. Migration Schedule
-   ```
-   Week 1: Server implementation
-   Week 2: API standardization
-   Week 3: Frontend updates
-   Week 4: Testing and validation
-   ``` 
+## Related Documentation
+- [Stripe Checkout Documentation](https://stripe.com/docs/checkout)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Project Documentation](../README.md)

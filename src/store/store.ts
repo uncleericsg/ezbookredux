@@ -1,14 +1,24 @@
 import { configureStore } from '@reduxjs/toolkit';
-import rootReducer from './rootReducer';
+import userReducer from './slices/userSlice';
+import bookingReducer from './slices/bookingSlice';
 
 export const store = configureStore({
-  reducer: rootReducer,
+  reducer: {
+    user: userReducer,
+    booking: bookingReducer,
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['booking/setCurrentBooking'],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: ['payload.scheduledDateTime'],
+        // Ignore these paths in the state
+        ignoredPaths: ['booking.currentBooking.scheduledDateTime'],
+      },
     }),
 });
 
-export type AppStore = typeof store;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

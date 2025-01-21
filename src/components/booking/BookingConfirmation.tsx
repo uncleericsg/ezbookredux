@@ -1,186 +1,129 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Calendar, CreditCard } from 'lucide-react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useAppSelector } from '@store';
-import PasswordCreationModal from '@components/auth/PasswordCreationModal';
-import { ROUTES } from '@config/routes';
-import { toast } from 'sonner';
-import { logger } from '@/server/utils/logger';
+import { HiCheckCircle, HiOutlineCalendar, HiOutlineUser, HiOutlineHome } from 'react-icons/hi2';
+import { cn } from '../../utils/cn';
+import type { BookingData } from '../../types/booking-flow';
+import { format } from 'date-fns';
+import { formatPrice } from '../../utils/formatters';
 
 interface BookingConfirmationProps {
-  onCreateAccount?: (password: string) => Promise<boolean>;
-  sessionId?: string;
-  onDownloadReceipt?: () => void;
-  email?: string;
+  booking: BookingData;
+  onViewBookings: () => void;
+  className?: string;
 }
 
-interface SessionStatus {
-  status: string;
-  metadata: {
-    bookingId: string;
-    amount: string;
-    currency: string;
-    service: string;
-    date: string;
-  };
-  receiptUrl?: string;
-}
-
-const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
-  onCreateAccount,
-  sessionId,
-  onDownloadReceipt,
-  email: propEmail,
+export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
+  booking,
+  onViewBookings,
+  className
 }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { bookingId } = useParams();
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [sessionData, setSessionData] = useState<SessionStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const { currentUser } = useAppSelector((state) => state.user);
-  const email = propEmail || currentUser?.email;
-
-  useEffect(() => {
-    const fetchSessionStatus = async () => {
-      try {
-        if (!sessionId) return;
-        
-        const response = await fetch(`/api/payments/status?session_id=${sessionId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch session status');
-        }
-        
-        const data = await response.json();
-        setSessionData(data);
-      } catch (error) {
-        logger.error('Failed to fetch session status', { error });
-        toast.error('Failed to load payment details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSessionStatus();
-  }, [sessionId]);
-
-  const handleViewBookings = () => {
-    if (!currentUser) {
-      setShowPasswordModal(true);
-      return;
-    }
-    navigate(ROUTES.BOOKINGS);
-  };
-
-  const handlePasswordSubmit = async (password: string) => {
-    try {
-      if (onCreateAccount) {
-        const success = await onCreateAccount(password);
-        if (success) {
-          setShowPasswordModal(false);
-          navigate(ROUTES.BOOKINGS);
-          return;
-        }
-      }
-      throw new Error('Account creation failed');
-    } catch (error) {
-      logger.error('Failed to create account', { error });
-      toast.error('Failed to create account. Please try again.');
-    }
-  };
-
-  const handleDownload = () => {
-    if (!sessionData?.receiptUrl) {
-      toast.error('Receipt not available yet');
-      return;
-    }
-    
-    // Open receipt in new tab (Stripe hosted receipt)
-    window.open(sessionData.receiptUrl, '_blank');
-    onDownloadReceipt?.();
-  };
-
-  if (isLoading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg text-center"
-      >
-        <p>Loading payment details...</p>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg"
+      transition={{ duration: 0.5 }}
+      className={cn(
+        'flex flex-col items-center justify-center space-y-6 rounded-lg bg-white p-8 text-center shadow-sm',
+        className
+      )}
     >
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-          <CheckCircle className="w-8 h-8 text-green-500" />
-        </div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Booking Confirmed!</h2>
-        <p className="text-gray-600">
-          {email && `We've sent a confirmation email to ${email}`}
-        </p>
-      </div>
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+      >
+        <HiCheckCircle className="h-16 w-16 text-green-500" />
+      </motion.div>
 
-      {sessionData && (
-        <div className="space-y-6 mb-8">
-          <div className="flex items-start space-x-4">
-            <Calendar className="w-6 h-6 text-gray-400 mt-1" />
-            <div>
-              <p className="font-medium text-gray-900">Appointment Details</p>
-              <p className="text-gray-600">{sessionData.metadata.service}</p>
-              <p className="text-gray-600">{sessionData.metadata.date}</p>
-            </div>
+      <h2 className="text-2xl font-semibold text-gray-900">
+        Booking Confirmed!
+      </h2>
+
+      <p className="max-w-sm text-gray-600">
+        Your booking has been confirmed. We've sent a confirmation email with all the details.
+      </p>
+
+      {/* Booking Details */}
+      <div className="w-full max-w-md space-y-4 rounded-lg bg-gray-50 p-6">
+        {/* Service Details */}
+        <div className="flex items-start space-x-3">
+          <HiOutlineCalendar className="mt-0.5 h-5 w-5 text-gray-500" />
+          <div className="flex-1 text-left">
+            <p className="font-medium text-gray-900">{booking.serviceTitle}</p>
+            <p className="text-sm text-gray-600">
+              {format(new Date(booking.date), 'PPP')} at {booking.time}
+            </p>
+            <p className="text-sm font-medium text-blue-600">
+              {formatPrice(booking.servicePrice)}
+            </p>
           </div>
+        </div>
 
-          <div className="flex items-start space-x-4">
-            <CreditCard className="w-6 h-6 text-gray-400 mt-1" />
-            <div>
-              <p className="font-medium text-gray-900">Payment Details</p>
-              <p className="text-gray-600">Amount: ${parseInt(sessionData.metadata.amount) / 100}</p>
-              <p className="text-gray-600">Status: {sessionData.status}</p>
-            </div>
+        {/* Customer Details */}
+        <div className="flex items-start space-x-3">
+          <HiOutlineUser className="mt-0.5 h-5 w-5 text-gray-500" />
+          <div className="flex-1 text-left">
+            <p className="font-medium text-gray-900">
+              {booking.customerInfo.firstName} {booking.customerInfo.lastName}
+            </p>
+            <p className="text-sm text-gray-600">{booking.customerInfo.email}</p>
+            <p className="text-sm text-gray-600">{booking.customerInfo.phone}</p>
           </div>
         </div>
-      )}
 
-      <div className="space-y-4">
-        {sessionData?.receiptUrl && (
-          <button
-            onClick={handleDownload}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            View Receipt
-          </button>
+        {/* Address Details */}
+        <div className="flex items-start space-x-3">
+          <HiOutlineHome className="mt-0.5 h-5 w-5 text-gray-500" />
+          <div className="flex-1 text-left">
+            <p className="font-medium text-gray-900">Service Address</p>
+            <p className="text-sm text-gray-600">
+              {booking.customerInfo.address.blockStreet}
+              {booking.customerInfo.address.floorUnit && `, Unit ${booking.customerInfo.address.floorUnit}`}
+            </p>
+            <p className="text-sm text-gray-600">
+              Singapore {booking.customerInfo.address.postalCode}
+            </p>
+          </div>
+        </div>
+
+        {/* Additional Details */}
+        {(booking.brands.length > 0 || booking.issues.length > 0) && (
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            {booking.brands.length > 0 && (
+              <div className="mb-2">
+                <p className="font-medium text-gray-900">Brands</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {booking.brands.map((brand, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                    >
+                      {brand}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {booking.issues.length > 0 && (
+              <div>
+                <p className="font-medium text-gray-900">Issues</p>
+                <ul className="mt-1 list-disc list-inside text-sm text-gray-600">
+                  {booking.issues.map((issue, index) => (
+                    <li key={index}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
-
-        <button
-          onClick={handleViewBookings}
-          className="w-full py-2 px-4 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-        >
-          View All Bookings
-        </button>
       </div>
 
-      {showPasswordModal && (
-        <PasswordCreationModal
-          isOpen={showPasswordModal}
-          onClose={() => setShowPasswordModal(false)}
-          onSubmit={handlePasswordSubmit}
-          email={email}
-        />
-      )}
+      <button
+        onClick={onViewBookings}
+        className="mt-6 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition-colors"
+      >
+        View My Bookings
+      </button>
     </motion.div>
   );
 };
-
-export default BookingConfirmation;

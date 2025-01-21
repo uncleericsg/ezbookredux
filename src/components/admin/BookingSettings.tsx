@@ -2,81 +2,41 @@
 
 import { motion } from 'framer-motion';
 import { Save, Loader2, Clock, Calendar, Users } from 'lucide-react';
-import React, { useState } from 'react';
+import * as React from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@utils/cn';
+import { 
+  BookingConfig,
+  BookingSettingsProps,
+  defaultBookingConfig 
+} from '@shared/types/booking-settings';
 
-export interface BookingConfig {
-  allowedDaysInAdvance: number;
-  minHoursBeforeBooking: number;
-  maxBookingsPerDay: number;
-  bufferBetweenBookings: number;
-  workingHours: {
-    start: string;
-    end: string;
-  };
-  holidays: string[];
-}
-
-export interface BookingSettingsProps {
-  config: BookingConfig;
-  onSave: (config: BookingConfig) => void;
-  loading?: boolean;
-}
-
-const defaultConfig: BookingConfig = {
-  timeSlots: {
-    enabled: true,
-    duration: 60,
-    startTime: '09:00',
-    endTime: '17:00',
-    breakDuration: 15,
-  },
-  scheduling: {
-    minAdvanceBooking: 24,
-    maxAdvanceBooking: 30,
-    allowSameDay: false,
-    allowWeekends: true,
-  },
-  capacity: {
-    maxBookingsPerDay: 10,
-    maxBookingsPerSlot: 2,
-    overbookingBuffer: 1,
-  },
-  restrictions: {
-    enabled: true,
-    maxBookingsPerUser: 3,
-    cancellationPeriod: 24,
-    blackoutDates: [],
-  },
-};
-
-const BookingSettings = ({
-  settings,
+const BookingSettings: React.FC<BookingSettingsProps> = ({
+  settings = defaultBookingConfig,
   onUpdate,
-}: BookingSettingsProps) => {
-  const [config, setConfig] = useState<BookingConfig>(settings);
-  const [loading, setLoading] = useState(false);
+  loading: externalLoading = false
+}) => {
+  const [config, setConfig] = React.useState<BookingConfig>(settings);
+  const [loading, setLoading] = React.useState(false);
+
+  const isLoading = loading || externalLoading;
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 1000);
-      });
-      onUpdate(config);
+      await onUpdate(config);
       toast.success('Booking settings saved successfully');
     } catch (error) {
       toast.error('Failed to save booking settings');
+      console.error('Save error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    setConfig(defaultConfig);
+    setConfig(defaultBookingConfig);
     toast.success('Settings reset to default');
   };
 
@@ -465,17 +425,19 @@ const BookingSettings = ({
         <div className="flex items-center justify-end space-x-4">
           <button
             onClick={handleReset}
+            disabled={isLoading}
             className={cn(
               'rounded-md px-4 py-2 text-sm font-medium',
               'bg-gray-700 text-gray-100 transition-colors',
-              'hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500'
+              'hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500',
+              'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             Reset to Default
           </button>
           <button
             onClick={handleSave}
-            disabled={loading}
+            disabled={isLoading}
             className={cn(
               'inline-flex items-center rounded-md px-4 py-2',
               'bg-blue-500 text-white transition-colors',
@@ -483,7 +445,7 @@ const BookingSettings = ({
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
-            {loading ? (
+            {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Saving...</span>
@@ -503,7 +465,4 @@ const BookingSettings = ({
 
 BookingSettings.displayName = 'BookingSettings';
 
-export type { BookingConfig };
-export { BookingSettings };
-
-undefined.displayName = 'undefined';
+export default BookingSettings;

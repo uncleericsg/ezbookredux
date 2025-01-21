@@ -1,21 +1,26 @@
-import { useState, useCallback, useEffect } from 'react';
-import { isEqual } from '../utils/object';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-export const useSettingsForm = <T extends Record<string, any>>(
+/**
+ * Generic settings form hook
+ * @param defaultSettings Default settings
+ * @param saveSettings Save settings callback
+ * @param fetchSettings Fetch settings callback
+ */
+export function useSettingsForm<T>(
   defaultSettings: T,
-  saveFunction: (settings: T) => Promise<void>,
-  fetchFunction: () => Promise<T>
-) => {
+  saveSettings: (settings: T) => Promise<void>,
+  fetchSettings: () => Promise<T>
+) {
   const [settings, setSettings] = useState<T>(defaultSettings);
-  const [loading, setLoading] = useState(true);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const fetchedSettings = await fetchFunction();
-        setSettings(fetchedSettings);
+        setLoading(true);
+        const data = await fetchSettings();
+        setSettings(data);
       } catch (error) {
         console.error('Failed to load settings:', error);
         toast.error('Failed to load settings');
@@ -25,21 +30,19 @@ export const useSettingsForm = <T extends Record<string, any>>(
     };
 
     loadSettings();
-  }, [fetchFunction]);
+  }, [fetchSettings]);
 
-  const updateSettings = useCallback((updates: Partial<T>) => {
-    setSettings(prev => {
-      const newSettings = { ...prev, ...updates };
-      setHasChanges(!isEqual(newSettings, settings));
-      return newSettings;
-    });
-  }, [settings]);
+  const updateSettings = (updates: Partial<T>) => {
+    setSettings(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      await saveFunction(settings);
-      setHasChanges(false);
+      await saveSettings(settings);
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -50,17 +53,10 @@ export const useSettingsForm = <T extends Record<string, any>>(
     }
   };
 
-  const resetSettings = useCallback(() => {
-    setSettings(defaultSettings);
-    setHasChanges(false);
-  }, [defaultSettings]);
-
   return {
     settings,
     loading,
-    hasChanges,
     updateSettings,
-    handleSave,
-    resetSettings
+    handleSave
   };
-};
+}

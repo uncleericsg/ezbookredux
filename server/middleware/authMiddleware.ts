@@ -1,73 +1,172 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseClient } from '@server/config/supabase/client';
-import { createApiError } from '../utils/apiResponse';
-import { Database } from '../types/supabase';
+import type { Request, Response, NextFunction } from 'express';
+import type {
+  AuthMiddlewareOptions,
+  AuthHandler,
+  AuthService,
+  UserProfile
+} from '@shared/types/auth';
+import { AuthError } from '@shared/types/auth';
+import { logger } from '@server/utils/logger';
 
-export interface AuthenticatedRequest extends NextApiRequest {
-  user: {
-    id: string;
-    role: 'admin' | 'service_provider' | 'customer';
-    email: string;
-  };
-}
+/**
+ * Default authentication strategies
+ */
+const DEFAULT_STRATEGIES = ['jwt', 'api-key', 'session'];
 
-export function withAuth(
-  handler: (req: AuthenticatedRequest, res: NextApiResponse) => Promise<void>,
-  requiredRoles?: ('admin' | 'service_provider' | 'customer')[]
-) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+/**
+ * Default excluded paths
+ */
+const DEFAULT_EXCLUDED_PATHS = [
+  '/api/health',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/verify-email',
+  '/api/auth/verify-phone'
+];
+
+/**
+ * Create authentication middleware
+ */
+export function createAuthMiddleware(
+  authService: AuthService,
+  options: AuthMiddlewareOptions = {}
+): AuthHandler {
+  const {
+    roles,
+    optional = false,
+    strategies = DEFAULT_STRATEGIES,
+    excludePaths = DEFAULT_EXCLUDED_PATHS,
+    roleBasedPaths = {},
+    config,
+    onError
+  } = options;
+
+  /**
+   * Authentication middleware
+   */
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authHeader = req.headers.authorization;
-
-      if (!authHeader) {
-        return res.status(401).json(
-          createApiError('Missing authorization header', 'AUTH_REQUIRED')
-        );
+      // Skip authentication for excluded paths
+      if (excludePaths.some(path => req.path.startsWith(path))) {
+        return next();
       }
 
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+      // Check role-based path restrictions
+      const requiredRoles = Object.entries(roleBasedPaths).find(([path]) =>
+        req.path.startsWith(path)
+      )?.[1];
 
-      if (authError || !user) {
-        return res.status(401).json(
-          createApiError('Invalid authentication token', 'AUTH_INVALID')
-        );
+      // Try each strategy in order
+      let user: UserProfile | null = null;
+      let error: Error | null = null;
+
+      for (const strategy of strategies) {
+        try {
+          switch (strategy) {
+            case 'jwt':
+              if (!req.headers.authorization?.startsWith('Bearer ')) {
+                continue;
+              }
+              const token = req.headers.authorization.split(' ')[1];
+              user = await authService.verifyToken(token);
+              break;
+
+            case 'api-key':
+              const apiKey =
+                req.headers['x-api-key'] ||
+                req.query.apiKey ||
+                req.cookies?.apiKey;
+              if (!apiKey) {
+                continue;
+              }
+              user = await authService.verifyApiKey(apiKey as string);
+              break;
+
+            case 'session':
+              const sessionId = req.cookies?.sessionId;
+              if (!sessionId) {
+                continue;
+              }
+              user = await authService.verifySession(sessionId);
+              break;
+
+            default:
+              logger.warn('Unknown authentication strategy', { strategy });
+              continue;
+          }
+
+          // Strategy succeeded
+          break;
+        } catch (e) {
+          error = e as Error;
+          continue;
+        }
       }
 
-      // Get user profile with role
-      const { data: profile, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      // Handle authentication failure
+      if (!user) {
+        if (optional) {
+          return next();
+        }
 
-      if (profileError || !profile) {
-        return res.status(401).json(
-          createApiError('User profile not found', 'AUTH_INVALID')
+        const authError = new AuthError(
+          'Authentication required',
+          'AUTH_REQUIRED',
+          401,
+          { originalError: error }
         );
+
+        if (onError) {
+          return onError(authError, req, res);
+        }
+
+        throw authError;
       }
 
-      // Check role if required
-      if (requiredRoles && !requiredRoles.includes(profile.role)) {
-        return res.status(403).json(
-          createApiError('Insufficient permissions', 'AUTH_INVALID')
+      // Check role requirements
+      if (roles?.length && !roles.includes(user.role)) {
+        const authError = new AuthError(
+          'Insufficient permissions',
+          'INSUFFICIENT_PERMISSIONS',
+          403,
+          { originalError: error }
         );
+
+        if (onError) {
+          return onError(authError, req, res);
+        }
+
+        throw authError;
       }
 
-      // Add user to request
-      (req as AuthenticatedRequest).user = {
-        id: user.id,
-        role: profile.role,
-        email: user.email!
-      };
+      // Check path-specific role requirements
+      if (requiredRoles?.length && !requiredRoles.includes(user.role)) {
+        const authError = new AuthError(
+          'Insufficient permissions for this path',
+          'INSUFFICIENT_PERMISSIONS',
+          403,
+          { originalError: error }
+        );
 
-      // Call the handler
-      return handler(req as AuthenticatedRequest, res);
+        if (onError) {
+          return onError(authError, req, res);
+        }
+
+        throw authError;
+      }
+
+      // Attach user to request
+      (req as any).user = user;
+
+      next();
     } catch (error) {
-      console.error('Auth middleware error:', error);
-      return res.status(500).json(
-        createApiError('Authentication failed', 'SERVER_ERROR')
-      );
+      if (onError) {
+        return onError(error as AuthError, req, res);
+      }
+
+      next(error);
     }
   };
-} 
+}

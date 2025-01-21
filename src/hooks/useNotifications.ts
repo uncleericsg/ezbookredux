@@ -1,60 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fetchNotifications, markNotificationAsRead } from '../services/notifications';
-import type { Notification } from '../types';
+import type { Notification } from '../types/notification';
 import { useAppSelector } from '../store';
 
-// Mock notifications data with actionUrls
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    userId: '1',
-    type: 'appointment_confirmation',
-    title: 'Upcoming Appointment',
-    message: 'Your aircon service appointment is scheduled for tomorrow at 2:00 PM',
-    createdAt: new Date().toISOString(),
-    read: false,
-    priority: 'high',
-    actionUrl: '/appointments'
-  },
-  {
-    id: '2',
-    userId: '1',
-    type: 'amc_expiry',
-    title: 'AMC Package Expiring Soon',
-    message: 'Your AMC package will expire in 30 days. Renew now to continue enjoying premium benefits.',
-    createdAt: new Date().toISOString(),
-    read: false,
-    priority: 'high',
-    actionUrl: '/amc/packages'
-  },
-  {
-    id: '3',
-    userId: '1',
-    type: 'service_reminder',
-    title: 'Service Due',
-    message: 'It\'s time for your regular aircon maintenance. Book a service now.',
-    createdAt: new Date().toISOString(),
-    read: false,
-    priority: 'normal',
-    actionUrl: '/'  // Routes to home page for service category selection
-  }
-];
-
+/**
+ * Hook to manage user notifications
+ */
 export const useNotifications = () => {
-  const { currentUser: user } = useAppSelector(state => state.user);
+  const user = useAppSelector(state => state.user.currentUser);
   const queryClient = useQueryClient();
 
-  // For now, always return mock notifications
-  const { data: notifications = MOCK_NOTIFICATIONS, isLoading } = useQuery({
+  // Fetch notifications
+  const { data: notificationsResponse, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: () => fetchNotifications(user?.id || ''),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // Mark notification as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: markNotificationAsRead,
     onSuccess: () => {
@@ -62,19 +28,27 @@ export const useNotifications = () => {
         queryKey: ['notifications', user?.id]
       });
     },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to mark notification as read';
+      toast.error(errorMessage);
+    }
   });
 
+  // Handle marking notification as read
   const handleMarkAsRead = useCallback((notificationId: string) => {
     if (!user?.id) return;
-    markAsReadMutation.mutate(notificationId);
+    void markAsReadMutation.mutate(notificationId);
   }, [user?.id, markAsReadMutation]);
 
+  // Calculate unread count
   const unreadCount = useMemo(() => {
-    return notifications.filter(n => !n.read).length;
-  }, [notifications]);
+    return notificationsResponse?.data?.filter((notification: Notification) => !notification.read).length || 0;
+  }, [notificationsResponse?.data]);
 
+  // Sort notifications by priority, read status, and date
   const sortedNotifications = useMemo(() => {
-    return [...notifications].sort((a, b) => {
+    const notifications = notificationsResponse?.data || [];
+    return [...notifications].sort((a: Notification, b: Notification) => {
       // First sort by priority
       if (a.priority === 'high' && b.priority !== 'high') return -1;
       if (a.priority !== 'high' && b.priority === 'high') return 1;
@@ -86,12 +60,13 @@ export const useNotifications = () => {
       // Finally sort by date
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [notifications]);
+  }, [notificationsResponse?.data]);
 
   return {
     notifications: sortedNotifications,
     unreadCount,
     isLoading,
     markAsRead: handleMarkAsRead,
+    error: notificationsResponse?.error
   };
 };

@@ -1,48 +1,43 @@
 'use client';
 
 import { Save } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import * as React from 'react';
 import { toast } from 'sonner';
 
-import { cn } from '../../lib/utils';
-import type { DashboardSettings as DashboardSettingsType } from '../../types';
-import { Button } from '../ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Input } from '../ui/Input';
-import { Label } from '../ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select';
-import { Switch } from '../ui/Switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
+import { cn } from '@/utils/cn';
+import { 
+  DashboardConfig,
+  DashboardSettingsProps,
+  defaultDashboardConfig,
+  DashboardView,
+  DashboardTheme,
+  DashboardDensity 
+} from '@shared/types/dashboard-settings';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export interface DashboardSettingsProps {
-  config: {
-    showRevenueChart: boolean;
-    showBookingStats: boolean;
-    showCustomerStats: boolean;
-    defaultDateRange: string;
-    refreshInterval: number;
-  };
-  onSave: (config: any) => void;
-  loading?: boolean;
-}
-
-export const DashboardSettings = ({
-  settings: initialSettings,
+const DashboardSettings: React.FC<DashboardSettingsProps> = ({
+  settings = defaultDashboardConfig,
   onSave,
   loading = false,
   className,
   ...props
-}: DashboardSettingsProps) => {
-  const [settings, setSettings] = useState<DashboardSettingsType>(initialSettings);
-  const [activeTab, setActiveTab] = useState('general');
+}) => {
+  const [config, setConfig] = React.useState<DashboardConfig>(settings);
+  const [activeTab, setActiveTab] = React.useState('general');
 
-  useEffect(() => {
-    setSettings(initialSettings);
-  }, [initialSettings]);
+  React.useEffect(() => {
+    setConfig(settings);
+  }, [settings]);
 
   const handleSave = async () => {
     try {
-      await onSave(settings);
+      await onSave(config);
       toast.success('Dashboard settings saved successfully');
     } catch (error) {
       toast.error('Failed to save dashboard settings');
@@ -50,11 +45,11 @@ export const DashboardSettings = ({
     }
   };
 
-  const updateSettings = <K extends keyof DashboardSettingsType>(
+  const updateSettings = <K extends keyof DashboardConfig>(
     key: K,
-    value: DashboardSettingsType[K]
+    value: DashboardConfig[K]
   ) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setConfig(prev => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -84,8 +79,8 @@ export const DashboardSettings = ({
             <div className="space-y-2">
               <Label>Default View</Label>
               <Select
-                value={settings.defaultView}
-                onValueChange={(value) => updateSettings('defaultView', value)}
+                value={config.defaultView}
+                onValueChange={(value: DashboardView) => updateSettings('defaultView', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select default view" />
@@ -102,8 +97,10 @@ export const DashboardSettings = ({
               <Label>Items Per Page</Label>
               <Input
                 type="number"
-                value={settings.itemsPerPage}
-                onChange={(e) => updateSettings('itemsPerPage', parseInt(e.target.value))}
+                value={config.itemsPerPage}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                  updateSettings('itemsPerPage', parseInt(e.target.value, 10))
+                }
                 min={1}
                 max={100}
               />
@@ -114,8 +111,8 @@ export const DashboardSettings = ({
             <div className="space-y-2">
               <Label>Theme</Label>
               <Select
-                value={settings.theme}
-                onValueChange={(value) => updateSettings('theme', value)}
+                value={config.theme}
+                onValueChange={(value: DashboardTheme) => updateSettings('theme', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select theme" />
@@ -131,8 +128,8 @@ export const DashboardSettings = ({
             <div className="space-y-2">
               <Label>Density</Label>
               <Select
-                value={settings.density}
-                onValueChange={(value) => updateSettings('density', value)}
+                value={config.density}
+                onValueChange={(value: DashboardDensity) => updateSettings('density', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select density" />
@@ -152,10 +149,10 @@ export const DashboardSettings = ({
                 <div className="flex items-center justify-between">
                   <span>Daily Summary</span>
                   <Switch
-                    checked={settings.notifications?.emailDaily}
-                    onCheckedChange={(checked) =>
+                    checked={config.notifications.emailDaily}
+                    onCheckedChange={(checked: boolean) =>
                       updateSettings('notifications', {
-                        ...settings.notifications,
+                        ...config.notifications,
                         emailDaily: checked
                       })
                     }
@@ -164,10 +161,10 @@ export const DashboardSettings = ({
                 <div className="flex items-center justify-between">
                   <span>Weekly Report</span>
                   <Switch
-                    checked={settings.notifications?.emailWeekly}
-                    onCheckedChange={(checked) =>
+                    checked={config.notifications.emailWeekly}
+                    onCheckedChange={(checked: boolean) =>
                       updateSettings('notifications', {
-                        ...settings.notifications,
+                        ...config.notifications,
                         emailWeekly: checked
                       })
                     }
@@ -182,10 +179,10 @@ export const DashboardSettings = ({
                 <div className="flex items-center justify-between">
                   <span>Important Updates</span>
                   <Switch
-                    checked={settings.notifications?.pushImportant}
-                    onCheckedChange={(checked) =>
+                    checked={config.notifications.pushImportant}
+                    onCheckedChange={(checked: boolean) =>
                       updateSettings('notifications', {
-                        ...settings.notifications,
+                        ...config.notifications,
                         pushImportant: checked
                       })
                     }
@@ -194,10 +191,10 @@ export const DashboardSettings = ({
                 <div className="flex items-center justify-between">
                   <span>Task Reminders</span>
                   <Switch
-                    checked={settings.notifications?.pushReminders}
-                    onCheckedChange={(checked) =>
+                    checked={config.notifications.pushReminders}
+                    onCheckedChange={(checked: boolean) =>
                       updateSettings('notifications', {
-                        ...settings.notifications,
+                        ...config.notifications,
                         pushReminders: checked
                       })
                     }
@@ -214,4 +211,4 @@ export const DashboardSettings = ({
 
 DashboardSettings.displayName = 'DashboardSettings';
 
-undefined.displayName = 'undefined';
+export default DashboardSettings;

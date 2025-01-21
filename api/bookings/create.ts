@@ -1,37 +1,83 @@
 import type { NextApiResponse } from 'next';
-import { withAuth } from '@/api/shared/middleware';
-import { createBooking } from '@/server/services/bookings/bookingService';
-import { logger } from '@/server/utils/logger';
-import { ApiError } from '@/server/utils/apiErrors';
-import type { AuthenticatedRequest } from '@/api/shared/types';
+import { withAuth } from '@server/api/middleware/auth';
+import { BookingService } from '@server/services/bookings/BookingService';
+import { logger } from '@server/utils/logger';
+import { ApiError } from '@server/utils/apiErrors';
+import { AuthenticatedRequest } from '@server/types/api';
+import { 
+  Booking, 
+  CreateBookingRequest, 
+  BookingValidationResult,
+  BookingValidationError 
+} from '@shared/types/booking';
 
-async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+interface ApiResponse {
+  data?: Booking;
+  error?: {
+    message: string;
+    code: string;
+    details?: BookingValidationError[];
+  };
+}
+
+/**
+ * Create a new booking
+ * Requires authentication
+ * POST /api/bookings/create
+ */
+async function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse<ApiResponse>
+) {
+  const bookingService = new BookingService();
+
   if (req.method !== 'POST') {
     throw new ApiError('Method not allowed', 'METHOD_NOT_ALLOWED');
   }
 
   try {
-    const bookingData = req.body;
+    const bookingData: CreateBookingRequest = {
+      ...req.body,
+      customer_id: req.user.id
+    };
+
+    // Validate booking data
+    const validation: BookingValidationResult = await bookingService.validateBooking(bookingData);
     
-    // Add validation here if needed
-    if (!bookingData.serviceId || !bookingData.date) {
-      throw new ApiError('Missing required fields', 'VALIDATION_ERROR');
+    if (!validation.isValid) {
+      logger.warn('Invalid booking data', { 
+        userId: req.user.id,
+        errors: validation.errors 
+      });
+      return res.status(400).json({
+        error: {
+          message: 'Invalid booking data',
+          code: 'VALIDATION_ERROR',
+          details: validation.errors
+        }
+      });
     }
 
-    // Add the authenticated user's ID as the customer ID
-    bookingData.customerId = req.user.id;
-
-    const booking = await createBooking(bookingData);
+    // Create booking
+    const booking = await bookingService.createBooking(bookingData);
     
-    logger.info('Booking created successfully', { bookingId: booking.id });
+    logger.info('Booking created successfully', { 
+      bookingId: booking.id,
+      userId: req.user.id 
+    });
     
     return res.status(201).json({
       data: booking
     });
+
   } catch (error) {
-    logger.error('Error in booking creation handler', { error });
+    logger.error('Error in booking creation handler', { 
+      error,
+      userId: req.user.id 
+    });
+
     if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
+      return res.status(error.statusCode || 400).json({
         error: {
           message: error.message,
           code: error.code,
@@ -39,6 +85,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         }
       });
     }
+
     return res.status(500).json({
       error: {
         message: 'Internal server error',

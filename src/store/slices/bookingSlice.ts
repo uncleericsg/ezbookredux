@@ -1,88 +1,76 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { BookingStatus } from '@shared/types/booking';
 import type { PaymentStatus } from '@shared/types/payment';
 
-export interface BookingDetails {
-  id: string;
-  userId: string;
-  serviceId: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  amount: number;
-  currency: string;
-  paymentStatus: PaymentStatus;
-  metadata?: Record<string, any>;
-}
-
 interface BookingState {
-  currentBooking: BookingDetails | null;
-  bookings: BookingDetails[];
-  paymentStatus: PaymentStatus | null;
-  isLoading: boolean;
+  currentBooking: {
+    id?: string;
+    service_id: string;
+    service_title: string;
+    service_price: number;
+    service_duration: string;
+    service_description: string;
+    customer_info: {
+      first_name: string;
+      last_name: string;
+      email: string;
+      mobile: string;
+      floor_unit: string;
+      block_street: string;
+      postal_code: string;
+      condo_name?: string;
+      lobby_tower?: string;
+      special_instructions?: string;
+    };
+    brands: string[];
+    issues: string[];
+    other_issue?: string;
+    is_amc: boolean;
+    scheduled_datetime: Date;
+    scheduled_timeslot: string;
+    status: BookingStatus;
+    payment_status: PaymentStatus;
+    total_amount: number;
+    tip_amount: number;
+  } | null;
   error: string | null;
-  filters: {
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  };
 }
 
 const initialState: BookingState = {
   currentBooking: null,
-  bookings: [],
-  paymentStatus: null,
-  isLoading: false,
-  error: null,
-  filters: {}
+  error: null
 };
 
-export const bookingSlice = createSlice({
+const bookingSlice = createSlice({
   name: 'booking',
   initialState,
   reducers: {
-    setCurrentBooking: (state: BookingState, action: PayloadAction<BookingDetails | null>) => {
+    setCurrentBooking: (state, action: PayloadAction<BookingState['currentBooking']>) => {
       state.currentBooking = action.payload;
     },
-    addBooking: (state: BookingState, action: PayloadAction<BookingDetails>) => {
-      state.bookings.push(action.payload);
-    },
-    updateBooking: (state: BookingState, action: PayloadAction<BookingDetails>) => {
-      const index = state.bookings.findIndex((booking: BookingDetails) => booking.id === action.payload.id);
-      if (index !== -1) {
-        state.bookings[index] = action.payload;
+    updateBooking: (state, action: PayloadAction<Partial<NonNullable<BookingState['currentBooking']>>>) => {
+      if (state.currentBooking) {
+        state.currentBooking = {
+          ...state.currentBooking,
+          ...action.payload
+        };
       }
     },
-    removeBooking: (state: BookingState, action: PayloadAction<string>) => {
-      state.bookings = state.bookings.filter((booking: BookingDetails) => booking.id !== action.payload);
+    clearBooking: (state) => {
+      state.currentBooking = null;
+      state.error = null;
     },
-    setBookings: (state: BookingState, action: PayloadAction<BookingDetails[]>) => {
-      state.bookings = action.payload;
-    },
-    setPaymentStatus: (state: BookingState, action: PayloadAction<PaymentStatus>) => {
-      state.paymentStatus = action.payload;
-    },
-    setLoading: (state: BookingState, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
-    },
-    setError: (state: BookingState, action: PayloadAction<string | null>) => {
+    setBookingError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
-    },
-    setFilters: (state: BookingState, action: PayloadAction<BookingState['filters']>) => {
-      state.filters = action.payload;
     }
   }
 });
 
-export const {
-  setCurrentBooking,
-  addBooking,
-  updateBooking,
-  removeBooking,
-  setBookings,
-  setPaymentStatus,
-  setLoading,
-  setError,
-  setFilters
+export const { 
+  setCurrentBooking, 
+  updateBooking, 
+  clearBooking, 
+  setBookingError 
 } = bookingSlice.actions;
 
 export default bookingSlice.reducer;

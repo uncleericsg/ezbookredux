@@ -1,17 +1,19 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
+import type { RootState } from '../store';
 import { 
   setUser, 
   setLoading, 
   setError, 
   updateUserProfile,
   requestOTP,
-  verifyUserOTP
+  verifyUserOTP,
+  clearUser
 } from '../store/slices/userSlice';
 import { setAuthenticated, setToken, clearAuth } from '../store/slices/authSlice';
-import { sendOTP, verifyOTP } from '../services/auth';
 import { toast } from 'sonner';
-import type { User, Booking } from '../types/user';
+import type { User, OTPVerificationPayload } from '../types/user';
+import type { BookingData } from '../types/booking-flow';
 import { useNavigate } from 'react-router-dom';
 import { RESET_STORE } from '../store';
 import { signOut } from 'firebase/auth';
@@ -19,20 +21,19 @@ import { auth } from '../services/firebase';
 
 /**
  * Hook to handle user state management with Redux
- * This replaces the useUser hook from UserContext
  */
 export const useUserRedux = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
   // Select state from Redux store
-  const user = useAppSelector(state => state.user.currentUser);
-  const loading = useAppSelector(state => state.user.loading);
-  const error = useAppSelector(state => state.user.error);
-  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
-  const token = useAppSelector(state => state.auth.token);
-  const verificationId = useAppSelector(state => state.user.verificationId);
-  const phone = useAppSelector(state => state.user.phone);
+  const user = useAppSelector((state: RootState) => state.user.currentUser);
+  const loading = useAppSelector((state: RootState) => state.user.loading);
+  const error = useAppSelector((state: RootState) => state.user.error);
+  const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated);
+  const token = useAppSelector((state: RootState) => state.auth.token);
+  const verificationId = useAppSelector((state: RootState) => state.user.verificationId);
+  const phone = useAppSelector((state: RootState) => state.user.phone);
 
   // Request OTP handler
   const requestPhoneOTP = useCallback(async (phoneNumber: string) => {
@@ -64,11 +65,8 @@ export const useUserRedux = () => {
 
     try {
       dispatch(setLoading(true));
-      const user = await dispatch(verifyUserOTP({ 
-        code, 
-        verificationId, 
-        phone 
-      })).unwrap();
+      const payload: OTPVerificationPayload = { code, verificationId, phone };
+      const user = await dispatch(verifyUserOTP(payload)).unwrap();
       
       if (user) {
         dispatch(setAuthenticated(true));
@@ -95,7 +93,7 @@ export const useUserRedux = () => {
       dispatch(clearAuth());
       dispatch({ type: RESET_STORE });
       localStorage.clear();
-      navigate('/login');
+      void navigate('/login');
       toast.success('Successfully logged out');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to logout';
@@ -117,7 +115,7 @@ export const useUserRedux = () => {
   }, [dispatch]);
 
   // Update bookings handler
-  const updateBookings = useCallback((bookings: Booking[]) => {
+  const updateBookings = useCallback((bookings: BookingData[]) => {
     if (user) {
       dispatch(updateUserProfile({ ...user, bookings }));
     }

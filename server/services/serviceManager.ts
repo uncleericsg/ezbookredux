@@ -1,31 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@server/types/database';
+import type { Database } from '../types/database';
 import type {
   Service,
   ServiceCategory,
   ServiceFilters,
   ServiceStatus,
   CreateServiceParams,
-  UpdateServiceParams
+  UpdateServiceParams,
+  ServiceManager as IServiceManager,
+  DatabaseService,
+  ServiceValidation
 } from '@shared/types/service';
 import { logger } from '@server/utils/logger';
 import { ApiError } from '@server/utils/apiErrors';
-import { validateServiceData } from '@server/utils/validation';
+import { validateServiceData } from '@server/utils/validation/serviceValidation';
 
 const supabase = createClient<Database>(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export class ServiceManager {
+export class ServiceManager implements IServiceManager {
   async createService(params: CreateServiceParams): Promise<Service> {
     try {
-      const validationError = validateServiceData(params);
-      if (validationError) {
-        throw new ApiError(validationError.message, 'INVALID_SERVICE_DATA');
+      logger.info('Creating service', { params });
+
+      const validationResult = validateServiceData(params);
+      if (!validationResult.isValid) {
+        logger.warn('Invalid service data', { 
+          errors: validationResult.errors,
+          params 
+        });
+        throw ApiError.validation('Invalid service data', validationResult.errors);
       }
 
-      const { data, error } = await supabase
+      const { data: service, error } = await supabase
         .from('services')
         .insert({
           ...params,
@@ -37,27 +46,36 @@ export class ServiceManager {
         .single();
 
       if (error) {
-        logger.error('Failed to create service', { error, params });
-        throw new ApiError('Failed to create service', 'SERVICE_CREATE_ERROR');
+        logger.error('Database error creating service', { error, params });
+        throw ApiError.database('Failed to create service', error);
       }
 
-      if (!data) {
-        throw new ApiError('No service data returned', 'SERVICE_CREATE_ERROR');
+      if (!service) {
+        logger.error('Failed to create service - no service returned', { params });
+        throw ApiError.database('Failed to create service');
       }
 
-      logger.info('Created service', { serviceId: data.id, params });
-      return data;
+      logger.info('Service created successfully', { serviceId: service.id });
+      return this.mapService(service as DatabaseService);
     } catch (error) {
-      logger.error('Error in createService', { error, params });
-      throw this.handleError(error);
+      logger.error('Create service error', { error: String(error), params });
+      if (error instanceof ApiError) throw error;
+      throw ApiError.server('Failed to create service');
     }
   }
 
   async updateService(serviceId: string, params: UpdateServiceParams): Promise<Service> {
     try {
-      const validationError = validateServiceData(params);
-      if (validationError) {
-        throw new ApiError(validationError.message, 'INVALID_SERVICE_DATA');
+      logger.info('Updating service', { serviceId, params });
+
+      const validationResult = validateServiceData(params, true);
+      if (!validationResult.isValid) {
+        logger.warn('Invalid service data', { 
+          errors: validationResult.errors,
+          serviceId,
+          params 
+        });
+        throw ApiError.validation('Invalid service data', validationResult.errors);
       }
 
       const { data: existingService } = await supabase
@@ -67,10 +85,11 @@ export class ServiceManager {
         .single();
 
       if (!existingService) {
-        throw new ApiError('Service not found', 'SERVICE_NOT_FOUND');
+        logger.warn('Service not found', { serviceId });
+        throw ApiError.notFound('Service', serviceId);
       }
 
-      const { data, error } = await supabase
+      const { data: service, error } = await supabase
         .from('services')
         .update({
           ...params,
@@ -81,92 +100,120 @@ export class ServiceManager {
         .single();
 
       if (error) {
-        logger.error('Failed to update service', { error, serviceId, params });
-        throw new ApiError('Failed to update service', 'SERVICE_UPDATE_ERROR');
+        logger.error('Database error updating service', { error, serviceId, params });
+        throw ApiError.database('Failed to update service', error);
       }
 
-      if (!data) {
-        throw new ApiError('No service data returned', 'SERVICE_UPDATE_ERROR');
+      if (!service) {
+        logger.error('Failed to update service - no service returned', { serviceId });
+        throw ApiError.database('Failed to update service');
       }
 
-      logger.info('Updated service', { serviceId, params });
-      return data;
+      logger.info('Service updated successfully', { serviceId });
+      return this.mapService(service as DatabaseService);
     } catch (error) {
-      logger.error('Error in updateService', { error, serviceId, params });
-      throw this.handleError(error);
+      logger.error('Update service error', { error: String(error), serviceId, params });
+      if (error instanceof ApiError) throw error;
+      throw ApiError.server('Failed to update service');
     }
   }
 
   async getServiceById(serviceId: string): Promise<Service> {
     try {
-      const { data, error } = await supabase
+      logger.info('Fetching service', { serviceId });
+
+      const { data: service, error } = await supabase
         .from('services')
         .select()
         .eq('id', serviceId)
         .single();
 
       if (error) {
-        logger.error('Failed to get service', { error, serviceId });
-        throw new ApiError('Failed to get service', 'SERVICE_FETCH_ERROR');
+        logger.error('Database error fetching service', { error, serviceId });
+        throw ApiError.database('Failed to fetch service', error);
       }
 
-      if (!data) {
-        throw new ApiError('Service not found', 'SERVICE_NOT_FOUND');
+      if (!service) {
+        logger.warn('Service not found', { serviceId });
+        throw ApiError.notFound('Service', serviceId);
       }
 
-      return data;
+      logger.info('Service fetched successfully', { serviceId });
+      return this.mapService(service as DatabaseService);
     } catch (error) {
-      logger.error('Error in getServiceById', { error, serviceId });
-      throw this.handleError(error);
+      logger.error('Get service error', { error: String(error), serviceId });
+      if (error instanceof ApiError) throw error;
+      throw ApiError.server('Failed to fetch service');
     }
   }
 
   async getServices(filters?: ServiceFilters): Promise<Service[]> {
     try {
+      logger.info('Fetching services', { filters });
+
       let query = supabase.from('services').select();
 
-      query = this.applyFilters(query, filters);
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        logger.error('Failed to get services', { error, filters });
-        throw new ApiError('Failed to get services', 'SERVICES_FETCH_ERROR');
+      if (filters) {
+        query = this.applyFilters(query, filters);
       }
 
-      return data || [];
+      const { data: services, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Database error fetching services', { error, filters });
+        throw ApiError.database('Failed to fetch services', error);
+      }
+
+      logger.info('Services fetched successfully', { count: services?.length || 0 });
+      return (services || []).map(service => this.mapService(service as DatabaseService));
     } catch (error) {
-      logger.error('Error in getServices', { error, filters });
-      throw this.handleError(error);
+      logger.error('Get services error', { error: String(error), filters });
+      if (error instanceof ApiError) throw error;
+      throw ApiError.server('Failed to fetch services');
     }
   }
 
   async getServicesByCategory(category: ServiceCategory, filters?: ServiceFilters): Promise<Service[]> {
     try {
+      logger.info('Fetching services by category', { category, filters });
+
       let query = supabase
         .from('services')
         .select()
         .eq('category', category);
 
-      query = this.applyFilters(query, filters);
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        logger.error('Failed to get services by category', { error, category, filters });
-        throw new ApiError('Failed to get services', 'SERVICES_FETCH_ERROR');
+      if (filters) {
+        query = this.applyFilters(query, filters);
       }
 
-      return data || [];
+      const { data: services, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Database error fetching services by category', { 
+          error,
+          category,
+          filters 
+        });
+        throw ApiError.database('Failed to fetch services', error);
+      }
+
+      logger.info('Services fetched successfully', { 
+        category,
+        count: services?.length || 0 
+      });
+      return (services || []).map(service => this.mapService(service as DatabaseService));
     } catch (error) {
-      logger.error('Error in getServicesByCategory', { error, category, filters });
-      throw this.handleError(error);
+      logger.error('Get services by category error', { 
+        error: String(error),
+        category,
+        filters 
+      });
+      if (error instanceof ApiError) throw error;
+      throw ApiError.server('Failed to fetch services');
     }
   }
 
-  private applyFilters(query: any, filters?: ServiceFilters): any {
-    if (!filters) return query;
-
+  private applyFilters(query: any, filters: ServiceFilters): any {
     const { status, minPrice, maxPrice, search } = filters;
 
     if (status) {
@@ -188,16 +235,21 @@ export class ServiceManager {
     return query;
   }
 
-  private handleError(error: unknown): never {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    throw new ApiError(
-      error instanceof Error ? error.message : 'An unexpected error occurred',
-      'SERVICE_MANAGER_ERROR'
-    );
+  private mapService(service: DatabaseService): Service {
+    return {
+      id: service.id,
+      title: service.title,
+      description: service.description,
+      category: service.category,
+      price: service.price,
+      duration: service.duration,
+      status: service.status,
+      image_url: service.image_url,
+      technician_requirements: service.technician_requirements,
+      created_at: service.created_at,
+      updated_at: service.updated_at
+    };
   }
 }
 
-export const serviceManager = new ServiceManager(); 
+export const serviceManager = new ServiceManager();

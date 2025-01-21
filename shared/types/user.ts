@@ -1,48 +1,113 @@
-export type UserRole = 'user' | 'admin' | 'technician';
-export type UserStatus = 'active' | 'inactive' | 'verified';
+/**
+ * User types
+ */
 
-export interface UserProfile {
-  address?: string;
-  city?: string;
-  state?: string;
-  postal_code?: string;
-  country?: string;
-  preferences?: {
-    notifications?: {
-      email?: boolean;
-      sms?: boolean;
-      push?: boolean;
-    };
-    language?: string;
-    theme?: 'light' | 'dark' | 'system';
-  };
-}
+/**
+ * User role
+ */
+export type UserRole = 'admin' | 'customer' | 'technician';
 
+/**
+ * User status
+ */
+export type UserStatus = 'active' | 'inactive' | 'suspended';
+
+/**
+ * AMC status
+ */
+export type AMCStatus = 'active' | 'expired' | 'none';
+
+/**
+ * User interface
+ */
 export interface User {
+  /**
+   * User ID
+   */
   id: string;
+
+  /**
+   * First name
+   */
+  firstName: string;
+
+  /**
+   * Last name
+   */
+  lastName: string;
+
+  /**
+   * Email address
+   */
   email: string;
-  phone: string | null;
+
+  /**
+   * Phone number
+   */
+  phone?: string;
+
+  /**
+   * User role
+   */
   role: UserRole;
+
+  /**
+   * Account status
+   */
   status: UserStatus;
-  first_name?: string;
-  last_name?: string;
-  profile?: UserProfile;
-  verified_at: string;
-  created_at: string;
-  updated_at: string;
+
+  /**
+   * AMC subscription status
+   */
+  amcStatus: AMCStatus;
+
+  /**
+   * Account creation date
+   */
+  createdAt: string;
+
+  /**
+   * Last login date
+   */
+  lastLoginAt: string;
+
+  /**
+   * Profile image URL
+   */
+  avatarUrl?: string;
+
+  /**
+   * Email verification status
+   */
+  emailVerified: boolean;
+
+  /**
+   * Phone verification status
+   */
+  phoneVerified: boolean;
+
+  /**
+   * User metadata
+   */
+  metadata?: Record<string, unknown>;
 }
 
-export interface UserFilters {
-  role?: UserRole;
-  status?: UserStatus;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
+/**
+ * User status toggle props
+ */
+export interface UserStatusToggleProps {
+  /**
+   * User ID
+   */
+  userId: string;
 
-export interface UserListResponse {
-  users: User[];
-  total: number;
-  page: number;
-  limit: number;
+  /**
+   * Active status
+   */
+  isActive: boolean;
+
+  /**
+   * Toggle callback
+   */
+  onToggle: (userId: string, newStatus: boolean) => Promise<void>;
 }

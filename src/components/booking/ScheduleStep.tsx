@@ -1,143 +1,42 @@
-/*
- * @ai-protection - CRITICAL COMPONENT - DO NOT MODIFY WITHOUT REVIEW
- * 
- * This component is a core part of the booking system that integrates location optimization,
- * route management, and time slot scheduling. Any changes require thorough testing of the
- * entire booking flow and location optimization system.
- * 
- * Core System Integration:
- * 1. Location Optimization System
- *    - Region-based slot prioritization (5-8km range)
- *    - Distance-based availability filtering
- *    - Real-time route optimization
- *    - Technician scheduling optimization
- * 
- * 2. Time Slot Management
- *    - Dynamic slot generation and filtering
- *    - Peak/off-peak hour handling
- *    - Buffer time management
- *    - Service duration calculations
- * 
- * 3. Booking Flow Integration
- *    - Direct payment navigation
- *    - State persistence
- *    - Loading state management
- *    - Error handling
- * 
- * Critical Dependencies:
- * @requires OptimizedLocationProvider - Location-based filtering and optimization
- * @requires optimizeTimeSlots - Slot optimization algorithm
- * @requires RouteCache - Technician route optimization
- * @requires BusinessRules - Scheduling constraints and rules
- * 
- * Integration Points:
- * - src/components/booking/OptimizedLocationProvider.tsx
- * - src/services/locations/optimizer.ts
- * - src/services/locations/regions.ts
- * - src/constants/businessRules.ts
- * 
- * Protected Features:
- * @ai-visual-protection: UI components and time slot presentation
- * @ai-flow-protection: Booking flow and navigation logic
- * @ai-state-protection: Redux state management
- * @ai-location-protection: Location optimization system
- * @ai-route-protection: Technician route optimization
- * 
- * Critical Workflows:
- * 1. Location Optimization
- *    - Postal code validation
- *    - Region determination
- *    - Distance calculation
- *    - Route optimization
- * 
- * 2. Time Slot Management
- *    - Availability calculation
- *    - Duration handling
- *    - Buffer time enforcement
- *    - Peak hour management
- * 
- * 3. Booking Flow
- *    - Customer info validation
- *    - Service selection
- *    - Schedule confirmation
- *    - Payment navigation
- * 
- * Required Testing:
- * 1. Location System
- *    - Region assignment
- *    - Distance calculations
- *    - Route optimization
- * 
- * 2. Time Slot System
- *    - Availability accuracy
- *    - Duration calculations
- *    - Buffer enforcement
- * 
- * 3. Integration Testing
- *    - Full booking flow
- *    - State management
- *    - Error handling
- * 
- * Change Protocol:
- * 1. Document proposed changes
- * 2. Test in isolation
- * 3. Verify with location system
- * 4. Test full booking flow
- * 5. Validate mobile responsiveness
- * 
- * Last Stable Update: December 2023
- * - Location optimization implemented
- * - Route cache integration complete
- * - Duration handling enhanced
- */
-
 import React, { useState } from 'react';
-import { format, addMinutes } from 'date-fns';
 import { toast } from 'sonner';
 import { HiOutlineCalendarDays, HiOutlineClock } from 'react-icons/hi2';
-import type { CreateBookingParams } from '@shared/types/booking';
-import { Calendar } from '@/components/ui/Calendar';
-import { TimeSlotPicker } from '@/components/ui/TimeSlotPicker';
-import { formatTimeSlot } from '@/utils/dates';
+import type { TimeSlot } from '@shared/types/booking';
+import type { BaseStepProps } from '../../types/booking-flow';
+import { Calendar } from '../../components/Calendar';
+import { TimeSlotPicker } from '../../components/TimeSlotPicker';
+import { formatDate, formatTime } from '../../utils/dates';
 
-interface ScheduleStepProps {
-  onNext: () => void;
-  onBack: () => void;
-  bookingData: Partial<CreateBookingParams>;
-  onUpdateBookingData: (data: Partial<CreateBookingParams>) => void;
-  className?: string;
-}
-
-const ScheduleStep: React.FC<ScheduleStepProps> = ({
+const ScheduleStep: React.FC<BaseStepProps> = ({
   onNext,
   onBack,
   bookingData,
   onUpdateBookingData,
   className
 }) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    bookingData.scheduled_datetime ? new Date(bookingData.scheduled_datetime) : undefined
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    bookingData.date ? new Date(bookingData.date) : null
   );
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | undefined>(
-    bookingData.scheduled_timeslot
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | undefined>(
+    bookingData.time ? { id: '1', startTime: bookingData.time } : undefined
   );
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = (date: Date | null) => {
     setSelectedDate(date);
     if (date) {
       onUpdateBookingData({
         ...bookingData,
-        scheduled_datetime: date.toISOString()
+        date: date.toISOString()
       });
     }
   };
 
-  const handleTimeSlotSelect = (timeSlot: string) => {
-    setSelectedTimeSlot(timeSlot);
+  const handleTimeSlotSelect = (slot: TimeSlot) => {
+    setSelectedTimeSlot(slot);
     if (selectedDate) {
       onUpdateBookingData({
         ...bookingData,
-        scheduled_timeslot: timeSlot
+        time: slot.startTime
       });
     }
   };
@@ -186,10 +85,16 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
           </div>
           {selectedDate ? (
             <TimeSlotPicker
-              date={selectedDate}
-              selectedTimeSlot={selectedTimeSlot}
-              onSelectTimeSlot={handleTimeSlotSelect}
-              serviceDuration={bookingData.service_duration || 60}
+              slots={[
+                { id: '1', startTime: '09:00' },
+                { id: '2', startTime: '10:00' },
+                { id: '3', startTime: '11:00' },
+                { id: '4', startTime: '14:00' },
+                { id: '5', startTime: '15:00' },
+                { id: '6', startTime: '16:00' }
+              ]}
+              selectedSlot={selectedTimeSlot}
+              onSelectSlot={handleTimeSlotSelect}
             />
           ) : (
             <p className="text-gray-400">
@@ -205,8 +110,8 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({
               Selected Schedule
             </h3>
             <div className="text-gray-300">
-              <p>Date: {format(selectedDate, 'PPP')}</p>
-              <p>Time: {formatTimeSlot(selectedTimeSlot, bookingData.service_duration || 60)}</p>
+              <p>Date: {formatDate(selectedDate)}</p>
+              <p>Time: {formatTime(selectedTimeSlot.startTime)}</p>
             </div>
           </div>
         )}

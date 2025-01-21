@@ -2,16 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-import AdminHeader from '@admin/AdminHeader';
-import AdminNav from '@admin/AdminNav';
+import AdminHeader from './AdminHeader';
+import AdminNav from './AdminNav';
 import { useBooking } from '@/hooks/useBooking';
-import type { BookingDetails } from '@server/types/booking';
 import { useAuth } from '@/hooks/useAuth';
 
-const AdminBookings = () => {
-  const [bookings, setBookings] = useState<BookingDetails[]>([]);
-  const { loading, error, fetchBookingsByEmail } = useBooking();
-  const { user } = useAuth();
+import type { Booking, BookingStatus } from '../../shared/types/booking';
+import type { UseBookingResult, UseAuthResult } from '../../shared/types/hooks';
+import type { AdminSettings } from '../../shared/types/settings';
+
+import { defaultSettings } from '../../config/settings';
+import { isAdminSettings } from '../../utils/typeGuards';
+
+const AdminBookings: React.FC = () => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const { loading: bookingLoading, error, fetchBookingsByEmail } = useBooking() as UseBookingResult;
+  const { user } = useAuth() as UseAuthResult;
+  const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
+
+  const loading = bookingLoading;
+
+  // Validate settings on mount
+  useEffect(() => {
+    if (!isAdminSettings(defaultSettings)) {
+      console.error('Invalid admin settings');
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -24,18 +42,55 @@ const AdminBookings = () => {
         } else if (result.error) {
           toast.error('Failed to load bookings');
         }
-      } catch (err) {
-        toast.error('Error loading bookings');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error loading bookings';
+        toast.error(errorMessage);
       }
     };
 
     loadBookings();
   }, [user?.email, fetchBookingsByEmail]);
 
+  const renderBookingStatus = (status: BookingStatus) => {
+    const statusClasses: Record<BookingStatus, string> = {
+      completed: 'bg-green-900 text-green-200',
+      pending: 'bg-yellow-900 text-yellow-200',
+      cancelled: 'bg-red-900 text-red-200',
+      confirmed: 'bg-blue-900 text-blue-200',
+      rescheduled: 'bg-purple-900 text-purple-200'
+    };
+
+    return (
+      <span className={`px-2 py-1 rounded-full ${statusClasses[status]}`}>
+        {status}
+      </span>
+    );
+  };
+
+  const handleUpdateSettings = async (updates: Partial<AdminSettings>) => {
+    try {
+      setSettings(prev => ({ ...prev, ...updates }));
+      toast.success('Settings updated successfully');
+    } catch (err) {
+      toast.error('Failed to update settings');
+    }
+  };
+
+  const headerProps = {
+    settings,
+    loading,
+    integrationStatus: {} as Record<string, boolean>,
+    onIntervalChange: () => {},
+    updateSettings: handleUpdateSettings
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
-      <AdminHeader title="Bookings Management" />
-      <AdminNav />
+      <AdminHeader {...headerProps} />
+      <AdminNav 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
       
       <main className="container mx-auto px-4 py-8">
         <div className="bg-gray-800 rounded-lg shadow-lg p-6">
@@ -80,24 +135,16 @@ const AdminBookings = () => {
                         {booking.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {`${booking.customer_info.first_name} ${booking.customer_info.last_name}`}
+                        {booking.customerId}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {booking.service_title}
+                        {booking.serviceId}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {format(new Date(booking.scheduled_datetime), 'PPP')}
+                        {format(new Date(booking.date), 'PPP')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`px-2 py-1 rounded-full ${
-                          booking.status === 'completed' 
-                            ? 'bg-green-900 text-green-200'
-                            : booking.status === 'pending'
-                            ? 'bg-yellow-900 text-yellow-200'
-                            : 'bg-red-900 text-red-200'
-                        }`}>
-                          {booking.status}
-                        </span>
+                        {renderBookingStatus(booking.status)}
                       </td>
                     </tr>
                   ))}

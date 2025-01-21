@@ -1,50 +1,77 @@
-import type { PaymentStatus } from './payment';
+import type { BookingData } from './booking-flow';
+import type { CustomerInfo } from './customer';
 
-export type UserRole = 'user' | 'admin' | 'technician';
+/**
+ * User role type
+ */
+export type UserRole = 'admin' | 'customer' | 'technician';
+
+/**
+ * User status type
+ */
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 
-export interface UserAddress {
-  id: string;
-  userId: string;
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isDefault: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserPreferences {
-  language: string;
-  currency: string;
-  notifications: {
-    email: boolean;
-    sms: boolean;
-    push: boolean;
-  };
-  theme: 'light' | 'dark' | 'system';
-}
-
+/**
+ * User type
+ */
 export interface User {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
-  role?: UserRole;
+  role: UserRole;
   status: UserStatus;
-  addresses?: UserAddress[];
-  preferences?: UserPreferences;
+  customerInfo?: CustomerInfo;
+  bookings?: BookingData[];
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
   metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
 }
 
-export interface UserProfile extends Omit<User, 'metadata'> {
-  avatar?: string;
-  bio?: string;
-  paymentStatus?: PaymentStatus;
+/**
+ * User state type
+ */
+export interface UserState {
+  currentUser: User | null;
+  loading: boolean;
+  error: string | null;
   verificationId?: string;
+  phone?: string;
+}
+
+/**
+ * Auth state type
+ */
+export interface AuthState {
+  isAuthenticated: boolean;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * OTP verification payload
+ */
+export interface OTPVerificationPayload {
+  code: string;
+  verificationId: string;
+  phone: string;
+}
+
+/**
+ * OTP verification response
+ */
+export interface OTPVerificationResponse {
+  success: boolean;
+  user?: User;
+  error?: string;
+}
+
+/**
+ * OTP request response
+ */
+export interface OTPRequestResponse {
+  verificationId: string;
 }

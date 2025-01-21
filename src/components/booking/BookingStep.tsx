@@ -1,22 +1,16 @@
 import React from 'react';
 import { toast } from 'sonner';
-import type { BookingDetails, CreateBookingParams } from '@shared/types/booking';
+import type { BookingData, BaseStepProps } from '../../types/booking-flow';
 import { useBooking } from '@/hooks/useBooking';
 import { useAuth } from '@/hooks/useAuth';
-import { BookingList } from './BookingList';
+import BookingList from './BookingList';
 import { BookingSummary } from './BookingSummary';
 
-interface BookingStepProps {
-  onNext: () => void;
-  onBack: () => void;
-  bookingData: Partial<CreateBookingParams>;
-  className?: string;
-}
-
-const BookingStep: React.FC<BookingStepProps> = ({
+const BookingStep: React.FC<BaseStepProps> = ({
   onNext,
   onBack,
   bookingData,
+  onUpdateBookingData,
   className
 }) => {
   const { loading, error, createBooking } = useBooking();
@@ -28,7 +22,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
       return;
     }
 
-    if (!bookingData.service_title || !bookingData.service_price || !bookingData.scheduled_datetime) {
+    if (!bookingData.serviceTitle || !bookingData.servicePrice || !bookingData.date) {
       toast.error('Missing required booking information');
       return;
     }
@@ -36,15 +30,17 @@ const BookingStep: React.FC<BookingStepProps> = ({
     try {
       const result = await createBooking({
         ...bookingData,
-        customer_email: user.email,
-        status: 'pending'
-      } as CreateBookingParams);
+        customerInfo: {
+          ...bookingData.customerInfo,
+          id: user.id
+        }
+      });
 
       if (result.data) {
         toast.success('Booking created successfully');
         onNext();
       } else if (result.error) {
-        toast.error(result.error);
+        toast.error(result.error.message);
       }
     } catch (err) {
       toast.error('Failed to create booking');
@@ -59,7 +55,29 @@ const BookingStep: React.FC<BookingStepProps> = ({
           <h2 className="text-xl font-semibold text-white mb-4">
             Booking Summary
           </h2>
-          <BookingSummary booking={bookingData as BookingDetails} />
+          <BookingSummary
+            data={{
+              service_title: bookingData.serviceTitle,
+              service_price: bookingData.servicePrice,
+              service_duration: String(bookingData.serviceDuration),
+              customer_info: {
+                first_name: bookingData.customerInfo.firstName,
+                last_name: bookingData.customerInfo.lastName,
+                email: bookingData.customerInfo.email,
+                mobile: bookingData.customerInfo.phone,
+                floor_unit: bookingData.customerInfo.address.floorUnit || '',
+                block_street: bookingData.customerInfo.address.blockStreet,
+                postal_code: bookingData.customerInfo.address.postalCode,
+                condo_name: bookingData.customerInfo.address.condoName || undefined,
+                lobby_tower: bookingData.customerInfo.address.lobbyTower || undefined,
+                special_instructions: bookingData.customerInfo.specialInstructions || undefined
+              },
+              scheduled_datetime: new Date(bookingData.date),
+              scheduled_timeslot: bookingData.time,
+              total_amount: bookingData.servicePrice,
+              tip_amount: 0 // Added required field
+            }}
+          />
         </div>
 
         {/* Recent Bookings */}
@@ -102,4 +120,4 @@ const BookingStep: React.FC<BookingStepProps> = ({
 
 BookingStep.displayName = 'BookingStep';
 
-export default BookingStep; 
+export default BookingStep;

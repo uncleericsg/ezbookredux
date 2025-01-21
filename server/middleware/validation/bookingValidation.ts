@@ -1,122 +1,204 @@
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
-import { logger } from '@server/utils/logger';
+import type { ValidationSchema } from '@shared/types/validation';
+import { validate as validateSchema } from '../validation';
 
-// Validation schemas
-const CustomerInfoSchema = z.object({
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email format'),
-  mobile: z.string().min(8, 'Mobile number must be at least 8 characters'),
-  floor_unit: z.string().min(1, 'Floor/Unit is required'),
-  block_street: z.string().min(1, 'Block/Street is required'),
-  postal_code: z.string().min(6, 'Postal code must be at least 6 characters'),
-  condo_name: z.string().optional(),
-  lobby_tower: z.string().optional(),
-  special_instructions: z.string().optional()
-});
-
-const CreateBookingSchema = z.object({
-  customer_info: CustomerInfoSchema,
-  service_id: z.string().min(1, 'Service ID is required'),
-  service_title: z.string().min(1, 'Service title is required'),
-  service_price: z.number().min(0, 'Service price must be non-negative'),
-  service_duration: z.string().min(1, 'Service duration is required'),
-  service_description: z.string().optional(),
-  brands: z.array(z.string()).min(1, 'At least one brand is required'),
-  issues: z.array(z.string()).min(1, 'At least one issue is required'),
-  other_issue: z.string().optional(),
-  is_amc: z.boolean(),
-  scheduled_datetime: z.string().or(z.date()),
-  scheduled_timeslot: z.string().min(1, 'Time slot is required'),
-  status: z.enum(['pending', 'confirmed', 'completed', 'cancelled']).optional(),
-  payment_status: z.string().optional(),
-  payment_intent_id: z.string().optional(),
-  total_amount: z.number().optional(),
-  tip_amount: z.number().optional(),
-  metadata: z.record(z.any()).optional()
-});
-
-const UpdateBookingSchema = CreateBookingSchema.partial();
-
-// Validation middleware functions
-export const validateCreateBooking = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const validatedData = CreateBookingSchema.parse(req.body);
-    req.body = validatedData;
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      logger.error('Booking validation failed', { error: error.errors });
-      return res.status(400).json({
-        error: {
-          message: 'Invalid booking data',
-          details: error.errors,
-          code: 'VALIDATION_ERROR'
-        }
-      });
+/**
+ * Booking creation schema
+ */
+export const createBookingSchema: ValidationSchema = {
+  serviceId: {
+    type: 'string',
+    required: true,
+    message: 'Service ID is required'
+  },
+  customerId: {
+    type: 'string',
+    required: true,
+    message: 'Customer ID is required'
+  },
+  date: {
+    type: 'date',
+    required: true,
+    validate: (value) => {
+      const date = new Date(value as string);
+      return date > new Date();
+    },
+    message: 'Booking date must be in the future'
+  },
+  time: {
+    type: 'string',
+    required: true,
+    pattern: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+    message: 'Time must be in HH:MM format'
+  },
+  duration: {
+    type: 'number',
+    required: true,
+    min: 30,
+    max: 480,
+    message: 'Duration must be between 30 and 480 minutes'
+  },
+  notes: {
+    type: 'string',
+    required: false,
+    max: 1000,
+    message: 'Notes cannot exceed 1000 characters'
+  },
+  location: {
+    type: 'object',
+    required: true,
+    message: 'Location is required',
+    validate: (value) => {
+      if (!value || typeof value !== 'object') return false;
+      const location = value as Record<string, unknown>;
+      return (
+        typeof location.address === 'string' &&
+        typeof location.postalCode === 'string' &&
+        /^\d{6}$/.test(location.postalCode) &&
+        (!location.coordinates || (
+          typeof location.coordinates === 'object' &&
+          typeof (location.coordinates as any).lat === 'number' &&
+          typeof (location.coordinates as any).lng === 'number'
+        ))
+      );
     }
-    next(error);
   }
 };
 
-export const validateUpdateBooking = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const validatedData = UpdateBookingSchema.parse(req.body);
-    req.body = validatedData;
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      logger.error('Booking update validation failed', { error: error.errors });
-      return res.status(400).json({
-        error: {
-          message: 'Invalid booking update data',
-          details: error.errors,
-          code: 'VALIDATION_ERROR'
-        }
-      });
-    }
-    next(error);
+/**
+ * Booking update schema
+ */
+export const updateBookingSchema: ValidationSchema = {
+  date: {
+    type: 'date',
+    required: false,
+    validate: (value) => {
+      if (!value) return true;
+      const date = new Date(value as string);
+      return date > new Date();
+    },
+    message: 'Booking date must be in the future'
+  },
+  time: {
+    type: 'string',
+    required: false,
+    pattern: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+    message: 'Time must be in HH:MM format'
+  },
+  duration: {
+    type: 'number',
+    required: false,
+    min: 30,
+    max: 480,
+    message: 'Duration must be between 30 and 480 minutes'
+  },
+  notes: {
+    type: 'string',
+    required: false,
+    max: 1000,
+    message: 'Notes cannot exceed 1000 characters'
+  },
+  status: {
+    type: 'string',
+    required: false,
+    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
+    message: 'Invalid booking status'
   }
 };
 
-export const validateBookingId = (req: Request, res: Response, next: NextFunction) => {
-  const { id } = req.params;
-  if (!id || typeof id !== 'string' || id.length < 1) {
-    return res.status(400).json({
-      error: {
-        message: 'Invalid booking ID',
-        code: 'INVALID_BOOKING_ID'
-      }
-    });
+/**
+ * Booking search schema
+ */
+export const searchBookingsSchema: ValidationSchema = {
+  customerId: {
+    type: 'string',
+    required: false
+  },
+  serviceId: {
+    type: 'string',
+    required: false
+  },
+  status: {
+    type: 'string',
+    required: false,
+    enum: ['pending', 'confirmed', 'cancelled', 'completed']
+  },
+  startDate: {
+    type: 'date',
+    required: false
+  },
+  endDate: {
+    type: 'date',
+    required: false
+  },
+  page: {
+    type: 'number',
+    required: false,
+    min: 1,
+    transform: (value) => Number(value) || 1
+  },
+  limit: {
+    type: 'number',
+    required: false,
+    min: 1,
+    max: 100,
+    transform: (value) => Math.min(Math.max(Number(value) || 20, 1), 100)
+  },
+  sort: {
+    type: 'string',
+    required: false,
+    enum: ['date', '-date', 'status', '-status'],
+    transform: (value) => String(value || '-date')
   }
-  next();
 };
 
-export const validateEmail = (req: Request, res: Response, next: NextFunction) => {
-  const { email } = req.params;
-  try {
-    z.string().email().parse(email);
-    next();
-  } catch (error) {
-    return res.status(400).json({
-      error: {
-        message: 'Invalid email format',
-        code: 'INVALID_EMAIL'
-      }
-    });
+/**
+ * Booking ID schema
+ */
+export const bookingIdSchema: ValidationSchema = {
+  id: {
+    type: 'string',
+    required: true,
+    message: 'Booking ID is required'
   }
 };
 
-export const validateCustomerId = (req: Request, res: Response, next: NextFunction) => {
-  const { customerId } = req.params;
-  if (!customerId || typeof customerId !== 'string' || customerId.length < 1) {
-    return res.status(400).json({
-      error: {
-        message: 'Invalid customer ID',
-        code: 'INVALID_CUSTOMER_ID'
-      }
-    });
+/**
+ * Email schema
+ */
+export const emailSchema: ValidationSchema = {
+  email: {
+    type: 'string',
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: 'Invalid email format'
   }
-  next();
-}; 
+};
+
+/**
+ * Customer ID schema
+ */
+export const customerIdSchema: ValidationSchema = {
+  customerId: {
+    type: 'string',
+    required: true,
+    message: 'Customer ID is required'
+  }
+};
+
+/**
+ * Validation functions
+ */
+export const validate = {
+  createBookingSchema,
+  updateBookingSchema,
+  searchBookingsSchema,
+  bookingIdSchema,
+  emailSchema,
+  customerIdSchema,
+  createBooking: validateSchema(createBookingSchema),
+  updateBooking: validateSchema(updateBookingSchema),
+  searchBookings: validateSchema(searchBookingsSchema, { stripUnknown: true }),
+  bookingId: validateSchema(bookingIdSchema),
+  email: validateSchema(emailSchema),
+  customerId: validateSchema(customerIdSchema)
+};

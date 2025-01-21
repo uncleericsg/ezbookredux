@@ -1,76 +1,36 @@
-import classNames from 'classnames';
-import { motion } from 'framer-motion';
-import { 
-  AlertCircle, 
-  BarChart3, 
-  Bell, 
-  Layout, 
-  Palette, 
-  Settings, 
-  Shield, 
-  Users, 
-  Users2, 
-  Wrench 
-} from 'lucide-react';
-import React, { memo } from 'react';
+import React from 'react';
+import type { AdminNavProps } from '../../shared/types/admin';
 
-import type { AdminTabConfig } from '@admin/types';
+const NAV_ITEMS = [
+  { id: 0, label: 'Dashboard' },
+  { id: 1, label: 'Bookings' },
+  { id: 2, label: 'Users' },
+  { id: 3, label: 'Settings' }
+];
 
-import { ROUTES } from '@config/routes';
-
-export interface AdminNavProps {
-  activeTab: number;
-  onTabChange: (index: number) => void;
-  collapsed?: boolean;
-}
-
-export type AdminTab = typeof tabs[number]['id'];
-
-export const tabs: AdminTabConfig[] = Object.freeze([
-  { id: 'services', icon: Wrench, label: 'Services', path: ROUTES.ADMIN.SERVICES },
-  { id: 'users', icon: Users, label: 'Users', path: ROUTES.ADMIN.USERS },
-  { id: 'teams', icon: Users2, label: 'Teams', path: ROUTES.ADMIN.TEAMS },
-  { id: 'notifications', icon: AlertCircle, label: 'Notifications', path: ROUTES.ADMIN.NOTIFICATIONS },
-  { id: 'amc', icon: Shield, label: 'AMC', path: ROUTES.ADMIN.AMC },
-  { id: 'analytics', icon: BarChart3, label: 'Analytics', path: ROUTES.ADMIN.ANALYTICS },
-  { id: 'branding', icon: Palette, label: 'Branding', path: ROUTES.ADMIN.BRANDING },
-  { id: 'push', icon: Bell, label: 'Push', path: ROUTES.ADMIN.PUSH },
-  { id: 'settings', icon: Settings, label: 'Settings', path: ROUTES.ADMIN.SETTINGS },
-  { id: 'homepage', icon: Layout, label: 'Homepage', path: ROUTES.ADMIN.HOMEPAGE }
-] as const);
-
-const AdminNav = memo<AdminNavProps>(({ activeTab, onTabChange, collapsed = false }) => {
+const AdminNav: React.FC<AdminNavProps> = ({ activeTab, onTabChange }) => {
   return (
-    <nav className="space-y-0.5">
-      {tabs.map((tab, index) => {
-        const Icon = tab.icon;
-        return (
-          <motion.button
-            key={tab.id}
-            onClick={() => onTabChange(index)}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className={classNames(
-              'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-150',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 focus:ring-offset-gray-800',
-              activeTab === index
-                ? 'bg-blue-500/10 text-blue-400 shadow-sm'
-                : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-            )}
-            aria-label={tab.label}
-            role="tab"
-            aria-selected={activeTab === index}
-          >
-            <Icon className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && (
-              <span className="text-sm font-medium truncate">{tab.label}</span>
-            )}
-          </motion.button>
-        );
-      })}
+    <nav className="bg-gray-800 border-b border-gray-700">
+      <div className="container mx-auto px-4">
+        <div className="flex space-x-4">
+          {NAV_ITEMS.map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => onTabChange(id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === id
+                  ? 'text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </nav>
   );
-});
+};
 
 AdminNav.displayName = 'AdminNav';
 

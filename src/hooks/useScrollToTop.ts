@@ -1,16 +1,10 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 
-export const useScrollToTop = (dependencies: any[] = []) => {
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }, []);
-
+/**
+ * Hook to scroll to top of page on mount
+ */
+export const useScrollToTop = () => {
   useEffect(() => {
-    scrollToTop();
-  }, dependencies);
-
-  return scrollToTop;
+    window.scrollTo(0, 0);
+  }, []);
 };

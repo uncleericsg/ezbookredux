@@ -1,65 +1,45 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "types": ["@types/google.maps", "node", "jest", "mocha", "stripe"],
-    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
+
+    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+
+    /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@services/*": ["./src/services/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@types/*": ["./src/types/*"],
-      "@config/*": ["./src/config/*"],
-      "@shared/*": ["./shared/*"],
-      "@server/*": ["./server/*"],
-      "@api/*": ["./api/*"],
-      "@server/types/*": ["./server/types/*"],
-      "@server/utils/*": ["./server/utils/*"],
-      "@server/config/*": ["./server/config/*"],
-      "@server/services/*": ["./server/services/*"],
-      "@server/repositories/*": ["./server/repositories/*"],
-      "@server/middleware/*": ["./server/middleware/*"],
-      "@admin/*": ["./src/components/admin/*"]
-    },
-    "allowJs": true,
-    "incremental": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@utils/*": ["src/utils/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@store/*": ["src/store/*"],
+      "@services/*": ["src/services/*"],
+      "@types/*": ["src/types/*"],
+      "@shared/*": ["shared/*"]
+    }
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "server/**/*.ts",
-    "api/**/*.ts",
-    "shared/**/*.ts",
-    "shared/**/*.tsx"
+    "src/**/*.tsx"
   ],
   "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "**/node_modules/*"
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.server.json" }
   ]
 }
-

@@ -1,57 +1,70 @@
-import type { Notification, NotificationPreferences } from '@/types/notifications';
-import { logger } from '@/utils/logger';
-import { ErrorMetadata } from '@/types/error';
+import type { 
+  Notification, 
+  NotificationResponse, 
+  MarkAsReadResponse 
+} from '../types/notification';
 
-export async function sendNotification(notification: Notification): Promise<void> {
-  try {
-    const response = await fetch('/api/notifications/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(notification)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to send notification: ${response.statusText}`);
-    }
-  } catch (error) {
-    logger.error('Error sending notification:', error as ErrorMetadata);
-    throw error;
+// Mock notifications data
+const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: '1',
+    userId: '1',
+    type: 'appointment_confirmation',
+    title: 'Upcoming Appointment',
+    message: 'Your aircon service appointment is scheduled for tomorrow at 2:00 PM',
+    createdAt: new Date().toISOString(),
+    read: false,
+    priority: 'high',
+    actionUrl: '/appointments'
+  },
+  {
+    id: '2',
+    userId: '1',
+    type: 'amc_expiry',
+    title: 'AMC Package Expiring Soon',
+    message: 'Your AMC package will expire in 30 days. Renew now to continue enjoying premium benefits.',
+    createdAt: new Date().toISOString(),
+    read: false,
+    priority: 'high',
+    actionUrl: '/amc/packages'
+  },
+  {
+    id: '3',
+    userId: '1',
+    type: 'service_reminder',
+    title: 'Service Due',
+    message: 'It\'s time for your regular aircon maintenance. Book a service now.',
+    createdAt: new Date().toISOString(),
+    read: false,
+    priority: 'normal',
+    actionUrl: '/'
   }
-}
+];
 
-export async function updateNotificationPreferences(
-  userId: string, 
-  preferences: NotificationPreferences
-): Promise<NotificationPreferences> {
-  try {
-    const response = await fetch(`/api/users/${userId}/notification-preferences`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(preferences)
-    });
+/**
+ * Fetch notifications for a user
+ */
+export const fetchNotifications = async (userId: string): Promise<NotificationResponse> => {
+  // TODO: Replace with actual API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: MOCK_NOTIFICATIONS.filter(n => n.userId === userId)
+      });
+    }, 1000);
+  });
+};
 
-    if (!response.ok) {
-      throw new Error(`Failed to update notification preferences: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error('Error updating notification preferences:', error as ErrorMetadata);
-    throw error;
-  }
-}
-
-export async function getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
-  try {
-    const response = await fetch(`/api/users/${userId}/notification-preferences`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get notification preferences: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error('Error getting notification preferences:', error as ErrorMetadata);
-    throw error;
-  }
-}
+/**
+ * Mark a notification as read
+ */
+export const markNotificationAsRead = async (notificationId: string): Promise<MarkAsReadResponse> => {
+  // TODO: Replace with actual API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        success: true
+      });
+    }, 500);
+  });
+};

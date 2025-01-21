@@ -1,40 +1,23 @@
 import type { NextApiResponse } from 'next';
-import { withAuth } from '@/api/shared/middleware';
-import { ApiError } from '@/server/utils/apiErrors';
-import { logger } from '@/server/utils/logger';
-import type { AuthenticatedRequest } from '@/api/shared/types';
+import { withAuth } from '@server/api/middleware/auth';
+import { ApiError } from '@server/utils/apiErrors';
+import { logger } from '@server/utils/logger';
+import { AuthenticatedRequest } from '@server/types/api';
+import { 
+  GeocodeResponse, 
+  GeocodeApiResponse,
+  GeocodeStatus,
+  GeocodingError
+} from '@shared/types/geocoding';
 
-interface GeocodeResult {
-  formatted_address: string;
-  geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-    location_type: string;
-    viewport: {
-      northeast: {
-        lat: number;
-        lng: number;
-      };
-      southwest: {
-        lat: number;
-        lng: number;
-      };
-    };
-  };
-  place_id: string;
-  types: string[];
-}
-
-interface GeocodeResponse {
-  results: GeocodeResult[];
-  status: string;
-}
-
+/**
+ * Geocode a postal code to get location details
+ * GET /api/geocode?postalCode=123456
+ * Requires authentication
+ */
 async function handler(
   req: AuthenticatedRequest,
-  res: NextApiResponse
+  res: NextApiResponse<GeocodeApiResponse>
 ) {
   if (req.method !== 'GET') {
     throw new ApiError('Method not allowed', 'METHOD_NOT_ALLOWED');
@@ -49,61 +32,108 @@ async function handler(
   try {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
-      throw new ApiError('Google Maps API key is not configured', 'SERVICE_ERROR');
+      logger.error('Google Maps API key is not configured');
+      throw new ApiError('Service configuration error', 'SERVICE_ERROR');
     }
 
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${postalCode},Singapore&key=${apiKey}`
-    );
+    // Validate postal code format
+    const postalCodeRegex = /^\d{6}$/;
+    if (!postalCodeRegex.test(postalCode)) {
+      throw new ApiError('Invalid postal code format. Must be 6 digits.', 'VALIDATION_ERROR');
+    }
+
+    const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+    url.searchParams.append('address', `${postalCode},Singapore`);
+    url.searchParams.append('key', apiKey);
+
+    const response = await fetch(url.toString());
 
     if (!response.ok) {
+      logger.error('Google Maps API request failed', {
+        status: response.status,
+        statusText: response.statusText
+      });
       throw new ApiError('Failed to fetch from Google Maps API', 'SERVICE_ERROR');
     }
 
     const data: GeocodeResponse = await response.json();
 
-    if (data.status === 'ZERO_RESULTS') {
-      return res.status(200).json({
-        data: [],
-        meta: {
-          total: 0
-        }
-      });
+    // Handle various Google Maps API status codes
+    switch (data.status) {
+      case 'OK':
+        logger.info('Geocoding successful', {
+          postalCode,
+          resultsCount: data.results.length,
+          userId: req.user.id
+        });
+        return res.status(200).json({
+          data: data.results,
+          meta: {
+            total: data.results.length,
+            status: data.status
+          }
+        });
+
+      case 'ZERO_RESULTS':
+        logger.info('No results found for postal code', { postalCode });
+        return res.status(200).json({
+          data: [],
+          meta: {
+            total: 0,
+            status: data.status
+          }
+        });
+
+      case 'OVER_DAILY_LIMIT':
+      case 'OVER_QUERY_LIMIT':
+        logger.error('Google Maps API quota exceeded', { status: data.status });
+        throw new ApiError('Service quota exceeded', 'SERVICE_ERROR');
+
+      case 'REQUEST_DENIED':
+        logger.error('Google Maps API request denied', { 
+          status: data.status,
+          error: data.error_message 
+        });
+        throw new ApiError('Service authentication failed', 'SERVICE_ERROR');
+
+      case 'INVALID_REQUEST':
+        logger.error('Invalid request to Google Maps API', { 
+          status: data.status,
+          error: data.error_message 
+        });
+        throw new ApiError('Invalid geocoding request', 'SERVICE_ERROR');
+
+      default:
+        logger.error('Unknown Google Maps API error', { 
+          status: data.status,
+          error: data.error_message 
+        });
+        throw new ApiError('Service error', 'SERVICE_ERROR');
     }
 
-    if (data.status !== 'OK') {
-      throw new ApiError('Google Maps API error', 'SERVICE_ERROR');
-    }
-
-    logger.info('Geocoding successful', {
-      postalCode,
-      resultsCount: data.results.length,
-      userId: req.user.id
-    });
-
-    return res.status(200).json({
-      data: data.results,
-      meta: {
-        total: data.results.length
-      }
-    });
   } catch (error) {
-    logger.error('Geocoding failed', { error, postalCode, userId: req.user.id });
+    logger.error('Geocoding failed', { 
+      error,
+      postalCode,
+      userId: req.user.id 
+    });
     
     if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        error: {
-          message: error.message,
-          code: error.code,
-          details: error.details
-        }
+      const geocodingError: GeocodingError = {
+        code: error.code as GeocodingError['code'],
+        message: error.message,
+        details: error.details
+      };
+
+      return res.status(error.statusCode || 400).json({
+        error: geocodingError
       });
     }
 
     return res.status(500).json({
       error: {
-        message: 'Internal server error',
-        code: 'SERVER_ERROR'
+        code: 'SERVICE_ERROR',
+        message: 'Internal server error'
       }
     });
   }
