@@ -1,55 +1,45 @@
 import { z } from 'zod';
-import debounce from 'lodash/debounce';
 import { MessageSquare, Mail, Bell } from 'lucide-react';
-import { TEMPLATE_TYPES } from '../constants/templateConstants';
+import { 
+  Template, 
+  templateSchema as baseTemplateSchema,
+  TemplateVersion,
+  ValidationResult 
+} from '../types/templateTypes';
+import { EnhancedTemplate } from '../adapters/types';
 
-export interface Template {
-  id: string;
-  name: string;
-  content: string;
-  version: number;
-  lastModified: string;
-  variables: string[];
-  userType: 'all' | 'amc' | 'regular';
-  type: string;
-  status?: string;
-}
+export { Template, TemplateVersion, ValidationResult };
 
-export interface TemplateVersion {
-  id: string;
-  templateId: string;
-  content: string;
-  version: number;
-  createdAt: string;
-  createdBy: string;
-}
-
-export const templateSchema = z.object({
-  name: z.string().min(1, 'Template name is required').max(100),
-  content: z.string()
-    .min(1, 'Template content is required')
-    .max(500)
-    .refine(content => {
-      // Check for valid variable syntax: {{variableName}}
-      const variableRegex = /{{[a-zA-Z0-9_]+}}/g;
-      const matches = content.match(variableRegex) || [];
-      const uniqueMatches = new Set(matches);
-      return matches.length === uniqueMatches.size;
-    }, 'Template contains duplicate or invalid variables'),
-  userType: z.enum(['all', 'amc', 'regular']),
-  type: z.string(),
-  variables: z.array(z.string())
+export const templateSchema = baseTemplateSchema.extend({
+  type: z.enum(['sms', 'email', 'push']),
+  category: z.enum(['marketing', 'transactional', 'reminder']),
+  description: z.string().max(200).optional(),
+  updatedAt: z.string()
 });
 
-export const validateTemplate = (template: Partial<Template>) => {
+export const validateTemplate = (template: Partial<Template>): ValidationResult => {
   try {
     templateSchema.parse(template);
     return { valid: true, errors: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { valid: false, errors: error.errors };
+      return {
+        valid: false,
+        errors: error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: 'VALIDATION_ERROR'
+        }))
+      };
     }
-    return { valid: false, errors: [{ message: 'Unknown validation error' }] };
+    return { 
+      valid: false, 
+      errors: [{ 
+        field: 'unknown', 
+        message: 'Unknown validation error',
+        code: 'UNKNOWN_ERROR'
+      }] 
+    };
   }
 };
 
@@ -62,7 +52,7 @@ export const extractVariables = (content: string): string[] => {
 export const previewTemplate = (
   template: Template,
   variables: Record<string, string>,
-  userType: 'all' | 'amc' | 'regular' = 'all'
+  userType: Template['userType'] = 'all'
 ): string => {
   if (template.userType !== 'all' && template.userType !== userType) {
     throw new Error('Template not available for this user type');
@@ -75,33 +65,31 @@ export const previewTemplate = (
   return preview;
 };
 
-// Autosave functionality
-export const createAutosave = (
-  saveFunction: (template: Partial<Template>) => Promise<void>,
-  delay = 1000
-) => {
-  return debounce(async (template: Partial<Template>) => {
-    try {
-      await saveFunction(template);
-    } catch (error) {
-      console.error('Autosave failed:', error);
-      // Implement your error handling here
-    }
-  }, delay);
+export const createAutosave = async (
+  template: Partial<Template>,
+  userId: string
+): Promise<void> => {
+  try {
+    const key = `template_autosave_${userId}`;
+    const autosave = {
+      template,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(key, JSON.stringify(autosave));
+  } catch (error) {
+    console.error('Autosave failed:', error);
+  }
 };
 
-// Version control
 export const createVersion = (
   template: Template,
   userId: string
 ): TemplateVersion => {
   return {
-    id: crypto.randomUUID(),
-    templateId: template.id,
+    version: (parseInt(template.version) + 1).toString(),
     content: template.content,
-    version: template.version + 1,
-    createdAt: new Date().toISOString(),
-    createdBy: userId,
+    modifiedBy: userId,
+    modifiedAt: new Date().toISOString()
   };
 };
 
@@ -134,28 +122,26 @@ export const diffTemplates = (oldContent: string, newContent: string): string[] 
   return changes;
 };
 
-// Get icon component based on template type
 export const getTemplateIcon = (type: Template['type']) => {
   switch (type) {
-    case TEMPLATE_TYPES.EMAIL:
+    case 'email':
       return Mail;
-    case TEMPLATE_TYPES.PUSH:
+    case 'push':
       return Bell;
     default:
       return MessageSquare;
   }
 };
 
-// Sort templates by different criteria
 export const sortTemplates = (templates: Template[], sortBy: string) => {
   return [...templates].sort((a, b) => {
     switch (sortBy) {
       case 'title':
         return a.name.localeCompare(b.name);
       case 'type':
-        return a.type.localeCompare(b.type);
+        return (a.type || '').localeCompare(b.type || '');
       case 'status':
-        return (a.status || '').localeCompare(b.status || '');
+        return (a.isActive ? 'active' : 'inactive').localeCompare(b.isActive ? 'active' : 'inactive');
       case 'date':
       default:
         return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
@@ -163,7 +149,6 @@ export const sortTemplates = (templates: Template[], sortBy: string) => {
   });
 };
 
-// Filter templates by search term
 export const filterTemplates = (templates: Template[], searchTerm: string) => {
   const term = searchTerm.toLowerCase();
   return templates.filter(template => 

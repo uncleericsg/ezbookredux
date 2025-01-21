@@ -1,113 +1,45 @@
-/**
- * User types
- */
+import type { DatabaseError } from './error';
 
-/**
- * User role
- */
-export type UserRole = 'admin' | 'customer' | 'technician';
-
-/**
- * User status
- */
-export type UserStatus = 'active' | 'inactive' | 'suspended';
-
-/**
- * AMC status
- */
-export type AMCStatus = 'active' | 'expired' | 'none';
-
-/**
- * User interface
- */
 export interface User {
-  /**
-   * User ID
-   */
   id: string;
-
-  /**
-   * First name
-   */
-  firstName: string;
-
-  /**
-   * Last name
-   */
-  lastName: string;
-
-  /**
-   * Email address
-   */
-  email: string;
-
-  /**
-   * Phone number
-   */
-  phone?: string;
-
-  /**
-   * User role
-   */
+  email?: string | null;
+  phone?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  last_sign_in_at?: string | null;
   role: UserRole;
-
-  /**
-   * Account status
-   */
   status: UserStatus;
-
-  /**
-   * AMC subscription status
-   */
-  amcStatus: AMCStatus;
-
-  /**
-   * Account creation date
-   */
-  createdAt: string;
-
-  /**
-   * Last login date
-   */
-  lastLoginAt: string;
-
-  /**
-   * Profile image URL
-   */
-  avatarUrl?: string;
-
-  /**
-   * Email verification status
-   */
-  emailVerified: boolean;
-
-  /**
-   * Phone verification status
-   */
-  phoneVerified: boolean;
-
-  /**
-   * User metadata
-   */
-  metadata?: Record<string, unknown>;
+  profile?: UserProfile | null;
 }
 
-/**
- * User status toggle props
- */
-export interface UserStatusToggleProps {
-  /**
-   * User ID
-   */
-  userId: string;
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  website: string | null;
+}
 
-  /**
-   * Active status
-   */
-  isActive: boolean;
+export type UserRole = 'admin' | 'user' | 'guest';
+export type UserStatus = 'active' | 'inactive' | 'pending';
 
-  /**
-   * Toggle callback
-   */
-  onToggle: (userId: string, newStatus: boolean) => Promise<void>;
+export interface AuthResponse {
+  user: User | null;
+  session: {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+  } | null;
+}
+
+export interface AuthError extends DatabaseError {
+  name: string;
+  status: number;
+}
+
+export interface OTPVerificationPayload {
+  phone: string;
+  code: string;
+  verificationId: string;
 }

@@ -1,9 +1,9 @@
 export const ITEMS_PER_PAGE = 10;
 
 export const TEMPLATE_TYPES = {
-  EMAIL: 'email',
-  PUSH: 'push',
-  SMS: 'sms',
+  email: 'email',
+  push: 'push',
+  sms: 'sms'
 } as const;
 
 export const SORT_OPTIONS = {
@@ -26,4 +26,10 @@ export const TEST_IDS = {
   SEARCH_INPUT: 'search-input',
   SORT_SELECT: 'sort-select',
   PAGINATION: 'pagination',
+  // Preview component test IDs
+  desktopPreviewButton: 'desktop-preview-button',
+  mobilePreviewButton: 'mobile-preview-button',
+  copyButton: 'copy-button',
+  messagePreview: 'message-preview',
+  previewSkeleton: 'preview-skeleton'
 } as const;

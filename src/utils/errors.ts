@@ -1,14 +1,14 @@
-import { ApiError } from '@/types/error';
+import { AppError } from '@shared/types/error';
 
-export function handleError(error: unknown): ApiError {
-  if (error instanceof ApiError) {
+export function handleError(error: unknown): AppError {
+  if (error instanceof AppError) {
     return error;
   }
-  return new ApiError('SERVICE_UNAVAILABLE', error instanceof Error ? error.message : String(error));
+  return new AppError('SERVICE_UNAVAILABLE', error instanceof Error ? error.message : String(error));
 }
 
-export function isApiError(error: unknown): error is ApiError {
-  return error instanceof ApiError;
+export function isAppError(error: unknown): error is AppError {
+  return error instanceof AppError;
 }
 
 export function getErrorMessage(error: unknown): string {

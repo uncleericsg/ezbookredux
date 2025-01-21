@@ -1,37 +1,29 @@
 export interface Holiday {
   id: string;
-  date: string;
   name: string;
-  holiday: string;
-  dayOfWeek: string;
-  type: 'public' | 'bank' | 'observance';
-  isWorkingDay: boolean;
-}
-
-export interface HolidayResponse {
-  success: boolean;
-  data?: Holiday[];
-  error?: string;
-}
-
-export interface HolidayNotification {
-  id: string;
-  holidayId: string;
-  userId: string;
-  type: 'email' | 'sms' | 'push';
-  status: 'pending' | 'sent' | 'failed';
-  scheduledFor: string;
-  message: string;
-  createdAt: string;
-  updatedAt: string;
+  date: string;
+  type: 'public' | 'religious' | 'cultural';
+  description?: string;
 }
 
 export interface HolidayGreeting {
   id: string;
-  holidayId: string;
+  holiday: string;
+  date: string;
   message: string;
-  template: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-} 
+  enabled: boolean;
+  sendTime: string;
+  lastSent?: string;
+  status?: 'pending' | 'sent' | 'failed';
+}
+
+export interface HolidaySchedule {
+  holiday: Holiday;
+  greeting?: HolidayGreeting;
+  nextOccurrence: string;
+}
+
+export const holidaySchema = {
+  type: ['public', 'religious', 'cultural'] as const,
+  status: ['pending', 'sent', 'failed'] as const
+};

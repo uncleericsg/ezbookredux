@@ -1,86 +1,67 @@
 import DOMPurify from 'dompurify';
-import type { Template } from '../types/templateTypes';
-import type { PreviewConfig, PreviewData, UtmParams, CharacterCount } from '../types/messageTypes';
-import { MESSAGE_LIMITS } from '../constants/templateConstants';
+import { Template } from '../types/templateTypes';
+import { PreviewConfig, PreviewData, ProcessedMessage } from '../types/messageTypes';
+import { MESSAGE_LIMITS, TEMPLATE_TYPES } from '../constants/templateConstants';
 
 export class PreviewAdapter {
-  /**
-   * Process message with preview data and sanitize HTML
-   */
-  processMessage(message: string, config: PreviewConfig): string {
-    let processed = message;
-
-    if (config.sampleData) {
-      Object.entries(config.sampleData).forEach(([key, value]) => {
-        const regex = new RegExp(`\\{${key}\\}`, 'g');
-        processed = processed.replace(regex, value.toString());
-      });
-    }
-
-    return DOMPurify.sanitize(processed);
-  }
-
-  /**
-   * Create preview configuration with defaults
-   */
   createPreviewConfig(
     template: Template,
     mode: 'desktop' | 'mobile' = 'desktop',
-    sampleData: PreviewData = {},
-    utmParams?: UtmParams
+    sampleData: PreviewData = {}
   ): PreviewConfig {
     return {
       mode,
       sampleData,
-      characterLimit: MESSAGE_LIMITS[template.type] || 1000,
-      utmParams: utmParams || {
-        utmSource: 'preview',
-        utmMedium: template.type,
-        utmCampaign: template.title
-      }
+      characterLimit: MESSAGE_LIMITS[template.type as keyof typeof TEMPLATE_TYPES] || 1000
     };
   }
 
-  /**
-   * Get character count information
-   */
-  getCharacterCount(message: string, limit: number): CharacterCount {
-    const current = message.length;
-    const remaining = limit - current;
-    
-    return {
-      current,
-      limit,
-      remaining,
-      isOverLimit: current > limit
-    };
-  }
+  processMessage(content: string, config: PreviewConfig): string {
+    let processedContent = content;
 
-  /**
-   * Format phone number based on length
-   */
-  formatPhoneNumber(phone: string): string {
-    const digits = phone.replace(/\D/g, '');
-    
-    if (digits.length === 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else if (digits.length === 11) {
-      return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-    }
-    
-    return phone;
-  }
-
-  /**
-   * Generate URL with UTM parameters
-   */
-  generateUrl(baseUrl: string, utmParams: UtmParams): string {
-    const params = new URLSearchParams({
-      utm_source: utmParams.utmSource,
-      utm_medium: utmParams.utmMedium,
-      utm_campaign: utmParams.utmCampaign
+    // Replace variables with sample data
+    Object.entries(config.sampleData).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      processedContent = processedContent.replace(regex, value);
     });
 
-    return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+    // Replace any remaining variables with placeholders
+    processedContent = processedContent.replace(/{{(\w+)}}/g, (_, key) => `[${key}]`);
+
+    // Sanitize HTML if present
+    if (/<[^>]*>/g.test(processedContent)) {
+      processedContent = DOMPurify.sanitize(processedContent);
+    }
+
+    return processedContent;
+  }
+
+  getCharacterCount(content: string): number {
+    // Remove HTML tags if present
+    const plainText = content.replace(/<[^>]*>/g, '');
+    return plainText.length;
+  }
+
+  validateMessage(content: string, config: PreviewConfig): string[] {
+    const errors: string[] = [];
+    const characterCount = this.getCharacterCount(content);
+
+    // Check character limit
+    if (characterCount > config.characterLimit) {
+      errors.push(`Message exceeds character limit (${characterCount}/${config.characterLimit})`);
+    }
+
+    // Check for unclosed HTML tags
+    if (/<[^>]*$/g.test(content)) {
+      errors.push('Message contains unclosed HTML tags');
+    }
+
+    // Check for remaining unprocessed variables
+    const remainingVars = content.match(/{{(\w+)}}/g);
+    if (remainingVars) {
+      errors.push(`Message contains unprocessed variables: ${remainingVars.join(', ')}`);
+    }
+
+    return errors;
   }
 }

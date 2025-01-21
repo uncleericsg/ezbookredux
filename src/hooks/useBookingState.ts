@@ -2,38 +2,53 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { 
   BookingState, 
+  BookingAction,
   createInitialState, 
   transition, 
   isBookingInProgress 
-} from '@utils/bookingState';
-import { BookingError } from '@utils/errors';
+} from '@/machines/bookingMachine';
 
-export const useBookingState = () => {
+export interface UseBookingState {
+  state: BookingState;
+  dispatch: (action: BookingAction) => void;
+  reset: () => void;
+  isInProgress: boolean;
+}
+
+export const useBookingState = (): UseBookingState => {
   const [state, setState] = useState<BookingState>(createInitialState());
 
-  const dispatch = useCallback((action: Parameters<typeof transition>[1]) => {
+  const dispatch = useCallback((action: BookingAction) => {
     setState(currentState => {
       try {
         const newState = transition(currentState, action);
         
         // Show relevant toasts based on state changes
-        if (newState.status === 'failed' && newState.error) {
+        if (newState.error && newState.error !== currentState.error) {
           toast.error(newState.error);
         }
         
-        if (newState.warnings.length > 0) {
-          newState.warnings.forEach(warning => toast.warning(warning));
+        if (newState.warnings.length > currentState.warnings.length) {
+          const newWarnings = newState.warnings.slice(currentState.warnings.length);
+          newWarnings.forEach(warning => toast.error(warning));
         }
         
-        if (newState.status === 'confirmed') {
+        if (newState.status === 'CONFIRMED' && currentState.status !== 'CONFIRMED') {
           toast.success('Booking confirmed successfully');
+        }
+
+        if (newState.status === 'COMPLETED' && currentState.status !== 'COMPLETED') {
+          toast.success('Booking completed successfully');
+        }
+
+        if (newState.status === 'CANCELLED' && currentState.status !== 'CANCELLED') {
+          toast.error('Booking cancelled');
         }
         
         return newState;
       } catch (error) {
-        if (error instanceof BookingError && error.toast) {
-          toast.error(error.message);
-        }
+        const message = error instanceof Error ? error.message : 'An unknown error occurred';
+        toast.error(message);
         throw error;
       }
     });

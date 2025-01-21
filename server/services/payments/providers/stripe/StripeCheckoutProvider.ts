@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
-import { logger } from '@server/utils/logger';
-import { ApiError } from '@server/utils/apiErrors';
+import { logger } from '@/utils/logger';
+import { handlePaymentError } from '@/utils/apiErrors';
 import { 
   CreateCheckoutRequest, 
   CheckoutResponse, 
@@ -8,6 +8,73 @@ import {
   PaymentCurrency,
   StripeWebhookEvent
 } from '@shared/types/payment';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2023-10-16'
+});
+
+interface CreateCheckoutSessionParams {
+  bookingId: string;
+  amount: number;
+  currency: string;
+  customerEmail: string;
+}
+
+export const StripeCheckoutProvider = {
+  /**
+   * Create a Stripe Checkout session
+   */
+  async createCheckoutSession(params: CreateCheckoutSessionParams) {
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: params.currency,
+              product_data: {
+                name: 'Booking Payment',
+              },
+              unit_amount: params.amount,
+            },
+            quantity: 1,
+          },
+        ],
+        customer_email: params.customerEmail,
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${params.bookingId}/success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${params.bookingId}/cancel`,
+        metadata: {
+          bookingId: params.bookingId
+        }
+      });
+
+      return {
+        sessionId: session.id,
+        checkoutUrl: session.url || ''
+      };
+    } catch (error) {
+      logger.error('Error creating checkout session:', error);
+      throw handlePaymentError('Failed to create checkout session');
+    }
+  },
+
+  /**
+   * Verify webhook signature and construct event
+   */
+  constructWebhookEvent(payload: Buffer, signature: string) {
+    try {
+      return stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET || ''
+      );
+    } catch (error) {
+      logger.error('Error constructing webhook event:', error);
+      throw handlePaymentError('Invalid webhook signature');
+    }
+  }
+};
 
 export interface CreateCheckoutParams extends CreateCheckoutRequest {
   userId: string;

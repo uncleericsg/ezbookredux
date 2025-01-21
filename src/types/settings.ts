@@ -1,140 +1,127 @@
-import { AppSettings } from './appSettings';
-
-export interface ServiceSettings {
+export interface ChatGPTSettings {
   enabled: boolean;
   apiKey?: string;
+  model?: string;
+  temperature?: number;
   maxTokens?: number;
-  rateLimit?: {
-    maxRequests: number;
-    windowMs: number;
+  systemPrompt?: string;
+  customInstructions?: string;
+  language?: string;
+  tonePreference?: 'formal' | 'casual';
+}
+
+export interface NotificationSettings {
+  email: {
+    enabled: boolean;
+    dailyLimit?: number;
+    templates?: Record<string, string>;
+  };
+  sms: {
+    enabled: boolean;
+    dailyLimit?: number;
+    provider?: string;
+    templates?: Record<string, string>;
+  };
+  push: {
+    enabled: boolean;
+    dailyLimit?: number;
+    fcmConfig?: {
+      projectId: string;
+      privateKey: string;
+      clientEmail: string;
+    };
   };
 }
 
-export interface IntegrationSettings {
-  repairShopr: ServiceSettings;
-  stripe: ServiceSettings;
-  chatGPT: ServiceSettings;
-  cypress: ServiceSettings;
-  fcm: ServiceSettings;
+export interface UserSettings {
+  id: string;
+  userId: string;
+  notifications: NotificationSettings;
+  chatgpt: ChatGPTSettings;
+  timezone: string;
+  language: string;
+  theme: 'light' | 'dark' | 'system';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateSettingsRequest {
+  notifications?: Partial<NotificationSettings>;
+  chatgpt?: Partial<ChatGPTSettings>;
+  timezone?: string;
+  language?: string;
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export interface BrandingSettings {
-  logo: {
-    url: string;
-    width: number;
-    height: number;
-  };
+  logo?: string;
   colors: {
     primary: string;
     secondary: string;
     accent: string;
   };
   fonts: {
-    heading: string;
-    body: string;
+    primary: string;
+    secondary: string;
   };
+  companyName: string;
+  contactEmail: string;
 }
 
-export interface RepairShoprSettings {
-  repairShoprApiKey: string;
-  repairShoprEnabled: boolean;
-  repairShoprFieldMappings: Record<string, string>;
-  defaultIntervalWeeks: number;
-}
-
-export interface AdminSettings {
-  integrations: IntegrationSettings;
+export interface AdminSettings extends UserSettings {
+  role: 'admin' | 'superadmin';
+  permissions: string[];
+  features: {
+    analytics: boolean;
+    userManagement: boolean;
+    settingsManagement: boolean;
+    systemMonitoring: boolean;
+  };
   branding: BrandingSettings;
-  app: AppSettings;
 }
 
-export const defaultSettings: AdminSettings = {
-  integrations: {
-    repairShopr: {
-      enabled: false,
-      apiKey: '',
-      rateLimit: {
-        maxRequests: 100,
-        windowMs: 60000
-      }
+export const defaultBrandingSettings: BrandingSettings = {
+  colors: {
+    primary: '#007bff',
+    secondary: '#6c757d',
+    accent: '#28a745'
+  },
+  fonts: {
+    primary: 'Inter',
+    secondary: 'Roboto'
+  },
+  companyName: 'iAircon',
+  contactEmail: 'support@iaircon.com'
+};
+
+export const defaultSettings: UserSettings = {
+  id: '',
+  userId: '',
+  notifications: {
+    email: {
+      enabled: true,
+      dailyLimit: 100
     },
-    stripe: {
-      enabled: false,
-      apiKey: '',
-      rateLimit: {
-        maxRequests: 100,
-        windowMs: 60000
-      }
+    sms: {
+      enabled: true,
+      dailyLimit: 50
     },
-    chatGPT: {
-      enabled: false,
-      apiKey: '',
-      maxTokens: 500,
-      rateLimit: {
-        maxRequests: 50,
-        windowMs: 60000
-      }
-    },
-    cypress: {
-      enabled: false,
-      apiKey: '',
-      rateLimit: {
-        maxRequests: 100,
-        windowMs: 60000
-      }
-    },
-    fcm: {
-      enabled: false,
-      maxTokens: 500,
-      rateLimit: {
-        maxRequests: 500,
-        windowMs: 60000
-      }
+    push: {
+      enabled: true,
+      dailyLimit: 100
     }
   },
-  branding: {
-    logo: {
-      url: '/logo.png',
-      width: 200,
-      height: 50
-    },
-    colors: {
-      primary: '#007bff',
-      secondary: '#6c757d',
-      accent: '#ffd700'
-    },
-    fonts: {
-      heading: 'Inter',
-      body: 'Inter'
-    }
+  chatgpt: {
+    enabled: false,
+    model: 'gpt-4',
+    temperature: 0.7,
+    maxTokens: 2000,
+    language: 'en',
+    tonePreference: 'formal'
   },
-  app: {
-    loginScreenEnabled: false,
-    chatGPTSettings: {
-      apiKey: '',
-      model: 'gpt-3.5-turbo',
-      enabled: false,
-      maxTokens: 500,
-      temperature: 0.7,
-      rateLimit: {
-        maxRequests: 50,
-        windowMs: 60000
-      }
-    },
-    cypressSettings: {
-      cypressApiKey: '',
-      cypressEnabled: false
-    },
-    stripeSettings: {
-      stripePublishableKey: '',
-      stripeSecretKey: '',
-      stripeEnabled: false
-    },
-    repairShoprSettings: {
-      repairShoprApiKey: '',
-      repairShoprEnabled: false,
-      repairShoprFieldMappings: {},
-      defaultIntervalWeeks: 11
-    }
-  }
+  timezone: 'UTC',
+  language: 'en',
+  theme: 'system',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 };

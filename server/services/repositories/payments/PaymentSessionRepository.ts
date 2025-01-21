@@ -1,8 +1,8 @@
-import { supabase } from '@server/utils/supabase';
-import { logger } from '@server/utils/logger';
-import { ApiError } from '@server/utils/apiErrors';
+import { supabaseClient } from '@/config/supabase/client';
+import { logger } from '@/utils/logger';
+import { handleDatabaseError } from '@/utils/apiErrors';
 
-export interface PaymentSession {
+interface PaymentSession {
   id: string;
   bookingId: string;
   userId: string;
@@ -10,40 +10,55 @@ export interface PaymentSession {
   currency: string;
   status: 'pending' | 'completed' | 'expired' | 'failed';
   stripeSessionId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export class PaymentSessionRepository {
-  async createSession(data: Omit<PaymentSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<PaymentSession> {
+interface CreatePaymentSessionParams {
+  bookingId: string;
+  userId: string;
+  amount: number;
+  currency: string;
+  stripeSessionId: string;
+}
+
+export const PaymentSessionRepository = {
+  /**
+   * Create a new payment session
+   */
+  async create(params: CreatePaymentSessionParams): Promise<PaymentSession> {
     try {
-      const { data: session, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('payment_sessions')
-        .insert([{
-          ...data,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
+        .insert({
+          booking_id: params.bookingId,
+          user_id: params.userId,
+          amount: params.amount,
+          currency: params.currency,
+          status: 'pending',
+          stripe_session_id: params.stripeSessionId,
+        })
         .select()
         .single();
 
-      if (error) throw error;
-      if (!session) throw new Error('Failed to create payment session');
+      if (error) {
+        logger.error('Error creating payment session:', error);
+        throw handleDatabaseError('Failed to create payment session');
+      }
 
-      logger.info('Created payment session', { sessionId: session.id });
-      return this.mapSession(session);
+      return this.mapPaymentSession(data);
     } catch (error) {
-      logger.error('Failed to create payment session', { error });
-      throw new ApiError(
-        'Failed to create payment session',
-        'DATABASE_ERROR'
-      );
+      logger.error('Error in create payment session:', error);
+      throw handleDatabaseError('Failed to create payment session');
     }
-  }
+  },
 
-  async updateSessionStatus(stripeSessionId: string, status: PaymentSession['status']): Promise<void> {
+  /**
+   * Update payment session status
+   */
+  async updateStatus(stripeSessionId: string, status: PaymentSession['status']): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('payment_sessions')
         .update({
           status,
@@ -51,61 +66,46 @@ export class PaymentSessionRepository {
         })
         .eq('stripe_session_id', stripeSessionId);
 
-      if (error) throw error;
-
-      logger.info('Updated payment session status', { stripeSessionId, status });
+      if (error) {
+        logger.error('Error updating payment session:', error);
+        throw handleDatabaseError('Failed to update payment session');
+      }
     } catch (error) {
-      logger.error('Failed to update payment session', { error });
-      throw new ApiError(
-        'Failed to update payment session',
-        'DATABASE_ERROR'
-      );
+      logger.error('Error in update payment session:', error);
+      throw handleDatabaseError('Failed to update payment session');
     }
-  }
+  },
 
-  async getSessionByStripeId(stripeSessionId: string): Promise<PaymentSession | null> {
+  /**
+   * Get payment session by Stripe session ID
+   */
+  async getByStripeSessionId(stripeSessionId: string): Promise<PaymentSession | null> {
     try {
-      const { data: session, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('payment_sessions')
         .select()
         .eq('stripe_session_id', stripeSessionId)
         .single();
 
-      if (error) throw error;
-      if (!session) return null;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        logger.error('Error fetching payment session:', error);
+        throw handleDatabaseError('Failed to fetch payment session');
+      }
 
-      return this.mapSession(session);
+      return data ? this.mapPaymentSession(data) : null;
     } catch (error) {
-      logger.error('Failed to get payment session', { error });
-      throw new ApiError(
-        'Failed to get payment session',
-        'DATABASE_ERROR'
-      );
+      logger.error('Error in get payment session:', error);
+      throw handleDatabaseError('Failed to fetch payment session');
     }
-  }
+  },
 
-  async getSessionByBookingId(bookingId: string): Promise<PaymentSession | null> {
-    try {
-      const { data: session, error } = await supabase
-        .from('payment_sessions')
-        .select()
-        .eq('booking_id', bookingId)
-        .single();
-
-      if (error) throw error;
-      if (!session) return null;
-
-      return this.mapSession(session);
-    } catch (error) {
-      logger.error('Failed to get payment session', { error });
-      throw new ApiError(
-        'Failed to get payment session',
-        'DATABASE_ERROR'
-      );
-    }
-  }
-
-  private mapSession(data: any): PaymentSession {
+  /**
+   * Map database record to PaymentSession type
+   */
+  private mapPaymentSession(data: any): PaymentSession {
     return {
       id: data.id,
       bookingId: data.booking_id,
@@ -114,8 +114,8 @@ export class PaymentSessionRepository {
       currency: data.currency,
       status: data.status,
       stripeSessionId: data.stripe_session_id,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
     };
   }
-} 
+}; 

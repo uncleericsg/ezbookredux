@@ -1,18 +1,29 @@
-import { ApiResponse, ApiErrorCode } from '../types/api';
+import { ErrorCode } from '@shared/types/error';
 
-export function createApiResponse<T>(data: T, meta?: ApiResponse<T>['meta']): ApiResponse<T> {
-  return {
-    data,
-    meta
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: ErrorCode;
+    message: string;
+    details?: Record<string, unknown>;
   };
 }
 
-export function createApiError(message: string, code: ApiErrorCode, details?: any): ApiResponse<never> {
+export function createApiError(message: string, code: ErrorCode, details?: Record<string, unknown>): ApiResponse<never> {
   return {
+    success: false,
     error: {
-      message,
       code,
+      message,
       details
     }
+  };
+}
+
+export function createApiSuccess<T>(data: T): ApiResponse<T> {
+  return {
+    success: true,
+    data
   };
 } 

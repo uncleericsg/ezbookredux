@@ -2,25 +2,26 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "esModuleInterop": true,
-
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-
+    "jsx": "preserve",
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
     /* Paths */
     "baseUrl": ".",
     "paths": {
@@ -31,15 +32,38 @@
       "@store/*": ["src/store/*"],
       "@services/*": ["src/services/*"],
       "@types/*": ["src/types/*"],
-      "@shared/*": ["shared/*"]
-    }
+      "@shared/*": ["shared/*"],
+      "@config/*": ["config/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+    "allowJs": true,
+    "incremental": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
   "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.server.json" }
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.server.json"
+    },
+    {
+      "path": "./tsconfig.shared.json"
+    }
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

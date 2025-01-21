@@ -1,52 +1,48 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { NotificationTemplatePreview } from '../NotificationTemplatePreview';
-import { Template } from '../../../types/notifications';
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+import { Template } from '../types/templateTypes';
 import { TEST_IDS } from '../constants/templateConstants';
-import { LoadingScreen } from '../../LoadingScreen';
+import NotificationTemplatePreview from '../NotificationTemplatePreview';
 
-// Mock the clipboard API
+// Mock clipboard API
 Object.assign(navigator, {
   clipboard: {
-    writeText: jest.fn(),
-  },
+    writeText: vi.fn()
+  }
 });
 
-// Mock the toast hook
-jest.mock('../../../hooks/useToast', () => ({
+// Mock toast hook
+vi.mock('@hooks/useToast', () => ({
   useToast: () => ({
-    showToast: jest.fn(),
-  }),
+    toast: vi.fn()
+  })
 }));
 
-const mockTemplate: Template = {
-  id: '1',
-  title: 'Welcome Message',
-  message: 'Hello {name}, welcome to {company}!',
-  type: 'email',
-  variables: [
-    { key: 'name', value: '', required: true },
-    { key: 'company', value: '', required: true },
-  ],
-  status: 'active',
-  lastModified: new Date().toISOString(),
-  order: 1,
-  content: '',
-  triggerType: 'manual',
-};
-
-const mockSampleData = {
-  name: 'John',
-  company: 'Acme Inc',
-};
-
 describe('NotificationTemplatePreview', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  const mockTemplate: Template = {
+    id: '1',
+    name: 'Test Template',
+    description: 'Test Description',
+    content: 'Hello {{name}}, your appointment is on {{date}}.',
+    type: 'email',
+    category: 'transactional',
+    userType: 'all',
+    variables: ['name', 'date'],
+    version: '1',
+    lastModified: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: 'test-user',
+    isActive: true
+  };
 
-  it('renders template with substituted variables', () => {
+  const mockSampleData = {
+    name: 'John',
+    date: '2025-01-21'
+  };
+
+  it('renders preview with sample data', () => {
     render(
       <NotificationTemplatePreview
         template={mockTemplate}
@@ -54,23 +50,11 @@ describe('NotificationTemplatePreview', () => {
       />
     );
 
-    expect(screen.getByText('Welcome Message')).toBeInTheDocument();
-    expect(screen.getByText('Hello John, welcome to Acme Inc!')).toBeInTheDocument();
+    const preview = screen.getByTestId(TEST_IDS.messagePreview);
+    expect(preview).toHaveTextContent('Hello John, your appointment is on 2025-01-21.');
   });
 
-  it('shows error when required variables are missing', () => {
-    render(
-      <NotificationTemplatePreview
-        template={mockTemplate}
-        sampleData={{}}
-      />
-    );
-
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/Missing required variables/)).toBeInTheDocument();
-  });
-
-  it('shows character count and type', () => {
+  it('switches between desktop and mobile views', () => {
     render(
       <NotificationTemplatePreview
         template={mockTemplate}
@@ -78,11 +62,17 @@ describe('NotificationTemplatePreview', () => {
       />
     );
 
-    expect(screen.getByText(/characters/)).toBeInTheDocument();
-    expect(screen.getByText('EMAIL')).toBeInTheDocument();
+    const desktopButton = screen.getByTestId(TEST_IDS.desktopPreviewButton);
+    const mobileButton = screen.getByTestId(TEST_IDS.mobilePreviewButton);
+
+    fireEvent.click(mobileButton);
+    expect(screen.getByTestId(TEST_IDS.messagePreview).parentElement).toHaveClass('max-w-sm');
+
+    fireEvent.click(desktopButton);
+    expect(screen.getByTestId(TEST_IDS.messagePreview).parentElement).not.toHaveClass('max-w-sm');
   });
 
-  it('copies message to clipboard when copy button is clicked', async () => {
+  it('copies message to clipboard', async () => {
     render(
       <NotificationTemplatePreview
         template={mockTemplate}
@@ -90,81 +80,71 @@ describe('NotificationTemplatePreview', () => {
       />
     );
 
-    const copyButton = screen.getByRole('button', { name: /copy to clipboard/i });
-    await userEvent.click(copyButton);
+    const copyButton = screen.getByTestId(TEST_IDS.copyButton);
+    fireEvent.click(copyButton);
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'Hello John, welcome to Acme Inc!'
-    );
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'Hello John, your appointment is on 2025-01-21.'
+      );
+    });
   });
 
-  it('renders in mobile preview mode', () => {
-    render(
-      <NotificationTemplatePreview
-        template={mockTemplate}
-        sampleData={mockSampleData}
-        previewMode="mobile"
-      />
-    );
-
-    expect(screen.getByText('Mobile Preview')).toBeInTheDocument();
-  });
-
-  it('renders in desktop preview mode by default', () => {
-    render(
-      <NotificationTemplatePreview
-        template={mockTemplate}
-        sampleData={mockSampleData}
-      />
-    );
-
-    expect(screen.getByText('Desktop Preview')).toBeInTheDocument();
-  });
-
-  it('displays template variables section', () => {
-    render(
-      <NotificationTemplatePreview
-        template={mockTemplate}
-        sampleData={mockSampleData}
-      />
-    );
-
-    expect(screen.getByText('Template Variables')).toBeInTheDocument();
-    expect(screen.getByText('name: John')).toBeInTheDocument();
-    expect(screen.getByText('company: Acme Inc')).toBeInTheDocument();
-  });
-
-  it('shows warning when message exceeds character limit', () => {
-    const longTemplate = {
+  it('shows validation errors for invalid content', () => {
+    const invalidTemplate = {
       ...mockTemplate,
-      type: 'sms',
-      message: 'A'.repeat(161),
+      content: 'Hello {{name}}, your appointment is on {{invalidVar}}.'
     };
 
     render(
       <NotificationTemplatePreview
-        template={longTemplate}
+        template={invalidTemplate}
         sampleData={mockSampleData}
       />
     );
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/exceeds maximum length/)).toBeInTheDocument();
+    expect(screen.getByText(/unprocessed variables/i)).toBeInTheDocument();
   });
 
-  it('shows loading screen while loading', () => {
-    render(<NotificationTemplatePreview isLoading={true} template={null} />);
-    expect(screen.getByTestId('loading-screen')).toBeInTheDocument();
+  it('shows character count', () => {
+    render(
+      <NotificationTemplatePreview
+        template={mockTemplate}
+        sampleData={mockSampleData}
+      />
+    );
+
+    const processedMessage = 'Hello John, your appointment is on 2025-01-21.';
+    expect(screen.getByText(`${processedMessage.length} characters`)).toBeInTheDocument();
   });
 
-  it('renders template content when not loading', () => {
-    const template = {
-      title: 'Test Template',
-      content: 'Test Content',
-      type: 'email'
+  it('renders loading skeleton when isLoading is true', () => {
+    render(
+      <NotificationTemplatePreview
+        template={mockTemplate}
+        sampleData={mockSampleData}
+        isLoading={true}
+      />
+    );
+
+    expect(screen.getByTestId('preview-skeleton')).toBeInTheDocument();
+  });
+
+  it('sanitizes HTML content', () => {
+    const templateWithHtml = {
+      ...mockTemplate,
+      content: '<p>Hello {{name}},</p><script>alert("xss")</script>'
     };
-    render(<NotificationTemplatePreview isLoading={false} template={template} />);
-    expect(screen.getByText('Test Template')).toBeInTheDocument();
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
+
+    render(
+      <NotificationTemplatePreview
+        template={templateWithHtml}
+        sampleData={mockSampleData}
+      />
+    );
+
+    const preview = screen.getByTestId(TEST_IDS.messagePreview);
+    expect(preview).toHaveTextContent('Hello John,');
+    expect(preview.innerHTML).not.toContain('<script>');
   });
 });

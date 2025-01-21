@@ -1,14 +1,44 @@
 import { useState, useCallback, useEffect } from 'react';
-import { generateHolidayGreeting, scheduleHolidayGreetings, fetchHolidayGreetings, updateHolidayGreeting } from '@services/notifications';
-import type { HolidayGreeting } from '@types';
-import type { ChatGPTSettings } from '@types/settings';
+import { 
+  generateHolidayGreeting, 
+  scheduleHolidayGreetings, 
+  fetchHolidayGreetings, 
+  updateHolidayGreeting 
+} from '@/services/notifications';
+import type { Holiday, HolidayGreeting } from '@/types/holiday';
+import type { ChatGPTSettings } from '@/types/settings';
+import { APIError } from '@/utils/apiErrors';
 import { toast } from 'sonner';
 
 interface UseHolidayGreetingsOptions {
   chatGPTSettings?: ChatGPTSettings;
 }
 
-export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) => {
+interface UseHolidayGreetingsResult {
+  holidayGreetings: HolidayGreeting[];
+  loading: boolean;
+  error: string | null;
+  generateGreeting: (
+    holiday: string,
+    date: string,
+    tone?: 'formal' | 'casual',
+    language?: string
+  ) => Promise<string | null>;
+  updateGreeting: (greeting: HolidayGreeting) => Promise<HolidayGreeting>;
+  scheduleGreetings: (
+    greetings: HolidayGreeting[],
+    scheduleTime?: '12h' | '24h' | '48h',
+    options?: {
+      sendTwiceDaily?: boolean;
+      morningTime?: string;
+      eveningTime?: string;
+    }
+  ) => Promise<void>;
+}
+
+export const useHolidayGreetings = (
+  options: UseHolidayGreetingsOptions = {}
+): UseHolidayGreetingsResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [holidayGreetings, setHolidayGreetings] = useState<HolidayGreeting[]>([]);
@@ -23,7 +53,7 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
         setHolidayGreetings(greetings);
         setLastUpdate(new Date());
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load greetings';
+        const message = err instanceof APIError ? err.message : 'Failed to load greetings';
         setError(message);
         toast.error(message);
       } finally {
@@ -39,9 +69,15 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
     date: string,
     tone: 'formal' | 'casual' = 'formal',
     language: string = 'en'
-  ) => {
+  ): Promise<string | null> => {
     if (!options.chatGPTSettings?.enabled) {
-      toast.error('ChatGPT integration is not enabled');
+      const error = new APIError(
+        'CHATGPT_DISABLED',
+        'ChatGPT integration is not enabled',
+        400
+      );
+      setError(error.message);
+      toast.error(error.message);
       return null;
     }
 
@@ -57,22 +93,33 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
       );
       return message;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to generate greeting';
-      setError(message);
-      toast.error(message);
+      const error = err instanceof APIError ? err : new APIError(
+        'GENERATION_ERROR',
+        'Failed to generate greeting',
+        500,
+        { originalError: err }
+      );
+      setError(error.message);
+      toast.error(error.message);
       return null;
     } finally {
       setLoading(false);
     }
   }, [options.chatGPTSettings]);
 
-  const updateGreeting = useCallback(async (greeting: HolidayGreeting) => {
+  const updateGreeting = useCallback(async (
+    greeting: HolidayGreeting
+  ): Promise<HolidayGreeting> => {
     try {
       setLoading(true);
       setError(null);
       
       if (!greeting.message?.trim()) {
-        throw new Error('Greeting message cannot be empty');
+        throw new APIError(
+          'INVALID_MESSAGE',
+          'Greeting message cannot be empty',
+          400
+        );
       }
 
       const updatedGreeting = await updateHolidayGreeting(greeting);
@@ -83,10 +130,15 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
       toast.success('Holiday greeting updated');
       return updatedGreeting;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update greeting';
-      setError(message);
-      toast.error(message);
-      throw err;
+      const error = err instanceof APIError ? err : new APIError(
+        'UPDATE_ERROR',
+        'Failed to update greeting',
+        500,
+        { originalError: err }
+      );
+      setError(error.message);
+      toast.error(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -100,16 +152,22 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
       morningTime?: string;
       eveningTime?: string;
     }
-  ) => {
+  ): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       await scheduleHolidayGreetings(greetings, scheduleTime, options);
       toast.success('Greetings scheduled successfully');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to schedule greetings';
-      setError(message);
-      toast.error(message);
+      const error = err instanceof APIError ? err : new APIError(
+        'SCHEDULE_ERROR',
+        'Failed to schedule greetings',
+        500,
+        { originalError: err }
+      );
+      setError(error.message);
+      toast.error(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -120,6 +178,7 @@ export const useHolidayGreetings = (options: UseHolidayGreetingsOptions = {}) =>
     loading,
     error,
     generateGreeting,
-    updateGreeting
+    updateGreeting,
+    scheduleGreetings
   };
 };

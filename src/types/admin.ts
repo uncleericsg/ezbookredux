@@ -1,35 +1,46 @@
-import { LucideIcon } from 'lucide-react';
+import type { AdminSettings } from './settings';
 
-export interface AdminData {
-  workingHours: {
-    start: string;
-    end: string;
-  };
-  bufferBetweenBookings: number;
-  allowGuestBookings: boolean;
-  showRevenueChart: boolean;
-  settings?: {
-    notifications: boolean;
-    analytics: boolean;
-    autoAssignment: boolean;
-  };
+export interface TopService {
+  name: string;
+  count: number;
 }
 
-export interface AdminTabConfig {
+export interface AnalyticsData {
+  totalBookings: number;
+  completedBookings: number;
+  pendingBookings: number;
+  revenue: number;
+  topServices: TopService[];
+  recentBookings: any[]; // TODO: Replace with proper BookingData type when available
+}
+
+export interface BuildVersion {
   id: string;
-  icon: LucideIcon;
-  label: string;
-  path: string;
+  version: string;
+  timestamp: string;
+  active: boolean;
+  size: number;
+  changelog: string;
 }
 
-export interface AdminState {
-  activeTab: number;
-  collapsed: boolean;
+export interface UserData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  bio: string;
+  joinDate: string;
+  amcStatus: 'active' | 'inactive' | 'pending';
+  role: 'regular' | 'admin' | 'technician';
+  lastServiceDate: string | null;
+  nextServiceDate: string | null;
 }
 
-export interface AdminAction {
-  type: string;
-  payload?: any;
+export interface AdminResponse<T> {
+  data: T;
+  message?: string;
 }
 
-export type AdminTab = string;
+export type AdminSettingsUpdate = Partial<AdminSettings>;
+export type UserUpdate = Partial<Omit<UserData, 'id'>>;

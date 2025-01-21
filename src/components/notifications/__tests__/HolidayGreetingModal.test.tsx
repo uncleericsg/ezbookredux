@@ -1,154 +1,214 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../__test__/test-utils';
-import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+import { toast } from 'sonner';
+import type { Holiday, HolidayGreeting } from '@/types/holiday';
 import HolidayGreetingModal from '../HolidayGreetingModal';
-import { ErrorBoundary } from '@components/error-boundary';
 
-// Mock the error boundary
-vi.mock('@components/error-boundary', () => ({
-  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-// Mock the useGreetingForm hook
-const mockUseGreetingForm = {
-  message: 'Test message',
-  setMessage: vi.fn(),
-  isValid: true,
-  characterCount: 12,
-  errors: [],
-  isLoading: false,
-  isGenerating: false,
-  canUndo: true,
-  canRedo: true,
-  handleSave: vi.fn(),
-  handleGenerateAI: vi.fn(),
-  handleUndo: vi.fn(),
-  handleRedo: vi.fn(),
-  form: {
-    register: vi.fn(() => ({ onChange: vi.fn(), onBlur: vi.fn(), name: 'message' })),
-    handleSubmit: (fn: any) => (e: any) => { e?.preventDefault(); return fn(); },
-    formState: { errors: {} },
-    watch: vi.fn(),
-    setValue: vi.fn(),
-  },
-};
-
-vi.mock('../hooks/useGreetingForm', () => ({
-  useGreetingForm: vi.fn(() => mockUseGreetingForm),
-}));
-
-// Mock the useModalAccessibility hook
-vi.mock('../hooks/useModalAccessibility', () => ({
-  useModalAccessibility: () => ({
-    modalRef: { current: null },
-  }),
-}));
-
-// Mock the formatDate function
-vi.mock('../utils/holidayGreetings', () => ({
-  formatDate: vi.fn(() => 'Monday, January 1, 2024'),
+// Mock toast
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn()
+  }
 }));
 
 describe('HolidayGreetingModal', () => {
-  const mockHoliday = {
-    id: '1',
-    holiday: 'New Year',
-    date: '2024-01-01',
+  const mockHoliday: Holiday = {
+    id: '2025-01-01',
+    name: 'New Year',
+    date: '2025-01-01',
+    type: 'public',
+    description: 'New Year celebration'
   };
 
-  const defaultProps = {
-    holiday: mockHoliday,
-    isOpen: true,
-    onClose: vi.fn(),
-    onSave: vi.fn(),
-    aiEnabled: true,
-    onGenerateAI: vi.fn(),
+  const mockGreeting: HolidayGreeting = {
+    id: '2025-01-01',
+    holiday: 'New Year',
+    date: '2025-01-01',
+    message: 'Happy New Year!',
+    enabled: true,
+    sendTime: '2025-01-01T09:00:00Z'
   };
+
+  const mockOnClose = vi.fn();
+  const mockOnSave = vi.fn();
+  const mockOnGenerateMessage = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseGreetingForm.message = 'Test message';
-    mockUseGreetingForm.isValid = true;
-    mockUseGreetingForm.characterCount = 12;
-    mockUseGreetingForm.errors = [];
-    mockUseGreetingForm.isLoading = false;
   });
 
-  it('renders correctly when open', () => {
-    render(<HolidayGreetingModal {...defaultProps} />);
-    
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('New Year')).toBeInTheDocument();
-    expect(screen.getByText('Monday, January 1, 2024')).toBeInTheDocument();
-    expect(screen.getByLabelText(/greeting message/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter your holiday greeting message/i)).toBeInTheDocument();
+  it('renders with default values', () => {
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+      />
+    );
+
+    expect(screen.getByText('New Year Greeting')).toBeInTheDocument();
+    expect(screen.getByText(/Create or edit the greeting message/)).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveValue('');
+    expect(screen.getByRole('switch')).toBeChecked();
   });
 
-  it('does not render when closed', () => {
-    render(<HolidayGreetingModal {...defaultProps} isOpen={false} />);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  it('renders with existing greeting', () => {
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        existingGreeting={mockGreeting}
+      />
+    );
+
+    expect(screen.getByRole('textbox')).toHaveValue('Happy New Year!');
+    expect(screen.getByRole('switch')).toBeChecked();
   });
 
-  it('handles close button click', async () => {
-    render(<HolidayGreetingModal {...defaultProps} />);
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    await userEvent.click(closeButton);
-    expect(defaultProps.onClose).toHaveBeenCalled();
+  it('handles message generation', async () => {
+    mockOnGenerateMessage.mockResolvedValueOnce('Generated greeting message');
+
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        onGenerateMessage={mockOnGenerateMessage}
+      />
+    );
+
+    const generateButton = screen.getByRole('button', { name: /Generate/i });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox')).toHaveValue('Generated greeting message');
+    });
+
+    expect(mockOnGenerateMessage).toHaveBeenCalledWith(mockHoliday);
+    expect(toast.success).toHaveBeenCalledWith('Message generated successfully');
   });
 
-  it('shows AI generation button when aiEnabled is true', () => {
-    render(<HolidayGreetingModal {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /generate with ai/i })).toBeInTheDocument();
+  it('handles message generation error', async () => {
+    mockOnGenerateMessage.mockRejectedValueOnce(new Error('Generation failed'));
+
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        onGenerateMessage={mockOnGenerateMessage}
+      />
+    );
+
+    const generateButton = screen.getByRole('button', { name: /Generate/i });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to generate message')).toBeInTheDocument();
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to generate message');
   });
 
-  it('hides AI generation button when aiEnabled is false', () => {
-    render(<HolidayGreetingModal {...defaultProps} aiEnabled={false} />);
-    expect(screen.queryByRole('button', { name: /generate with ai/i })).not.toBeInTheDocument();
+  it('handles save action', async () => {
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+      />
+    );
+
+    const messageInput = screen.getByRole('textbox');
+    fireEvent.change(messageInput, { target: { value: 'Test message' } });
+
+    const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockOnSave).toHaveBeenCalledWith({
+        id: mockHoliday.date,
+        holiday: mockHoliday.name,
+        date: mockHoliday.date,
+        message: 'Test message',
+        enabled: true,
+        sendTime: expect.any(String)
+      });
+    });
+
+    expect(toast.success).toHaveBeenCalledWith('Holiday greeting saved successfully');
+    expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('displays character count', () => {
-    mockUseGreetingForm.message = 'Hello';
-    mockUseGreetingForm.characterCount = 5;
+  it('handles save error', async () => {
+    mockOnSave.mockRejectedValueOnce(new Error('Save failed'));
 
-    render(<HolidayGreetingModal {...defaultProps} />);
-    expect(screen.getByText(/5\/500/)).toBeInTheDocument();
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+      />
+    );
+
+    const messageInput = screen.getByRole('textbox');
+    fireEvent.change(messageInput, { target: { value: 'Test message' } });
+
+    const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to save greeting')).toBeInTheDocument();
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to save greeting');
+    expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  it('displays undo/redo buttons', () => {
-    render(<HolidayGreetingModal {...defaultProps} />);
-    
-    expect(screen.getByRole('button', { name: /undo/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /redo/i })).toBeInTheDocument();
+  it('validates empty message', async () => {
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+      />
+    );
+
+    const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Message cannot be empty')).toBeInTheDocument();
+    });
+
+    expect(mockOnSave).not.toHaveBeenCalled();
+    expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  it('handles form submission', async () => {
-    mockUseGreetingForm.handleSave.mockResolvedValueOnce(undefined);
+  it('closes modal on cancel', () => {
+    render(
+      <HolidayGreetingModal
+        holiday={mockHoliday}
+        isOpen={true}
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+      />
+    );
 
-    render(<HolidayGreetingModal {...defaultProps} />);
-    
-    const submitButton = screen.getByRole('button', { name: /save/i });
-    await userEvent.click(submitButton);
-    
-    expect(mockUseGreetingForm.handleSave).toHaveBeenCalled();
-  });
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelButton);
 
-  it('displays loading state during save', () => {
-    mockUseGreetingForm.isLoading = true;
-
-    render(<HolidayGreetingModal {...defaultProps} />);
-    
-    const saveButton = screen.getByRole('button', { name: /saving\.\.\./i });
-    expect(saveButton).toBeInTheDocument();
-    expect(saveButton).toBeDisabled();
-  });
-
-  it('displays validation errors', () => {
-    mockUseGreetingForm.errors = ['Message is required'];
-    mockUseGreetingForm.isValid = false;
-
-    render(<HolidayGreetingModal {...defaultProps} />);
-    
-    expect(screen.getByText('Message is required')).toBeInTheDocument();
+    expect(mockOnClose).toHaveBeenCalled();
   });
 });

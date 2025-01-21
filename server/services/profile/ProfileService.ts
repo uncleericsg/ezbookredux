@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@server/config/supabase/client';
 import { ApiError } from '@server/utils/apiErrors';
 import { logger } from '@server/utils/logger';
-import type {
+import {
   Profile,
   UpdateProfileRequest,
   ProfileService as IProfileService,
@@ -9,29 +9,28 @@ import type {
 } from '@shared/types/profile';
 import { StorageClient } from '@supabase/storage-js';
 
-interface DatabaseProfile {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  phone?: string;
-  avatar_url?: string;
-  company_name?: string;
-  company_role?: string;
+interface DatabaseProfile extends Omit<Profile, 'preferences'> {
   preferences: string;
-  created_at: string;
-  updated_at: string;
 }
 
-interface DatabaseUpdateRequest {
-  first_name?: string;
-  last_name?: string;
-  phone?: string;
-  avatar_url?: string;
-  company_name?: string;
-  company_role?: string;
-  preferences?: string;
+interface DatabaseUpdateRequest extends Omit<UpdateProfileRequest, 'preferences'> {
   updated_at?: string;
+  preferences?: string;
+}
+
+function validateDatabaseProfile(profile: any): profile is DatabaseProfile {
+  return profile &&
+    typeof profile.id === 'string' &&
+    typeof profile.email === 'string' &&
+    (profile.first_name === undefined || typeof profile.first_name === 'string') &&
+    (profile.last_name === undefined || typeof profile.last_name === 'string') &&
+    (profile.phone === undefined || typeof profile.phone === 'string') &&
+    (profile.avatar_url === undefined || typeof profile.avatar_url === 'string') &&
+    (profile.company_name === undefined || typeof profile.company_name === 'string') &&
+    (profile.company_role === undefined || typeof profile.company_role === 'string') &&
+    typeof profile.preferences === 'string' &&
+    typeof profile.created_at === 'string' &&
+    typeof profile.updated_at === 'string';
 }
 
 export class ProfileService implements IProfileService {

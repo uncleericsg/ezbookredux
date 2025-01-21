@@ -1,36 +1,38 @@
-import * as React from 'react';
-import { cn } from '@utils/cn';
+import React, { forwardRef } from 'react';
+import { BaseProps } from './types';
 
-export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  error?: string | boolean;
+interface TextareaProps extends BaseProps {
+  id?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  rows?: number;
 }
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, error, ...props }, ref) => {
-    return (
-      <div className="relative w-full">
-        <textarea
-          className={cn(
-            'flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-colors',
-            'placeholder:text-gray-400',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'border-red-500 focus-visible:ring-red-500',
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        {typeof error === 'string' && error && (
-          <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-            {error}
-          </span>
-        )}
-      </div>
-    );
-  }
-);
-Textarea.displayName = 'Textarea';
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
+  className = '',
+  id,
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+  rows = 4,
+  ...props
+}, ref) => {
+  return (
+    <textarea
+      ref={ref}
+      id={id}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      rows={rows}
+      className={`flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      {...props}
+    />
+  );
+});
 
-export { Textarea };
+Textarea.displayName = 'Textarea';

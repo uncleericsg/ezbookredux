@@ -1,53 +1,56 @@
+import { z } from 'zod';
+import { TEMPLATE_TYPES } from '../constants/templateConstants';
+
+export type TemplateType = typeof TEMPLATE_TYPES[keyof typeof TEMPLATE_TYPES];
+
 export interface PreviewData {
-  [key: string]: string | number | boolean;
-}
-
-export interface UtmParams {
-  utmSource: string;
-  utmMedium: string;
-  utmCampaign: string;
-}
-
-export interface CharacterCount {
-  current: number;
-  limit: number;
-  remaining: number;
-  isOverLimit: boolean;
+  [key: string]: string;
 }
 
 export interface PreviewConfig {
   mode: 'desktop' | 'mobile';
   sampleData: PreviewData;
   characterLimit: number;
-  utmParams: UtmParams;
+  utmParams?: {
+    utmSource: string;
+    utmMedium: string;
+    utmCampaign: string;
+  };
 }
 
-export interface MessageTemplate {
-  id: string;
-  name: string;
+export const previewConfigSchema = z.object({
+  mode: z.enum(['desktop', 'mobile']),
+  sampleData: z.record(z.string()),
+  characterLimit: z.number().min(1),
+  utmParams: z.object({
+    utmSource: z.string(),
+    utmMedium: z.string(),
+    utmCampaign: z.string()
+  }).optional()
+});
+
+export interface MessageValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export const messageValidationSchema = z.object({
+  isValid: z.boolean(),
+  errors: z.array(z.string()),
+  warnings: z.array(z.string())
+});
+
+export interface ProcessedMessage {
   content: string;
-  type: 'sms' | 'email' | 'whatsapp';
-  characterLimit: number;
+  characterCount: number;
+  variables: string[];
+  validation: MessageValidation;
 }
 
-export interface MessageFeatures {
-  readonly _enhanced?: boolean;
-  validation?: {
-    isValid: boolean;
-    errors: string[];
-    warnings: string[];
-  };
-  analytics?: {
-    impressions: number;
-    clicks: number;
-    conversions: number;
-  };
-}
-
-export const MESSAGE_LIMITS = {
-  sms: 160,
-  whatsapp: 1000,
-  email: 5000
-} as const;
-
-export type MessageType = keyof typeof MESSAGE_LIMITS;
+export const processedMessageSchema = z.object({
+  content: z.string(),
+  characterCount: z.number(),
+  variables: z.array(z.string()),
+  validation: messageValidationSchema
+});

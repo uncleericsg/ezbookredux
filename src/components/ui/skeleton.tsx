@@ -1,15 +1,12 @@
-import { FC } from 'react';
-import { cn } from '@/utils/cn';
+import React from 'react';
+import { BaseProps } from './types';
 
-interface SkeletonProps {
-  className?: string;
-}
-
-export const Skeleton: FC<SkeletonProps> = ({ className }) => {
+export const Skeleton: React.FC<BaseProps> = ({ 
+  className = '' 
+}) => {
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-gray-200 dark:bg-gray-700', className)}
+      className={`animate-pulse rounded-md bg-gray-200 ${className}`}
     />
   );
 };
-

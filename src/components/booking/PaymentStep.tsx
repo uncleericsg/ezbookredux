@@ -1,181 +1,332 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { ImSpinner8 } from 'react-icons/im';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { motion } from 'framer-motion';
-
-// Types
-import type { PaymentStatus, PaymentError } from '@shared/types/payment';
-import type { BookingData, PaymentStepProps } from '../../types/booking-flow';
-import type { ApiError } from '@/types/error';
+import { FiCreditCard } from 'react-icons/fi';
+import { ImSpinner8 } from 'react-icons/im';
+import { HiHeart } from 'react-icons/hi2';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 // Components
 import { BookingSummary } from '@components/booking/BookingSummary';
+import { BookingConfirmation } from '@components/booking/BookingConfirmation';
+import EnhancedErrorBoundary from '@components/EnhancedErrorBoundary';
 
-// Utils
-import { cn } from '@utils/cn';
-import { logger } from '@utils/logger';
+// Redux
+import { useAppDispatch, useAppSelector } from '@store/hooks';
+import { setError, setPaymentStatus } from '@store/slices/userSlice';
+import { setCurrentBooking, updateBooking } from '@store/slices/bookingSlice';
 
-interface PaymentState {
-  status: 'idle' | 'loading' | 'success' | 'error';
-  error: PaymentError | null;
-}
+// Types
+import type {
+  PaymentStepProps,
+  PaymentStepContentProps,
+  PaymentState,
+  PaymentStatus,
+  PAYMENT_STATES
+} from '@shared/types/payment';
 
+// Services
+import { getStripe } from '@services/stripe';
+import { createPaymentIntent, addToServiceQueue } from '@services/paymentService';
+import { createBooking } from '@services/supabaseBookingService';
+import { getServiceByAppointmentType } from '@services/serviceUtils';
+
+const initialPaymentState: PaymentState = {
+  status: PAYMENT_STATES.INITIALIZING,
+  clientSecret: null,
+  error: null,
+  tipAmount: 0
+};
+
+const logPaymentEvent = (event: string, data?: unknown) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[PaymentStep ${timestamp}] ${event}`, data ? data : '');
+};
+
+const calculateTotalAmount = (baseAmount: number, tipAmount = 0): number => {
+  return baseAmount + tipAmount;
+};
+
+// Main Payment Step Component
 const PaymentStep: React.FC<PaymentStepProps> = ({
   bookingData,
   onComplete,
   onBack,
-}) => {
+}: PaymentStepProps) => {
   const navigate = useNavigate();
-  const [state, setState] = useState<PaymentState>({
-    status: 'idle',
-    error: null
-  });
+  const dispatch = useAppDispatch();
+  const { currentUser, error: userError } = useAppSelector((state) => state.user);
+  const { currentBooking } = useAppSelector((state) => state.booking);
 
-  // Enhanced logging for debugging
-  const logPaymentEvent = (event: string, data?: any) => {
-    const timestamp = new Date().toISOString();
-    const deviceInfo = {
-      type: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-      userAgent: navigator.userAgent,
-      viewport: {
-        width: window.innerWidth,
-        height: window.innerHeight
-      },
-      online: navigator.onLine
-    };
+  // Clear any existing errors on mount
+  useEffect(() => {
+    if (userError) {
+      logPaymentEvent('Clearing existing user error');
+      dispatch(setError(null));
+    }
+  }, [dispatch, userError]);
 
-    logger.info(`[PaymentStep ${timestamp}] ${event}`, {
-      ...data,
-      device: deviceInfo
+  // Ensure booking data is in Redux store
+  useEffect(() => {
+    if (bookingData && (!currentBooking || currentBooking.id !== bookingData.bookingId)) {
+      logPaymentEvent('Setting current booking in Redux', bookingData);
+      dispatch(setCurrentBooking({
+        id: bookingData.bookingId,
+        serviceType: bookingData.selectedService?.title || '',
+        date: bookingData.scheduledDateTime ? format(bookingData.scheduledDateTime, 'PP') : '',
+        time: bookingData.scheduledTimeSlot || '',
+        status: 'Pending',
+        amount: bookingData.selectedService?.price || 0,
+        customerInfo: bookingData.customerInfo || null
+      }));
+    }
+  }, [bookingData, currentBooking, dispatch]);
+
+  // State management
+  const [isLoading, setIsLoading] = useState(false);
+  const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
+  const [stripePromise] = useState(getStripe);
+
+  // Component mount logging
+  useEffect(() => {
+    logPaymentEvent('Component mounted', {
+      hasClientSecret: !!paymentState.clientSecret,
+      bookingId: bookingData?.bookingId,
+      serviceId: bookingData?.selectedService?.id,
+      price: bookingData?.selectedService?.price,
+      status: paymentState.status
     });
-  };
 
-  const initiateCheckout = async () => {
-    if (!bookingData.serviceId || !bookingData.customerInfo) {
-      toast.error('Missing required booking information');
+    return () => {
+      logPaymentEvent('Component unmounting');
+    };
+  }, []);
+
+  // Prevent duplicate payment intents
+  const paymentInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (paymentState.clientSecret || paymentInitializedRef.current) {
+      logPaymentEvent('Payment intent exists or initialization in progress', {
+        hasClientSecret: !!paymentState.clientSecret,
+        isInitialized: paymentInitializedRef.current
+      });
       return;
     }
 
-    setState({ ...state, status: 'loading' });
+    if (!bookingData?.selectedService?.id || !bookingData?.bookingId) {
+      logPaymentEvent('Missing required booking data', {
+        serviceId: bookingData?.selectedService?.id,
+        bookingId: bookingData?.bookingId
+      });
+      return;
+    }
+
+    const initializePayment = async () => {
+      try {
+        paymentInitializedRef.current = true;
+        setIsLoading(true);
+
+        // Get service details
+        const serviceDetails = await getServiceByAppointmentType(bookingData.selectedService.id);
+        if (!serviceDetails) {
+          throw new Error('Service not found');
+        }
+
+        // Create or get booking
+        const bookingRef = await createBooking({
+          ...bookingData,
+          serviceId: serviceDetails.id,
+          userId: currentUser?.id
+        });
+
+        if (!bookingRef) {
+          throw new Error('Failed to create booking');
+        }
+
+        // Create payment intent
+        const { clientSecret } = await createPaymentIntent({
+          bookingId: bookingRef.id,
+          serviceId: serviceDetails.id,
+          amount: bookingData.selectedService.price,
+          customerEmail: bookingData.customerInfo?.email || '',
+          metadata: {
+            bookingId: bookingRef.id,
+            serviceId: serviceDetails.id
+          }
+        });
+
+        setPaymentState(prev => ({
+          ...prev,
+          status: PAYMENT_STATES.READY,
+          clientSecret
+        }));
+
+        logPaymentEvent('Payment initialized', {
+          bookingId: bookingRef.id,
+          serviceId: serviceDetails.id
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment';
+        logPaymentEvent('Payment initialization failed', { error: errorMessage });
+        setPaymentState(prev => ({
+          ...prev,
+          status: PAYMENT_STATES.FAILED,
+          error: errorMessage
+        }));
+        toast.error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializePayment();
+  }, [bookingData, currentUser, paymentState.clientSecret]);
+
+  const handlePaymentSuccess = useCallback((reference: string) => {
+    logPaymentEvent('Payment successful', { reference });
+    dispatch(setPaymentStatus('succeeded'));
+    onComplete(reference);
+  }, [dispatch, onComplete]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <ImSpinner8 className="w-8 h-8 animate-spin text-primary" />
+        <p className="mt-4 text-gray-600">Initializing payment...</p>
+      </div>
+    );
+  }
+
+  if (paymentState.error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="text-red-500 mb-4">
+          <span className="text-lg">Payment initialization failed</span>
+        </div>
+        <p className="text-gray-600 mb-6">{paymentState.error}</p>
+        <button
+          onClick={onBack}
+          className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  if (!paymentState.clientSecret) {
+    return null;
+  }
+
+  return (
+    <Elements stripe={stripePromise} options={{ clientSecret: paymentState.clientSecret }}>
+      <EnhancedErrorBoundary>
+        <PaymentStepContent
+          bookingData={bookingData}
+          paymentState={paymentState}
+          setPaymentState={setPaymentState}
+          onBack={onBack}
+          onSuccess={handlePaymentSuccess}
+        />
+      </EnhancedErrorBoundary>
+    </Elements>
+  );
+};
+
+const PaymentStepContent: React.FC<PaymentStepContentProps> = ({
+  bookingData,
+  paymentState,
+  setPaymentState,
+  onBack,
+  onSuccess
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      console.error('Stripe.js has not loaded');
+      return;
+    }
+
+    setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/payments/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId: bookingData.serviceId,
-          amount: bookingData.servicePrice,
-          currency: 'sgd',
-          customerEmail: bookingData.customerInfo.email,
-          successUrl: `${window.location.origin}/bookings/${bookingData.serviceId}/success`,
-          cancelUrl: `${window.location.origin}/bookings/${bookingData.serviceId}/cancel`
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to initiate checkout');
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        throw submitError;
       }
 
-      const { checkoutUrl } = await response.json();
-      logPaymentEvent('Redirecting to Stripe Checkout', { checkoutUrl });
-      window.location.href = checkoutUrl;
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
-      const errorMetadata = {
-        bookingId: bookingData.serviceId,
-        serviceId: bookingData.serviceId,
-        customerEmail: bookingData.customerInfo?.email,
-        error: error instanceof Error ? error : undefined
-      };
-      
-      logPaymentEvent('Checkout Error', errorMetadata);
-      
-      setState({
-        status: 'error',
-        error: {
-          code: 'PAYMENT_FAILED',
-          message: errorMessage
-        }
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required'
       });
-      toast.error('Unable to process payment. Please try again.');
+
+      if (confirmError) {
+        throw confirmError;
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        await addToServiceQueue(bookingData.bookingId);
+        onSuccess(paymentIntent.id);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Payment failed';
+      setPaymentState(prev => ({
+        ...prev,
+        status: PAYMENT_STATES.FAILED,
+        error: errorMessage
+      }));
+      toast.error(errorMessage);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <BookingSummary
-        data={{
-          service_title: bookingData.serviceTitle,
-          service_price: bookingData.servicePrice,
-          service_duration: String(bookingData.serviceDuration),
-          customer_info: {
-            first_name: bookingData.customerInfo.firstName,
-            last_name: bookingData.customerInfo.lastName,
-            email: bookingData.customerInfo.email,
-            mobile: bookingData.customerInfo.phone,
-            floor_unit: bookingData.customerInfo.address.floorUnit || '',
-            block_street: bookingData.customerInfo.address.blockStreet,
-            postal_code: bookingData.customerInfo.address.postalCode,
-            condo_name: bookingData.customerInfo.address.condoName || undefined,
-            lobby_tower: bookingData.customerInfo.address.lobbyTower || undefined,
-            special_instructions: bookingData.customerInfo.specialInstructions || undefined
-          },
-          scheduled_datetime: new Date(bookingData.date),
-          scheduled_timeslot: bookingData.time,
-          total_amount: bookingData.servicePrice,
-          tip_amount: 0 // Tip handling moved to Stripe Checkout
-        }}
-      />
+    <div className="max-w-3xl mx-auto">
+      <BookingSummary bookingData={bookingData} />
+      
+      <form onSubmit={handleSubmit} className="mt-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <PaymentElement />
+        </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center space-y-4"
-      >
-        <button
-          onClick={initiateCheckout}
-          disabled={state.status === 'loading'}
-          className={cn(
-            "w-full max-w-md px-6 py-3 text-lg font-semibold text-white",
-            "bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            "transition-colors duration-200",
-            "flex items-center justify-center space-x-2"
-          )}
-        >
-          {state.status === 'loading' ? (
-            <>
-              <ImSpinner8 className="animate-spin" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <span>Proceed to Payment</span>
-          )}
-        </button>
+        <div className="mt-6 flex justify-between items-center">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isProcessing}
+            className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
+          >
+            Back
+          </button>
 
-        <button
-          onClick={onBack}
-          disabled={state.status === 'loading'}
-          className={cn(
-            "px-6 py-2 text-gray-600 hover:text-gray-800",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            "transition-colors duration-200"
-          )}
-        >
-          Back
-        </button>
-
-        {state.error && (
-          <div className="w-full max-w-md p-4 bg-red-50 text-red-600 rounded-lg">
-            <p>{state.error.message}</p>
-          </div>
-        )}
-      </motion.div>
+          <button
+            type="submit"
+            disabled={!stripe || isProcessing}
+            className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center"
+          >
+            {isProcessing ? (
+              <>
+                <ImSpinner8 className="w-4 h-4 animate-spin mr-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <FiCreditCard className="w-4 h-4 mr-2" />
+                Pay Now
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -1,33 +1,22 @@
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@utils/cn';
+import React from 'react';
+import { BadgeProps } from './types';
 
-const badgeVariants = cva(
-  'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset',
-  {
-    variants: {
-      variant: {
-        default: 'bg-gray-50 text-gray-600 ring-gray-500/10',
-        primary: 'bg-blue-50 text-blue-700 ring-blue-700/10',
-        success: 'bg-green-50 text-green-700 ring-green-600/20',
-        warning: 'bg-yellow-50 text-yellow-800 ring-yellow-600/20',
-        destructive: 'bg-red-50 text-red-700 ring-red-600/10',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+export const Badge: React.FC<BadgeProps> = ({
+  children,
+  className = '',
+  variant = 'default'
+}) => {
+  const baseStyles = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
+  
+  const variantStyles = {
+    default: 'bg-primary text-primary-foreground hover:bg-primary/80',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/80'
+  };
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div className={`${baseStyles} ${variantStyles[variant]} ${className}`}>
+      {children}
+    </div>
   );
-}
-
-export { Badge, badgeVariants };
+};
