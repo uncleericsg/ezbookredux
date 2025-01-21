@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import type { ReactElement, ReactNode, KeyboardEvent } from 'react';
+import { useCallback } from 'react';
 import { useForm } from './context';
 import { FormError } from './Form';
 import type { ValidationRule } from './context';
@@ -8,7 +9,7 @@ export interface RadioOption<V> {
   value: V;
   description?: string;
   disabled?: boolean;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }
 
 export interface RadioFieldProps<T extends Record<string, unknown>, V> {

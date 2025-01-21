@@ -1,5 +1,6 @@
 'use client';
 
+import type { FC } from 'react';
 import {
   Bell,
   Calendar,
@@ -8,16 +9,14 @@ import {
   Info,
   MessageSquare
 } from 'lucide-react';
-import React from 'react';
 
 export interface NotificationIconProps {
-  count?: number;
-  onClick?: () => void;
+  type?: 'default' | 'success' | 'error' | 'info' | 'calendar' | 'message';
+  size?: number;
   className?: string;
 }
 
-NotificationIcon.displayName = 'NotificationIcon';
-const NotificationIcon: React.FC<NotificationIconProps> = ({
+export const NotificationIcon: FC<NotificationIconProps> = ({
   type = 'default',
   size = 24,
   className = ''
@@ -71,5 +70,4 @@ const getIconColorClass = (type: NotificationIconProps['type']): string => {
   }
 };
 
-export { NotificationIcon };
-undefined.displayName = 'undefined';
+NotificationIcon.displayName = 'NotificationIcon';

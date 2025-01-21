@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -19,7 +20,7 @@ const sizeMap = {
  * @deprecated Use the Spinner component from @/components/ui/spinner instead.
  * This component will be removed in a future release.
  */
-export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
+export const LoadingSpinner: FC<LoadingSpinnerProps> = ({ size = 'md', className = '' }) => {
   console.warn('LoadingSpinner is deprecated. Use Spinner from @/components/ui/spinner instead.');
   return (
     <div className="flex min-h-[100px] items-center justify-center">
@@ -28,13 +29,13 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
       />
     </div>
   );
-}
+};
 
 /**
  * @deprecated Use the Spinner component from @/components/ui/spinner instead.
  * This component will be removed in a future release.
  */
-export function FullPageLoader() {
+export const FullPageLoader: FC = () => {
   console.warn('FullPageLoader is deprecated. Use Spinner from @/components/ui/spinner instead.');
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
@@ -44,4 +45,4 @@ export function FullPageLoader() {
       </div>
     </div>
   );
-}
+};

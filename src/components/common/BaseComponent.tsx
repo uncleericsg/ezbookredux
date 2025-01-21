@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ReactNode, CSSProperties } from 'react';
-import { mergeClassNames, ensureString } from '@/types/exactOptional';
 import type { ExactOptionalPropertyTypes } from '@/types/exactOptional';
+import { mergeClassNames, ensureString } from '@/utils/classNames';
 
 // Base component props that all components should extend
 export interface BaseProps {

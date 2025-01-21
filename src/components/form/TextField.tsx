@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import type { ReactElement, InputHTMLAttributes, ChangeEvent } from 'react';
+import { useCallback } from 'react';
 import { useForm } from './context';
 import { FormError } from './Form';
 import type { ValidationRule } from './context';
@@ -41,7 +42,7 @@ export interface TextFieldProps<T extends Record<string, unknown>> {
   showError?: boolean;
   
   /** Additional props for the input element */
-  inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+  inputProps?: InputHTMLAttributes<HTMLInputElement>;
 }
 
 export function TextField<T extends Record<string, unknown>>({

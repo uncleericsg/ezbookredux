@@ -1,14 +1,18 @@
-import { AppError } from '@shared/types/error';
+import type { AppError } from '@shared/types/error';
+import { BaseError } from '@shared/types/error';
 
 export function handleError(error: unknown): AppError {
-  if (error instanceof AppError) {
+  if (error instanceof BaseError) {
     return error;
   }
-  return new AppError('SERVICE_UNAVAILABLE', error instanceof Error ? error.message : String(error));
+  return new BaseError(
+    error instanceof Error ? error.message : String(error),
+    'INTERNAL_ERROR'
+  );
 }
 
 export function isAppError(error: unknown): error is AppError {
-  return error instanceof AppError;
+  return error instanceof BaseError;
 }
 
 export function getErrorMessage(error: unknown): string {

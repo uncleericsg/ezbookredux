@@ -2,7 +2,7 @@ import type { Profile, UpdateProfileRequest } from '../types/profile';
 import { createApiError } from '../utils/error';
 import type { ErrorCode } from '@shared/types/error';
 
-const INTERNAL_ERROR: ErrorCode = 'INTERNAL_SERVER_ERROR';
+const INTERNAL_ERROR: ErrorCode = 'INTERNAL_ERROR';
 
 export const fetchProfile = async (userId: string): Promise<Profile> => {
   try {

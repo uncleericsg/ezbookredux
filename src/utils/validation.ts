@@ -12,6 +12,11 @@ interface ServiceData {
   isPremium?: boolean;
 }
 
+type ValidationResult = {
+  isValid: boolean;
+  message?: string;
+};
+
 /**
  * Validates service data
  */
@@ -52,29 +57,44 @@ export const isValidPaymentStatus = (status: unknown): status is PaymentStatus =
 };
 
 /**
- * Validates postal code format (6 digits)
+ * Validates postal code format
  */
-export const isValidPostalCode = (code: string): boolean => {
-  return /^\d{6}$/.test(code);
+export const isValidPostalCode = (code: string): ValidationResult => {
+  const postalCodeRegex = /^\d{6}$/;
+  return {
+    isValid: postalCodeRegex.test(code),
+    message: postalCodeRegex.test(code) ? undefined : 'Invalid postal code format'
+  };
 };
 
 /**
- * Validates mobile number format (8 digits)
+ * Validates mobile number format
  */
-export const isValidMobileNumber = (number: string): boolean => {
-  return /^\d{8}$/.test(number);
+export const isValidMobileNumber = (number: string): ValidationResult => {
+  const mobileRegex = /^(\+65|65)?[689]\d{7}$/;
+  return {
+    isValid: mobileRegex.test(number),
+    message: mobileRegex.test(number) ? undefined : 'Invalid mobile number format'
+  };
 };
 
 /**
  * Validates email format
  */
-export const isValidEmail = (email: string): boolean => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+export const isValidEmail = (email: string): ValidationResult => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return {
+    isValid: emailRegex.test(email),
+    message: emailRegex.test(email) ? undefined : 'Invalid email format'
+  };
 };
 
 /**
- * Validates amount (non-negative number)
+ * Validates amount
  */
-export const isValidAmount = (amount: number): boolean => {
-  return !isNaN(amount) && amount >= 0;
+export const isValidAmount = (amount: number): ValidationResult => {
+  return {
+    isValid: amount >= 0 && Number.isFinite(amount),
+    message: amount >= 0 && Number.isFinite(amount) ? undefined : 'Invalid amount'
+  };
 };

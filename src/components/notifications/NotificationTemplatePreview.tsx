@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import type { FC, ReactNode } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Copy, AlertCircle, Smartphone, Monitor, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@hooks/useToast';
@@ -16,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface TemplatePreviewProps {
   template: Template;
   sampleData?: PreviewData;
-  children?: React.ReactNode;
+  children?: ReactNode;
   className?: string;
   isLoading?: boolean;
 }
@@ -24,7 +25,7 @@ interface TemplatePreviewProps {
 const previewAdapter = new PreviewAdapter();
 const validationAdapter = new ValidationAdapter();
 
-const NotificationTemplatePreview: React.FC<TemplatePreviewProps> = ({
+const NotificationTemplatePreview: FC<TemplatePreviewProps> = ({
   template,
   sampleData = {},
   children,

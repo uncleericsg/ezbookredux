@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { useCallback, useMemo } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -34,7 +35,7 @@ interface BaseNotificationProps<T extends Record<string, unknown>> {
 type NotificationTemplateProps<T extends Record<string, unknown>> = 
   ExactOptionalPropertyTypes<BaseNotificationProps<T>>;
 
-const typeToIcon: Record<NotificationType, React.ReactNode> = {
+const typeToIcon: Record<NotificationType, ReactNode> = {
   success: <CheckCircle className="h-5 w-5 text-green-500" />,
   error: <XCircle className="h-5 w-5 text-red-500" />,
   warning: <AlertCircle className="h-5 w-5 text-yellow-500" />,
@@ -67,7 +68,7 @@ export function NotificationTemplate<T extends Record<string, unknown>>({
   template,
   data,
   onClose
-}: NotificationTemplateProps<T>): React.ReactElement {
+}: NotificationTemplateProps<T>): ReactElement {
   const content = useMemo(() => 
     interpolateTemplate(template, data),
     [template, data]
@@ -137,7 +138,7 @@ export function BookingNotification({
   template,
   data,
   onClose
-}: NotificationTemplateProps<BookingNotificationData>): React.ReactElement {
+}: NotificationTemplateProps<BookingNotificationData>): ReactElement {
   return (
     <NotificationTemplate<BookingNotificationData>
       template={{
@@ -154,7 +155,7 @@ export function PaymentNotification({
   template,
   data,
   onClose
-}: NotificationTemplateProps<PaymentNotificationData>): React.ReactElement {
+}: NotificationTemplateProps<PaymentNotificationData>): ReactElement {
   return (
     <NotificationTemplate<PaymentNotificationData>
       template={{
@@ -171,7 +172,7 @@ export function ServiceNotification({
   template,
   data,
   onClose
-}: NotificationTemplateProps<ServiceNotificationData>): React.ReactElement {
+}: NotificationTemplateProps<ServiceNotificationData>): ReactElement {
   return (
     <NotificationTemplate<ServiceNotificationData>
       template={{

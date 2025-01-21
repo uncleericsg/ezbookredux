@@ -1,7 +1,8 @@
-import React from 'react';
-import type { ServiceError } from '../../../types/api';
-import type { ValidationError } from '../../../shared/types/error';
-import { FormProvider, type FormContextValue, type ValidationRule } from './context';
+import type { ReactElement, ReactNode, ButtonHTMLAttributes, MouseEvent } from 'react';
+import type { ServiceError } from '@/types/api';
+import type { ValidationError } from '@shared/types/error';
+import { FormProvider } from './context';
+import type { FormContextValue, ValidationRule } from './context';
 
 export interface FormProps<T extends Record<string, unknown>> {
   /** Initial form values */
@@ -19,7 +20,7 @@ export interface FormProps<T extends Record<string, unknown>> {
   };
   
   /** Form children (fields, buttons, etc.) */
-  children: React.ReactNode | ((form: FormContextValue<T>) => React.ReactNode);
+  children: ReactNode | ((form: FormContextValue<T>) => ReactNode);
   
   /** Additional class names */
   className?: string;

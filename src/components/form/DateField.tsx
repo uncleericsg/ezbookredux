@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import type { ReactElement, ChangeEvent } from 'react';
+import { useCallback } from 'react';
 import { useForm } from './context';
 import { FormError } from './Form';
 import type { ValidationRule } from './context';

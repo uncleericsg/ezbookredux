@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { FiInfo } from 'react-icons/fi';
 
 interface PaymentSummaryProps {
@@ -7,7 +7,7 @@ interface PaymentSummaryProps {
   totalAmount: number;
 }
 
-export const PaymentSummary: React.FC<PaymentSummaryProps> = ({
+export const PaymentSummary: FC<PaymentSummaryProps> = ({
   serviceAmount,
   tipAmount,
   totalAmount,

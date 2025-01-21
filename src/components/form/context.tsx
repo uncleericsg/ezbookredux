@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import type { ValidationError } from '../../../shared/types/error';
-import type { ServiceError } from '../../../types/api';
+import type { ReactElement, FormEvent } from 'react';
+import { createContext, useContext, useReducer, useCallback } from 'react';
+import type { ValidationError } from '@shared/types/error';
+import type { ServiceError } from '@/types/api';
 
 // Form field validation rule
 export interface ValidationRule {

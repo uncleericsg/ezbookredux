@@ -4,6 +4,9 @@ import { BaseError } from '@shared/types/error';
 import { supabaseClient } from '@/config/supabase/client';
 import { createApiError } from '@/utils/error';
 
+const DATABASE_ERROR = 'DATABASE_ERROR';
+const NOT_FOUND = 'NOT_FOUND';
+
 export const createBooking = async (data: CreateBookingInput): Promise<Booking> => {
   try {
     const { data: booking, error } = await supabaseClient
@@ -13,14 +16,14 @@ export const createBooking = async (data: CreateBookingInput): Promise<Booking> 
       .single();
 
     if (error) throw error;
-    if (!booking) throw createApiError('Failed to create booking', 'DATABASE_ERROR');
+    if (!booking) throw createApiError('Failed to create booking', DATABASE_ERROR);
 
     return booking;
   } catch (error) {
     if (error instanceof BaseError) {
       throw error;
     }
-    throw createApiError('Failed to create booking', 'DATABASE_ERROR');
+    throw createApiError('Failed to create booking', DATABASE_ERROR);
   }
 };
 
@@ -33,14 +36,14 @@ export const getBooking = async (id: string): Promise<Booking> => {
       .single();
 
     if (error) throw error;
-    if (!booking) throw createApiError('Booking not found', 'NOT_FOUND');
+    if (!booking) throw createApiError('Booking not found', NOT_FOUND);
 
     return booking;
   } catch (error) {
     if (error instanceof BaseError) {
       throw error;
     }
-    throw createApiError('Failed to fetch booking', 'DATABASE_ERROR');
+    throw createApiError('Failed to fetch booking', DATABASE_ERROR);
   }
 };
 
@@ -54,14 +57,14 @@ export const updateBooking = async (id: string, data: Partial<Booking>): Promise
       .single();
 
     if (error) throw error;
-    if (!booking) throw createApiError('Booking not found', 'NOT_FOUND');
+    if (!booking) throw createApiError('Booking not found', NOT_FOUND);
 
     return booking;
   } catch (error) {
     if (error instanceof BaseError) {
       throw error;
     }
-    throw createApiError('Failed to update booking', 'DATABASE_ERROR');
+    throw createApiError('Failed to update booking', DATABASE_ERROR);
   }
 };
 
@@ -77,6 +80,6 @@ export const deleteBooking = async (id: string): Promise<void> => {
     if (error instanceof BaseError) {
       throw error;
     }
-    throw createApiError('Failed to delete booking', 'DATABASE_ERROR');
+    throw createApiError('Failed to delete booking', DATABASE_ERROR);
   }
 };

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { FC } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Save, Eye, Copy, History, Tag } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,13 +8,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DOMPurify from 'dompurify';
 import debounce from 'lodash/debounce';
-import {
+import type {
   Template,
-  templateSchema,
   TemplateType,
   TemplateCategory
 } from './types/templateTypes';
-import { EnhancedTemplate, isEnhancedTemplate } from './adapters/types';
+import { templateSchema } from './types/templateTypes';
+import type { EnhancedTemplate } from './adapters/types';
+import { isEnhancedTemplate } from './adapters/types';
 import { extractVariables, createAutosave } from './utils/templateUtils';
 import { ErrorBoundary } from '@/components/error-boundary';
 import {
@@ -40,7 +42,7 @@ interface EditorProps {
 
 const AUTOSAVE_DELAY = 1000;
 
-const NotificationTemplateEditor: React.FC<EditorProps> = ({
+const NotificationTemplateEditor: FC<EditorProps> = ({
   template: initialTemplate,
   onSave,
   onPreview,

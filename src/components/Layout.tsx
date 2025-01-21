@@ -28,18 +28,19 @@
  * }
  */
 
-import React from 'react';
+import type { FC } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { ROUTES_WITHOUT_NAVBAR, ROUTES } from '@config/routes';
+import { useAnnouncements } from '@hooks/useAnnouncements';
 import Navbar from '@components/Navbar';
 import Footer from '@components/Footer';
 import Announcement from '@components/Announcement';
 import AppInstallPrompt from '@components/AppInstallPrompt';
-import { useAnnouncements } from '@hooks/useAnnouncements';
-import { ROUTES_WITHOUT_NAVBAR, ROUTES } from '@config/routes';
+
 type AppRoute = typeof ROUTES[keyof typeof ROUTES];
 type NavbarExcludedRoute = typeof ROUTES_WITHOUT_NAVBAR[number];
 
-const Layout: React.FC = () => {
+const Layout: FC = () => {
   const { announcements, dismissAnnouncement } = useAnnouncements();
   const currentAnnouncement = announcements[0];
   const location = useLocation();

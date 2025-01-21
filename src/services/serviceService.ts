@@ -2,6 +2,7 @@ import { supabaseClient } from '@/config/supabase/client';
 import { handleDatabaseError } from '@/utils/apiErrors';
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '@/types/service';
 import { mapServiceToDatabase } from '@/types/service';
+import type { DatabaseError } from '@shared/types/error';
 
 export const serviceService = {
   async createService(data: CreateServiceRequest): Promise<Service> {

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import type { FC, KeyboardEvent, ChangeEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface OTPInputProps {
   length?: number;
@@ -7,7 +8,7 @@ interface OTPInputProps {
   isLoading?: boolean;
 }
 
-export const OTPInput: React.FC<OTPInputProps> = ({ 
+export const OTPInput: FC<OTPInputProps> = ({ 
   length = 6, 
   onComplete, 
   error, 
@@ -23,13 +24,13 @@ export const OTPInput: React.FC<OTPInputProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSubmit(otp);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, length);
     setOtp(value);
     if (value.length === length) {

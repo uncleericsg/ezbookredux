@@ -1,10 +1,12 @@
+import type { ErrorCode } from '@shared/types/error';
+
 export class APIError extends Error {
-  code: string;
+  code: ErrorCode;
   statusCode: number;
   details?: Record<string, unknown>;
 
   constructor(
-    code: string,
+    code: ErrorCode,
     message: string,
     statusCode: number,
     details?: Record<string, unknown>
@@ -23,7 +25,7 @@ export const handleValidationError = (error: unknown): APIError => {
   return new APIError(
     'VALIDATION_ERROR',
     error instanceof Error ? error.message : 'Validation failed',
-    400,
+    422,
     { originalError: error }
   );
 };
@@ -47,7 +49,7 @@ export const handleNotFoundError = (resource: string): APIError => {
 
 export const handleConfigurationError = (error: unknown): APIError => {
   return new APIError(
-    'CONFIGURATION_ERROR',
+    'INTERNAL_ERROR',
     error instanceof Error ? error.message : 'Configuration error',
     500,
     { originalError: error }

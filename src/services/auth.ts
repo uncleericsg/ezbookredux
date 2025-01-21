@@ -8,11 +8,11 @@ import { supabaseClient } from '@/config/supabase/client';
 import type { AsyncServiceResponse, ServiceResponse } from '../../types/api';
 import { BaseService } from './base';
 import { 
-  BaseError,
   ValidationFailedError,
   AuthenticationError,
   DatabaseOperationError
 } from '../../shared/types/error';
+import type { BaseError } from '../../shared/types/error';
 import { convertSupabaseUser } from '../../shared/types/supabase-bridge';
 import type { SupabaseUser } from '../../shared/types/supabase-bridge';
 
@@ -59,17 +59,22 @@ export class AuthService extends BaseService {
         }]);
       }
 
-      // Send OTP
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        phone: phoneNumber
-      });
+      // Implementation
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithOtp({
+          phone: phoneNumber
+        });
 
-      if (error) {
-        throw new AuthenticationError(error.message);
+        if (error) {
+          throw new AuthenticationError(error.message);
+        }
+
+        return data;
+      } catch (error) {
+        logger.error('OTP send error:', error);
+        throw error;
       }
-
-      return 'OTP sent successfully';
-    }, { path: 'auth/sendOTP' });
+    });
   }
 
   async verifyOTP(payload: OTPVerificationPayload): Promise<ServiceResponse<User>> {

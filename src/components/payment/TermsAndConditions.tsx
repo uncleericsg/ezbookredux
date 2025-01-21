@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 
 interface TermsAndConditionsProps {
@@ -6,7 +6,7 @@ interface TermsAndConditionsProps {
   onAcceptChange: (accepted: boolean) => void;
 }
 
-export const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({
+export const TermsAndConditions: FC<TermsAndConditionsProps> = ({
   isAccepted,
   onAcceptChange,
 }) => {

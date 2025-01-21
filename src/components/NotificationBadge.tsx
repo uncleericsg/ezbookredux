@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 
 interface NotificationBadgeProps {
   count: number;
@@ -6,7 +6,7 @@ interface NotificationBadgeProps {
   className?: string;
 }
 
-const NotificationBadge: React.FC<NotificationBadgeProps> = ({ count, onClick, className = '' }) => {
+const NotificationBadge: FC<NotificationBadgeProps> = ({ count, onClick, className = '' }) => {
   if (count === 0) return null;
 
   return (

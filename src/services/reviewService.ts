@@ -1,100 +1,50 @@
 import { supabaseClient } from '@server/config/supabase/client';
-import { Review, CreateReviewRequest, GetReviewResponse } from '../types/review';
-import { createApiError } from '../utils/apiResponse';
+import type { Review, CreateReviewRequest, GetReviewResponse } from '../types/review';
+import { createApiError } from '../utils/error';
+import type { ErrorCode } from '@shared/types/error';
 
-export class ReviewService {
-  async createReview(userId: string, data: CreateReviewRequest): Promise<Review> {
-    try {
-      // Verify booking exists and belongs to user
-      const { data: booking, error: bookingError } = await supabaseClient
-        .from('bookings')
-        .select('id, status')
-        .eq('id', data.booking_id)
-        .eq('user_id', userId)
-        .single();
+const SERVER_ERROR: ErrorCode = 'INTERNAL_ERROR';
 
-      if (bookingError || !booking) {
-        throw createApiError('Booking not found', 'NOT_FOUND');
-      }
+export const createReview = async (data: CreateReviewRequest): Promise<Review> => {
+  try {
+    const { data: review, error } = await supabaseClient
+      .from('reviews')
+      .insert(data)
+      .select()
+      .single();
 
-      if (booking.status !== 'completed') {
-        throw createApiError('Cannot review incomplete booking', 'VALIDATION_ERROR');
-      }
-
-      // Check if review already exists
-      const { data: existingReview } = await supabaseClient
-        .from('reviews')
-        .select()
-        .eq('booking_id', data.booking_id)
-        .single();
-
-      if (existingReview) {
-        throw createApiError('Review already exists', 'VALIDATION_ERROR');
-      }
-
-      // Create review
-      const { data: review, error } = await supabaseClient
-        .from('reviews')
-        .insert({
-          booking_id: data.booking_id,
-          user_id: userId,
-          rating: data.rating,
-          comment: data.comment || null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!review) throw new Error('Failed to create review');
-
-      return review;
-    } catch (error) {
-      console.error('Review creation error:', error);
-      throw createApiError('Failed to create review', 'SERVER_ERROR');
+    if (error) {
+      throw error;
     }
-  }
 
-  async getReview(id: string): Promise<GetReviewResponse> {
-    try {
-      const { data: review, error } = await supabaseClient
-        .from('reviews')
-        .select(`
-          *,
-          customer:profiles(id, full_name),
-          booking:bookings(
-            id,
-            service:services(
-              id,
-              title
-            )
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      if (!review) throw createApiError('Review not found', 'NOT_FOUND');
-
-      return {
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        created_at: review.created_at,
-        customer: {
-          id: review.customer.id,
-          name: review.customer.full_name
-        },
-        booking: {
-          id: review.booking.id,
-          service: {
-            id: review.booking.service.id,
-            title: review.booking.service.title
-          }
-        }
-      };
-    } catch (error) {
-      console.error('Get review error:', error);
-      throw createApiError('Failed to fetch review', 'SERVER_ERROR');
+    if (!review) {
+      throw createApiError('Failed to create review', SERVER_ERROR);
     }
+
+    return review;
+  } catch (error) {
+    throw createApiError('Failed to create review', SERVER_ERROR);
   }
-} 
+};
+
+export const getReview = async (id: string): Promise<GetReviewResponse> => {
+  try {
+    const { data: review, error } = await supabaseClient
+      .from('reviews')
+      .select()
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!review) {
+      throw createApiError('Review not found', 'NOT_FOUND');
+    }
+
+    return review;
+  } catch (error) {
+    throw createApiError('Failed to fetch review', SERVER_ERROR);
+  }
+}; 

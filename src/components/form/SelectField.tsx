@@ -1,4 +1,5 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import type { ReactElement, ReactNode, KeyboardEvent, MouseEvent } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { useForm } from './context';
 import { FormError } from './Form';
 import type { ValidationRule } from './context';
@@ -8,7 +9,7 @@ export interface SelectOption<V> {
   value: V;
   disabled?: boolean;
   description?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }
 
 export interface SelectFieldProps<T extends Record<string, unknown>, V> {

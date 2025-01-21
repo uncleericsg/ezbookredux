@@ -1,7 +1,7 @@
-import React from 'react';
-import { SpinnerProps } from './types';
+import type { FC } from 'react';
+import type { SpinnerProps } from './types';
 
-export const Spinner: React.FC<SpinnerProps> = ({
+export const Spinner: FC<SpinnerProps> = ({
   className = '',
   size = 'md'
 }) => {

@@ -1,4 +1,5 @@
-import React from 'react';
+import type { FC, FormEvent } from 'react';
+import { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { toast } from 'react-hot-toast';
 import { FiCreditCard, FiLock } from 'react-icons/fi';
@@ -11,7 +12,7 @@ interface PaymentFormProps {
   onError: (error: any) => void;
 }
 
-export const PaymentForm: React.FC<PaymentFormProps> = ({
+export const PaymentForm: FC<PaymentFormProps> = ({
   clientSecret,
   onComplete,
   amount,
@@ -19,14 +20,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [isProcessing, setIsProcessing] = React.useState(false);
-  const [isElementReady, setIsElementReady] = React.useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isElementReady, setIsElementReady] = useState(false);
 
   if (!stripe || !elements) {
     return null;
   }
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!stripe || !elements || !isElementReady) {

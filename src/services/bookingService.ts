@@ -15,6 +15,7 @@ import {
   DatabaseOperationError,
   NotFoundError
 } from '../../shared/types/error';
+import type { ValidationError } from '../../shared/types/error';
 
 export class BookingService extends BaseService {
   private validateBookingData(data: Partial<CreateBookingInput>): void {
@@ -48,14 +49,11 @@ export class BookingService extends BaseService {
         .single();
 
       if (error) {
-        throw new DatabaseOperationError(
-          'create_booking',
-          { code: error.code }
-        );
+        throw new DatabaseOperationError('create', { error });
       }
 
       if (!booking) {
-        throw new DatabaseOperationError('create_booking');
+        throw new DatabaseOperationError('create', { message: 'No booking returned after creation' });
       }
 
       return booking;

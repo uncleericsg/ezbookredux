@@ -48,7 +48,23 @@ export type ErrorCode =
   | 'EXTERNAL_API_ERROR'
   | 'INTEGRATION_ERROR'
   | 'TIMEOUT_ERROR'
-  | 'CONNECTION_ERROR';
+  | 'CONNECTION_ERROR'
+  
+  // Admin errors
+  | 'FETCH_ADMIN_SETTINGS_ERROR'
+  | 'UPDATE_ADMIN_SETTINGS_ERROR'
+  | 'UPDATE_BRANDING_ERROR'
+  | 'RESET_ADMIN_SETTINGS_ERROR'
+  
+  // Google Maps errors
+  | 'GOOGLE_MAPS_API_KEY_MISSING'
+  | 'GOOGLE_MAPS_LOAD_ERROR'
+  
+  // Notification errors
+  | 'FETCH_GREETINGS_ERROR'
+  | 'UPDATE_GREETING_ERROR'
+  | 'GENERATE_GREETING_ERROR'
+  | 'SCHEDULE_GREETINGS_ERROR';
 
 export interface DatabaseError {
   code: ErrorCode;

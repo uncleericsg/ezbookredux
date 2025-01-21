@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import type { FC } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, User, Shield, Settings, LogOut, LogIn } from 'lucide-react';
 import NotificationBadge from './NotificationBadge';
 import GuestNotificationModal from './GuestNotificationModal';
 import LoginModal from './LoginModal';
-import { useAppDispatch, useAppSelector, type RootState } from '../store';
+import { useAppDispatch, useAppSelector } from '../store';
+import type { RootState } from '../store';
 import { setUser } from '../store/slices/userSlice';
 import { clearAuth, setAuthenticated, setToken } from '../store/slices/authSlice';
 import { resetAdmin } from '../store/slices/adminSlice';
@@ -13,7 +15,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { RESET_STORE } from '../store';
 
-const Navbar: React.FC = () => {
+const Navbar: FC = () => {
   const { currentUser } = useAppSelector((state: RootState) => state.user);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();

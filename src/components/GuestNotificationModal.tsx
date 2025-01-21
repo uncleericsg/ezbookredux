@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Bell, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ interface GuestNotificationModalProps {
   onClose: () => void;
 }
 
-const GuestNotificationModal: React.FC<GuestNotificationModalProps> = ({
+const GuestNotificationModal: FC<GuestNotificationModalProps> = ({
   isOpen,
   onClose
 }) => {

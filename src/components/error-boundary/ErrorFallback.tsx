@@ -1,11 +1,11 @@
-import React from 'react';
+import type { FC } from 'react';
 import styles from './ErrorFallback.module.css';
 
 interface Props {
   error: Error;
 }
 
-export const ErrorFallback: React.FC<Props> = ({ error }) => {
+export const ErrorFallback: FC<Props> = ({ error }) => {
   return (
     <div className={styles.container}>
       <h2>Something went wrong</h2>

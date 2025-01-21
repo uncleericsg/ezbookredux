@@ -2,8 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type {
   User,
-  UserState,
-  AuthState
+  UserState
 } from '../../types/user';
 import { authenticate, signOut } from '../../services/auth';
 
