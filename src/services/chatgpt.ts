@@ -2,8 +2,12 @@ import axios from 'axios';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import type { ChatGPTSettings, ChatGPTResponse } from '@/types/chatgpt';
-import { APIError } from '@/utils/apiErrors';
-import { ServiceResponse, AsyncServiceResponse, createServiceHandler } from '@/types/api';
+import type { AsyncServiceResponse, ServiceResponse } from '../../types/api';
+import { BaseService } from './base';
+import { 
+  ValidationFailedError,
+  BaseError
+} from '../../shared/types/error';
 
 // Validation schemas
 const responseSchema = z.object({
@@ -34,11 +38,12 @@ interface RateLimiter {
 
 const API_ENDPOINT = import.meta.env.VITE_CHATGPT_API_ENDPOINT || '/api/chatgpt';
 
-class ChatGPTClient {
-  private static instance: ChatGPTClient;
+class ChatGPTService extends BaseService {
+  private static instance: ChatGPTService;
   private rateLimiter: RateLimiter;
 
   private constructor() {
+    super();
     this.rateLimiter = {
       tokens: 50,
       lastRefill: Date.now(),
@@ -47,23 +52,23 @@ class ChatGPTClient {
     };
   }
 
-  public static getInstance(): ChatGPTClient {
-    if (!ChatGPTClient.instance) {
-      ChatGPTClient.instance = new ChatGPTClient();
+  public static getInstance(): ChatGPTService {
+    if (!ChatGPTService.instance) {
+      ChatGPTService.instance = new ChatGPTService();
     }
-    return ChatGPTClient.instance;
+    return ChatGPTService.instance;
   }
 
   private async validateSettings(settings: ChatGPTSettings): Promise<void> {
     try {
       await settingsSchema.parseAsync(settings);
     } catch (error) {
-      throw new APIError(
-        'INVALID_SETTINGS',
-        'Invalid ChatGPT settings',
-        400,
-        { error }
-      );
+      throw new ValidationFailedError([{
+        field: 'settings',
+        message: 'Invalid ChatGPT settings',
+        type: 'validation',
+        code: 'VALIDATION_ERROR'
+      }]);
     }
   }
 
@@ -88,137 +93,120 @@ class ChatGPTClient {
     return true;
   }
 
-  public async generateResponse(
+  private async generateResponse(
     prompt: string,
     settings: ChatGPTSettings
-  ): AsyncServiceResponse<string> {
-    const serviceHandler = createServiceHandler<string>();
+  ): Promise<string> {
+    await this.validateSettings(settings);
 
-    return serviceHandler(async () => {
-      await this.validateSettings(settings);
+    if (!settings.enabled) {
+      throw new BaseError(
+        'ChatGPT integration is not enabled',
+        'VALIDATION_ERROR'
+      );
+    }
 
-      if (!settings.enabled) {
-        throw new APIError(
-          'SERVICE_DISABLED',
-          'ChatGPT integration is not enabled',
-          400
-        );
+    if (!(await this.checkRateLimit())) {
+      throw new BaseError(
+        'Rate limit exceeded. Please try again later.',
+        'INTERNAL_ERROR'
+      );
+    }
+
+    try {
+      const response = await this.withRetry(
+        async () => {
+          const result = await axios.post<ChatGPTResponse>(
+            `${API_ENDPOINT}/generate`,
+            {
+              prompt,
+              model: settings.model,
+              maxTokens: settings.maxTokens,
+              temperature: settings.temperature
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${settings.apiKey}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          return responseSchema.parse(result.data);
+        },
+        3,
+        1000
+      );
+
+      return response.text;
+    } catch (err) {
+      const error = err as Error;
+      const axiosError = err as { response?: { status?: number; data?: unknown } };
+      
+      throw new BaseError(
+        error.message || 'ChatGPT API request failed',
+        'INTERNAL_ERROR',
+        { error: axiosError.response?.data }
+      );
+    }
+  }
+
+  async generateHolidayGreeting(
+    holiday: string,
+    date: string,
+    settings: ChatGPTSettings,
+    tone: 'formal' | 'casual' = 'formal',
+    language: string = 'en'
+  ): Promise<ServiceResponse<string>> {
+    return this.handleRequest(async () => {
+      if (import.meta.env.DEV) {
+        return `Happy ${holiday}! Our office will be closed on ${date}. For emergencies, please contact 9187 4498.`;
       }
 
-      if (!(await this.checkRateLimit())) {
-        throw new APIError(
-          'RATE_LIMIT_EXCEEDED',
-          'Rate limit exceeded. Please try again later.',
-          429
-        );
-      }
+      const prompt = `Generate a ${tone} holiday greeting message for ${holiday} on ${date}.
+        The message should:
+        - Be ${tone} and professional
+        - Mention office closure
+        - Include emergency contact: 9187 4498
+        - Be concise (2-3 sentences)
+        ${language !== 'en' ? `- Provide translation in ${language}` : ''}`;
 
       try {
-        const response = await axios.post<ChatGPTResponse>(
-          `${API_ENDPOINT}/generate`,
-          {
-            prompt,
-            model: settings.model,
-            maxTokens: settings.maxTokens,
-            temperature: settings.temperature
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${settings.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        const validatedResponse = responseSchema.parse(response.data);
-        return validatedResponse.text;
-      } catch (err) {
-        const error = err as Error;
-        const axiosError = err as { response?: { status?: number; data?: unknown } };
-        
-        throw new APIError(
-          'API_ERROR',
-          error.message || 'ChatGPT API request failed',
-          axiosError.response?.status || 500,
-          { error: axiosError.response?.data }
-        );
+        const response = await this.generateResponse(prompt, settings);
+        return response;
+      } catch (error) {
+        toast.error('Failed to generate greeting message');
+        throw error;
       }
-    });
+    }, { path: 'chatgpt/holiday-greeting' });
+  }
+
+  async generateRatingResponse(
+    rating: number,
+    feedback: string,
+    settings: ChatGPTSettings
+  ): Promise<ServiceResponse<string>> {
+    return this.handleRequest(async () => {
+      if (import.meta.env.DEV) {
+        return `Thank you for your ${rating}-star rating! We're glad you enjoyed our service.`;
+      }
+
+      const prompt = `Generate a personalized response to a ${rating}-star rating with the following feedback: "${feedback}".
+        The response should:
+        - Be grateful and professional
+        - Address specific points in their feedback
+        - If rating is 4-5 stars, encourage them to share on Google
+        - Be concise (2-3 sentences)`;
+
+      try {
+        const response = await this.generateResponse(prompt, settings);
+        return response;
+      } catch (error) {
+        toast.error('Failed to generate response');
+        throw error;
+      }
+    }, { path: 'chatgpt/rating-response' });
   }
 }
 
-const chatGPTClient = ChatGPTClient.getInstance();
-
-const generateHolidayGreeting = async (
-  holiday: string,
-  date: string,
-  settings: ChatGPTSettings,
-  tone: 'formal' | 'casual' = 'formal',
-  language: string = 'en'
-): AsyncServiceResponse<string> => {
-  const serviceHandler = createServiceHandler<string>();
-
-  return serviceHandler(async () => {
-    if (import.meta.env.DEV) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return `Happy ${holiday}! Our office will be closed on ${date}. For emergencies, please contact 9187 4498.`;
-    }
-
-    const prompt = `Generate a ${tone} holiday greeting message for ${holiday} on ${date}.
-      The message should:
-      - Be ${tone} and professional
-      - Mention office closure
-      - Include emergency contact: 9187 4498
-      - Be concise (2-3 sentences)
-      ${language !== 'en' ? `- Provide translation in ${language}` : ''}`;
-
-    const response = await chatGPTClient.generateResponse(prompt, settings);
-    if (response.status === 'error' || !response.data) {
-      toast.error('Failed to generate greeting message');
-      throw response.error || new APIError(
-        'GENERATION_ERROR',
-        'Failed to generate greeting message',
-        500
-      );
-    }
-    return response.data;
-  });
-};
-
-const generateRatingResponse = async (
-  rating: number,
-  feedback: string,
-  settings: ChatGPTSettings
-): AsyncServiceResponse<string> => {
-  const serviceHandler = createServiceHandler<string>();
-
-  return serviceHandler(async () => {
-    if (import.meta.env.DEV) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return `Thank you for your ${rating}-star rating! We're glad you enjoyed our service.`;
-    }
-
-    const prompt = `Generate a personalized response to a ${rating}-star rating with the following feedback: "${feedback}".
-      The response should:
-      - Be grateful and professional
-      - Address specific points in their feedback
-      - If rating is 4-5 stars, encourage them to share on Google
-      - Be concise (2-3 sentences)`;
-
-    const response = await chatGPTClient.generateResponse(prompt, settings);
-    if (response.status === 'error' || !response.data) {
-      toast.error('Failed to generate response');
-      throw response.error || new APIError(
-        'GENERATION_ERROR',
-        'Failed to generate rating response',
-        500
-      );
-    }
-    return response.data;
-  });
-};
-
-export const chatGPTService = {
-  generateHolidayGreeting,
-  generateRatingResponse
-};
+// Create singleton instance
+export const chatGPTService = ChatGPTService.getInstance();

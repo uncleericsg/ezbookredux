@@ -1,72 +1,167 @@
-import { useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { fetchNotifications, markNotificationAsRead } from '../services/notifications';
-import type { Notification } from '../types/notification';
-import { useAppSelector } from '../store';
+import { useReducer, useCallback } from 'react';
+import type {
+  NotificationState,
+  NotificationAction,
+  NotificationData,
+  NotificationTemplate,
+  NotificationStatus,
+  BookingNotificationData,
+  PaymentNotificationData,
+  ServiceNotificationData
+} from '@/types/notification';
 
-/**
- * Hook to manage user notifications
- */
-export const useNotifications = () => {
-  const user = useAppSelector(state => state.user.currentUser);
-  const queryClient = useQueryClient();
+type NotificationDataType = 
+  | BookingNotificationData 
+  | PaymentNotificationData 
+  | ServiceNotificationData;
 
-  // Fetch notifications
-  const { data: notificationsResponse, isLoading } = useQuery({
-    queryKey: ['notifications', user?.id],
-    queryFn: () => fetchNotifications(user?.id || ''),
-    enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+const initialState: NotificationState = {
+  templates: [],
+  notifications: [],
+  loading: false,
+  error: null
+};
 
-  // Mark notification as read mutation
-  const markAsReadMutation = useMutation({
-    mutationFn: markNotificationAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['notifications', user?.id]
-      });
-    },
-    onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark notification as read';
-      toast.error(errorMessage);
-    }
-  });
+function notificationReducer(
+  state: NotificationState,
+  action: NotificationAction
+): NotificationState {
+  switch (action.type) {
+    case 'ADD_NOTIFICATION':
+      return {
+        ...state,
+        notifications: [...state.notifications, action.payload]
+      };
 
-  // Handle marking notification as read
-  const handleMarkAsRead = useCallback((notificationId: string) => {
-    if (!user?.id) return;
-    void markAsReadMutation.mutate(notificationId);
-  }, [user?.id, markAsReadMutation]);
+    case 'REMOVE_NOTIFICATION':
+      return {
+        ...state,
+        notifications: state.notifications.filter(
+          notification => notification.id !== action.payload
+        )
+      };
 
-  // Calculate unread count
-  const unreadCount = useMemo(() => {
-    return notificationsResponse?.data?.filter((notification: Notification) => !notification.read).length || 0;
-  }, [notificationsResponse?.data]);
+    case 'UPDATE_STATUS':
+      return {
+        ...state,
+        notifications: state.notifications.map(notification =>
+          notification.id === action.payload.id
+            ? { ...notification, status: action.payload.status }
+            : notification
+        )
+      };
 
-  // Sort notifications by priority, read status, and date
-  const sortedNotifications = useMemo(() => {
-    const notifications = notificationsResponse?.data || [];
-    return [...notifications].sort((a: Notification, b: Notification) => {
-      // First sort by priority
-      if (a.priority === 'high' && b.priority !== 'high') return -1;
-      if (a.priority !== 'high' && b.priority === 'high') return 1;
-      
-      // Then sort by read status
-      if (!a.read && b.read) return -1;
-      if (a.read && !b.read) return 1;
-      
-      // Finally sort by date
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload
+      };
+
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload
+      };
+
+    case 'CLEAR_ALL':
+      return {
+        ...state,
+        notifications: [],
+        error: null
+      };
+
+    default:
+      return state;
+  }
+}
+
+export function useNotifications() {
+  const [state, dispatch] = useReducer(notificationReducer, initialState);
+
+  const addNotification = useCallback((notification: NotificationData) => {
+    dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
+  }, []);
+
+  const updateStatus = useCallback((id: string, status: NotificationStatus) => {
+    dispatch({
+      type: 'UPDATE_STATUS',
+      payload: { id, status }
     });
-  }, [notificationsResponse?.data]);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    dispatch({ type: 'CLEAR_ALL' });
+  }, []);
+
+  const setError = useCallback((error: string | null) => {
+    dispatch({ type: 'SET_ERROR', payload: error });
+  }, []);
+
+  const setLoading = useCallback((loading: boolean) => {
+    dispatch({ type: 'SET_LOADING', payload: loading });
+  }, []);
+
+  // Helper function to create a notification with proper typing
+  const createNotification = useCallback(<T extends NotificationDataType>(
+    template: NotificationTemplate<T>,
+    data: T,
+    status: NotificationStatus = 'queued'
+  ): NotificationData => {
+    return {
+      id: `notification-${Date.now()}`,
+      templateId: template.id,
+      type: template.type,
+      status,
+      data,
+      createdAt: new Date().toISOString()
+    };
+  }, []);
+
+  // Type-safe notification creators
+  const createBookingNotification = useCallback((
+    template: NotificationTemplate<BookingNotificationData>,
+    data: BookingNotificationData
+  ) => {
+    return createNotification<BookingNotificationData>(template, data);
+  }, [createNotification]);
+
+  const createPaymentNotification = useCallback((
+    template: NotificationTemplate<PaymentNotificationData>,
+    data: PaymentNotificationData
+  ) => {
+    return createNotification<PaymentNotificationData>(template, data);
+  }, [createNotification]);
+
+  const createServiceNotification = useCallback((
+    template: NotificationTemplate<ServiceNotificationData>,
+    data: ServiceNotificationData
+  ) => {
+    return createNotification<ServiceNotificationData>(template, data);
+  }, [createNotification]);
 
   return {
-    notifications: sortedNotifications,
-    unreadCount,
-    isLoading,
-    markAsRead: handleMarkAsRead,
-    error: notificationsResponse?.error
+    ...state,
+    addNotification,
+    removeNotification,
+    updateStatus,
+    clearAll,
+    setError,
+    setLoading,
+    createNotification,
+    createBookingNotification,
+    createPaymentNotification,
+    createServiceNotification
   };
-};
+}
+
+// Type guard to check if a notification is of a specific type
+export function isNotificationType<T extends NotificationDataType>(
+  notification: NotificationData,
+  type: NotificationTemplate<T>['type']
+): notification is NotificationData & { data: T } {
+  return notification.type === type;
+}

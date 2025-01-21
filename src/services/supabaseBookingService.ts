@@ -1,147 +1,82 @@
+import type { Booking, CreateBookingInput } from '@shared/types/booking';
+import type { AppError } from '@shared/types/error';
+import { BaseError } from '@shared/types/error';
 import { supabaseClient } from '@/config/supabase/client';
-import { logger } from '@/lib/logger';
-import type { Booking, CreateBookingRequest } from '@shared/types/booking';
-import { AppError } from '@shared/types/error';
-import { handleDatabaseError, handleValidationError, handleNotFoundError } from '@/utils/apiErrors';
+import { createApiError } from '@/utils/error';
 
-export class SupabaseBookingService {
-  async createBooking(booking: CreateBookingRequest): Promise<Booking> {
-    try {
-      if (!booking.userId || !booking.serviceId || !booking.scheduledAt) {
-        throw handleValidationError('Missing required booking fields');
-      }
+export const createBooking = async (data: CreateBookingInput): Promise<Booking> => {
+  try {
+    const { data: booking, error } = await supabaseClient
+      .from('bookings')
+      .insert(data)
+      .select()
+      .single();
 
-      const { data, error } = await supabaseClient
-        .from('bookings')
-        .insert(booking)
-        .select()
-        .single();
+    if (error) throw error;
+    if (!booking) throw createApiError('Failed to create booking', 'DATABASE_ERROR');
 
-      if (error) {
-        logger.error('Database error while creating booking:', { error, booking });
-        throw handleDatabaseError('Failed to create booking');
-      }
-
-      if (!data) {
-        throw handleDatabaseError('Failed to retrieve created booking');
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      logger.error('Unexpected error while creating booking:', { error });
-      throw handleDatabaseError('Failed to create booking');
+    return booking;
+  } catch (error) {
+    if (error instanceof BaseError) {
+      throw error;
     }
+    throw createApiError('Failed to create booking', 'DATABASE_ERROR');
   }
+};
 
-  async getBooking(id: string): Promise<Booking> {
-    try {
-      if (!id) {
-        throw handleValidationError('Booking ID is required');
-      }
+export const getBooking = async (id: string): Promise<Booking> => {
+  try {
+    const { data: booking, error } = await supabaseClient
+      .from('bookings')
+      .select()
+      .eq('id', id)
+      .single();
 
-      const { data, error } = await supabaseClient
-        .from('bookings')
-        .select()
-        .eq('id', id)
-        .single();
+    if (error) throw error;
+    if (!booking) throw createApiError('Booking not found', 'NOT_FOUND');
 
-      if (error) {
-        logger.error('Database error while fetching booking:', { error, id });
-        throw handleDatabaseError('Failed to fetch booking');
-      }
-
-      if (!data) {
-        throw handleNotFoundError('Booking not found');
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      logger.error('Unexpected error while fetching booking:', { error });
-      throw handleDatabaseError('Failed to fetch booking');
+    return booking;
+  } catch (error) {
+    if (error instanceof BaseError) {
+      throw error;
     }
+    throw createApiError('Failed to fetch booking', 'DATABASE_ERROR');
   }
+};
 
-  async updateBooking(id: string, updates: Partial<Booking>): Promise<Booking> {
-    try {
-      if (!id) {
-        throw handleValidationError('Booking ID is required');
-      }
+export const updateBooking = async (id: string, data: Partial<Booking>): Promise<Booking> => {
+  try {
+    const { data: booking, error } = await supabaseClient
+      .from('bookings')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
 
-      // First check if booking exists
-      const { data: existingBooking, error: fetchError } = await supabaseClient
-        .from('bookings')
-        .select()
-        .eq('id', id)
-        .single();
+    if (error) throw error;
+    if (!booking) throw createApiError('Booking not found', 'NOT_FOUND');
 
-      if (fetchError || !existingBooking) {
-        throw handleNotFoundError('Booking not found');
-      }
-
-      const { data, error } = await supabaseClient
-        .from('bookings')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Database error while updating booking:', { error, id, updates });
-        throw handleDatabaseError('Failed to update booking');
-      }
-
-      if (!data) {
-        throw handleDatabaseError('Failed to retrieve updated booking');
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      logger.error('Unexpected error while updating booking:', { error });
-      throw handleDatabaseError('Failed to update booking');
+    return booking;
+  } catch (error) {
+    if (error instanceof BaseError) {
+      throw error;
     }
+    throw createApiError('Failed to update booking', 'DATABASE_ERROR');
   }
+};
 
-  async deleteBooking(id: string): Promise<void> {
-    try {
-      if (!id) {
-        throw handleValidationError('Booking ID is required');
-      }
+export const deleteBooking = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabaseClient
+      .from('bookings')
+      .delete()
+      .eq('id', id);
 
-      // First check if booking exists
-      const { data: existingBooking, error: fetchError } = await supabaseClient
-        .from('bookings')
-        .select()
-        .eq('id', id)
-        .single();
-
-      if (fetchError || !existingBooking) {
-        throw handleNotFoundError('Booking not found');
-      }
-
-      const { error } = await supabaseClient
-        .from('bookings')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        logger.error('Database error while deleting booking:', { error, id });
-        throw handleDatabaseError('Failed to delete booking');
-      }
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      logger.error('Unexpected error while deleting booking:', { error });
-      throw handleDatabaseError('Failed to delete booking');
+    if (error) throw error;
+  } catch (error) {
+    if (error instanceof BaseError) {
+      throw error;
     }
+    throw createApiError('Failed to delete booking', 'DATABASE_ERROR');
   }
-}
+};

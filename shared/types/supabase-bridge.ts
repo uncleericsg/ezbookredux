@@ -1,4 +1,4 @@
-import type { Database } from '@shared/types/supabase';
+import type { Database } from './supabase';
 import type { User, UserProfile } from './user';
 
 export type SupabaseUser = Database['public']['Tables']['users']['Row'];

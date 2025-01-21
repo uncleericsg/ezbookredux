@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { DatabaseConfig } from './database';
 import type { ServiceConfig } from './service';
-import type { ValidationOptions } from './route';
+import type { ValidationOptions } from './validation';
 import type { ServerLogger, LogMetadata } from './logger';
 import type { UserProfile } from './middleware';
 

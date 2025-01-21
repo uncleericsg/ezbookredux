@@ -4,7 +4,29 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist/config",
+    "types": ["node", "vite/client"],
+    "rootDir": ".",
+    "tsBuildInfoFile": "./dist/config/.tsbuildinfo"
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tailwind.config.ts",
+    "vite-plugin-google-maps.ts",
+    "src/theme/theme.config.ts"
+  ],
+  "references": [
+    { "path": "./tsconfig.shared.json" }
+  ]
 }

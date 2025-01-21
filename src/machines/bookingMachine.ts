@@ -1,141 +1,189 @@
-import type { Booking, BookingStatus } from '@/types/booking';
+import type { ServiceCategory } from '@/types/homepage';
+import type { User } from '@/types/auth';
+
+export interface BookingDetails {
+  user: User;
+  notes?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface PaymentDetails {
+  amount: number;
+  currency: string;
+  method: string;
+  reference?: string;
+}
+
+export type BookingStatus = 
+  | 'IDLE'
+  | 'SELECTING_DATE'
+  | 'ENTERING_DETAILS'
+  | 'CONFIRMING'
+  | 'PROCESSING_PAYMENT'
+  | 'CONFIRMED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'ERROR';
 
 export interface BookingState {
   status: BookingStatus;
-  data: Partial<Booking>;
-  error: string | null;
+  service?: ServiceCategory;
+  date?: string;
+  time?: string;
+  details?: BookingDetails;
+  payment?: PaymentDetails;
+  error?: string | undefined;
   warnings: string[];
-  isLoading: boolean;
+  lastAction?: BookingAction;
 }
 
 export type BookingAction =
-  | { type: 'START_BOOKING' }
-  | { type: 'SET_SERVICE'; serviceId: string }
-  | { type: 'SET_DATE'; scheduledAt: string }
-  | { type: 'SET_NOTES'; notes: string }
-  | { type: 'CONFIRM_BOOKING' }
-  | { type: 'COMPLETE_BOOKING' }
-  | { type: 'CANCEL_BOOKING' }
-  | { type: 'SET_ERROR'; error: string }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'SET_LOADING'; isLoading: boolean }
-  | { type: 'ADD_WARNING'; warning: string }
-  | { type: 'CLEAR_WARNINGS' }
+  | { type: 'SELECT_SERVICE'; payload: ServiceCategory }
+  | { type: 'SELECT_DATE'; payload: { date: string; time: string } }
+  | { type: 'UPDATE_DETAILS'; payload: BookingDetails }
+  | { type: 'CONFIRM' }
+  | { type: 'PROCESS_PAYMENT'; payload: PaymentDetails }
+  | { type: 'COMPLETE' }
+  | { type: 'CANCEL' }
+  | { type: 'RETRY' }
   | { type: 'RESET' };
 
-export function createInitialState(): BookingState {
-  return {
-    status: 'PENDING',
-    data: {},
-    error: null,
-    warnings: [],
-    isLoading: false
-  };
-}
-
-export function isBookingInProgress(state: BookingState): boolean {
-  return state.status === 'PENDING' || state.isLoading;
-}
-
-export function transition(state: BookingState, action: BookingAction): BookingState {
-  switch (action.type) {
-    case 'START_BOOKING':
-      return {
-        ...state,
-        status: 'PENDING',
-        error: null,
-        warnings: []
-      };
-
-    case 'SET_SERVICE':
-      return {
-        ...state,
-        data: {
-          ...state.data,
-          serviceId: action.serviceId
-        }
-      };
-
-    case 'SET_DATE':
-      return {
-        ...state,
-        data: {
-          ...state.data,
-          scheduledAt: action.scheduledAt
-        }
-      };
-
-    case 'SET_NOTES':
-      return {
-        ...state,
-        data: {
-          ...state.data,
-          notes: action.notes
-        }
-      };
-
-    case 'CONFIRM_BOOKING':
-      if (!state.data.serviceId || !state.data.scheduledAt) {
+export function createBookingMachine() {
+  return function bookingReducer(state: BookingState, action: BookingAction): BookingState {
+    switch (action.type) {
+      case 'SELECT_SERVICE':
         return {
           ...state,
-          error: 'Missing required booking information'
+          status: 'SELECTING_DATE',
+          service: action.payload,
+          error: undefined,
+          lastAction: action
         };
-      }
-      return {
-        ...state,
-        status: 'CONFIRMED',
-        error: null
-      };
 
-    case 'COMPLETE_BOOKING':
-      return {
-        ...state,
-        status: 'COMPLETED',
-        error: null
-      };
+      case 'SELECT_DATE':
+        if (state.status === 'IDLE') {
+          return {
+            ...state,
+            status: 'ERROR',
+            error: 'Must select service first',
+            lastAction: action
+          };
+        }
 
-    case 'CANCEL_BOOKING':
-      return {
-        ...state,
-        status: 'CANCELLED',
-        error: null
-      };
+        return {
+          ...state,
+          status: 'ENTERING_DETAILS',
+          date: action.payload.date,
+          time: action.payload.time,
+          error: undefined,
+          lastAction: action
+        };
 
-    case 'SET_ERROR':
-      return {
-        ...state,
-        error: action.error,
-        isLoading: false
-      };
+      case 'UPDATE_DETAILS':
+        if (!state.service || !state.date || !state.time) {
+          return {
+            ...state,
+            status: 'ERROR',
+            error: 'Must select service and date first',
+            lastAction: action
+          };
+        }
 
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
+        return {
+          ...state,
+          status: 'CONFIRMING',
+          details: action.payload,
+          error: undefined,
+          lastAction: action
+        };
 
-    case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.isLoading
-      };
+      case 'CONFIRM':
+        if (!state.service || !state.date || !state.time || !state.details) {
+          return {
+            ...state,
+            status: 'ERROR',
+            error: 'Missing required details',
+            lastAction: action
+          };
+        }
 
-    case 'ADD_WARNING':
-      return {
-        ...state,
-        warnings: [...state.warnings, action.warning]
-      };
+        return {
+          ...state,
+          status: 'PROCESSING_PAYMENT',
+          error: undefined,
+          lastAction: action
+        };
 
-    case 'CLEAR_WARNINGS':
-      return {
-        ...state,
-        warnings: []
-      };
+      case 'PROCESS_PAYMENT':
+        if (state.status !== 'PROCESSING_PAYMENT' && state.status !== 'ERROR') {
+          return {
+            ...state,
+            status: 'ERROR',
+            error: 'Invalid state for payment processing',
+            lastAction: action
+          };
+        }
 
-    case 'RESET':
-      return createInitialState();
+        return {
+          ...state,
+          status: 'CONFIRMED',
+          payment: action.payload,
+          error: undefined,
+          lastAction: action
+        };
 
-    default:
-      return state;
-  }
+      case 'COMPLETE':
+        if (state.status !== 'CONFIRMED') {
+          return {
+            ...state,
+            status: 'ERROR',
+            error: 'Booking must be confirmed first',
+            lastAction: action
+          };
+        }
+
+        return {
+          ...state,
+          status: 'COMPLETED',
+          error: undefined,
+          lastAction: action
+        };
+
+      case 'CANCEL':
+        return {
+          ...state,
+          status: 'CANCELLED',
+          error: undefined,
+          lastAction: action
+        };
+
+      case 'RETRY':
+        if (state.status !== 'ERROR') {
+          return state;
+        }
+
+        const previousStatus = state.lastAction?.type === 'PROCESS_PAYMENT' 
+          ? 'PROCESSING_PAYMENT' 
+          : 'CONFIRMING';
+
+        return {
+          ...state,
+          status: previousStatus,
+          error: undefined,
+          lastAction: action
+        };
+
+      case 'RESET':
+        return {
+          status: 'IDLE',
+          warnings: [],
+          error: undefined
+        };
+
+      default:
+        return state;
+    }
+  };
 }

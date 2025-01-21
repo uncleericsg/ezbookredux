@@ -33,7 +33,7 @@ export interface AuthResponse {
   } | null;
 }
 
-export interface AuthError extends DatabaseError {
+export interface AuthenticationError extends DatabaseError {
   name: string;
   status: number;
 }

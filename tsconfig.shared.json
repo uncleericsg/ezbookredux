@@ -1,20 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "lib": ["ES2020"],
+    "composite": true,
     "declaration": true,
-    "declarationDir": "./dist/shared",
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
     "outDir": "./dist/shared",
     "rootDir": "./shared",
-    "strict": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "composite": true,
-    "declarationMap": true
+    "tsBuildInfoFile": "./dist/shared/.tsbuildinfo"
   },
-  "include": ["shared/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["shared/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

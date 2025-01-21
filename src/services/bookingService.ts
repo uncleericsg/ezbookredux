@@ -2,85 +2,71 @@ import type {
   Booking,
   BookingStatus,
   BookingFilters,
-  BookingListResponse,
-  CreateBookingRequest,
-  UpdateBookingRequest,
+  CreateBookingInput,
+  UpdateBookingInput,
   BookingWithService
 } from '@shared/types/booking';
 import { supabaseClient } from '@/config/supabase/client';
 import { logger } from '@/utils/logger';
-import { ServiceResponse, AsyncServiceResponse, createServiceHandler } from '@/types/api';
-import { APIError } from '@/utils/apiErrors';
+import type { AsyncServiceResponse, ServiceResponse } from '../../types/api';
+import { BaseService } from './base';
+import { 
+  ValidationFailedError,
+  DatabaseOperationError,
+  NotFoundError
+} from '../../shared/types/error';
 
-const serviceHandler = createServiceHandler<Booking>();
-const listHandler = createServiceHandler<BookingWithService[]>();
-
-const validateBookingData = (data: Partial<CreateBookingRequest>): void => {
-  const requiredFields = ['userId', 'serviceId', 'scheduledAt'];
-  const missingFields = requiredFields.filter(field => !data[field as keyof CreateBookingRequest]);
-  
-  if (missingFields.length > 0) {
-    throw new APIError(
-      'VALIDATION_ERROR',
-      `Missing required fields: ${missingFields.join(', ')}`,
-      400,
-      { missingFields }
+export class BookingService extends BaseService {
+  private validateBookingData(data: Partial<CreateBookingInput>): void {
+    const requiredFields = ['customerId', 'serviceId', 'date', 'time', 'duration', 'location'];
+    const missingFields = requiredFields.filter(
+      field => !data[field as keyof CreateBookingInput]
     );
+    
+    if (missingFields.length > 0) {
+      throw new ValidationFailedError([{
+        field: 'booking',
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        type: 'required',
+        code: 'VALIDATION_ERROR'
+      }]);
+    }
   }
-};
 
-export const bookingService = {
-  async createBooking(data: CreateBookingRequest): AsyncServiceResponse<Booking> {
-    try {
-      validateBookingData(data);
+  async createBooking(data: CreateBookingInput): Promise<ServiceResponse<Booking>> {
+    return this.handleRequest(async () => {
+      this.validateBookingData(data);
 
       const { data: booking, error } = await supabaseClient
         .from('bookings')
         .insert({
           ...data,
-          status: 'pending',
+          status: 'pending' as BookingStatus,
           created_at: new Date().toISOString()
         })
         .select()
         .single();
 
       if (error) {
-        throw new APIError(
-          'DATABASE_ERROR',
-          error.message,
-          500,
+        throw new DatabaseOperationError(
+          'create_booking',
           { code: error.code }
         );
       }
 
       if (!booking) {
-        throw new APIError(
-          'DATABASE_ERROR',
-          'Failed to create booking',
-          500
-        );
+        throw new DatabaseOperationError('create_booking');
       }
 
-      return {
-        data: booking,
-        status: 'success'
-      };
+      return booking;
+    }, { path: 'booking/create' });
+  }
 
-    } catch (err: unknown) {
-      logger.error('Error creating booking:', err);
-      return {
-        error: {
-          code: err instanceof APIError ? err.code : 'INTERNAL_ERROR',
-          message: err instanceof Error ? err.message : 'Failed to create booking',
-          details: err instanceof APIError ? err.details : undefined
-        },
-        status: 'error'
-      };
-    }
-  },
-
-  async updateBooking(id: string, data: UpdateBookingRequest): AsyncServiceResponse<Booking> {
-    try {
+  async updateBooking(
+    id: string, 
+    data: UpdateBookingInput
+  ): Promise<ServiceResponse<Booking>> {
+    return this.handleRequest(async () => {
       const { data: booking, error } = await supabaseClient
         .from('bookings')
         .update(data)
@@ -89,43 +75,24 @@ export const bookingService = {
         .single();
 
       if (error) {
-        throw new APIError(
-          'DATABASE_ERROR',
-          error.message,
-          500,
+        throw new DatabaseOperationError(
+          'update_booking',
           { code: error.code }
         );
       }
 
       if (!booking) {
-        throw new APIError(
-          'NOT_FOUND',
-          'Booking not found',
-          404,
-          { bookingId: id }
-        );
+        throw new NotFoundError('Booking');
       }
 
-      return {
-        data: booking,
-        status: 'success'
-      };
+      return booking;
+    }, { path: `booking/update/${id}` });
+  }
 
-    } catch (err: unknown) {
-      logger.error('Error updating booking:', err);
-      return {
-        error: {
-          code: err instanceof APIError ? err.code : 'INTERNAL_ERROR',
-          message: err instanceof Error ? err.message : 'Failed to update booking',
-          details: err instanceof APIError ? err.details : undefined
-        },
-        status: 'error'
-      };
-    }
-  },
-
-  async getBookings(filters?: BookingFilters): AsyncServiceResponse<BookingWithService[]> {
-    try {
+  async getBookings(
+    filters?: BookingFilters
+  ): Promise<ServiceResponse<BookingWithService[]>> {
+    return this.handleRequest(async () => {
       let query = supabaseClient
         .from('bookings')
         .select(`
@@ -149,32 +116,49 @@ export const bookingService = {
         query = query.lte('scheduled_at', filters.toDate);
       }
 
+      if (filters?.technicianId) {
+        query = query.eq('technician_id', filters.technicianId);
+      }
+
       const { data: bookings, error } = await query;
 
       if (error) {
-        throw new APIError(
-          'DATABASE_ERROR',
-          error.message,
-          500,
+        throw new DatabaseOperationError(
+          'fetch_bookings',
           { code: error.code }
         );
       }
 
-      return {
-        data: bookings || [],
-        status: 'success'
-      };
-
-    } catch (err: unknown) {
-      logger.error('Error fetching bookings:', err);
-      return {
-        error: {
-          code: err instanceof APIError ? err.code : 'INTERNAL_ERROR',
-          message: err instanceof Error ? err.message : 'Failed to fetch bookings',
-          details: err instanceof APIError ? err.details : undefined
-        },
-        status: 'error'
-      };
-    }
+      return bookings || [];
+    }, { path: 'booking/list' });
   }
-};
+
+  async getBookingById(id: string): Promise<ServiceResponse<BookingWithService>> {
+    return this.handleRequest(async () => {
+      const { data: booking, error } = await supabaseClient
+        .from('bookings')
+        .select(`
+          *,
+          service:services (*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        throw new DatabaseOperationError(
+          'fetch_booking',
+          { code: error.code }
+        );
+      }
+
+      if (!booking) {
+        throw new NotFoundError('Booking');
+      }
+
+      return booking;
+    }, { path: `booking/${id}` });
+  }
+}
+
+// Create singleton instance
+export const bookingService = new BookingService();

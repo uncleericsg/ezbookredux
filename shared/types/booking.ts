@@ -1,4 +1,5 @@
 import type { BaseEntity } from './repository';
+import type { Service } from './service';
 
 /**
  * Booking status
@@ -45,9 +46,6 @@ export interface LocationInput {
 }
 
 /**
- * Create booking input
- */
-/**
  * Time slot type
  */
 export interface TimeSlot {
@@ -62,6 +60,39 @@ export interface TimeSlot {
   startTime: string;
 }
 
+/**
+ * Booking filters
+ */
+export interface BookingFilters {
+  /**
+   * Filter by user ID
+   */
+  userId?: string;
+
+  /**
+   * Filter by status
+   */
+  status?: BookingStatus;
+
+  /**
+   * Filter by date range - from
+   */
+  fromDate?: string;
+
+  /**
+   * Filter by date range - to
+   */
+  toDate?: string;
+
+  /**
+   * Filter by technician
+   */
+  technicianId?: string;
+}
+
+/**
+ * Create booking input
+ */
 export interface CreateBookingInput {
   /**
    * Customer ID
@@ -301,4 +332,14 @@ export interface Booking extends BaseEntity {
    * Metadata
    */
   metadata?: Record<string, unknown>;
+}
+
+/**
+ * Booking with service details
+ */
+export interface BookingWithService extends Booking {
+  /**
+   * Service details
+   */
+  service: Service;
 }

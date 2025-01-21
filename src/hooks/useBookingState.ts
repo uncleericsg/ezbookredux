@@ -1,67 +1,165 @@
-import { useState, useCallback } from 'react';
+import { useReducer, useCallback } from 'react';
 import { toast } from 'sonner';
-import { 
+import { createBookingMachine } from '@/machines/bookingMachine';
+import type { 
   BookingState, 
   BookingAction,
-  createInitialState, 
-  transition, 
-  isBookingInProgress 
+  BookingDetails,
+  PaymentDetails
 } from '@/machines/bookingMachine';
 
-export interface UseBookingState {
-  state: BookingState;
-  dispatch: (action: BookingAction) => void;
-  reset: () => void;
-  isInProgress: boolean;
+export type { BookingDetails, PaymentDetails };
+
+export function hasRequiredDetails(state: BookingState): boolean {
+  return !!(
+    state.service &&
+    state.date &&
+    state.time &&
+    state.details?.user
+  );
 }
 
-export const useBookingState = (): UseBookingState => {
-  const [state, setState] = useState<BookingState>(createInitialState());
+export function hasPaymentDetails(state: BookingState): boolean {
+  return !!(
+    state.payment?.amount &&
+    state.payment?.currency &&
+    state.payment?.method
+  );
+}
 
-  const dispatch = useCallback((action: BookingAction) => {
-    setState(currentState => {
-      try {
-        const newState = transition(currentState, action);
-        
-        // Show relevant toasts based on state changes
-        if (newState.error && newState.error !== currentState.error) {
-          toast.error(newState.error);
-        }
-        
-        if (newState.warnings.length > currentState.warnings.length) {
-          const newWarnings = newState.warnings.slice(currentState.warnings.length);
-          newWarnings.forEach(warning => toast.error(warning));
-        }
-        
-        if (newState.status === 'CONFIRMED' && currentState.status !== 'CONFIRMED') {
-          toast.success('Booking confirmed successfully');
-        }
+interface TimeComponents {
+  hours: number;
+  minutes: number;
+}
 
-        if (newState.status === 'COMPLETED' && currentState.status !== 'COMPLETED') {
-          toast.success('Booking completed successfully');
-        }
+function isValidTimeString(timeStr: unknown): timeStr is string {
+  return typeof timeStr === 'string' && /^\d{1,2}:\d{2}$/.test(timeStr);
+}
 
-        if (newState.status === 'CANCELLED' && currentState.status !== 'CANCELLED') {
-          toast.error('Booking cancelled');
-        }
-        
-        return newState;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'An unknown error occurred';
-        toast.error(message);
-        throw error;
-      }
-    });
-  }, []);
+function parseTimeComponents(timeStr: string | undefined | null): TimeComponents | null {
+  if (!timeStr) return null;
+
+  try {
+    const [hoursStr = '', minutesStr = ''] = timeStr.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+
+    if (
+      isNaN(hours) || 
+      isNaN(minutes) || 
+      hours < 0 || 
+      hours > 23 || 
+      minutes < 0 || 
+      minutes > 59
+    ) {
+      return null;
+    }
+
+    return { hours, minutes };
+  } catch {
+    return null;
+  }
+}
+
+function parseTimeString(timeStr: unknown): TimeComponents | null {
+  if (!isValidTimeString(timeStr)) return null;
+  return parseTimeComponents(timeStr);
+}
+
+function isValidDateString(dateStr: unknown): dateStr is string {
+  return typeof dateStr === 'string' && !isNaN(Date.parse(dateStr));
+}
+
+function parseDate(dateStr: unknown): Date | null {
+  if (!isValidDateString(dateStr)) return null;
+
+  try {
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
+
+export function getFormattedBookingTime(state: BookingState): string {
+  const date = parseDate(state.date);
+  if (!date) return '';
+
+  const timeComponents = parseTimeString(state.time);
+  if (!timeComponents) return '';
+
+  try {
+    date.setHours(timeComponents.hours);
+    date.setMinutes(timeComponents.minutes);
+
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(date);
+  } catch {
+    return '';
+  }
+}
+
+export function getBookingSummary(state: BookingState): string {
+  const parts: string[] = [];
+
+  if (state.service) {
+    parts.push(`Service: ${state.service.name}`);
+  }
+
+  if (state.date && state.time) {
+    const formattedTime = getFormattedBookingTime(state);
+    if (formattedTime) {
+      parts.push(`Time: ${formattedTime}`);
+    }
+  }
+
+  if (state.details?.user) {
+    parts.push(`Customer: ${state.details.user.firstName} ${state.details.user.lastName}`);
+  }
+
+  if (state.payment) {
+    parts.push(`Payment: ${state.payment.amount} ${state.payment.currency}`);
+  }
+
+  return parts.join('\n');
+}
+
+const defaultState: BookingState = {
+  status: 'IDLE',
+  warnings: [],
+  error: undefined
+};
+
+export function useBookingState(initialState?: Partial<BookingState>) {
+  const [state, dispatch] = useReducer(
+    createBookingMachine(),
+    {
+      ...defaultState,
+      ...initialState
+    }
+  );
 
   const reset = useCallback(() => {
     dispatch({ type: 'RESET' });
-  }, [dispatch]);
+  }, []);
+
+  const isInProgress = state.status !== 'IDLE' && 
+    state.status !== 'COMPLETED' && 
+    state.status !== 'CANCELLED';
 
   return {
     state,
     dispatch,
     reset,
-    isInProgress: isBookingInProgress(state),
+    isInProgress
   };
-};
+}
+
+export type UseBookingState = ReturnType<typeof useBookingState>;

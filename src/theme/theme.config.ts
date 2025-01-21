@@ -90,8 +90,8 @@ export const themeConfig = {
   },
   typography: {
     fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      mono: ['JetBrains Mono', 'monospace'],
+      sans: ['Inter', 'system-ui', 'sans-serif'] as string[],
+      mono: ['JetBrains Mono', 'monospace'] as string[],
     },
     fontSize: {
       xs: '0.75rem',

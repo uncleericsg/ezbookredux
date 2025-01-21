@@ -3,12 +3,46 @@
  * This file re-exports all shared types and provides common utility types
  */
 
-// Re-export all domain types
-export * from './booking';
-export * from './user';
-export * from './payment';
-export * from './error';
-export * from './service';
+// Re-export domain types from booking
+export type * from './booking';
+
+// Re-export from user, excluding AuthenticationError
+export type {
+  User,
+  UserProfile,
+  UserRole,
+  UserStatus,
+  AuthResponse,
+  OTPVerificationPayload
+} from './user';
+
+// Re-export from payment
+export type * from './payment';
+
+// Re-export from error
+export type {
+  ErrorCode,
+  DatabaseError,
+  AppError,
+  ValidationError,
+  ErrorResponse
+} from './error';
+
+export {
+  BaseError,
+  ValidationFailedError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  DatabaseOperationError,
+  isDatabaseError,
+  isValidationError,
+  isAppError,
+  AuthError
+} from './error';
+
+// Re-export from service
+export type * from './service';
 
 // Base entity types
 export interface BaseEntity {
@@ -103,4 +137,4 @@ export const hasProperty = <T extends object, K extends PropertyKey>(
   prop: K
 ): obj is T & Record<K, unknown> => {
   return Object.prototype.hasOwnProperty.call(obj, prop);
-}; 
+};

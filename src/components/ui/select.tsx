@@ -1,29 +1,99 @@
-import React, { forwardRef } from 'react';
-import { SelectProps } from './types';
+import React from 'react';
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
-  className = '',
-  error = false,
-  children,
+export interface SelectProps<T extends string> extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value'> {
+  onValueChange?: (value: T) => void;
+  value?: T;
+}
+
+export interface SelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  className?: string;
+}
+
+export interface SelectContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+export interface SelectItemProps<T extends string> extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'> {
+  value: T;
+  className?: string;
+}
+
+export interface SelectValueProps extends React.HTMLAttributes<HTMLSpanElement> {
+  placeholder?: string;
+}
+
+export function Select<T extends string>({ 
+  children, 
+  onValueChange,
   value,
-  onChange,
-  ...props
-}, ref) => {
-  const baseStyles = 'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
-  
-  const errorStyles = error ? 'border-red-500 focus-visible:ring-red-500' : '';
+  ...props 
+}: SelectProps<T>): React.ReactElement {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onValueChange?.(e.target.value as T);
+  };
 
   return (
-    <select
-      ref={ref}
-      className={`${baseStyles} ${errorStyles} ${className}`}
-      value={value}
-      onChange={e => onChange?.(e.target.value)}
+    <select 
+      value={value} 
+      onChange={handleChange}
       {...props}
     >
       {children}
     </select>
   );
-});
+}
 
-Select.displayName = 'Select';
+export const SelectTrigger: React.FC<SelectTriggerProps> = ({ 
+  children,
+  className,
+  ...props 
+}) => (
+  <button 
+    type="button"
+    className={`inline-flex items-center justify-between px-3 py-2 text-sm ${className || ''}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+export const SelectContent: React.FC<SelectContentProps> = ({ 
+  children,
+  className,
+  ...props 
+}) => (
+  <div 
+    className={`absolute z-50 mt-1 w-full bg-white rounded-md shadow-lg ${className || ''}`}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+export function SelectItem<T extends string>({ 
+  children,
+  className,
+  value,
+  ...props 
+}: SelectItemProps<T>): React.ReactElement {
+  return (
+    <button 
+      type="button"
+      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${className || ''}`}
+      data-value={value}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export const SelectValue: React.FC<SelectValueProps> = ({ 
+  children,
+  placeholder,
+  ...props 
+}) => (
+  <span {...props}>
+    {children || placeholder}
+  </span>
+);

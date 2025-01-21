@@ -4,8 +4,13 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { app } from './firebase';
 import axios from 'axios';
-import { APIError } from '@/utils/apiErrors';
-import { ServiceResponse, AsyncServiceResponse, createServiceHandler } from '@/types/api';
+import type { AsyncServiceResponse, ServiceResponse } from '../../types/api';
+import { BaseService } from './base';
+import { 
+  ValidationFailedError,
+  NotFoundError,
+  BaseError
+} from '../../shared/types/error';
 
 // Validation schemas
 const fcmTokenSchema = z.string().regex(/^[A-Za-z0-9-_]+$/);
@@ -60,7 +65,7 @@ interface MulticastResponse {
   responses: FCMResponse[];
 }
 
-class FCMService {
+class FCMService extends BaseService {
   private static instance: FCMService;
   private rateLimiter: {
     tokens: number;
@@ -70,6 +75,7 @@ class FCMService {
   };
 
   private constructor() {
+    super();
     // Initialize rate limiter (500 notifications per minute)
     this.rateLimiter = {
       tokens: 500,
@@ -90,12 +96,12 @@ class FCMService {
     try {
       await fcmTokenSchema.parseAsync(token);
     } catch (error) {
-      throw new APIError(
-        'INVALID_TOKEN',
-        'Invalid FCM token format',
-        400,
-        { error }
-      );
+      throw new ValidationFailedError([{
+        field: 'token',
+        message: 'Invalid FCM token format',
+        type: 'format',
+        code: 'VALIDATION_ERROR'
+      }]);
     }
   }
 
@@ -103,12 +109,12 @@ class FCMService {
     try {
       await notificationPayloadSchema.parseAsync(payload);
     } catch (error) {
-      throw new APIError(
-        'INVALID_PAYLOAD',
-        'Invalid notification payload',
-        400,
-        { error }
-      );
+      throw new ValidationFailedError([{
+        field: 'payload',
+        message: 'Invalid notification payload',
+        type: 'format',
+        code: 'VALIDATION_ERROR'
+      }]);
     }
   }
 
@@ -134,40 +140,18 @@ class FCMService {
     return true;
   }
 
-  private async retryOperation<T>(
-    operation: () => Promise<T>,
-    options: Required<Pick<SendOptions, 'retries' | 'retryDelay'>>
-  ): Promise<T> {
-    let lastError: Error | null = null;
-    
-    for (let attempt = 1; attempt <= options.retries; attempt++) {
-      try {
-        return await operation();
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        if (attempt === options.retries) break;
-        await new Promise(resolve => setTimeout(resolve, options.retryDelay * attempt));
-      }
-    }
-    
-    throw lastError;
-  }
-
   public async sendNotification(
     token: string,
     payload: NotificationPayload,
     options: SendOptions = {}
-  ): AsyncServiceResponse<string> {
-    const serviceHandler = createServiceHandler<string>();
-
-    return serviceHandler(async () => {
+  ): Promise<ServiceResponse<string>> {
+    return this.handleRequest(async () => {
       if (!messagingInstance) {
         const supported = await initializeMessaging();
         if (!supported) {
-          throw new APIError(
-            'FCM_NOT_SUPPORTED',
+          throw new BaseError(
             'FCM not supported in this environment',
-            400
+            'INTERNAL_ERROR'
           );
         }
       }
@@ -176,10 +160,9 @@ class FCMService {
       await this.validatePayload(payload);
 
       if (!(await this.checkRateLimit())) {
-        throw new APIError(
-          'RATE_LIMIT_EXCEEDED',
+        throw new BaseError(
           'Rate limit exceeded',
-          429
+          'INTERNAL_ERROR'
         );
       }
 
@@ -206,44 +189,42 @@ class FCMService {
         }
       };
 
-      // Use the FCM REST API instead of client SDK for sending messages
-      const response = await this.retryOperation(
+      const response = await this.withRetry(
         async () => {
           const result = await axios.post<FCMResponse>('/api/notifications/send', message);
           return result.data.id;
         },
-        { retries, retryDelay }
+        retries,
+        retryDelay
       );
 
       toast.success('Notification sent successfully');
       return response;
-    });
+    }, { path: 'fcm/send' });
   }
 
   public async sendMulticast(
     tokens: string[],
     payload: NotificationPayload,
     options: SendOptions = {}
-  ): AsyncServiceResponse<MulticastResponse> {
-    const serviceHandler = createServiceHandler<MulticastResponse>();
-
-    return serviceHandler(async () => {
+  ): Promise<ServiceResponse<MulticastResponse>> {
+    return this.handleRequest(async () => {
       await Promise.all(tokens.map(token => this.validateToken(token)));
       await this.validatePayload(payload);
 
       if (tokens.length > 500) {
-        throw new APIError(
-          'TOO_MANY_TOKENS',
-          'Maximum of 500 tokens per multicast',
-          400
-        );
+        throw new ValidationFailedError([{
+          field: 'tokens',
+          message: 'Maximum of 500 tokens per multicast',
+          type: 'max',
+          code: 'VALIDATION_ERROR'
+        }]);
       }
 
       if (!(await this.checkRateLimit())) {
-        throw new APIError(
-          'RATE_LIMIT_EXCEEDED',
+        throw new BaseError(
           'Rate limit exceeded',
-          429
+          'INTERNAL_ERROR'
         );
       }
 
@@ -268,10 +249,9 @@ class FCMService {
         },
       };
 
-      // Use the FCM REST API for multicast messages
       const response = await axios.post<MulticastResponse>('/api/notifications/send-multicast', message);
       return response.data;
-    });
+    }, { path: 'fcm/multicast' });
   }
 
   public async scheduleNotification(
@@ -279,23 +259,20 @@ class FCMService {
     payload: NotificationPayload,
     scheduledTime: Date,
     options: SendOptions = {}
-  ): AsyncServiceResponse<string> {
-    const serviceHandler = createServiceHandler<string>();
-
-    return serviceHandler(async () => {
+  ): Promise<ServiceResponse<string>> {
+    return this.handleRequest(async () => {
       if (scheduledTime.getTime() <= Date.now()) {
-        throw new APIError(
-          'INVALID_SCHEDULE_TIME',
-          'Scheduled time must be in the future',
-          400
-        );
+        throw new ValidationFailedError([{
+          field: 'scheduledTime',
+          message: 'Scheduled time must be in the future',
+          type: 'min',
+          code: 'VALIDATION_ERROR'
+        }]);
       }
 
-      // Validate inputs before scheduling
       await this.validateToken(token);
       await this.validatePayload(payload);
 
-      // Schedule notification
       const response = await axios.post<{ id: string }>('/api/notifications/schedule', {
         token,
         payload,
@@ -305,7 +282,7 @@ class FCMService {
 
       toast.success('Notification scheduled successfully');
       return response.data.id;
-    });
+    }, { path: 'fcm/schedule' });
   }
 }
 

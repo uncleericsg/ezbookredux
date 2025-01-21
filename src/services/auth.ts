@@ -5,124 +5,114 @@ import type {
 } from '@shared/types/user';
 import { logger } from '@/utils/logger';
 import { supabaseClient } from '@/config/supabase/client';
-import { ServiceResponse, AsyncServiceResponse, createServiceHandler } from '@/types/api';
+import type { AsyncServiceResponse, ServiceResponse } from '../../types/api';
+import { BaseService } from './base';
 import { 
-  APIError,
-  handleValidationError,
-  handleAuthenticationError,
-  handleDatabaseError
-} from '@/utils/apiErrors';
-import { convertSupabaseUser } from '@shared/types/supabase-bridge';
+  BaseError,
+  ValidationFailedError,
+  AuthenticationError,
+  DatabaseOperationError
+} from '../../shared/types/error';
+import { convertSupabaseUser } from '../../shared/types/supabase-bridge';
+import type { SupabaseUser } from '../../shared/types/supabase-bridge';
 
-const serviceHandler = createServiceHandler<User>();
-
-const validatePhoneNumber = (phone: string): boolean => {
-  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-  return phoneRegex.test(phone);
-};
-
-const validateOTPPayload = (payload: Partial<OTPVerificationPayload>): void => {
-  const requiredFields = ['phone', 'code', 'verificationId'];
-  const missingFields = requiredFields.filter(field => !payload[field as keyof OTPVerificationPayload]);
-  
-  if (missingFields.length > 0) {
-    throw new APIError(
-      'VALIDATION_ERROR',
-      `Missing required fields: ${missingFields.join(', ')}`,
-      400
-    );
+export class AuthService extends BaseService {
+  private validatePhoneNumber(phone: string): boolean {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone);
   }
-};
 
-export const authService = {
-  async sendOTP(phoneNumber: string): AsyncServiceResponse<string> {
-    try {
+  private validateOTPPayload(payload: Partial<OTPVerificationPayload>): void {
+    const requiredFields = ['phone', 'code', 'verificationId'];
+    const missingFields = requiredFields.filter(
+      field => !payload[field as keyof OTPVerificationPayload]
+    );
+    
+    if (missingFields.length > 0) {
+      throw new ValidationFailedError([{
+        field: 'otpPayload',
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        type: 'required',
+        code: 'VALIDATION_ERROR'
+      }]);
+    }
+  }
+
+  async sendOTP(phoneNumber: string): Promise<ServiceResponse<string>> {
+    return this.handleRequest(async () => {
+      // Validation
       if (!phoneNumber) {
-        return {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Phone number is required'
-          },
-          status: 'error'
-        };
+        throw new ValidationFailedError([{
+          field: 'phoneNumber',
+          message: 'Phone number is required',
+          type: 'required',
+          code: 'VALIDATION_ERROR'
+        }]);
       }
 
-      if (!validatePhoneNumber(phoneNumber)) {
-        return {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid phone number format'
-          },
-          status: 'error'
-        };
+      if (!this.validatePhoneNumber(phoneNumber)) {
+        throw new ValidationFailedError([{
+          field: 'phoneNumber',
+          message: 'Invalid phone number format',
+          type: 'format',
+          code: 'VALIDATION_ERROR'
+        }]);
       }
 
+      // Send OTP
       const { error } = await supabaseClient.auth.signInWithOtp({
         phone: phoneNumber
       });
 
       if (error) {
-        throw new APIError(
-          'AUTH_ERROR',
-          error.message,
-          error.status || 500,
-          { name: error.name }
-        );
+        throw new AuthenticationError(error.message);
       }
 
-      return {
-        data: 'OTP sent successfully',
-        status: 'success'
-      };
-    } catch (err: unknown) {
-      logger.error('Error sending OTP:', err);
-      return {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: err instanceof Error ? err.message : 'Failed to send OTP',
-          details: err instanceof Error ? { stack: err.stack } : undefined
-        },
-        status: 'error'
-      };
-    }
-  },
+      return 'OTP sent successfully';
+    }, { path: 'auth/sendOTP' });
+  }
 
-  async verifyOTP(payload: OTPVerificationPayload): AsyncServiceResponse<User> {
-    try {
-      validateOTPPayload(payload);
-      return serviceHandler(
-        supabaseClient.auth.verifyOtp({
-          phone: payload.phone,
-          token: payload.code,
-          type: 'sms'
-        }).then(result => {
-          if (result.error) throw result.error;
-          if (!result.data.user) throw new Error('No user data returned');
-          return convertSupabaseUser(result.data.user);
-        })
+  async verifyOTP(payload: OTPVerificationPayload): Promise<ServiceResponse<User>> {
+    return this.handleRequest(async () => {
+      // Validation
+      this.validateOTPPayload(payload);
+
+      // Verify OTP
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        phone: payload.phone,
+        token: payload.code,
+        type: 'sms'
+      });
+
+      if (error) {
+        throw new AuthenticationError(error.message);
+      }
+
+      if (!data.user) {
+        throw new AuthenticationError('No user data returned');
+      }
+
+      // Convert user data with retry logic
+      const supabaseUser = data.user as SupabaseUser;
+      return await this.withRetry(
+        async () => convertSupabaseUser(supabaseUser),
+        3,
+        1000
       );
-    } catch (err: unknown) {
-      logger.error('Error verifying OTP:', err);
-      return {
-        error: {
-          code: 'AUTH_ERROR',
-          message: err instanceof Error ? err.message : 'Failed to verify OTP',
-          details: err instanceof Error ? { stack: err.stack } : undefined
-        },
-        status: 'error'
-      };
-    }
-  },
+    }, { path: 'auth/verifyOTP' });
+  }
 
-  async getCurrentUser(): AsyncServiceResponse<User | null> {
-    try {
+  async getCurrentUser(): Promise<ServiceResponse<User | null>> {
+    return this.handleRequest(async () => {
+      // Get user
       const { data: { user }, error } = await supabaseClient.auth.getUser();
 
       if (error || !user) {
         logger.info('No authenticated user found');
-        return { data: null, status: 'success' };
+        return null;
       }
 
+      // Get profile
       const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
         .select()
@@ -130,59 +120,40 @@ export const authService = {
         .single();
 
       if (profileError) {
-        throw new APIError(
-          'DATABASE_ERROR',
-          profileError.message,
-          500,
-          { code: profileError.code }
+        throw new DatabaseOperationError(
+          'fetch_profile',
+          { 
+            code: profileError.code,
+            userId: user.id
+          }
         );
       }
 
-      const fullUser = convertSupabaseUser(user);
-      fullUser.profile = profile;
+      // Convert user data with retry logic
+      const supabaseUser = user as SupabaseUser;
+      const fullUser = await this.withRetry(
+        async () => convertSupabaseUser(supabaseUser),
+        3,
+        1000
+      );
+      
+      fullUser.profile = profile || null;
+      return fullUser;
+    }, { path: 'auth/getCurrentUser' });
+  }
 
-      return {
-        data: fullUser,
-        status: 'success'
-      };
-    } catch (error) {
-      logger.error('Error getting current user:', error);
-      return {
-        error: {
-          code: 'DATABASE_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to get current user',
-          details: error instanceof Error ? { stack: error.stack } : undefined
-        },
-        status: 'error'
-      };
-    }
-  },
-
-  async signOut(): AsyncServiceResponse<void> {
-    try {
+  async signOut(): Promise<ServiceResponse<void>> {
+    return this.handleRequest(async () => {
       const { error } = await supabaseClient.auth.signOut();
 
       if (error) {
-        throw new APIError(
-          'AUTH_ERROR',
-          error.message,
-          error.status || 500,
-          { name: error.name }
-        );
+        throw new AuthenticationError(error.message);
       }
 
       logger.info('User signed out successfully');
-      return { data: undefined, status: 'success' };
-    } catch (error) {
-      logger.error('Error signing out:', error);
-      return {
-        error: {
-          code: 'AUTH_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to sign out',
-          details: error instanceof Error ? { stack: error.stack } : undefined
-        },
-        status: 'error'
-      };
-    }
+    }, { path: 'auth/signOut' });
   }
-};
+}
+
+// Create singleton instance
+export const authService = new AuthService();

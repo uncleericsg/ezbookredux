@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { CorsOptions } from 'cors';
 import type { HelmetOptions } from 'helmet';
 import type { ValidationSchema } from './validation';
-import type { UserProfile } from './auth';
+import type { UserProfile } from './user';
 
 /**
  * Rate limit options
@@ -283,5 +283,4 @@ export interface MiddlewareConfig {
   static?: StaticMiddlewareConfig;
 }
 
-// Re-export UserProfile for use in other modules
-export { UserProfile };
+export type { UserProfile };

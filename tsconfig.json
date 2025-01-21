@@ -1,28 +1,38 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": [
-      "ES2020",
+      "ES2022",
       "DOM",
       "DOM.Iterable"
     ],
     "module": "ESNext",
     "skipLibCheck": true,
     "esModuleInterop": true,
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    /* Paths */
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": false,
+    "allowUnreachableCode": false,
+
+    /* Module Resolution */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -37,33 +47,67 @@
     },
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types"
+      "./src/types",
+      "./types"
     ],
+    "types": [
+      "node",
+      "jest",
+      "react",
+      "react-dom",
+      "vite/client"
+    ],
+
+    /* Build Options */
     "allowJs": true,
+    "checkJs": true,
     "incremental": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true
+    "sourceMap": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Advanced Options */
+    "verbatimModuleSyntax": true,
+    "allowSyntheticDefaultImports": true,
+    "preserveSymlinks": true,
+    "skipDefaultLibCheck": true
   },
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "require": ["tsconfig-paths/register"],
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "types/**/*.ts",
+    "types/**/*.d.ts"
   ],
   "references": [
     {
       "path": "./tsconfig.node.json"
     },
     {
-      "path": "./tsconfig.server.json"
-    },
-    {
       "path": "./tsconfig.shared.json"
     }
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+    "out",
+    ".vscode",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/__tests__/**"
   ]
 }

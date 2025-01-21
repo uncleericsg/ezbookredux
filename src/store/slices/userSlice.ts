@@ -1,17 +1,11 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { 
-  User, 
-  UserState, 
-  OTPVerificationPayload,
-  OTPVerificationResponse,
-  OTPRequestResponse
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type {
+  User,
+  UserState,
+  AuthState
 } from '../../types/user';
-import { sendOTP, verifyOTP } from '../../services/auth';
-
-interface OTPResponse {
-  verificationId: string;
-  phone: string;
-}
+import { authenticate, signOut } from '../../services/auth';
 
 const initialState: UserState = {
   currentUser: null,
@@ -21,41 +15,26 @@ const initialState: UserState = {
   phone: undefined
 };
 
-// Async thunks
-export const requestOTP = createAsyncThunk<
-  OTPResponse,
-  string,
-  { rejectValue: string }
->(
-  'user/requestOTP',
-  async (phoneNumber, { rejectWithValue }) => {
+export const authenticateUser = createAsyncThunk(
+  'user/authenticate',
+  async (_, { rejectWithValue }) => {
     try {
-      const result = await sendOTP(phoneNumber);
-      return {
-        verificationId: result.verificationId,
-        phone: phoneNumber
-      };
+      const user = await authenticate();
+      return user;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to send OTP');
+      return rejectWithValue(error);
     }
   }
 );
 
-export const verifyUserOTP = createAsyncThunk<
-  User,
-  OTPVerificationPayload,
-  { rejectValue: string }
->(
-  'user/verifyOTP',
-  async (payload, { rejectWithValue }) => {
+export const signOutUser = createAsyncThunk(
+  'user/signOut',
+  async (_, { rejectWithValue }) => {
     try {
-      const result = await verifyOTP(payload);
-      if (!result.success || !result.user) {
-        return rejectWithValue(result.error || 'Failed to verify OTP');
-      }
-      return result.user;
+      await signOut();
+      return null;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to verify OTP');
+      return rejectWithValue(error);
     }
   }
 );
@@ -66,24 +45,22 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User | null>) => {
       state.currentUser = action.payload;
+      state.loading = false;
+      state.error = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
+      state.loading = false;
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.currentUser) {
-        state.currentUser = {
-          ...state.currentUser,
-          ...action.payload,
-          updatedAt: new Date().toISOString()
-        };
-      }
+    clearError: (state) => {
+      state.error = null;
     },
-    clearUser: (state) => {
+    resetState: (state) => {
       state.currentUser = null;
+      state.loading = false;
       state.error = null;
       state.verificationId = undefined;
       state.phone = undefined;
@@ -91,34 +68,34 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Request OTP
-      .addCase(requestOTP.pending, (state) => {
+      .addCase(authenticateUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(requestOTP.fulfilled, (state, action) => {
-        state.loading = false;
-        state.verificationId = action.payload.verificationId;
-        state.phone = action.payload.phone;
-      })
-      .addCase(requestOTP.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || 'Failed to send OTP';
-      })
-      // Verify OTP
-      .addCase(verifyUserOTP.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(verifyUserOTP.fulfilled, (state, action) => {
-        state.loading = false;
+      .addCase(authenticateUser.fulfilled, (state, action) => {
         state.currentUser = action.payload;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(authenticateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Authentication failed';
+        state.currentUser = null;
+      })
+      .addCase(signOutUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signOutUser.fulfilled, (state) => {
+        state.currentUser = null;
+        state.loading = false;
+        state.error = null;
         state.verificationId = undefined;
         state.phone = undefined;
       })
-      .addCase(verifyUserOTP.rejected, (state, action) => {
+      .addCase(signOutUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Failed to verify OTP';
+        state.error = action.error.message || 'Sign out failed';
       });
   }
 });
@@ -127,8 +104,8 @@ export const {
   setUser,
   setLoading,
   setError,
-  updateUserProfile,
-  clearUser
+  clearError,
+  resetState
 } = userSlice.actions;
 
 export default userSlice.reducer;
