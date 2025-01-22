@@ -1,10 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { HiCheckCircle, HiOutlineCalendar, HiOutlineUser, HiOutlineHome } from 'react-icons/hi2';
-import { cn } from '../../utils/cn';
-import type { BookingData } from '../../types/booking-flow';
-import { format } from 'date-fns';
-import { formatPrice } from '../../utils/formatters';
+import { cn } from '@/utils/cn';
+import type { BookingData } from '@/types/booking-flow';
+import { format, isValid } from 'date-fns';
+import { formatPrice } from '@/utils/formatters';
+
+const formatBookingDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return isValid(date) ? format(date, 'PPP') : 'Invalid date';
+};
 
 interface BookingConfirmationProps {
   booking: BookingData;
@@ -51,7 +56,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="flex-1 text-left">
             <p className="font-medium text-gray-900">{booking.serviceTitle}</p>
             <p className="text-sm text-gray-600">
-              {format(new Date(booking.date), 'PPP')} at {booking.time}
+              {formatBookingDate(booking.date)} at {booking.time || 'Not specified'}
             </p>
             <p className="text-sm font-medium text-blue-600">
               {formatPrice(booking.servicePrice)}
@@ -79,9 +84,11 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             <p className="text-sm text-gray-600">
               {booking.customerInfo.address.blockStreet}
               {booking.customerInfo.address.floorUnit && `, Unit ${booking.customerInfo.address.floorUnit}`}
+              {booking.customerInfo.address.condoName && `, ${booking.customerInfo.address.condoName}`}
             </p>
             <p className="text-sm text-gray-600">
               Singapore {booking.customerInfo.address.postalCode}
+              {booking.customerInfo.address.region && ` (${booking.customerInfo.address.region})`}
             </p>
           </div>
         </div>

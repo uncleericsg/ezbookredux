@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { toast } from 'react-hot-toast';
 import { FiCreditCard, FiLock } from 'react-icons/fi';
-import cn from 'classnames';
+import cn from '@utils/cn';
 
 interface PaymentFormProps {
   clientSecret: string;

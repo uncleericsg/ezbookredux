@@ -44,3 +44,11 @@ export interface AdminResponse<T> {
 
 export type AdminSettingsUpdate = Partial<AdminSettings>;
 export type UserUpdate = Partial<Omit<UserData, 'id'>>;
+
+export interface AdminData {
+  settings: AdminSettings;
+  analytics: AnalyticsData;
+  users: UserData[];
+  buildVersions: BuildVersion[];
+  lastUpdated: string;
+}

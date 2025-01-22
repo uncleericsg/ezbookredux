@@ -1,4 +1,13 @@
-import { supabaseClient } from '@/server/config/supabase/client';
+import { supabaseClient } from '@/config/supabase/client';
+import * as dotenv from 'dotenv';
+
+interface SchemaInfo {
+  table_name: string;
+  column_name: string;
+  data_type: string;
+  is_nullable: boolean;
+  column_default: string | null;
+}
 
 // Load environment variables
 dotenv.config();

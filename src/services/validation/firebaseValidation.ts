@@ -27,10 +27,11 @@ export const userValidation = {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone,
-        role: user.role || 'user',
+        role: user.role || 'customer',
         status: user.status || 'active',
-        created_at: user.created_at || new Date().toISOString(),
-        updated_at: user.updated_at || new Date().toISOString()
+        amcStatus: user.amcStatus || 'inactive',
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
       };
 
       return validatedUser;

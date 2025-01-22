@@ -1,5 +1,7 @@
-import { supabaseClient } from '@/server/config/supabase/client';
+import { supabaseClient } from '@/config/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import * as dotenv from 'dotenv';
+import type { BookingDetails } from '@/types/booking';
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +35,7 @@ async function checkBookingTable() {
     console.log('Found service:', services);
 
     // Create a test booking with existing service ID
-    const testBooking = {
+    const testBooking: Omit<BookingDetails, 'id'> = {
       customer_info: {
         first_name: 'Test',
         last_name: 'User',
@@ -52,7 +54,7 @@ async function checkBookingTable() {
       issues: ['Test Issue'],
       other_issue: 'Test other issue',
       is_amc: false,
-      scheduled_datetime: new Date().toISOString(),
+      scheduled_datetime: new Date(),
       scheduled_timeslot: '10:00',
       status: 'pending',
       payment_status: 'pending',

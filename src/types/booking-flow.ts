@@ -1,19 +1,15 @@
 import type { CustomerInfo } from './customer';
-
-/**
- * Time slot type
- */
-export interface TimeSlot {
-  id: string;
-  startTime: string;
-  endTime?: string;
-  duration?: number;
-}
+import type { TimeSlot } from './timeSlot';
 
 /**
  * Booking step type
  */
 export type BookingStep = 'service' | 'customer' | 'schedule' | 'booking' | 'payment' | 'confirmation';
+
+/**
+ * Booking status type
+ */
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 /**
  * Booking data type
@@ -24,13 +20,19 @@ export interface BookingData {
   serviceTitle: string;
   servicePrice: number;
   serviceDuration: number;
-  duration?: number; // For backward compatibility
   customerInfo: CustomerInfo;
   date: string;
   time: string;
-  status?: string;
+  timeSlot?: TimeSlot;
+  status: BookingStatus;
   brands: string[];
   issues: string[];
+  otherIssue?: string;
+  paymentStatus?: 'pending' | 'completed' | 'failed';
+  totalAmount?: number;
+  tipAmount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
@@ -49,13 +51,18 @@ export const INITIAL_BOOKING_DATA: BookingData = {
     address: {
       blockStreet: '',
       postalCode: '',
-      region: 'central' // Default region
+      region: 'central', // Default region
+      floorUnit: '',
     }
   },
   date: '',
   time: '',
+  status: 'pending',
   brands: [],
-  issues: []
+  issues: [],
+  paymentStatus: 'pending',
+  totalAmount: 0,
+  tipAmount: 0
 };
 
 /**

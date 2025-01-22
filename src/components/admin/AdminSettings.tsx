@@ -1,14 +1,15 @@
-import { 
-  Archive, 
-  Bell, 
-  CreditCard, 
-  Key, 
-  MessageSquare, 
-  TestTube, 
-  Users 
-} from 'lucide-react';
-import React, { useCallback } from 'react';
+import type { FC } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
+import {
+  Archive,
+  Bell,
+  CreditCard,
+  Key,
+  MessageSquare,
+  TestTube,
+  Users
+} from 'lucide-react';
 
 import BuildManager from '@components/admin/BuildManager';
 import ChatGPTSettings from '@components/admin/ChatGPTSettings';
@@ -25,7 +26,13 @@ import type { AppError } from '@shared/types/error';
 import { useSettingsForm } from '@hooks/useSettingsForm';
 import { useSettingsSections, SECTION_IDS } from '@hooks/useSettingsSections';
 
-import type { AppSettings } from '@shared/types/appSettings';
+import type {
+  AppSettings,
+  ChatGPTSettings,
+  CypressSettings,
+  StripeSettings,
+  RepairShoprSettings
+} from '@shared/types/appSettings';
 import type { AdminSettings } from '@shared/types/settings';
 import { defaultSettings } from '@shared/types/settings';
 
@@ -130,7 +137,7 @@ const AdminSettingsWrapper: React.FC<AdminWrapperProps> = ({
   return React.cloneElement(children, props);
 };
 
-const AdminSettings: React.FC = () => {
+const AdminSettings: FC = () => {
   const {
     settings: appSettings,
     loading: appLoading,

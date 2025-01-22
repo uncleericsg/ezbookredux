@@ -1,345 +1,98 @@
-import type { BaseEntity } from './repository';
-import type { Service } from './service';
+import type { Database } from './database';
 
 /**
  * Booking status
  */
-export type BookingStatus =
+export type BookingStatus = 
   | 'pending'
   | 'confirmed'
-  | 'cancelled'
   | 'completed'
+  | 'cancelled'
   | 'rescheduled';
 
 /**
- * Booking payment status
+ * Payment status
  */
-export type BookingPaymentStatus =
+export type PaymentStatus =
   | 'pending'
   | 'processing'
-  | 'paid'
+  | 'completed'
   | 'failed'
   | 'refunded'
-  | 'partially_refunded';
+  | 'cancelled';
 
 /**
- * Location input
+ * Booking type from database
  */
-export interface LocationInput {
-  /**
-   * Street address
-   */
-  address: string;
+export type Booking = Database['public']['Tables']['bookings']['Row'];
 
-  /**
-   * Postal code
-   */
-  postalCode: string;
-
-  /**
-   * Coordinates (optional)
-   */
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
+/**
+ * Booking state for frontend
+ */
+export interface BookingState {
+  currentBooking: Booking | null;
+  selectedDate: string | null;
+  selectedTime: string | null;
+  selectedService: string | null;
+  paymentStatus: PaymentStatus;
+  bookingStatus: BookingStatus;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 /**
- * Time slot type
+ * Time slot for booking
  */
 export interface TimeSlot {
-  /**
-   * Unique identifier
-   */
-  id: string;
-
-  /**
-   * Start time in HH:mm format
-   */
   startTime: string;
+  endTime: string;
+  available: boolean;
 }
 
 /**
- * Booking filters
+ * Booking creation request
+ */
+export interface CreateBookingRequest {
+  userId: string;
+  serviceId: string;
+  scheduledAt: string;
+  notes?: string;
+}
+
+/**
+ * Booking update request
+ */
+export interface UpdateBookingRequest {
+  status?: BookingStatus;
+  scheduledAt?: string;
+  notes?: string;
+}
+
+/**
+ * Booking with related data
+ */
+export interface BookingWithDetails extends Booking {
+  service: Database['public']['Tables']['services']['Row'];
+  payment?: Database['public']['Tables']['payments']['Row'];
+  user: Database['public']['Tables']['users']['Row'];
+}
+
+/**
+ * Booking validation
+ */
+export interface BookingValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings?: string[];
+}
+
+/**
+ * Booking filter options
  */
 export interface BookingFilters {
-  /**
-   * Filter by user ID
-   */
+  status?: BookingStatus[];
+  startDate?: string;
+  endDate?: string;
   userId?: string;
-
-  /**
-   * Filter by status
-   */
-  status?: BookingStatus;
-
-  /**
-   * Filter by date range - from
-   */
-  fromDate?: string;
-
-  /**
-   * Filter by date range - to
-   */
-  toDate?: string;
-
-  /**
-   * Filter by technician
-   */
-  technicianId?: string;
-}
-
-/**
- * Create booking input
- */
-export interface CreateBookingInput {
-  /**
-   * Customer ID
-   */
-  customerId: string;
-
-  /**
-   * Service ID
-   */
-  serviceId: string;
-
-  /**
-   * Booking date
-   */
-  date: string;
-
-  /**
-   * Booking time (HH:mm)
-   */
-  time: string;
-
-  /**
-   * Duration in minutes
-   */
-  duration: number;
-
-  /**
-   * Location details
-   */
-  location: LocationInput;
-
-  /**
-   * Additional notes (optional)
-   */
-  notes?: string;
-
-  /**
-   * Service provider ID (optional)
-   */
-  technicianId?: string;
-
-  /**
-   * Metadata (optional)
-   */
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Update booking input
- */
-export interface UpdateBookingInput {
-  /**
-   * Service ID (optional)
-   */
   serviceId?: string;
-
-  /**
-   * Booking date (optional)
-   */
-  date?: string;
-
-  /**
-   * Booking time (optional)
-   */
-  time?: string;
-
-  /**
-   * Duration in minutes (optional)
-   */
-  duration?: number;
-
-  /**
-   * Location details (optional)
-   */
-  location?: LocationInput;
-
-  /**
-   * Additional notes (optional)
-   */
-  notes?: string;
-
-  /**
-   * Service provider ID (optional)
-   */
-  technicianId?: string;
-
-  /**
-   * Booking status (optional)
-   */
-  status?: BookingStatus;
-
-  /**
-   * Payment status (optional)
-   */
-  paymentStatus?: BookingPaymentStatus;
-
-  /**
-   * Payment ID (optional)
-   */
-  paymentId?: string;
-
-  /**
-   * Cancellation reason (optional)
-   */
-  cancellationReason?: string;
-
-  /**
-   * Rescheduling details (optional)
-   */
-  rescheduling?: {
-    fromDate: string;
-    fromTime: string;
-    reason: string;
-  };
-
-  /**
-   * Service completion details (optional)
-   */
-  completion?: {
-    completedAt: string;
-    duration: number;
-    notes: string;
-    rating?: number;
-    review?: string;
-    photos?: string[];
-  };
-
-  /**
-   * Metadata (optional)
-   */
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Booking entity
- */
-export interface Booking extends BaseEntity {
-  /**
-   * Customer ID
-   */
-  customerId: string;
-
-  /**
-   * Service ID
-   */
-  serviceId: string;
-
-  /**
-   * Booking date
-   */
-  date: Date;
-
-  /**
-   * Booking time (HH:mm)
-   */
-  time: string;
-
-  /**
-   * Duration in minutes
-   */
-  duration: number;
-
-  /**
-   * Total price
-   */
-  price: number;
-
-  /**
-   * Booking status
-   */
-  status: BookingStatus;
-
-  /**
-   * Payment status
-   */
-  paymentStatus: BookingPaymentStatus;
-
-  /**
-   * Payment ID (if paid)
-   */
-  paymentId?: string;
-
-  /**
-   * Location details
-   */
-  location: {
-    address: string;
-    postalCode: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
-  };
-
-  /**
-   * Additional notes
-   */
-  notes?: string;
-
-  /**
-   * Cancellation reason
-   */
-  cancellationReason?: string;
-
-  /**
-   * Cancellation date
-   */
-  cancelledAt?: Date;
-
-  /**
-   * Rescheduling details
-   */
-  rescheduling?: {
-    fromDate: Date;
-    fromTime: string;
-    reason: string;
-  };
-
-  /**
-   * Service provider ID (assigned technician)
-   */
-  technicianId?: string;
-
-  /**
-   * Service completion details
-   */
-  completion?: {
-    completedAt: Date;
-    duration: number;
-    notes: string;
-    rating?: number;
-    review?: string;
-    photos?: string[];
-  };
-
-  /**
-   * Metadata
-   */
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Booking with service details
- */
-export interface BookingWithService extends Booking {
-  /**
-   * Service details
-   */
-  service: Service;
 }

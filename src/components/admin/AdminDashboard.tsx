@@ -1,14 +1,28 @@
+import type { FC } from 'react';
+import type { MotionProps } from 'framer-motion';
+import { memo, Suspense, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, LogOut } from 'lucide-react';
-import React, { memo, Suspense, useState, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
-import AdminNav, { tabs } from '@admin/AdminNav';
+const tabs = [
+  { path: '/admin/services', label: 'Services' },
+  { path: '/admin/users', label: 'Users' },
+  { path: '/admin/settings', label: 'Settings' },
+  { path: '/admin/bookings', label: 'Bookings' }
+];
+
+import AdminNav from '@components/admin/AdminNav';
 
 import { useAdminDashboard } from '@hooks/useAdminDashboard';
 import { useUserRedux } from '@hooks/useUserRedux';
 
-const AdminDashboard = memo(() => {
+interface Tab {
+  path: string;
+  label: string;
+}
+
+const AdminDashboard: FC = memo((): JSX.Element => {
   const { activeTab, setActiveTab } = useAdminDashboard();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,12 +47,12 @@ const AdminDashboard = memo(() => {
     }
   }, [location.pathname, activeTab, setActiveTab]);
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     await logout();
     navigate('/login');
   };
 
-  const handleTabChange = (index: number) => {
+  const handleTabChange = (index: number): void => {
     setActiveTab(index);
     navigate(tabs[index].path);
     setSidebarOpen(false); // Close sidebar on mobile after navigation
@@ -93,7 +107,7 @@ const AdminDashboard = memo(() => {
         {/* Sidebar */}
         <AnimatePresence mode="wait">
           {(sidebarOpen || !isMobile) && (
-            <motion.aside
+            <motion.div
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
@@ -103,9 +117,8 @@ const AdminDashboard = memo(() => {
               <AdminNav
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
-                collapsed={false}
               />
-            </motion.aside>
+            </motion.div>
           )}
         </AnimatePresence>
 

@@ -1,7 +1,6 @@
-import type { User } from '@shared/types/user';
-import type { PaymentStatus } from '@shared/types/payment';
-import type { BookingDetails } from '../slices/bookingSlice';
-import type { ServiceProvider, ServiceVisit } from '@/types/services';
+import type { User } from '@/types/user';
+import type { BookingDetails, BookingState, PaymentStatus } from '@/types/booking';
+import type { ServiceProvider, ServiceVisit } from '@/types/service';
 
 export interface AdminState {
   adminData: {

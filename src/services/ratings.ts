@@ -1,19 +1,17 @@
 import { supabaseClient } from '@/config/supabase/client';
 import { logger } from '@/lib/logger';
-import { handleNotFoundError } from '@/utils/apiErrors';
-import type { ServiceRating } from '@/types/service';
+import { handleNotFoundError, handleConfigurationError } from '@/utils/apiErrors';
+import type { ServiceRating, DBServiceRating } from '@/types/rating';
+import { mapDBRatingToServiceRating, mapServiceRatingToDB } from '@/types/rating';
 
 export async function createRating(rating: Omit<ServiceRating, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceRating> {
   logger.info('Creating service rating', { bookingId: rating.bookingId });
 
+  const dbRating = mapServiceRatingToDB(rating);
+  
   const { data, error } = await supabaseClient
     .from('service_ratings')
-    .insert({
-      booking_id: rating.bookingId,
-      user_id: rating.userId,
-      rating: rating.rating,
-      comment: rating.comment
-    })
+    .insert(dbRating)
     .select()
     .single();
 
@@ -22,18 +20,14 @@ export async function createRating(rating: Omit<ServiceRating, 'id' | 'createdAt
       message: error.message,
       details: { bookingId: rating.bookingId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'RATING_CREATE_FAILED',
+      message: 'Failed to create service rating',
+      originalError: error
+    });
   }
 
-  return {
-    id: data.id,
-    bookingId: data.booking_id,
-    userId: data.user_id,
-    rating: data.rating,
-    comment: data.comment,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+  return mapDBRatingToServiceRating(data as DBServiceRating);
 }
 
 export async function getRatingsByBooking(bookingId: string): Promise<ServiceRating[]> {
@@ -49,22 +43,18 @@ export async function getRatingsByBooking(bookingId: string): Promise<ServiceRat
       message: error.message,
       details: { bookingId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'RATING_FETCH_FAILED',
+      message: 'Failed to fetch ratings by booking',
+      originalError: error
+    });
   }
 
   if (!data?.length) {
     throw handleNotFoundError(`No ratings found for booking ${bookingId}`);
   }
 
-  return data.map(rating => ({
-    id: rating.id,
-    bookingId: rating.booking_id,
-    userId: rating.user_id,
-    rating: rating.rating,
-    comment: rating.comment,
-    createdAt: rating.created_at,
-    updatedAt: rating.updated_at
-  }));
+  return data.map(rating => mapDBRatingToServiceRating(rating as DBServiceRating));
 }
 
 export async function getRatingsByUser(userId: string): Promise<ServiceRating[]> {
@@ -80,21 +70,20 @@ export async function getRatingsByUser(userId: string): Promise<ServiceRating[]>
       message: error.message,
       details: { userId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'RATING_FETCH_FAILED',
+      message: 'Failed to fetch ratings by user',
+      originalError: error
+    });
   }
 
-  return data?.map(rating => ({
-    id: rating.id,
-    bookingId: rating.booking_id,
-    userId: rating.user_id,
-    rating: rating.rating,
-    comment: rating.comment,
-    createdAt: rating.created_at,
-    updatedAt: rating.updated_at
-  })) || [];
+  return data?.map(rating => mapDBRatingToServiceRating(rating as DBServiceRating)) || [];
 }
 
-export async function updateRating(id: string, rating: Partial<Omit<ServiceRating, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ServiceRating> {
+export async function updateRating(
+  id: string,
+  rating: Partial<Omit<ServiceRating, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<ServiceRating> {
   logger.info('Updating service rating', { id });
 
   const { data, error } = await supabaseClient
@@ -112,22 +101,18 @@ export async function updateRating(id: string, rating: Partial<Omit<ServiceRatin
       message: error.message,
       details: { id }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'RATING_UPDATE_FAILED',
+      message: 'Failed to update service rating',
+      originalError: error
+    });
   }
 
   if (!data) {
     throw handleNotFoundError(`Rating with id ${id} not found`);
   }
 
-  return {
-    id: data.id,
-    bookingId: data.booking_id,
-    userId: data.user_id,
-    rating: data.rating,
-    comment: data.comment,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+  return mapDBRatingToServiceRating(data as DBServiceRating);
 }
 
 export async function deleteRating(id: string): Promise<void> {
@@ -143,6 +128,10 @@ export async function deleteRating(id: string): Promise<void> {
       message: error.message,
       details: { id }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'RATING_DELETE_FAILED',
+      message: 'Failed to delete service rating',
+      originalError: error
+    });
   }
 }

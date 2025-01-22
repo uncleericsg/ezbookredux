@@ -1,166 +1,92 @@
 /**
- * Log level
+ * Log levels
  */
-export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'http' | 'silly';
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
 
 /**
- * Log format
+ * Log formats
  */
-export type LogFormat = 'json' | 'text';
+export type LogFormat = 'json' | 'pretty';
 
 /**
  * Log metadata
  */
 export interface LogMetadata {
-  [key: string]: any;
+  timestamp: string;
+  level: LogLevel;
+  message: string;
+  [key: string]: unknown;
 }
 
 /**
  * Log entry
  */
-export interface LogEntry {
-  /**
-   * Log level
-   */
-  level: LogLevel;
-
-  /**
-   * Log message
-   */
-  message: string;
-
-  /**
-   * Log timestamp
-   */
-  timestamp: Date;
-
-  /**
-   * Log metadata
-   */
-  metadata?: LogMetadata;
+export interface LogEntry extends LogMetadata {
+  context?: Record<string, unknown>;
+  error?: Error;
+  stack?: string;
 }
 
 /**
  * Log query options
  */
 export interface LogQueryOptions {
-  /**
-   * Start date
-   */
-  startDate?: Date;
-
-  /**
-   * End date
-   */
-  endDate?: Date;
-
-  /**
-   * Log levels to include
-   */
-  levels?: LogLevel[];
-
-  /**
-   * Search text
-   */
-  search?: string;
-
-  /**
-   * Metadata filters
-   */
-  metadata?: Record<string, any>;
-
-  /**
-   * Page number
-   */
-  page?: number;
-
-  /**
-   * Page size
-   */
+  level?: LogLevel;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
-
-  /**
-   * Sort direction
-   */
-  sortDirection?: 'asc' | 'desc';
+  offset?: number;
+  search?: string;
 }
 
 /**
- * Logger interface
+ * Logger configuration
  */
-export interface Logger {
+export interface LoggerConfig {
   /**
-   * Log error message
+   * Log level
    */
-  error(message: string, metadata?: LogMetadata): void;
+  level: LogLevel;
 
   /**
-   * Log warning message
+   * Log format
    */
-  warn(message: string, metadata?: LogMetadata): void;
+  format: LogFormat;
 
   /**
-   * Log info message
+   * Output file path
    */
-  info(message: string, metadata?: LogMetadata): void;
+  file?: string;
 
   /**
-   * Log debug message
+   * Pretty print options
    */
-  debug(message: string, metadata?: LogMetadata): void;
+  pretty?: {
+    colorize?: boolean;
+    translateTime?: boolean;
+    ignore?: string[];
+  };
 
   /**
-   * Log verbose message
+   * JSON format options
    */
-  verbose(message: string, metadata?: LogMetadata): void;
-
-  /**
-   * Log HTTP message
-   */
-  http(message: string, metadata?: LogMetadata): void;
-
-  /**
-   * Log silly message
-   */
-  silly(message: string, metadata?: LogMetadata): void;
+  json?: {
+    space?: number;
+    replacer?: (key: string, value: unknown) => unknown;
+  };
 }
 
 /**
  * Server logger interface
  */
-export interface ServerLogger extends Logger {
-  /**
-   * Get log entries
-   */
-  getEntries(options?: LogQueryOptions): Promise<LogEntry[]>;
-
-  /**
-   * Get log entry count
-   */
-  getEntryCount(options?: LogQueryOptions): Promise<number>;
-
-  /**
-   * Clear log entries
-   */
-  clearEntries(options?: LogQueryOptions): Promise<void>;
-
-  /**
-   * Set log format
-   */
-  setFormat(format: LogFormat): void;
-
-  /**
-   * Set minimum log level
-   */
-  setLevel(level: LogLevel): void;
-
-  /**
-   * Get current log format
-   */
-  getFormat(): LogFormat;
-
-  /**
-   * Get current minimum log level
-   */
-  getLevel(): LogLevel;
+export interface ServerLogger {
+  error(message: string, metadata?: Record<string, unknown>): void;
+  warn(message: string, metadata?: Record<string, unknown>): void;
+  info(message: string, metadata?: Record<string, unknown>): void;
+  debug(message: string, metadata?: Record<string, unknown>): void;
+  trace(message: string, metadata?: Record<string, unknown>): void;
+  log(level: LogLevel, message: string, metadata?: Record<string, unknown>): void;
+  query(options?: LogQueryOptions): Promise<LogEntry[]>;
+  getConfig(): LoggerConfig;
+  setConfig(config: Partial<LoggerConfig>): void;
 }

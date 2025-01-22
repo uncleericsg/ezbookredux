@@ -1,5 +1,5 @@
-import React from 'react';
-import type { AdminHeaderProps } from '../../shared/types/admin';
+import type { FC } from 'react';
+import type { AdminHeaderProps } from '@shared/types/admin';
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({
   settings,

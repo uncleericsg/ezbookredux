@@ -1,363 +1,110 @@
-/**
- * Payment types
- */
-import type { BaseEntity } from './repository';
-import type { Booking } from './booking';
+import type { ErrorResponse } from './error';
 
 /**
  * Payment status
  */
-export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
-
-/**
- * Payment provider
- */
-export type PaymentProvider = 'stripe' | 'paynow' | 'cash';
+export type PaymentStatus = 
+  | 'pending'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'refunded'
+  | 'cancelled';
 
 /**
  * Payment method
  */
-export type PaymentMethod = 'card' | 'paynow' | 'cash';
+export type PaymentMethod = 
+  | 'card'
+  | 'bank_transfer'
+  | 'cash';
 
 /**
  * Payment currency
  */
-export type PaymentCurrency = 'sgd' | 'usd';
+export type PaymentCurrency = 'SGD' | 'USD';
 
 /**
- * Payment error codes
+ * Base payment interface
  */
-export type PaymentErrorCode = 
-  | 'INVALID_REQUEST'
-  | 'PAYMENT_FAILED'
-  | 'NETWORK_ERROR'
-  | 'INVALID_SERVICE'
-  | 'INVALID_AMOUNT'
-  | 'INVALID_CURRENCY'
-  | 'CARD_DECLINED'
-  | 'INSUFFICIENT_FUNDS'
-  | 'EXPIRED_CARD'
-  | 'PROCESSING_ERROR'
-  | 'SERVICE_ERROR'
-  | 'UNKNOWN_ERROR';
-
-/**
- * Payment error
- */
-export interface PaymentError {
-  /**
-   * Error code
-   */
-  code: PaymentErrorCode;
-
-  /**
-   * Error message
-   */
-  message: string;
-
-  /**
-   * Original error
-   */
-  originalError?: unknown;
-}
-
-/**
- * Payment intent response
- */
-export interface PaymentIntentResponse {
-  /**
-   * Payment intent ID
-   */
-  paymentIntentId: string;
-
-  /**
-   * Client secret
-   */
-  clientSecret: string;
-
-  /**
-   * Payment status
-   */
-  status: PaymentStatus;
-
-  /**
-   * Payment amount
-   */
-  amount: number;
-
-  /**
-   * Payment currency
-   */
-  currency: PaymentCurrency;
-
-  /**
-   * Payment method
-   */
-  paymentMethod?: string;
-
-  /**
-   * Error details
-   */
-  error?: PaymentError;
-}
-
-/**
- * Create payment intent parameters
- */
-export interface CreatePaymentIntentParams {
-  /**
-   * Payment amount
-   */
-  amount: number;
-
-  /**
-   * Payment currency
-   */
-  currency: PaymentCurrency;
-
-  /**
-   * Service ID
-   */
-  serviceId: string;
-
-  /**
-   * Booking ID
-   */
-  bookingId: string;
-
-  /**
-   * Customer ID
-   */
-  customerId: string;
-
-  /**
-   * Tip amount
-   */
-  tipAmount?: number;
-
-  /**
-   * Payment method
-   */
-  paymentMethod?: PaymentMethod;
-
-  /**
-   * Metadata
-   */
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Payment details
- */
-export interface PaymentDetails {
-  /**
-   * Payment ID
-   */
+export interface Payment {
   id: string;
-
-  /**
-   * Payment amount
-   */
   amount: number;
-
-  /**
-   * Payment currency
-   */
   currency: PaymentCurrency;
-
-  /**
-   * Payment status
-   */
   status: PaymentStatus;
-
-  /**
-   * Payment provider
-   */
-  provider: PaymentProvider;
-
-  /**
-   * Payment method
-   */
-  method: PaymentMethod;
-
-  /**
-   * Payment date
-   */
+  method?: PaymentMethod;
   createdAt: string;
-
-  /**
-   * Payment updated date
-   */
   updatedAt: string;
-
-  /**
-   * Payment completed date
-   */
-  completedAt?: string;
-
-  /**
-   * Payment refunded date
-   */
-  refundedAt?: string;
-
-  /**
-   * Payment cancelled date
-   */
-  cancelledAt?: string;
-
-  /**
-   * Payment metadata
-   */
-  metadata?: Record<string, unknown>;
-
-  /**
-   * Payment error
-   */
-  error?: PaymentError;
 }
 
 /**
- * Payment hook state
+ * Create checkout session request
  */
-export interface PaymentHookState {
-  /**
-   * Loading state
-   */
-  loading: boolean;
-
-  /**
-   * Error state
-   */
-  error: PaymentError | null;
-
-  /**
-   * Process payment function
-   */
-  processPayment: (params: CreatePaymentIntentParams) => Promise<void>;
-}
-
-/**
- * Payment entity
- */
-export interface Payment extends BaseEntity {
-  /**
-   * Booking ID
-   */
+export interface CreateCheckoutSessionRequest {
   bookingId: string;
-
-  /**
-   * Customer ID
-   */
   customerId: string;
-
-  /**
-   * Service ID
-   */
-  serviceId: string;
-
-  /**
-   * Payment amount
-   */
   amount: number;
+  currency?: PaymentCurrency;
+  successUrl?: string;
+  cancelUrl?: string;
+  metadata?: Record<string, string>;
+}
 
-  /**
-   * Payment currency
-   */
+/**
+ * Create checkout session response
+ */
+export interface CreateCheckoutSessionResponse {
+  url: string;
+  sessionId: string;
+}
+
+/**
+ * Payment session
+ */
+export interface PaymentSession {
+  id: string;
+  bookingId: string;
+  customerId: string;
+  amount: number;
   currency: PaymentCurrency;
-
-  /**
-   * Payment status
-   */
   status: PaymentStatus;
+  sessionId: string;
+  paymentIntentId?: string;
+  metadata?: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  /**
-   * Payment provider
-   */
-  provider: PaymentProvider;
-
-  /**
-   * Payment method
-   */
-  method: PaymentMethod;
-
-  /**
-   * Provider payment ID
-   */
-  providerPaymentId?: string;
-
-  /**
-   * Provider payment intent ID
-   */
-  providerPaymentIntentId?: string;
-
-  /**
-   * Provider payment method ID
-   */
-  providerPaymentMethodId?: string;
-
-  /**
-   * Provider payment method details
-   */
-  providerPaymentMethodDetails?: Record<string, unknown>;
-
-  /**
-   * Provider shipping details
-   */
-  providerShipping?: {
-    address: Record<string, unknown>;
-    name: string;
-    carrier: string;
-    phone: string;
-    tracking_number: string;
+/**
+ * Payment webhook event
+ */
+export interface PaymentWebhookEvent {
+  type: string;
+  data: {
+    object: Record<string, unknown>;
   };
+}
 
-  /**
-   * Provider billing details
-   */
-  providerBillingDetails?: {
-    address: Record<string, unknown>;
-    email: string;
-    name: string;
-    phone: string;
-  };
+/**
+ * Payment webhook response
+ */
+export type PaymentWebhookResponse = 
+  | { received: true }
+  | ErrorResponse;
 
-  /**
-   * Provider metadata
-   */
-  providerMetadata?: Record<string, unknown>;
-
-  /**
-   * Error details
-   */
-  errorDetails?: Record<string, unknown>;
-
-  /**
-   * Dispute evidence
-   */
-  disputeEvidence?: Record<string, unknown>;
-
-  /**
-   * Payment metadata
-   */
-  metadata?: Record<string, unknown>;
-
-  /**
-   * Payment completed date
-   */
-  completedAt?: Date;
-
-  /**
-   * Payment refunded date
-   */
-  refundedAt?: Date;
-
-  /**
-   * Payment cancelled date
-   */
-  cancelledAt?: Date;
-
-  /**
-   * Associated booking
-   */
-  booking?: Booking;
+/**
+ * Payment provider interface
+ */
+export interface PaymentProvider {
+  createCheckoutSession(
+    data: CreateCheckoutSessionRequest
+  ): Promise<CreateCheckoutSessionResponse>;
+  
+  handleWebhookEvent(
+    event: PaymentWebhookEvent
+  ): Promise<PaymentWebhookResponse>;
+  
+  getPaymentSession(
+    sessionId: string
+  ): Promise<PaymentSession>;
 }

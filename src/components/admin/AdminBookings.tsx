@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { FC } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 import AdminHeader from './AdminHeader';
 import AdminNav from './AdminNav';
-import { useBooking } from '@/hooks/useBooking';
-import { useAuth } from '@/hooks/useAuth';
+import { useBooking } from '@hooks/useBooking';
+import { useAuth } from '@hooks/useAuth';
 
-import type { Booking, BookingStatus } from '../../shared/types/booking';
-import type { UseBookingResult, UseAuthResult } from '../../shared/types/hooks';
-import type { AdminSettings } from '../../shared/types/settings';
+import type { Booking, BookingStatus } from '@shared/types/booking';
+import type {
+  UseBookingResult,
+  UseAuthResult
+} from '@shared/types';
+import type { AdminHeaderProps } from '@shared/types/admin';
+import type { AdminSettings } from '@shared/types/settings';
 
-import { defaultSettings } from '../../config/settings';
-import { isAdminSettings } from '../../utils/typeGuards';
+import { defaultSettings } from '@shared/types/settings';
+import { isAdminSettings } from '@utils/typeGuards';
 
-const AdminBookings: React.FC = () => {
+const AdminBookings: FC = (): JSX.Element => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const { loading: bookingLoading, error, fetchBookingsByEmail } = useBooking() as UseBookingResult;
@@ -51,7 +56,7 @@ const AdminBookings: React.FC = () => {
     loadBookings();
   }, [user?.email, fetchBookingsByEmail]);
 
-  const renderBookingStatus = (status: BookingStatus) => {
+  const renderBookingStatus = (status: BookingStatus): JSX.Element => {
     const statusClasses: Record<BookingStatus, string> = {
       completed: 'bg-green-900 text-green-200',
       pending: 'bg-yellow-900 text-yellow-200',
@@ -69,17 +74,17 @@ const AdminBookings: React.FC = () => {
 
   const handleUpdateSettings = async (updates: Partial<AdminSettings>) => {
     try {
-      setSettings(prev => ({ ...prev, ...updates }));
+      setSettings((prev: AdminSettings) => ({ ...prev, ...updates }));
       toast.success('Settings updated successfully');
     } catch (err) {
       toast.error('Failed to update settings');
     }
   };
 
-  const headerProps = {
+  const headerProps: AdminHeaderProps = {
     settings,
     loading,
-    integrationStatus: {} as Record<string, boolean>,
+    integrationStatus: {},
     onIntervalChange: () => {},
     updateSettings: handleUpdateSettings
   };

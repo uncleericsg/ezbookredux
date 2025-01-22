@@ -115,9 +115,11 @@ export const profileOperations = {
       lastName: 'User',
       email: 'test@example.com',
       phone: '1234567890',
+      role: 'customer',
       status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      amcStatus: 'inactive',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
   },
 
@@ -126,9 +128,11 @@ export const profileOperations = {
     return {
       id: userId,
       ...data,
+      role: 'customer',
       status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      amcStatus: 'inactive',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     } as User;
   }
 };

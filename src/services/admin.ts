@@ -1,5 +1,5 @@
 import { supabaseClient } from '@/config/supabase/client';
-import { APIError } from '@/utils/apiErrors';
+import { handleDatabaseError } from '@/utils/apiErrors';
 import type { AdminSettings, BrandingSettings } from '@/types/settings';
 import { defaultBrandingSettings } from '@/types/settings';
 
@@ -26,12 +26,11 @@ export async function fetchAdminSettings(): Promise<AdminSettings> {
       branding: settings.branding || defaultBrandingSettings
     };
   } catch (error) {
-    throw new APIError(
-      'FETCH_ADMIN_SETTINGS_ERROR',
-      'Failed to fetch admin settings',
-      500,
-      { error }
-    );
+    throw handleDatabaseError({
+      code: 'FETCH_ADMIN_SETTINGS_ERROR',
+      message: 'Failed to fetch admin settings',
+      originalError: error
+    });
   }
 }
 
@@ -49,12 +48,11 @@ export async function updateAdminSettings(
 
     return settings;
   } catch (error) {
-    throw new APIError(
-      'UPDATE_ADMIN_SETTINGS_ERROR',
-      'Failed to update admin settings',
-      500,
-      { error }
-    );
+    throw handleDatabaseError({
+      code: 'UPDATE_ADMIN_SETTINGS_ERROR',
+      message: 'Failed to update admin settings',
+      originalError: error
+    });
   }
 }
 
@@ -78,12 +76,11 @@ export async function updateBrandingSettings(
 
     return settings;
   } catch (error) {
-    throw new APIError(
-      'UPDATE_BRANDING_ERROR',
-      'Failed to update branding settings',
-      500,
-      { error }
-    );
+    throw handleDatabaseError({
+      code: 'UPDATE_BRANDING_ERROR',
+      message: 'Failed to update branding settings',
+      originalError: error
+    });
   }
 }
 
@@ -110,11 +107,10 @@ export async function resetAdminSettings(): Promise<AdminSettings> {
 
     return settings;
   } catch (error) {
-    throw new APIError(
-      'RESET_ADMIN_SETTINGS_ERROR',
-      'Failed to reset admin settings',
-      500,
-      { error }
-    );
+    throw handleDatabaseError({
+      code: 'RESET_ADMIN_SETTINGS_ERROR',
+      message: 'Failed to reset admin settings',
+      originalError: error
+    });
   }
 }

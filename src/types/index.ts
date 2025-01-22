@@ -68,3 +68,13 @@ export interface Holiday {
   type: 'public' | 'school' | 'bank';
   isWorkingDay: boolean;
 }
+
+// Component Types
+export type {
+  BaseSettingsProps,
+  SaveableProps,
+  AppSettingsProps,
+  AdminSettingsProps,
+  SectionProps,
+  WrapperProps
+} from './components';

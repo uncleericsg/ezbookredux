@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { HiOutlineCalendarDays, HiOutlineClock } from 'react-icons/hi2';
-import type { TimeSlot } from '@shared/types/booking';
-import type { BaseStepProps } from '../../types/booking-flow';
-import { Calendar } from '../../components/Calendar';
-import { TimeSlotPicker } from '../../components/TimeSlotPicker';
-import { formatDate, formatTime } from '../../utils/dates';
+import type { BaseStepProps } from '@/types/booking-flow';
+import type { PickerTimeSlot } from '@/types/schedule';
+import { Calendar } from '../ui/calendar';
+import { TimeSlotPicker } from '../ui/time-slot-picker';
+import { formatDate, formatTime } from '@/utils/dates';
 
 const ScheduleStep: React.FC<BaseStepProps> = ({
   onNext,
@@ -17,8 +17,12 @@ const ScheduleStep: React.FC<BaseStepProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     bookingData.date ? new Date(bookingData.date) : null
   );
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | undefined>(
-    bookingData.time ? { id: '1', startTime: bookingData.time } : undefined
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<PickerTimeSlot | undefined>(
+    bookingData.time ? {
+      id: '1',
+      startTime: bookingData.time,
+      isAvailable: true
+    } : undefined
   );
 
   const handleDateSelect = (date: Date | null) => {
@@ -31,7 +35,7 @@ const ScheduleStep: React.FC<BaseStepProps> = ({
     }
   };
 
-  const handleTimeSlotSelect = (slot: TimeSlot) => {
+  const handleTimeSlotSelect = (slot: PickerTimeSlot) => {
     setSelectedTimeSlot(slot);
     if (selectedDate) {
       onUpdateBookingData({
@@ -86,12 +90,12 @@ const ScheduleStep: React.FC<BaseStepProps> = ({
           {selectedDate ? (
             <TimeSlotPicker
               slots={[
-                { id: '1', startTime: '09:00' },
-                { id: '2', startTime: '10:00' },
-                { id: '3', startTime: '11:00' },
-                { id: '4', startTime: '14:00' },
-                { id: '5', startTime: '15:00' },
-                { id: '6', startTime: '16:00' }
+                { id: '1', startTime: '09:00', endTime: '10:00', isAvailable: true },
+                { id: '2', startTime: '10:00', endTime: '11:00', isAvailable: true },
+                { id: '3', startTime: '11:00', endTime: '12:00', isAvailable: true },
+                { id: '4', startTime: '14:00', endTime: '15:00', isAvailable: true, isPeakHour: true },
+                { id: '5', startTime: '15:00', endTime: '16:00', isAvailable: true, isPeakHour: true },
+                { id: '6', startTime: '16:00', endTime: '17:00', isAvailable: true }
               ]}
               selectedSlot={selectedTimeSlot}
               onSelectSlot={handleTimeSlotSelect}

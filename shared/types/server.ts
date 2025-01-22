@@ -1,205 +1,101 @@
-import type { Request, Response, NextFunction } from 'express';
-import type { DatabaseConfig } from './database';
-import type { ServiceConfig } from './service';
-import type { ValidationOptions } from './validation';
-import type { ServerLogger, LogMetadata } from './logger';
-import type { UserProfile } from './middleware';
+import type { Express, Request, Response, NextFunction } from 'express';
+import type { Server } from 'http';
+import type { MiddlewareConfig } from './middleware';
+import type { LoggerConfig } from './logger';
 
 /**
- * Server environment type
- */
-export type ServerEnvironment = 'development' | 'production' | 'test';
-
-/**
- * Server configuration interface
+ * Server configuration
  */
 export interface ServerConfig {
+  /**
+   * Port number
+   */
   port: number;
-  env: ServerEnvironment;
-  database: DatabaseConfig;
-  services: ServiceConfig;
-  validation?: ValidationOptions;
+
+  /**
+   * Host name
+   */
+  host: string;
+
+  /**
+   * Environment
+   */
+  env: 'development' | 'production' | 'test';
+
+  /**
+   * API version
+   */
+  apiVersion: string;
+
+  /**
+   * Base URL
+   */
+  baseUrl: string;
+
+  /**
+   * Middleware configuration
+   */
+  middleware: MiddlewareConfig;
+
+  /**
+   * Logger configuration
+   */
+  logger: LoggerConfig;
+
+  /**
+   * Trust proxy
+   */
+  trustProxy?: boolean;
+
+  /**
+   * CORS origin
+   */
+  corsOrigin?: string | string[];
+
+  /**
+   * Rate limit window (ms)
+   */
+  rateLimitWindow?: number;
+
+  /**
+   * Rate limit max requests
+   */
+  rateLimitMax?: number;
 }
 
 /**
- * Server initialization options
+ * Server instance
  */
-export interface ServerOptions {
-  config: ServerConfig;
-  middleware?: ServerMiddleware[];
-  plugins?: ServerPlugin[];
-}
+export interface ServerInstance {
+  /**
+   * Express app
+   */
+  app: Express;
 
-/**
- * Server middleware interface
- */
-export interface ServerMiddleware {
-  name: string;
-  priority: number;
-  handler: ServerMiddlewareHandler;
-}
+  /**
+   * HTTP server
+   */
+  server: Server;
 
-/**
- * Server middleware handler type
- */
-export type ServerMiddlewareHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<void>;
-
-/**
- * Server plugin interface
- */
-export interface ServerPlugin {
-  name: string;
-  version: string;
-  initialize(server: Server): Promise<void>;
-}
-
-/**
- * Server status type
- */
-export type ServerStatus = 'starting' | 'running' | 'stopping' | 'stopped' | 'error';
-
-/**
- * Server health check result
- */
-export interface ServerHealth {
-  status: ServerStatus;
-  uptime: number;
-  memory: {
-    used: number;
-    total: number;
-  };
-  services: Record<string, ServiceHealth>;
-}
-
-/**
- * Service health check result
- */
-export interface ServiceHealth {
-  status: 'healthy' | 'unhealthy' | 'degraded';
-  message?: string;
-  details?: Record<string, unknown>;
-}
-
-/**
- * Server error interface
- */
-export interface ServerError extends Error {
-  code: string;
-  statusCode: number;
-  details?: Record<string, unknown>;
-}
-
-/**
- * Server request context
- */
-export interface ServerContext {
-  requestId: string;
-  startTime: number;
-  user?: UserProfile;
-  session?: SessionData;
-  [key: string]: unknown;
-}
-
-/**
- * Server session data
- */
-export interface SessionData {
-  id: string;
-  userId: string;
-  role: string;
-  permissions: string[];
-  expiresAt: Date;
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Server metrics interface
- */
-export interface ServerMetrics {
-  requestCount: number;
-  errorCount: number;
-  responseTime: {
-    avg: number;
-    min: number;
-    max: number;
-    p95: number;
-    p99: number;
-  };
-  memory: {
-    used: number;
-    total: number;
-    free: number;
-  };
-  cpu: {
-    usage: number;
-    load: number[];
-  };
-}
-
-/**
- * Server event types
- */
-export type ServerEvent =
-  | 'start'
-  | 'stop'
-  | 'error'
-  | 'request'
-  | 'response'
-  | 'middleware'
-  | 'plugin';
-
-/**
- * Server event handler type
- */
-export type ServerEventHandler = (event: ServerEvent, data?: unknown) => void;
-
-/**
- * Server class interface
- */
-export interface Server {
-  config: ServerConfig;
-  status: ServerStatus;
-  metrics: ServerMetrics;
-  logger: ServerLogger;
-  
-  // Lifecycle methods
+  /**
+   * Start server
+   */
   start(): Promise<void>;
+
+  /**
+   * Stop server
+   */
   stop(): Promise<void>;
-  restart(): Promise<void>;
-  
-  // Middleware and plugins
-  use(middleware: ServerMiddleware): void;
-  register(plugin: ServerPlugin): Promise<void>;
-  
-  // Event handling
-  on(event: ServerEvent, handler: ServerEventHandler): void;
-  off(event: ServerEvent, handler: ServerEventHandler): void;
-  
-  // Health checks
-  getHealth(): Promise<ServerHealth>;
-  
-  // Utility methods
-  createContext(req: Request): ServerContext;
-  handleError(error: Error): void;
+
+  /**
+   * Get server config
+   */
+  getConfig(): ServerConfig;
+
+  /**
+   * Use middleware
+   */
+  use(path: string, ...handlers: ((req: Request, res: Response, next: NextFunction) => void)[]): void;
 }
 
-/**
- * Server factory interface
- */
-export interface ServerFactory {
-  create(options: ServerOptions): Server;
-}
-
-/**
- * Server builder interface
- */
-export interface ServerBuilder {
-  setConfig(config: ServerConfig): this;
-  addMiddleware(middleware: ServerMiddleware): this;
-  addPlugin(plugin: ServerPlugin): this;
-  build(): Server;
-}
+export type { Express, Request, Response, NextFunction, Server };

@@ -1,43 +1,37 @@
 import { supabaseClient } from '@/config/supabase/client';
 import { logger } from '@/lib/logger';
 import { handleNotFoundError, handleConfigurationError } from '@/utils/apiErrors';
-import type { ServiceVisit } from '@/types/service';
+import type { ServiceVisit } from '@/types/amc';
+import type { DBServiceVisit } from '@/types/database';
+import { mapDBServiceVisitToServiceVisit, mapServiceVisitToDB } from '@/types/database';
 
-export async function createServiceVisit(visit: Omit<ServiceVisit, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceVisit> {
-  logger.info('Creating service visit', { bookingId: visit.bookingId });
+export async function createServiceVisit(
+  visit: Omit<ServiceVisit, 'id' | 'createdAt' | 'updatedAt'>,
+  bookingId: string
+): Promise<ServiceVisit> {
+  logger.info('Creating service visit', { bookingId });
 
+  const dbVisit = mapServiceVisitToDB(visit, bookingId);
+  
   const { data, error } = await supabaseClient
     .from('service_visits')
-    .insert({
-      booking_id: visit.bookingId,
-      technician_id: visit.technicianId,
-      start_time: visit.startTime,
-      end_time: visit.endTime,
-      status: visit.status,
-      notes: visit.notes
-    })
+    .insert(dbVisit)
     .select()
     .single();
 
   if (error) {
     logger.error('Failed to create service visit', {
       message: error.message,
-      details: { bookingId: visit.bookingId }
+      details: { bookingId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'SERVICE_VISIT_CREATE_FAILED',
+      message: 'Failed to create service visit',
+      originalError: error
+    });
   }
 
-  return {
-    id: data.id,
-    bookingId: data.booking_id,
-    technicianId: data.technician_id,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    status: data.status,
-    notes: data.notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+  return mapDBServiceVisitToServiceVisit(data as DBServiceVisit);
 }
 
 export async function getServiceVisit(id: string): Promise<ServiceVisit> {
@@ -54,38 +48,32 @@ export async function getServiceVisit(id: string): Promise<ServiceVisit> {
       message: error.message,
       details: { id }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'SERVICE_VISIT_FETCH_FAILED',
+      message: 'Failed to fetch service visit',
+      originalError: error
+    });
   }
 
   if (!data) {
     throw handleNotFoundError(`Service visit with id ${id} not found`);
   }
 
-  return {
-    id: data.id,
-    bookingId: data.booking_id,
-    technicianId: data.technician_id,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    status: data.status,
-    notes: data.notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+  return mapDBServiceVisitToServiceVisit(data as DBServiceVisit);
 }
 
-export async function updateServiceVisit(id: string, visit: Partial<Omit<ServiceVisit, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ServiceVisit> {
+export async function updateServiceVisit(
+  id: string,
+  visit: Partial<Omit<ServiceVisit, 'id' | 'createdAt' | 'updatedAt'>>,
+  bookingId: string
+): Promise<ServiceVisit> {
   logger.info('Updating service visit', { id });
 
+  const dbVisit = mapServiceVisitToDB({ ...visit, packageId: '', date: '', label: '', status: 'scheduled' }, bookingId);
+  
   const { data, error } = await supabaseClient
     .from('service_visits')
-    .update({
-      technician_id: visit.technicianId,
-      start_time: visit.startTime,
-      end_time: visit.endTime,
-      status: visit.status,
-      notes: visit.notes
-    })
+    .update(dbVisit)
     .eq('id', id)
     .select()
     .single();
@@ -95,24 +83,18 @@ export async function updateServiceVisit(id: string, visit: Partial<Omit<Service
       message: error.message,
       details: { id }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'SERVICE_VISIT_UPDATE_FAILED',
+      message: 'Failed to update service visit',
+      originalError: error
+    });
   }
 
   if (!data) {
     throw handleNotFoundError(`Service visit with id ${id} not found`);
   }
 
-  return {
-    id: data.id,
-    bookingId: data.booking_id,
-    technicianId: data.technician_id,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    status: data.status,
-    notes: data.notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+  return mapDBServiceVisitToServiceVisit(data as DBServiceVisit);
 }
 
 export async function deleteServiceVisit(id: string): Promise<void> {
@@ -145,20 +127,35 @@ export async function getServiceVisitsByBooking(bookingId: string): Promise<Serv
       message: error.message,
       details: { bookingId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'SERVICE_VISIT_FETCH_FAILED',
+      message: 'Failed to fetch service visits by booking',
+      originalError: error
+    });
   }
 
-  return data?.map(visit => ({
-    id: visit.id,
-    bookingId: visit.booking_id,
-    technicianId: visit.technician_id,
-    startTime: visit.start_time,
-    endTime: visit.end_time,
-    status: visit.status,
-    notes: visit.notes,
-    createdAt: visit.created_at,
-    updatedAt: visit.updated_at
-  })) || [];
+  return data?.map(visit => mapDBServiceVisitToServiceVisit(visit as DBServiceVisit)) || [];
+}
+
+export async function resetVisitLabels(packageId: string): Promise<void> {
+  logger.info('Resetting visit labels', { packageId });
+
+  const { error } = await supabaseClient
+    .from('service_visits')
+    .update({ label: null })
+    .eq('package_id', packageId);
+
+  if (error) {
+    logger.error('Failed to reset visit labels', {
+      message: error.message,
+      details: { packageId }
+    });
+    throw handleConfigurationError({
+      code: 'RESET_LABELS_FAILED',
+      message: 'Failed to reset visit labels',
+      originalError: error
+    });
+  }
 }
 
 export async function getServiceVisitsByTechnician(technicianId: string): Promise<ServiceVisit[]> {
@@ -174,18 +171,12 @@ export async function getServiceVisitsByTechnician(technicianId: string): Promis
       message: error.message,
       details: { technicianId }
     });
-    throw error;
+    throw handleConfigurationError({
+      code: 'SERVICE_VISIT_FETCH_FAILED',
+      message: 'Failed to fetch service visits by technician',
+      originalError: error
+    });
   }
 
-  return data?.map(visit => ({
-    id: visit.id,
-    bookingId: visit.booking_id,
-    technicianId: visit.technician_id,
-    startTime: visit.start_time,
-    endTime: visit.end_time,
-    status: visit.status,
-    notes: visit.notes,
-    createdAt: visit.created_at,
-    updatedAt: visit.updated_at
-  })) || [];
+  return data?.map(visit => mapDBServiceVisitToServiceVisit(visit as DBServiceVisit)) || [];
 }

@@ -1,28 +1,15 @@
 import React, { useState } from 'react';
 import { Mail, Phone, Loader2, Save, X, User, MapPin, Building } from 'lucide-react';
-import type { User as UserType } from '../../types';
-import { z } from 'zod';
 import { motion } from 'framer-motion';
-
-interface ProfileFormProps {
-  user: UserType;
-  onSave: (data: any) => Promise<void>;
-  onCancel: () => void;
-}
-
-const profileSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  unitNumber: z.string().min(1, 'Unit number is required'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(8, 'Phone number must be at least 8 characters'),
-  address: z.string().min(1, 'Address is required'),
-  condoName: z.string().optional(),
-  lobbyTower: z.string().optional()
-});
+import type {
+  ProfileFormProps,
+  ProfileFormData,
+  ProfileFormErrors
+} from '@/types/profile-form';
+import { profileFormSchema } from '@/types/profile-form';
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
@@ -32,23 +19,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onCancel }) => 
     condoName: user.condoName || '',
     lobbyTower: user.lobbyTower || ''
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<ProfileFormErrors>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      profileSchema.parse(formData);
+      const validatedData = profileFormSchema.parse(formData);
       setErrors({});
       setLoading(true);
-      await onSave(formData);
+      await onSave(validatedData);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
+        const newErrors: ProfileFormErrors = {};
         err.errors.forEach(error => {
-          if (error.path[0]) {
-            newErrors[error.path[0].toString()] = error.message;
+          const path = error.path[0];
+          if (path && typeof path === 'string') {
+            newErrors[path as keyof ProfileFormData] = error.message;
           }
         });
         setErrors(newErrors);

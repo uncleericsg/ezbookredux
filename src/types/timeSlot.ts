@@ -1,6 +1,4 @@
-import type { Database } from './database';
-
-export interface TimeSlot {
+interface DatabaseTimeSlot {
   id: string;
   serviceId: string | null;
   technicianId: string | null;
@@ -14,6 +12,23 @@ export interface TimeSlot {
   duration: number | null;
   created_at: string;
   updated_at: string;
+  metadata: TimeSlotMetadata | null;
+}
+
+export interface TimeSlot {
+  id: string;
+  serviceId: string | null;
+  technicianId: string | null;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  isPeakHour: boolean;
+  priceMultiplier: number;
+  status: TimeSlotStatus;
+  blockReason: string | null;
+  duration: number | null;
+  createdAt: string;
+  updatedAt: string;
   metadata: TimeSlotMetadata | null;
 }
 
@@ -44,7 +59,7 @@ export interface UpdateTimeSlotRequest extends Partial<CreateTimeSlotRequest> {
   id: string;
 }
 
-export function mapDatabaseTimeSlot(dbTimeSlot: Database['public']['Tables']['time_slots']['Row']): TimeSlot {
+export function mapDatabaseTimeSlot(dbTimeSlot: DatabaseTimeSlot): TimeSlot {
   return {
     id: dbTimeSlot.id,
     serviceId: dbTimeSlot.serviceId,
@@ -57,13 +72,13 @@ export function mapDatabaseTimeSlot(dbTimeSlot: Database['public']['Tables']['ti
     status: dbTimeSlot.status as TimeSlotStatus,
     blockReason: dbTimeSlot.blockReason,
     duration: dbTimeSlot.duration,
-    created_at: dbTimeSlot.created_at,
-    updated_at: dbTimeSlot.updated_at,
+    createdAt: dbTimeSlot.created_at,
+    updatedAt: dbTimeSlot.updated_at,
     metadata: dbTimeSlot.metadata as TimeSlotMetadata | null
   };
 }
 
-export function mapTimeSlotToDatabase(timeSlot: CreateTimeSlotRequest): Database['public']['Tables']['time_slots']['Insert'] {
+export function mapTimeSlotToDatabase(timeSlot: CreateTimeSlotRequest): Omit<DatabaseTimeSlot, 'id' | 'created_at' | 'updated_at'> {
   return {
     serviceId: timeSlot.serviceId ?? null,
     technicianId: timeSlot.technicianId ?? null,

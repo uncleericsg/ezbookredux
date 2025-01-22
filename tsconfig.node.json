@@ -1,32 +1,31 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist/config",
-    "types": ["node", "vite/client"],
+    "outDir": "./dist/server",
     "rootDir": ".",
-    "tsBuildInfoFile": "./dist/config/.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/server/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@server/*": ["server/*"],
+      "@shared/*": ["shared/*"],
+      "@config/*": ["server/config/*"],
+      "@utils/*": ["server/utils/*"],
+      "@services/*": ["server/services/*"],
+      "@middleware/*": ["server/middleware/*"],
+      "@routes/*": ["server/routes/*"],
+      "@types/*": ["server/types/*"],
+      "@repositories/*": ["server/repositories/*"]
+    },
+    "types": ["node", "express"]
   },
   "include": [
-    "vite.config.ts",
-    "vitest.config.ts",
-    "tailwind.config.ts",
-    "vite-plugin-google-maps.ts",
-    "src/theme/theme.config.ts"
+    "server/**/*.ts",
+    "server/**/*.tsx"
   ],
   "references": [
-    { "path": "./tsconfig.shared.json" }
+    {
+      "path": "./tsconfig.shared.json"
+    }
   ]
 }

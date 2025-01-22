@@ -1,319 +1,51 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+/**
+ * Database schema types
+ */
+export interface DBServiceVisit {
+  id: string;
+  booking_id: string;
+  technician_id?: string;
+  package_id: string;
+  start_time?: string;
+  end_time?: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  label?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
 
-export interface Database {
-  public: {
-    Tables: {
-      users: {
-        Row: {
-          id: string;
-          name: string | null;
-          email: string | null;
-          phone: string | null;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          name?: string | null;
-          email?: string | null;
-          phone?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          name?: string | null;
-          email?: string | null;
-          phone?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      bookings: {
-        Row: {
-          id: string;
-          userId: string;
-          serviceId: string;
-          scheduledAt: string;
-          status: string;
-          totalAmount: number;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          userId: string;
-          serviceId: string;
-          scheduledAt: string;
-          status?: string;
-          totalAmount: number;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          userId?: string;
-          serviceId?: string;
-          scheduledAt?: string;
-          status?: string;
-          totalAmount?: number;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      services: {
-        Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          price: number;
-          duration: number;
-          categoryId: string | null;
-          isActive: boolean;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          price: number;
-          duration: number;
-          categoryId?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          price?: number;
-          duration?: number;
-          categoryId?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      service_categories: {
-        Row: {
-          id: string;
-          name: string;
-          description: string | null;
-          parentId: string | null;
-          isActive: boolean;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          description?: string | null;
-          parentId?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string | null;
-          parentId?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      service_ratings: {
-        Row: {
-          id: string;
-          bookingId: string;
-          userId: string;
-          rating: number;
-          comment: string | null;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          bookingId: string;
-          userId: string;
-          rating: number;
-          comment?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          bookingId?: string;
-          userId?: string;
-          rating?: number;
-          comment?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      teams: {
-        Row: {
-          id: string;
-          name: string;
-          description: string | null;
-          isActive: boolean;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          description?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string | null;
-          isActive?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      team_members: {
-        Row: {
-          id: string;
-          teamId: string;
-          userId: string;
-          role: string;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          teamId: string;
-          userId: string;
-          role?: string;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          teamId?: string;
-          userId?: string;
-          role?: string;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      time_slots: {
-        Row: {
-          id: string;
-          serviceId: string | null;
-          technicianId: string | null;
-          startTime: string;
-          endTime: string;
-          isAvailable: boolean;
-          isPeakHour: boolean;
-          priceMultiplier: number;
-          status: string;
-          blockReason: string | null;
-          duration: number | null;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          serviceId?: string | null;
-          technicianId?: string | null;
-          startTime: string;
-          endTime: string;
-          isAvailable?: boolean;
-          isPeakHour?: boolean;
-          priceMultiplier?: number;
-          status?: string;
-          blockReason?: string | null;
-          duration?: number | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          serviceId?: string | null;
-          technicianId?: string | null;
-          startTime?: string;
-          endTime?: string;
-          isAvailable?: boolean;
-          isPeakHour?: boolean;
-          priceMultiplier?: number;
-          status?: string;
-          blockReason?: string | null;
-          duration?: number | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-      service_configs: {
-        Row: {
-          id: string;
-          serviceId: string;
-          enabled: boolean;
-          apiKey: string | null;
-          settings: Record<string, unknown> | null;
-          created_at: string;
-          updated_at: string;
-          metadata: Record<string, unknown> | null;
-        };
-        Insert: {
-          id?: string;
-          serviceId: string;
-          enabled?: boolean;
-          apiKey?: string | null;
-          settings?: Record<string, unknown> | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-        Update: {
-          id?: string;
-          serviceId?: string;
-          enabled?: boolean;
-          apiKey?: string | null;
-          settings?: Record<string, unknown> | null;
-          created_at?: string;
-          updated_at?: string;
-          metadata?: Record<string, unknown> | null;
-        };
-      };
-    };
+/**
+ * Type mapping functions
+ */
+import type { ServiceVisit } from './amc';
+
+export function mapDBServiceVisitToServiceVisit(dbVisit: DBServiceVisit): ServiceVisit {
+  return {
+    id: dbVisit.id,
+    packageId: dbVisit.package_id,
+    date: dbVisit.start_time || '',
+    label: dbVisit.label || '',
+    status: dbVisit.status,
+    notes: dbVisit.notes,
+    technicianId: dbVisit.technician_id,
+    createdAt: dbVisit.created_at,
+    updatedAt: dbVisit.updated_at
   };
 }
 
-export type DbClient = SupabaseClient<Database>; 
+export function mapServiceVisitToDB(
+  visit: Omit<ServiceVisit, 'id' | 'createdAt' | 'updatedAt'>,
+  bookingId: string
+): Omit<DBServiceVisit, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    booking_id: bookingId,
+    package_id: visit.packageId,
+    start_time: visit.date,
+    status: visit.status,
+    label: visit.label,
+    notes: visit.notes,
+    technician_id: visit.technicianId,
+    end_time: visit.date // Using same date for end_time as a default
+  };
+}

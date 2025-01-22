@@ -1,286 +1,135 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { CorsOptions } from 'cors';
-import type { HelmetOptions } from 'helmet';
-import type { ValidationSchema } from './validation';
-import type { UserProfile } from './user';
+import type { ErrorCode } from './error';
+import type { UserRole } from './auth';
 
 /**
- * Rate limit options
+ * API error response
  */
-export interface RateLimitOptions {
-  /**
-   * Max number of requests during windowMs
-   */
-  max?: number;
-
-  /**
-   * Time window in milliseconds
-   */
-  windowMs?: number;
-
-  /**
-   * Error message sent to user when max is exceeded
-   */
-  message?: string;
-
-  /**
-   * Status code returned when max is exceeded
-   */
-  statusCode?: number;
-
-  /**
-   * Enable headers for request limit info
-   */
-  headers?: boolean;
-
-  /**
-   * Allow client to override limit per key
-   */
-  skipFailedRequests?: boolean;
-
-  /**
-   * Function to generate custom keys
-   */
-  keyGenerator?: (req: Request) => string;
-
-  /**
-   * Function to skip requests
-   */
-  skip?: (req: Request) => boolean;
-
-  /**
-   * Function to handle exceeded requests
-   */
-  handler?: (req: Request, res: Response) => void;
+export interface ApiErrorResponse {
+  code: ErrorCode;
+  message: string;
+  details?: unknown;
 }
 
 /**
- * Middleware handler type
+ * API success response
  */
-export type MiddlewareHandler = (
+export interface ApiSuccessResponse<T> {
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
+/**
+ * API response
+ */
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+/**
+ * Authenticated request
+ */
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    role: UserRole;
+    email: string;
+  };
+}
+
+/**
+ * Request handler
+ */
+export type RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => Promise<void> | void;
 
 /**
- * CORS middleware configuration
+ * Authenticated request handler
  */
-export type CorsMiddlewareConfig = CorsOptions;
+export type AuthenticatedRequestHandler = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => Promise<void> | void;
 
 /**
- * Helmet middleware configuration
+ * Error handler
  */
-export type HelmetMiddlewareConfig = HelmetOptions;
-
-/**
- * Rate limit middleware configuration
- */
-export type RateLimitMiddlewareConfig = RateLimitOptions;
-
-/**
- * Error handling middleware configuration
- */
-export interface ErrorHandlingMiddlewareConfig {
-  /**
-   * Log errors
-   */
-  logErrors?: boolean;
-
-  /**
-   * Include stack trace in error response
-   */
-  includeStackTrace?: boolean;
-
-  /**
-   * Default error status code
-   */
-  defaultStatusCode?: number;
-
-  /**
-   * Default error message
-   */
-  defaultMessage?: string;
-
-  /**
-   * Error handlers by type
-   */
-  handlers?: Record<string, (error: Error) => {
-    code: string;
-    message: string;
-    statusCode: number;
-    details?: unknown;
-  }>;
-}
-
-/**
- * Validation middleware configuration
- */
-export interface ValidationMiddlewareConfig {
-  /**
-   * Validation schemas by route
-   */
-  schemas: Record<string, ValidationSchema>;
-
-  /**
-   * Strip unknown properties
-   */
-  stripUnknown?: boolean;
-
-  /**
-   * Allow unknown properties
-   */
-  allowUnknown?: boolean;
-
-  /**
-   * Convert types
-   */
-  convert?: boolean;
-
-  /**
-   * Abort early on first error
-   */
-  abortEarly?: boolean;
-}
-
-/**
- * Authentication middleware configuration
- */
-export interface AuthMiddlewareConfig {
-  /**
-   * Required roles
-   */
-  roles?: string[];
-
-  /**
-   * Optional authentication
-   */
-  optional?: boolean;
-
-  /**
-   * Authentication strategies to try
-   */
-  strategies?: string[];
-
-  /**
-   * Custom error handler
-   */
-  onError?: (error: Error, req: Request, res: Response) => Promise<void>;
-
-  /**
-   * Strategy configuration
-   */
-  config?: Record<string, unknown>;
-
-  /**
-   * Excluded paths
-   */
-  excludePaths?: string[];
-
-  /**
-   * Role-based path restrictions
-   */
-  roleBasedPaths?: Record<string, string[]>;
-}
-
-/**
- * Static file serving middleware configuration
- */
-export interface StaticMiddlewareConfig {
-  /**
-   * Root directory
-   */
-  root: string;
-
-  /**
-   * URL path
-   */
-  path?: string;
-
-  /**
-   * Cache control max age
-   */
-  maxAge?: number;
-
-  /**
-   * Enable etag
-   */
-  etag?: boolean;
-
-  /**
-   * Enable directory listing
-   */
-  index?: boolean;
-
-  /**
-   * Enable dotfiles
-   */
-  dotfiles?: 'allow' | 'deny' | 'ignore';
-
-  /**
-   * Enable fallthrough
-   */
-  fallthrough?: boolean;
-
-  /**
-   * Enable immutable caching
-   */
-  immutable?: boolean;
-
-  /**
-   * Enable last modified
-   */
-  lastModified?: boolean;
-
-  /**
-   * Enable redirect
-   */
-  redirect?: boolean;
-
-  /**
-   * Set headers
-   */
-  setHeaders?: (res: Response, path: string, stat: any) => void;
-}
+export type ErrorHandler = (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void;
 
 /**
  * Middleware configuration
  */
 export interface MiddlewareConfig {
   /**
-   * CORS configuration
+   * CORS options
    */
-  cors?: CorsMiddlewareConfig;
+  cors?: {
+    origin?: string | string[];
+    methods?: string[];
+    allowedHeaders?: string[];
+    exposedHeaders?: string[];
+    credentials?: boolean;
+    maxAge?: number;
+  };
 
   /**
-   * Helmet configuration
+   * Rate limit options
    */
-  helmet?: HelmetMiddlewareConfig;
+  rateLimit?: {
+    windowMs?: number;
+    max?: number;
+    message?: string;
+    statusCode?: number;
+    headers?: boolean;
+    keyGenerator?: (req: Request) => string;
+  };
 
   /**
-   * Rate limit configuration
+   * Body parser options
    */
-  rateLimit?: RateLimitMiddlewareConfig;
+  bodyParser?: {
+    json?: {
+      limit?: string | number;
+      strict?: boolean;
+      type?: string | string[];
+    };
+    urlencoded?: {
+      extended?: boolean;
+      limit?: string | number;
+      parameterLimit?: number;
+    };
+  };
 
   /**
-   * Error handling configuration
+   * Compression options
    */
-  errorHandling?: ErrorHandlingMiddlewareConfig;
+  compression?: {
+    level?: number;
+    threshold?: number | string;
+    filter?: (req: Request, res: Response) => boolean;
+  };
 
   /**
-   * Validation configuration
+   * Static file options
    */
-  validation?: ValidationMiddlewareConfig;
-
-  /**
-   * Authentication configuration
-   */
-  auth?: AuthMiddlewareConfig;
-
-  /**
-   * Static file serving configuration
-   */
-  static?: StaticMiddlewareConfig;
+  static?: {
+    root?: string;
+    dotfiles?: 'allow' | 'deny' | 'ignore';
+    etag?: boolean;
+    extensions?: string[];
+    fallthrough?: boolean;
+    immutable?: boolean;
+    index?: boolean | string | string[];
+    lastModified?: boolean;
+    maxAge?: number | string;
+    redirect?: boolean;
+    setHeaders?: (res: Response, path: string, stat: any) => void;
+  };
 }
-
-export type { UserProfile };

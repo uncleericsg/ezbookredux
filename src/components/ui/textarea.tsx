@@ -1,38 +1,43 @@
-import React, { forwardRef } from 'react';
-import { BaseProps } from './types';
+import React from 'react';
 
-interface TextareaProps extends BaseProps {
-  id?: string;
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  /** Additional class names */
+  className?: string;
+  /** Textarea value */
   value?: string;
+  /** Change handler */
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  placeholder?: string;
+  /** Error message */
+  error?: string;
+  /** Disabled state */
   disabled?: boolean;
-  rows?: number;
+  /** Required state */
+  required?: boolean;
+  /** Placeholder text */
+  placeholder?: string;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
-  className = '',
-  id,
-  value,
-  onChange,
-  placeholder,
-  disabled = false,
-  rows = 4,
-  ...props
-}, ref) => {
-  return (
-    <textarea
-      ref={ref}
-      id={id}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      disabled={disabled}
-      rows={rows}
-      className={`flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      {...props}
-    />
-  );
-});
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className = '', error, ...props }, ref) => {
+    return (
+      <div className="space-y-1">
+        <textarea
+          className={`
+            w-full px-3 py-2 rounded-md border
+            focus:outline-none focus:ring-2 focus:ring-primary-500
+            disabled:bg-gray-100 disabled:cursor-not-allowed
+            ${error ? 'border-red-500' : 'border-gray-300'}
+            ${className}
+          `}
+          ref={ref}
+          {...props}
+        />
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+      </div>
+    );
+  }
+);
 
 Textarea.displayName = 'Textarea';

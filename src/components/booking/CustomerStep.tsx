@@ -3,37 +3,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { HiOutlineUser, HiOutlineEnvelope, HiOutlinePhone, HiOutlineHome } from 'react-icons/hi2';
-import * as z from 'zod';
 import type { CustomerInfo } from '@/types/customer';
-import type { BaseStepProps } from '../../types/booking-flow';
-import { Input } from '@components/ui/input';
-import { Textarea } from '@components/ui/textarea';
-
-interface CustomerFormData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  mobile: string;
-  floor_unit?: string | null;
-  block_street: string;
-  postal_code: string;
-  condo_name?: string | null;
-  lobby_tower?: string | null;
-  special_instructions?: string | null;
-}
-
-const customerSchema = z.object({
-  first_name: z.string().min(2, 'First name is required'),
-  last_name: z.string().min(2, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  mobile: z.string().min(8, 'Valid phone number is required'),
-  floor_unit: z.string().optional().nullable(),
-  block_street: z.string().min(5, 'Address is required'),
-  postal_code: z.string().min(6, 'Valid postal code is required'),
-  condo_name: z.string().optional().nullable(),
-  lobby_tower: z.string().optional().nullable(),
-  special_instructions: z.string().optional().nullable()
-});
+import type { BaseStepProps } from '@/types/booking-flow';
+import type { DBCustomerFormData } from '@/types/customer-form';
+import { customerFormSchema } from '@/types/customer-form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export const CustomerStep: React.FC<BaseStepProps> = ({
   onNext,
@@ -46,8 +21,8 @@ export const CustomerStep: React.FC<BaseStepProps> = ({
     register,
     handleSubmit,
     formState: { errors, isSubmitting }
-  } = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
+  } = useForm<DBCustomerFormData>({
+    resolver: zodResolver(customerFormSchema),
     defaultValues: {
       first_name: bookingData.customerInfo.firstName,
       last_name: bookingData.customerInfo.lastName,
@@ -62,7 +37,7 @@ export const CustomerStep: React.FC<BaseStepProps> = ({
     }
   });
 
-  const onSubmit = async (data: CustomerFormData) => {
+  const onSubmit = async (data: DBCustomerFormData) => {
     try {
       const customerInfo: CustomerInfo = {
         id: bookingData.customerInfo.id,

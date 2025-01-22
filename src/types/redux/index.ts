@@ -1,21 +1,9 @@
 // Core Redux Types
-import type { UserProfile } from '../user';
+import type { User } from '../user';
 import type { BaseEntity } from '../index';
-import type { AdminData } from '../admin';
+import type { AuthState } from '../auth';
 
-// Re-export the User type to maintain compatibility
-export type User = UserProfile;
 
-// Auth State
-export interface AuthState {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  paymentStatus: 'idle' | 'processing' | 'success' | 'error';
-  verificationId: string | null;
-  phone: string | null;
-}
 
 // Booking Types
 export interface Booking {
@@ -43,7 +31,7 @@ export interface BookingState {
 
 // Admin State
 export interface AdminState {
-  adminData: AdminData | null;
+  adminData: Record<string, unknown> | null;
   loading: boolean;
   error: string | null;
 }
@@ -63,7 +51,7 @@ export interface ServiceState {
 
 // User State
 export interface UserState {
-  user: UserProfile | null;
+  user: User | null;
   isLoading: boolean;
   error: string | null;
   paymentStatus: 'idle' | 'processing' | 'success' | 'error';

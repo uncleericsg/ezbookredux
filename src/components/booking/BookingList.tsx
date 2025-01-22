@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { 
+import {
   HiOutlineCalendarDays,
   HiOutlineClock,
   HiOutlineWrenchScrewdriver,
   HiOutlineClipboardDocumentList
 } from 'react-icons/hi2';
-import type { BookingData } from '../../types/booking-flow';
-import { useBooking } from '../../hooks/useBooking';
-import { useAuth } from '../../hooks/useAuth';
-import { formatPrice } from '../../utils/formatters';
-import { formatTimeSlot } from '../../utils/dates';
+import type { BookingData } from '@/types/booking-flow';
+import type { BookingResult } from '@/types/booking-result';
+import { useBooking } from '@/hooks/useBooking';
+import { useAuth } from '@/hooks/useAuth';
+import { formatPrice } from '@/utils/formatters';
+import { formatTimeSlot } from '@/utils/dates';
 
 interface BookingListProps {
   className?: string;
@@ -28,14 +29,17 @@ const BookingList: React.FC<BookingListProps> = ({ className, limit }) => {
       if (!user?.email) return;
 
       try {
-        const results = await fetchBookingsByEmail(user.email);
+        const results: BookingResult[] = await fetchBookingsByEmail(user.email);
         const validBookings = results
-          .filter(result => result.data)
-          .map(result => result.data!)
+          .filter((result): result is BookingResult & { data: BookingData } =>
+            result.data !== null && !result.error
+          )
+          .map(result => result.data)
           .slice(0, limit);
         
         setBookings(validBookings);
       } catch (err) {
+        console.error('Error loading bookings:', err);
         toast.error('Error loading bookings');
       }
     };

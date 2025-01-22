@@ -1,4 +1,4 @@
-import type { AdminData } from '../../types/admin';
+import type { AdminData } from '@/types/admin';
 
 export interface AdminState {
   isAdmin: boolean;

@@ -22,12 +22,20 @@ export interface User {
   phone: string;
   role: UserRole;
   status: UserStatus;
+  amcStatus: 'active' | 'inactive';
   customerInfo?: CustomerInfo;
   bookings?: BookingData[];
-  createdAt: string;
-  updatedAt: string;
-  lastLoginAt?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  lastLoginAt?: Date | string;
   metadata?: Record<string, unknown>;
+  // Profile fields
+  address?: string;
+  unitNumber?: string;
+  condoName?: string;
+  lobbyTower?: string;
+  nextServiceDate?: string;
+  contractExpiryDate?: string;
 }
 
 /**
@@ -39,16 +47,6 @@ export interface UserState {
   error: string | null;
   verificationId?: string;
   phone?: string;
-}
-
-/**
- * Auth state type
- */
-export interface AuthState {
-  isAuthenticated: boolean;
-  token: string | null;
-  loading: boolean;
-  error: string | null;
 }
 
 /**
@@ -74,4 +72,19 @@ export interface OTPVerificationResponse {
  */
 export interface OTPRequestResponse {
   verificationId: string;
+}
+
+/**
+ * User profile type
+ * Extended user information for authenticated users
+ */
+export interface UserProfile extends User {
+  preferences?: {
+    notifications: boolean;
+    theme: 'light' | 'dark';
+    language: string;
+  };
+  lastActivity?: string;
+  deviceTokens?: string[];
+  isVerified: boolean;
 }

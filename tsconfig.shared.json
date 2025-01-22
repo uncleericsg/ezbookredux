@@ -1,26 +1,37 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "outDir": "./dist/shared",
+    "rootDir": ".",
+    "tsBuildInfoFile": "./dist/shared/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"],
+      "@types/*": ["shared/types/*"]
+    },
+    "types": ["node"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./shared/types"
+    ],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "strict": true,
-    "isolatedModules": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist/shared",
-    "rootDir": "./shared",
-    "tsBuildInfoFile": "./dist/shared/.tsbuildinfo"
+    "noEmit": false
   },
-  "include": ["shared/**/*"],
+  "include": [
+    "shared/**/*.ts",
+    "shared/**/*.tsx",
+    "shared/**/*.d.ts",
+    "shared/types/**/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.test.tsx",
+    "**/*.spec.tsx"
   ]
 }

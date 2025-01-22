@@ -1,14 +1,14 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Edit, ChevronLeft, ChevronRight, Save, X, UserX } from 'lucide-react';
+import { Edit, ChevronLeft, ChevronRight, Save, X, User as UserIcon } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import UserStatusToggle from './UserStatusToggle';
-import { User } from '@shared/types/user';
+import type { User } from '@/types/user';
 
 interface UserTableProps {
   /**
@@ -161,8 +161,8 @@ const UserTable: React.FC<UserTableProps> = ({
                       {user.amcStatus}
                     </span>
                   </td>
-                  <td className="p-4">{format(new Date(user.createdAt), 'PP')}</td>
-                  <td className="p-4">{format(new Date(user.lastLoginAt), 'PP p')}</td>
+                  <td className="p-4">{user.createdAt ? format(new Date(user.createdAt), 'PP') : 'N/A'}</td>
+                  <td className="p-4">{user.lastLoginAt ? format(new Date(user.lastLoginAt), 'PP p') : 'Never'}</td>
                   <td className="p-4">{user.role}</td>
                   <td className="p-4">
                     <div className="flex items-center space-x-2">
@@ -194,7 +194,7 @@ const UserTable: React.FC<UserTableProps> = ({
                           <UserStatusToggle
                             userId={user.id}
                             isActive={user.amcStatus === 'active'}
-                            onToggle={async (id, newStatus) => {
+                            onToggle={async (id: string, newStatus: boolean) => {
                               await onDeactivate(id);
                             }}
                           />
@@ -229,11 +229,11 @@ const UserTable: React.FC<UserTableProps> = ({
               <div className="text-sm text-gray-400 space-y-1">
                 <div className="flex justify-between">
                   <span>Registered:</span>
-                  <span>{format(new Date(user.createdAt), 'PP')}</span>
+                  <span>{user.createdAt ? format(new Date(user.createdAt), 'PP') : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Last Login:</span>
-                  <span>{format(new Date(user.lastLoginAt), 'PP p')}</span>
+                  <span>{user.lastLoginAt ? format(new Date(user.lastLoginAt), 'PP p') : 'Never'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Role:</span>
@@ -272,7 +272,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       className="text-red-400"
                       title="Deactivate user"
                     >
-                      <UserX className="h-5 w-5" />
+                      <UserIcon className="h-5 w-5" />
                     </Button>
                   </React.Fragment>
                 )}

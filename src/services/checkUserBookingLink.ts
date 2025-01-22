@@ -1,7 +1,14 @@
-import { supabaseClient } from '@/server/config/supabase/client';
+import { supabaseClient } from '@/config/supabase/client';
+import * as dotenv from 'dotenv';
+import type { User } from '@/types/user';
 
 // Load environment variables
 dotenv.config();
+
+interface AlterTableResult {
+  success: boolean;
+  message?: string;
+}
 
 async function checkUserBookingLink() {
   try {

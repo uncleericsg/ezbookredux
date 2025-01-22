@@ -1,113 +1,60 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "exactOptionalPropertyTypes": false,
-    "allowUnreachableCode": false,
-
-    /* Module Resolution */
+    "composite": true,
+    "outDir": "./dist/app",
+    "rootDir": ".",
+    "tsBuildInfoFile": "./dist/app/.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@shared/*": ["shared/*"],
       "@components/*": ["src/components/*"],
       "@utils/*": ["src/utils/*"],
       "@hooks/*": ["src/hooks/*"],
       "@store/*": ["src/store/*"],
       "@services/*": ["src/services/*"],
-      "@types/*": ["src/types/*"],
-      "@shared/*": ["shared/*"],
-      "@config/*": ["config/*"]
+      "@types/*": ["src/types/*", "shared/types/*"],
+      "@config/*": ["src/config/*"],
+      "@constants/*": ["src/constants/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@data/*": ["src/data/*"],
+      "@lib/*": ["src/lib/*"],
+      "@machines/*": ["src/machines/*"],
+      "@repositories/*": ["src/repositories/*"],
+      "@routes/*": ["src/routes/*"],
+      "@theme/*": ["src/theme/*"]
     },
+    "types": ["node", "jest", "react", "react-dom"],
+    "plugins": [
+      {
+        "name": "typescript-plugin-css-modules"
+      }
+    ],
+    "jsx": "react-jsx",
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types",
-      "./types"
-    ],
-    "types": [
-      "node",
-      "jest",
-      "react",
-      "react-dom",
-      "vite/client"
-    ],
-
-    /* Build Options */
-    "allowJs": true,
-    "checkJs": true,
-    "incremental": true,
-    "sourceMap": true,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "importHelpers": true,
-    "forceConsistentCasingInFileNames": true,
-
-    /* Advanced Options */
-    "verbatimModuleSyntax": true,
-    "allowSyntheticDefaultImports": true,
-    "preserveSymlinks": true,
-    "skipDefaultLibCheck": true
-  },
-  "ts-node": {
-    "require": ["tsconfig-paths/register"],
-    "transpileOnly": true,
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
+      "./shared/types",
+      "./src/types"
+    ]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
-    "types/**/*.ts",
-    "types/**/*.d.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.shared.json"
-    }
+    "shared/**/*.ts",
+    "shared/**/*.tsx",
+    "shared/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "build",
-    "coverage",
-    ".next",
-    "out",
-    ".vscode",
-    "**/*.spec.ts",
     "**/*.test.ts",
-    "**/*.spec.tsx",
+    "**/*.spec.ts",
     "**/*.test.tsx",
-    "**/__tests__/**"
+    "**/*.spec.tsx"
+  ],
+  "references": [
+    { "path": "./tsconfig.shared.json" }
   ]
 }

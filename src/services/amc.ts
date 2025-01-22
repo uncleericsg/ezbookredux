@@ -1,12 +1,10 @@
 import axios from 'axios';
-import { resetVisitLabels } from './repairShopr';
+import { resetVisitLabels } from '@services/repairShopr';
 import { toast } from 'sonner';
-import type { AMCPackage, ServiceVisit } from '../types';
+import type { AMCPackage, ServiceVisit, RenewalStatus } from '@/types/amc';
+import { handleDatabaseError } from '@/utils/apiErrors';
 
-const checkRenewalStatus = (visits: ServiceVisit[]): { 
-  shouldRemind: boolean; 
-  isLastVisit: boolean;
-} => {
+const checkRenewalStatus = (visits: ServiceVisit[]): RenewalStatus => {
   const completedVisits = visits.filter(v => v.status === 'completed').length;
   const scheduledVisits = visits.filter(v => v.status === 'scheduled').length;
   
@@ -29,32 +27,42 @@ export const renewAMC = async (packageId: string): Promise<void> => {
     // Then reset visit labels in RepairShopr
     await resetVisitLabels(packageId);
   } catch (error) {
-    console.error('Failed to renew AMC:', error);
-    throw error;
+    throw handleDatabaseError({
+      code: 'RENEWAL_FAILED',
+      message: 'Failed to renew AMC package',
+      originalError: error
+    });
   }
 };
 
 export const fetchServiceVisits = async (userId: string): Promise<ServiceVisit[]> => {
   if (import.meta.env.DEV) {
-    return [
+    const mockVisits: ServiceVisit[] = [
       {
         id: '1',
         date: '2024-02-15',
         label: '#1ST VISIT',
         status: 'completed',
         notes: 'Regular maintenance completed',
+        packageId: 'mock-package-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
         id: '2',
         date: '2024-05-15',
         label: '#2ND VISIT',
         status: 'scheduled',
+        packageId: 'mock-package-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
     ];
+    return mockVisits;
   }
 
   try {
-    const response = await axios.get(`/api/service-visits/${userId}`);
+    const response = await axios.get<ServiceVisit[]>(`/api/service-visits/${userId}`);
     const visits = response.data;
     
     // Check renewal status
@@ -76,7 +84,10 @@ export const fetchServiceVisits = async (userId: string): Promise<ServiceVisit[]
     
     return visits;
   } catch (error) {
-    console.error('Failed to fetch service visits:', error);
-    return [];
+    throw handleDatabaseError({
+      code: 'FETCH_VISITS_FAILED',
+      message: 'Failed to fetch service visits',
+      originalError: error
+    });
   }
 };

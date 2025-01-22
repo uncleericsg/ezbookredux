@@ -1,16 +1,15 @@
-import React from 'react';
-
-import AdminHeader from '@admin/AdminHeader';
-import AdminNav from '@admin/AdminNav';
-import UserTable from '@admin/UserTable';
-
+import type { FC } from 'react';
 import { useAppSelector } from '@store/index';
+import AdminHeader from '@components/admin/AdminHeader';
+import AdminNav from '@components/admin/AdminNav';
+import UserTable from '@components/admin/UserTable';
+import type { User } from '@types/user';
 
-const AdminUsers = () => {
-  const { currentUser } = useAppSelector((_state) => _state.user);
-  const { users, loading } = useAppSelector(() => ({
-    users: [], // TODO: Add users slice
-    loading: false
+const AdminUsers: FC = () => {
+  const { currentUser } = useAppSelector((state) => state.user);
+  const { users, loading } = useAppSelector((state) => ({
+    users: state.admin.users,
+    loading: state.admin.loading
   }));
 
   return (

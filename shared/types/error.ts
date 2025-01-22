@@ -1,199 +1,150 @@
-// Common error codes shared across the application
-export type ErrorCode = 
-  // Common errors
-  | 'VALIDATION_ERROR'
-  | 'AUTHENTICATION_ERROR'
-  | 'AUTHORIZATION_ERROR'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'INTERNAL_ERROR'
-  | 'DATABASE_ERROR'
-  | 'NETWORK_ERROR'
-  | 'UNKNOWN_ERROR'
-  | 'SERVER_ERROR'
-  | 'SERVICE_ERROR'
-  | 'SERVICE_UNAVAILABLE'
-  
-  // Auth specific errors
+/**
+ * Standard error codes used throughout the application
+ */
+export type ErrorCode =
+  // Authentication Errors
   | 'AUTH_INVALID_CREDENTIALS'
-  | 'AUTH_USER_NOT_FOUND'
   | 'AUTH_TOKEN_EXPIRED'
   | 'AUTH_INVALID_TOKEN'
-  | 'AUTH_NETWORK_ERROR'
+  | 'AUTHORIZATION_ERROR'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
-  | 'TOKEN_EXPIRED'
-  | 'TOKEN_INVALID'
-  | 'SESSION_EXPIRED'
-  
-  // Input validation errors
-  | 'BAD_REQUEST'
+  // Resource Errors
+  | 'RECORD_NOT_FOUND'
+  | 'NOT_FOUND'
+  | 'METHOD_NOT_ALLOWED'
+  | 'CONFLICT'
+  | 'DUPLICATE_ENTRY'
+  // Validation Errors
   | 'INVALID_INPUT'
   | 'MISSING_REQUIRED_FIELD'
   | 'INVALID_FORMAT'
   | 'OUT_OF_RANGE'
   | 'UNPROCESSABLE_ENTITY'
-  
-  // Database errors
-  | 'DB_ERROR'
-  | 'RECORD_NOT_FOUND'
-  | 'DUPLICATE_ENTRY'
-  | 'FOREIGN_KEY_VIOLATION'
-  
-  // API errors
-  | 'METHOD_NOT_ALLOWED'
+  | 'VALIDATION_ERROR'
+  // Rate Limiting
   | 'TOO_MANY_REQUESTS'
   | 'RATE_LIMIT_EXCEEDED'
+  // Server Errors
+  | 'INTERNAL_ERROR'
+  | 'SERVER_ERROR'
   | 'INTERNAL_SERVER_ERROR'
+  | 'DATABASE_ERROR'
+  | 'UNKNOWN_ERROR'
+  // Service Errors
+  | 'SERVICE_ERROR'
+  | 'SERVICE_UNAVAILABLE'
   | 'EXTERNAL_API_ERROR'
-  | 'INTEGRATION_ERROR'
-  | 'TIMEOUT_ERROR'
-  | 'CONNECTION_ERROR'
-  
-  // Admin errors
-  | 'FETCH_ADMIN_SETTINGS_ERROR'
-  | 'UPDATE_ADMIN_SETTINGS_ERROR'
-  | 'UPDATE_BRANDING_ERROR'
-  | 'RESET_ADMIN_SETTINGS_ERROR'
-  
-  // Google Maps errors
-  | 'GOOGLE_MAPS_API_KEY_MISSING'
-  | 'GOOGLE_MAPS_LOAD_ERROR'
-  
-  // Notification errors
-  | 'FETCH_GREETINGS_ERROR'
-  | 'UPDATE_GREETING_ERROR'
-  | 'GENERATE_GREETING_ERROR'
-  | 'SCHEDULE_GREETINGS_ERROR';
+  | 'INTEGRATION_ERROR';
 
-export interface DatabaseError {
-  code: ErrorCode;
-  message: string;
-  details?: Record<string, unknown>;
-  stack?: string;
-}
-
-export interface AppError extends Error {
-  code: ErrorCode;
-  details?: Record<string, unknown>;
-  isOperational: boolean;
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  type: string;
-  code: ErrorCode;
-}
-
-export interface ErrorResponse {
-  statusCode: number;
-  message: string;
-  code: ErrorCode;
-  errors?: ValidationError[];
-  stack?: string;
-}
-
-// Error class implementations
-export class BaseError extends Error implements AppError {
+/**
+ * Base error class for application errors
+ */
+export class BaseError extends Error {
   constructor(
     message: string,
     public code: ErrorCode,
-    public details?: Record<string, unknown>,
-    public isOperational = true
+    public details?: Record<string, unknown>
   ) {
     super(message);
-    this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
+    this.name = 'BaseError';
   }
 }
 
-export class ValidationFailedError extends BaseError {
-  constructor(errors: ValidationError[]) {
-    super(
-      'Validation failed',
-      'VALIDATION_ERROR',
-      { errors },
-      true
-    );
-  }
-}
-
-export class AuthenticationError extends BaseError {
-  constructor(message = 'Authentication failed') {
-    super(message, 'AUTHENTICATION_ERROR', undefined, true);
-  }
-}
-
-export class AuthorizationError extends BaseError {
-  constructor(message = 'Not authorized') {
-    super(message, 'AUTHORIZATION_ERROR', undefined, true);
-  }
-}
-
-export class NotFoundError extends BaseError {
-  constructor(resource: string) {
-    super(`${resource} not found`, 'NOT_FOUND', { resource }, true);
-  }
-}
-
-export class DatabaseOperationError extends BaseError {
-  constructor(
-    operation: string,
-    details?: Record<string, unknown>
-  ) {
-    super(
-      `Database operation '${operation}' failed`,
-      'DATABASE_ERROR',
-      details,
-      true
-    );
-  }
-}
-
-// Type guards
-export const isDatabaseError = (error: unknown): error is DatabaseError => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    'message' in error
-  );
-};
-
-export const isValidationError = (error: unknown): error is ValidationError => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'field' in error &&
-    'message' in error &&
-    'type' in error &&
-    'code' in error
-  );
-};
-
-export const isAppError = (error: unknown): error is AppError => {
-  return (
-    error instanceof BaseError ||
-    (error instanceof Error &&
-      'code' in error &&
-      'isOperational' in error)
-  );
-};
-
-// Auth specific error class
+/**
+ * Authentication error
+ */
 export class AuthError extends BaseError {
-  constructor(
-    message: string,
-    code: Extract<ErrorCode, 
-      | 'AUTH_INVALID_CREDENTIALS'
-      | 'AUTH_USER_NOT_FOUND'
-      | 'AUTH_TOKEN_EXPIRED'
-      | 'AUTH_INVALID_TOKEN'
-      | 'AUTH_NETWORK_ERROR'
-    >,
-    details?: Record<string, unknown>
-  ) {
-    super(message, code, details, true);
+  constructor(message: string, code: ErrorCode, details?: Record<string, unknown>) {
+    super(message, code, details);
+    this.name = 'AuthError';
+  }
+}
+
+/**
+ * Database error
+ */
+export class DatabaseError extends BaseError {
+  constructor(message: string, code: ErrorCode = 'DATABASE_ERROR', details?: Record<string, unknown>) {
+    super(message, code, details);
+    this.name = 'DatabaseError';
+  }
+}
+
+/**
+ * Validation error
+ */
+export class ValidationError extends BaseError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, 'VALIDATION_ERROR', details);
+    this.name = 'ValidationError';
+  }
+}
+
+/**
+ * Application error
+ */
+export class AppError extends BaseError {
+  constructor(message: string, code: ErrorCode, details?: Record<string, unknown>) {
+    super(message, code, details);
+    this.name = 'AppError';
+  }
+}
+
+/**
+ * Helper to create a new error with the correct type
+ */
+export function createError(
+  message: string,
+  code: ErrorCode,
+  details?: Record<string, unknown>
+): BaseError {
+  return new BaseError(message, code, details);
+}
+
+/**
+ * Get HTTP status code for an error
+ */
+export function getHttpStatus(code: ErrorCode): number {
+  switch (code) {
+    case 'AUTH_INVALID_CREDENTIALS':
+    case 'AUTH_TOKEN_EXPIRED':
+    case 'AUTH_INVALID_TOKEN':
+    case 'UNAUTHORIZED':
+      return 401;
+    case 'AUTHORIZATION_ERROR':
+    case 'FORBIDDEN':
+      return 403;
+    case 'RECORD_NOT_FOUND':
+    case 'NOT_FOUND':
+      return 404;
+    case 'METHOD_NOT_ALLOWED':
+      return 405;
+    case 'CONFLICT':
+    case 'DUPLICATE_ENTRY':
+      return 409;
+    case 'INVALID_INPUT':
+    case 'MISSING_REQUIRED_FIELD':
+    case 'INVALID_FORMAT':
+    case 'OUT_OF_RANGE':
+    case 'UNPROCESSABLE_ENTITY':
+    case 'VALIDATION_ERROR':
+      return 422;
+    case 'TOO_MANY_REQUESTS':
+    case 'RATE_LIMIT_EXCEEDED':
+      return 429;
+    case 'INTERNAL_ERROR':
+    case 'SERVER_ERROR':
+    case 'INTERNAL_SERVER_ERROR':
+    case 'DATABASE_ERROR':
+    case 'UNKNOWN_ERROR':
+      return 500;
+    case 'SERVICE_ERROR':
+    case 'SERVICE_UNAVAILABLE':
+    case 'EXTERNAL_API_ERROR':
+    case 'INTEGRATION_ERROR':
+      return 503;
+    default:
+      return 500;
   }
 }

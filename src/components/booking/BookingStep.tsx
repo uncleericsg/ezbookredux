@@ -1,6 +1,8 @@
 import React from 'react';
 import { toast } from 'sonner';
-import type { BookingData, BaseStepProps } from '../../types/booking-flow';
+import type { BookingData, BaseStepProps } from '@/types/booking-flow';
+import type { BookingSummaryData, DBBookingSummaryData } from '@/types/booking-summary';
+import { mapToDBBookingSummary } from '@/types/booking-summary';
 import { useBooking } from '@/hooks/useBooking';
 import { useAuth } from '@/hooks/useAuth';
 import BookingList from './BookingList';
@@ -56,27 +58,27 @@ const BookingStep: React.FC<BaseStepProps> = ({
             Booking Summary
           </h2>
           <BookingSummary
-            data={{
-              service_title: bookingData.serviceTitle,
-              service_price: bookingData.servicePrice,
-              service_duration: String(bookingData.serviceDuration),
-              customer_info: {
-                first_name: bookingData.customerInfo.firstName,
-                last_name: bookingData.customerInfo.lastName,
+            data={mapToDBBookingSummary({
+              serviceTitle: bookingData.serviceTitle,
+              servicePrice: bookingData.servicePrice,
+              serviceDuration: String(bookingData.serviceDuration),
+              customerInfo: {
+                firstName: bookingData.customerInfo.firstName,
+                lastName: bookingData.customerInfo.lastName,
                 email: bookingData.customerInfo.email,
                 mobile: bookingData.customerInfo.phone,
-                floor_unit: bookingData.customerInfo.address.floorUnit || '',
-                block_street: bookingData.customerInfo.address.blockStreet,
-                postal_code: bookingData.customerInfo.address.postalCode,
-                condo_name: bookingData.customerInfo.address.condoName || undefined,
-                lobby_tower: bookingData.customerInfo.address.lobbyTower || undefined,
-                special_instructions: bookingData.customerInfo.specialInstructions || undefined
+                floorUnit: bookingData.customerInfo.address.floorUnit || '',
+                blockStreet: bookingData.customerInfo.address.blockStreet,
+                postalCode: bookingData.customerInfo.address.postalCode,
+                condoName: bookingData.customerInfo.address.condoName,
+                lobbyTower: bookingData.customerInfo.address.lobbyTower,
+                specialInstructions: bookingData.customerInfo.specialInstructions
               },
-              scheduled_datetime: new Date(bookingData.date),
-              scheduled_timeslot: bookingData.time,
-              total_amount: bookingData.servicePrice,
-              tip_amount: 0 // Added required field
-            }}
+              scheduledDatetime: new Date(bookingData.date),
+              scheduledTimeslot: bookingData.time,
+              totalAmount: bookingData.servicePrice,
+              tipAmount: 0
+            })}
           />
         </div>
 

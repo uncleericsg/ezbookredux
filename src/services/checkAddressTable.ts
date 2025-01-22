@@ -1,5 +1,5 @@
-import { supabaseClient } from '@/server/config/supabase/client';
-import { initEnv } from '../utils/env';
+import { supabaseClient } from '@/config/supabase/client';
+import { initEnv } from '@/utils/env';
 
 // Initialize environment variables
 initEnv();
