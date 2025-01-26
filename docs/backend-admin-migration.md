@@ -1,19 +1,24 @@
 # Backend Admin Migration Plan
+
 Created: January 27, 2025
 Last Updated: January 27, 2025
 
 ## Overview
+
 Migration of admin backend components from `/src` to `/server` directory to improve architecture, security, and maintainability. This plan is designed to run in parallel with the Stripe Checkout migration.
 
 ## Parallel Execution Strategy
 
 ### Shared Resources Coordination
+
 1. **Directory Structure**
+
    - Coordinate with Stripe migration team on `/server` structure
    - Reuse shared utilities and middleware
    - Share type definitions in `shared/types`
 
 2. **Core Dependencies**
+
    - Share error handling infrastructure
    - Share logging services
    - Share CORS configuration
@@ -39,7 +44,9 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ## Migration Phases
 
 ### Phase 1: Setup and Infrastructure (Est. 2 hours)
+
 - [ ] Coordinate with Stripe migration on shared directory structure
+
 ```bash
 /server
 ├── api/
@@ -54,10 +61,12 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ├── utils/              # Shared utilities
 └── config/             # Shared configuration
 ```
+
 - [ ] Set up TypeScript configuration (reuse from Stripe migration)
 - [ ] Set up shared error handling and logging infrastructure
 
 ### Phase 2: Core Services Migration (Est. 4 hours)
+
 - [ ] Migrate Authentication & Authorization
   - [ ] Admin role verification
   - [ ] Protected route middleware (coordinate with Stripe team)
@@ -68,6 +77,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
   - [ ] Logging service
 
 ### Phase 3: Admin API Migration (Est. 6 hours)
+
 - [ ] User Management API
   - [ ] List users endpoint
   - [ ] User details endpoint
@@ -83,6 +93,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
   - [ ] Report generation endpoints
 
 ### Phase 4: Admin Services Migration (Est. 4 hours)
+
 - [ ] Settings Service
   - [ ] Configuration management
   - [ ] Backup/restore functionality
@@ -94,6 +105,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
   - [ ] Email templates
 
 ### Phase 5: Testing and Validation (Est. 4 hours)
+
 - [ ] Unit Tests
   - [ ] Service tests
   - [ ] API endpoint tests
@@ -107,12 +119,14 @@ Migration of admin backend components from `/src` to `/server` directory to impr
   - [ ] Critical path testing
 
 ### Phase 6: Frontend Integration (Est. 4 hours)
+
 - [ ] Update API endpoints in frontend
 - [ ] Update service calls
 - [ ] Update error handling
 - [ ] Update authentication flow
 
 ## Dependencies
+
 - Node.js >=18
 - TypeScript
 - Express.js
@@ -126,6 +140,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ## Tracking Progress
 
 ### Current Status
+
 - [ ] Phase 1: Not Started
 - [ ] Phase 2: Not Started
 - [ ] Phase 3: Not Started
@@ -136,6 +151,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ### Migration Checklist
 
 #### Files to Migrate
+
 - [ ] `/src/services/admin.ts` → `/server/services/admin/`
 - [ ] `/src/api/admin/*` → `/server/api/admin/`
 - [ ] `/src/services/serviceManager.ts` → `/server/services/core/`
@@ -143,6 +159,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 - [ ] `/src/config/admin.ts` → `/server/config/`
 
 #### New Files to Create
+
 - [ ] `/server/api/middleware/auth.ts` (shared with Stripe)
 - [ ] `/server/api/middleware/validation.ts` (shared with Stripe)
 - [ ] `/server/services/core/error.service.ts` (shared with Stripe)
@@ -152,6 +169,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ## Coordination Points with Stripe Migration
 
 ### Shared Infrastructure
+
 - [ ] Error handling system
 - [ ] Logging service
 - [ ] Authentication middleware
@@ -159,6 +177,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 - [ ] Type system structure
 
 ### Integration Testing
+
 - [ ] Payment flow in admin dashboard
 - [ ] Error handling integration
 - [ ] Authentication flow
@@ -167,12 +186,14 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 ## Rollback Plan
 
 ### Rollback Triggers
+
 - Failed integration tests
 - Production performance degradation
 - Critical security issues
 - Conflicts with Stripe migration
 
 ### Rollback Steps
+
 1. Revert to previous API endpoints
 2. Restore original file structure
 3. Update frontend to use old endpoints
@@ -180,6 +201,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 5. Coordinate rollback with Stripe team if necessary
 
 ## Post-Migration Tasks
+
 - [ ] Update documentation
 - [ ] Performance monitoring setup
 - [ ] Security audit
@@ -188,6 +210,7 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 - [ ] Coordinate final integration testing with Stripe team
 
 ## Notes
+
 - Keep both old and new implementations running in parallel during migration
 - Use feature flags to control rollout
 - Monitor error rates and performance metrics
@@ -195,9 +218,10 @@ Migration of admin backend components from `/src` to `/server` directory to impr
 - Daily sync with Stripe migration team
 
 ## Success Criteria
+
 - All tests passing
 - No performance degradation
 - Successful security audit
 - Zero production incidents
 - Complete documentation
-- Successful integration with Stripe migration 
+- Successful integration with Stripe migration

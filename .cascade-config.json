@@ -103,15 +103,8 @@
           "@radix-ui/react-toast",
           "@radix-ui/react-tooltip"
         ],
-        "forms": [
-          "react-hook-form",
-          "@hookform/resolvers",
-          "zod"
-        ],
-        "data": [
-          "@tanstack/react-table",
-          "@tanstack/react-query"
-        ]
+        "forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+        "data": ["@tanstack/react-table", "@tanstack/react-query"]
       }
     }
   },
@@ -119,10 +112,7 @@
   "integrations": {
     "maps": {
       "provider": "google",
-      "libraries": [
-        "@googlemaps/js-api-loader",
-        "@react-google-maps/api"
-      ]
+      "libraries": ["@googlemaps/js-api-loader", "@react-google-maps/api"]
     },
     "authentication": {
       "provider": "firebase",
@@ -134,27 +124,16 @@
     },
     "payments": {
       "provider": "stripe",
-      "libraries": [
-        "@stripe/react-stripe-js",
-        "@stripe/stripe-js"
-      ]
+      "libraries": ["@stripe/react-stripe-js", "@stripe/stripe-js"]
     },
     "api": {
-      "libraries": [
-        "@trpc/client",
-        "@trpc/react-query",
-        "@trpc/server"
-      ]
+      "libraries": ["@trpc/client", "@trpc/react-query", "@trpc/server"]
     }
   },
 
   "development": {
     "vite": {
-      "plugins": [
-        "@vitejs/plugin-react",
-        "vite-plugin-dts",
-        "vite-plugin-google-maps"
-      ],
+      "plugins": ["@vitejs/plugin-react", "vite-plugin-dts", "vite-plugin-google-maps"],
       "optimizations": {
         "exclude": ["lucide-react"],
         "include": ["@supabase/supabase-js"]
@@ -174,10 +153,7 @@
       },
       "setup": {
         "environment": "jsdom",
-        "utilities": [
-          "@testing-library/react",
-          "@testing-library/user-event"
-        ]
+        "utilities": ["@testing-library/react", "@testing-library/user-event"]
       }
     },
     "code_style": {
@@ -260,10 +236,7 @@
   "security": {
     "api_keys": "environment_variables",
     "protected_paths": {
-      "do_not_modify": [
-        "/src/components/public/**/*",
-        "/src/components/shared/**/*"
-      ],
+      "do_not_modify": ["/src/components/public/**/*", "/src/components/shared/**/*"],
       "reason": "These components should maintain their current UI and functionality"
     }
   }

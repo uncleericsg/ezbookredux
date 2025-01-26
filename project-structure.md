@@ -3,6 +3,7 @@
 ## Core Application Structure
 
 ### Entry Points
+
 - `src/main.tsx`: Application entry point
   - Sets up providers:
     - Redux store provider
@@ -14,6 +15,7 @@
   - Handles global error cases with custom fallback UI
 
 ### Application Root
+
 - `src/App.tsx`: Root component
   - Provides Redux store
   - Renders router outlet
@@ -21,6 +23,7 @@
 ## State Management
 
 ### Store Configuration
+
 - `src/store/`
   - `index.ts`: Main store configuration
     - Exports typed hooks (useAppSelector, useAppDispatch)
@@ -30,6 +33,7 @@
     - Combines all feature slices
 
 ### Feature Slices
+
 - `src/store/slices/`
   - `adminSlice.ts`: Admin-related state
   - `authSlice.ts`: Authentication state
@@ -41,16 +45,19 @@
 ## Database Integration
 
 ### Prisma ORM
+
 - `prisma/`
   - `schema.prisma`: Database schema definition
   - Models for users, bookings, services, and AMC packages
 
 ### Supabase Integration
+
 - `supabase/`
   - `config.toml`: Supabase configuration
   - `migrations/`: Database migrations
 
 ### Migrations
+
 - `migrations/`
   - SQL migration files for schema changes
   - Migration metadata and journals
@@ -59,6 +66,7 @@
 ## Routing System
 
 ### Main Router
+
 - `src/router.tsx`: Application routing
   - Public routes (login, pricing)
   - Protected routes (profile, booking confirmation)
@@ -66,6 +74,7 @@
   - Development-only routes (test routes, mockups)
 
 ### Route Configuration
+
 - Uses React Router v6
 - ProtectedRoute and PublicRoute components for access control
 - Layout management for consistent UI structure
@@ -90,11 +99,13 @@
     - `/admin/settings`: System settings
 
 ### Route Protection
+
 - PublicRoute: Used for routes accessible to all users (login, pricing)
 - ProtectedRoute: Used for authenticated user routes
 - AdminRoute: Used for admin-only routes (extends ProtectedRoute)
 
 ### Layout Management
+
 - Layout component wraps main application routes
 - Routes can opt-out of layout using direct Route definition
 - Consistent header/footer across layout routes
@@ -102,6 +113,7 @@
 ## Component Organization
 
 ### Core Components
+
 - `src/components/`
   - Layout components (`Layout.tsx`, `Navbar.tsx`, `Footer.tsx`)
   - Common UI elements:
@@ -128,6 +140,7 @@
       - `fallbacks/`
 
 ### Feature Components
+
 - Organized by domain/feature
   - `admin/`: Admin dashboard and management
   - `auth/`: Authentication components
@@ -146,6 +159,7 @@
   - `ui/`: UI components library
 
 ### AMC Components
+
 - AMC (Annual Maintenance Contract) management:
   - `AMCManagement.tsx`
   - `AMCPackageCard.tsx`
@@ -159,6 +173,7 @@
 ## Server Structure
 
 ### API Server
+
 - `server/`
   - Express.js server configuration
   - API route handlers
@@ -168,6 +183,7 @@
 ## Configuration Files
 
 ### Build Configuration
+
 - `vite.config.ts`: Vite configuration with plugins
 - TypeScript configurations:
   - `tsconfig.json`: Base configuration
@@ -182,6 +198,7 @@
 - `.lintstagedrc`: Lint-staged configuration
 
 ### Project Configuration
+
 - `.env`: Environment variables
 - `.env.example`: Environment template
 - `.cascade-config.json`: Project settings
@@ -193,6 +210,7 @@
 ## Development Tools
 
 ### Testing
+
 - `vitest.config.ts`: Test configuration
 - Type tests in `src/store/types/__tests__/`
 - Integration tests for components
@@ -203,6 +221,7 @@
   - Trend visualization
 
 ### Scripts
+
 - Various utility scripts in `scripts/` directory
   - State analysis
   - Backup creation
@@ -217,6 +236,7 @@
 ## Documentation
 
 ### Project Documentation
+
 - `docs/`: Contains project documentation
   - Integration plans
   - Setup references
@@ -225,6 +245,7 @@
   - Archived documentation
 
 ### Code Documentation
+
 - Extensive JSDoc comments throughout codebase
 - Type safety with TypeScript
 - Clear component and hook documentation
@@ -232,6 +253,7 @@
 ## Public Assets
 
 ### Static Files
+
 - `public/`: Contains static assets
   - Images
   - Fonts
@@ -241,12 +263,14 @@
   - Service worker for PWA support
 
 ### Certificates
+
 - SSL certificates for local development
 - Production certificates
 
 ## Error Handling System
 
 ### Core Error Boundary
+
 - `src/components/error-boundary/`
   - Unified error handling implementation
   - Type-safe error boundary components
@@ -254,6 +278,7 @@
   - Development mode enhancements
 
 ### Error Handling Strategy
+
 - Application-wide protection in main.tsx
 - Feature-specific error boundaries:
   - Section-based error handling for home page
@@ -266,6 +291,7 @@
   - Error recovery mechanisms
 
 ### Error UI System
+
 - Default error fallback for general errors
 - Specialized error UIs:
   - Section-specific error displays
@@ -277,6 +303,7 @@
   - User feedback system
 
 ## Tools
+
 - `tools/`: Contains utility executables
   - Stripe CLI tool
   - Search utilities
@@ -284,6 +311,7 @@
 ## Testing Infrastructure
 
 ### Test Organization
+
 - `tests/`: Main test directory
   - `analysis/`: Analysis tools and utilities
     - `core/`: Core analysis functionality
@@ -305,17 +333,20 @@
   - `backend/`: API and service tests
 
 ### Test Configuration
+
 - `vitest.config.ts`: Vitest configuration
 - Path aliases for test organization
 - Specialized test utilities and matchers
 
 ### Test Utilities
+
 - Test setup helpers in `tests/setup/`
 - Mock data generators
 - Test type definitions
 - Custom test matchers
 
 ### Report Generation
+
 - Performance analysis
   - Test execution metrics
   - Slow test identification

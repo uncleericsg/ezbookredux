@@ -2,12 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "ESNext"],
     "module": "ESNext",
     "skipLibCheck": true,
 
@@ -75,16 +70,8 @@
     },
 
     /* Types */
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
-    "types": [
-      "node",
-      "google.maps",
-      "vite/client",
-      "vitest"
-    ]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "google.maps", "vite/client", "vitest"]
   },
   "include": [
     "src",
@@ -106,13 +93,7 @@
     "eslint.config.js",
     "vite.config.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    ".git"
-  ],
+  "exclude": ["node_modules", "dist", "build", "coverage", ".git"],
   "references": [
     {
       "path": "./tsconfig.node.json"

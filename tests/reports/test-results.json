@@ -1,1 +1,96 @@
-{"numTotalTestSuites":5,"numPassedTestSuites":5,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":9,"numPassedTests":9,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"startTime":1737873715091,"success":true,"testResults":[{"assertionResults":[{"ancestorTitles":["","Report Generators","Coverage Report"],"fullName":" Report Generators Coverage Report should generate coverage report with correct metrics","status":"passed","title":"should generate coverage report with correct metrics","duration":4,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Coverage Report"],"fullName":" Report Generators Coverage Report should calculate correct coverage percentages","status":"passed","title":"should calculate correct coverage percentages","duration":1,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Coverage Report"],"fullName":" Report Generators Coverage Report should generate recommendations for low coverage","status":"passed","title":"should generate recommendations for low coverage","duration":1,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Performance Report"],"fullName":" Report Generators Performance Report should generate performance report with metrics","status":"passed","title":"should generate performance report with metrics","duration":1,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Performance Report"],"fullName":" Report Generators Performance Report should identify slow tests correctly","status":"passed","title":"should identify slow tests correctly","duration":0,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Status Report"],"fullName":" Report Generators Status Report should generate consolidated status report","status":"passed","title":"should generate consolidated status report","duration":1,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Status Report"],"fullName":" Report Generators Status Report should track trends correctly","status":"passed","title":"should track trends correctly","duration":2,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Status Report"],"fullName":" Report Generators Status Report should generate actionable recommendations","status":"passed","title":"should generate actionable recommendations","duration":1,"failureMessages":[]},{"ancestorTitles":["","Report Generators","Status Report"],"fullName":" Report Generators Status Report should handle missing historical data","status":"passed","title":"should handle missing historical data","duration":0,"failureMessages":[]}],"startTime":1737873715959,"endTime":1737873715970,"status":"passed","message":"","name":"C:/Users/djxpi/CascadeProjects/project-redux/scripts/__tests__/report-generators.test.ts"}]}
+{
+  "numTotalTestSuites": 5,
+  "numPassedTestSuites": 5,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 9,
+  "numPassedTests": 9,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "startTime": 1737873715091,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["", "Report Generators", "Coverage Report"],
+          "fullName": " Report Generators Coverage Report should generate coverage report with correct metrics",
+          "status": "passed",
+          "title": "should generate coverage report with correct metrics",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Coverage Report"],
+          "fullName": " Report Generators Coverage Report should calculate correct coverage percentages",
+          "status": "passed",
+          "title": "should calculate correct coverage percentages",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Coverage Report"],
+          "fullName": " Report Generators Coverage Report should generate recommendations for low coverage",
+          "status": "passed",
+          "title": "should generate recommendations for low coverage",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Performance Report"],
+          "fullName": " Report Generators Performance Report should generate performance report with metrics",
+          "status": "passed",
+          "title": "should generate performance report with metrics",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Performance Report"],
+          "fullName": " Report Generators Performance Report should identify slow tests correctly",
+          "status": "passed",
+          "title": "should identify slow tests correctly",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Status Report"],
+          "fullName": " Report Generators Status Report should generate consolidated status report",
+          "status": "passed",
+          "title": "should generate consolidated status report",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Status Report"],
+          "fullName": " Report Generators Status Report should track trends correctly",
+          "status": "passed",
+          "title": "should track trends correctly",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Status Report"],
+          "fullName": " Report Generators Status Report should generate actionable recommendations",
+          "status": "passed",
+          "title": "should generate actionable recommendations",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "Report Generators", "Status Report"],
+          "fullName": " Report Generators Status Report should handle missing historical data",
+          "status": "passed",
+          "title": "should handle missing historical data",
+          "duration": 0,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1737873715959,
+      "endTime": 1737873715970,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/djxpi/CascadeProjects/project-redux/scripts/__tests__/report-generators.test.ts"
+    }
+  ]
+}
