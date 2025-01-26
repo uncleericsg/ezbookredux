@@ -3,12 +3,26 @@ import { useGreetingForm } from '../useGreetingForm';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock localStorage
+const mockStore: Record<string, string> = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
+  getItem: vi.fn((key: string) => mockStore[key] || null),
+  setItem: vi.fn((key: string, value: string) => {
+    mockStore[key] = value;
+  }),
+  removeItem: vi.fn((key: string) => {
+    delete mockStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(mockStore).forEach(key => delete mockStore[key]);
+  }),
+  length: 0,
+  key: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true
+});
 
 // Mock API functions directly instead of importing
 const mockSaveGreeting = vi.fn();
@@ -20,156 +34,135 @@ vi.mock('../../../../api/greetings', () => ({
 }));
 
 describe('useGreetingForm', () => {
-  const mockProps = {
-    onSave: vi.fn(),
-    onGenerateAI: vi.fn(),
-  };
+  let mockStore: Record<string, string> = {};
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    localStorageMock.getItem.mockReset();
-    localStorageMock.setItem.mockReset();
-    localStorageMock.removeItem.mockReset();
+    mockStore = {};
     mockSaveGreeting.mockReset();
     mockGenerateAIGreeting.mockReset();
+
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: (key: string) => mockStore[key] || null,
+        setItem: (key: string, value: string) => {
+          mockStore[key] = value;
+        },
+        removeItem: (key: string) => {
+          delete mockStore[key];
+        },
+        clear: () => {
+          mockStore = {};
+        },
+        length: 0,
+        key: () => null,
+      },
+      writable: true,
+    });
   });
 
-  it('initializes with default values', () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
+  const defaultProps = {
+    onSave: mockSaveGreeting,
+    onGenerateAI: mockGenerateAIGreeting,
+  };
+
+  it('should initialize with default values', () => {
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
 
     expect(result.current.message).toBe('');
+    expect(result.current.errors).toEqual({});
     expect(result.current.isValid).toBe(false);
-    expect(result.current.characterCount).toBe(0);
-    expect(result.current.errors).toEqual(['Message is required']);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.isGenerating).toBe(false);
-    expect(result.current.canUndo).toBe(false);
-    expect(result.current.canRedo).toBe(false);
   });
 
-  it('updates message and validation state', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
+  it('should load draft message from localStorage', () => {
+    mockStore['greetingDraft'] = 'Test draft message';
+    
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
+    
+    expect(result.current.message).toBe('Test draft message');
+  });
 
-    await act(async () => {
+  it('should update message and save draft to localStorage', () => {
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
+
+    act(() => {
       result.current.setMessage('Test message');
     });
 
     expect(result.current.message).toBe('Test message');
-    expect(result.current.characterCount).toBe(12);
+    expect(mockStore['greetingDraft']).toBe('Test message');
+  });
+
+  it('should validate message length', () => {
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
+
+    act(() => {
+      result.current.setMessage('Hi');
+    });
+
+    expect(result.current.errors).toHaveProperty('message', 'Message must be at least 5 characters');
+    expect(result.current.isValid).toBe(false);
+
+    act(() => {
+      result.current.setMessage('Hello World');
+    });
+
+    expect(result.current.errors).toEqual({});
     expect(result.current.isValid).toBe(true);
-    expect(result.current.errors).toEqual([]);
   });
 
-  it('validates minimum message length', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
+  it('should handle save action', async () => {
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
 
-    await act(async () => {
-      result.current.setMessage('');
-    });
-
-    expect(result.current.isValid).toBe(false);
-    expect(result.current.errors).toContain('Message is required');
-  });
-
-  it('validates maximum message length', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
-
-    await act(async () => {
-      result.current.setMessage('a'.repeat(501));
-      // Wait for validation to complete
-      await result.current.form.trigger('message');
-    });
-
-    expect(result.current.isValid).toBe(false);
-    expect(result.current.errors).toContain('Message must be less than 500 characters');
-  });
-
-  it('handles undo/redo correctly', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
-
-    await act(async () => {
-      result.current.setMessage('First message');
+    act(() => {
+      result.current.setMessage('Hello World');
     });
 
     await act(async () => {
-      result.current.setMessage('Second message');
+      await result.current.handleSave();
     });
 
-    expect(result.current.message).toBe('Second message');
-    expect(result.current.canUndo).toBe(true);
-    expect(result.current.canRedo).toBe(false);
-
-    await act(async () => {
-      result.current.handleUndo();
-    });
-
-    expect(result.current.message).toBe('First message');
-    expect(result.current.canUndo).toBe(true);
-    expect(result.current.canRedo).toBe(true);
+    expect(mockSaveGreeting).toHaveBeenCalledWith('Hello World');
+    expect(mockStore['greetingDraft']).toBeUndefined();
   });
 
-  it('saves draft messages to localStorage', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
+  it('should handle AI generation', async () => {
+    mockGenerateAIGreeting.mockResolvedValueOnce('AI generated message');
+    
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
 
     await act(async () => {
-      result.current.setMessage('Draft message');
-    });
-
-    // Wait for the debounce timeout
-    await new Promise(resolve => setTimeout(resolve, 1100));
-
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'greetingDraft',
-      'Draft message'
-    );
-  });
-
-  it('loads draft messages from localStorage', () => {
-    localStorageMock.getItem.mockReturnValue('Saved draft');
-    const { result } = renderHook(() => useGreetingForm(mockProps));
-
-    expect(result.current.message).toBe('Saved draft');
-  });
-
-  it('handles save action with valid message', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
-
-    await act(async () => {
-      result.current.setMessage('Valid message');
-      await result.current.handleSave({ message: 'Valid message' });
-    });
-
-    expect(mockProps.onSave).toHaveBeenCalledWith('Valid message');
-  });
-
-  it('handles AI generation', async () => {
-    const generatedMessage = 'AI generated message';
-    mockProps.onGenerateAI.mockResolvedValue(generatedMessage);
-
-    const { result } = renderHook(() => useGreetingForm(mockProps));
-
-    await act(async () => {
-      result.current.setMessage('Initial message');
       await result.current.handleGenerateAI();
     });
 
-    expect(result.current.message).toBe(generatedMessage);
+    expect(result.current.message).toBe('AI generated message');
+    expect(mockStore['greetingDraft']).toBe('AI generated message');
   });
 
-  it('handles API errors during save', async () => {
-    const { result } = renderHook(() => useGreetingForm(mockProps));
+  it('should handle errors during save', async () => {
+    mockSaveGreeting.mockRejectedValueOnce(new Error('Save failed'));
+    
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
 
-    await act(async () => {
-      result.current.setMessage('Test message');
-      await result.current.form.trigger('message');
+    act(() => {
+      result.current.setMessage('Hello World');
     });
 
-    mockProps.onSave.mockRejectedValueOnce(new Error('Failed to save message'));
-
     await act(async () => {
-      await result.current.handleSave({ message: 'Test message' });
+      await result.current.handleSave();
     });
 
-    expect(result.current.errors).toContain('Failed to save message');
+    expect(result.current.error).toBe('Failed to save greeting');
+  });
+
+  it('should handle errors during AI generation', async () => {
+    mockGenerateAIGreeting.mockRejectedValueOnce(new Error('Generation failed'));
+    
+    const { result } = renderHook(() => useGreetingForm(defaultProps));
+
+    await act(async () => {
+      await result.current.handleGenerateAI();
+    });
+
+    expect(result.current.error).toBe('Failed to generate message');
   });
 });

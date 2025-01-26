@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   Clock,
@@ -11,8 +9,12 @@ import {
   Gift,
   AlertTriangle,
 } from 'lucide-react';
-import type { Holiday, HolidayGreeting } from '@types';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
+import { Alert, AlertTitle, AlertDescription } from '@components/ui/alert';
+import { Badge } from '@components/ui/badge';
+import { Button } from '@components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -20,15 +22,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@components/organisms/dialog';
-import { Button } from '@components/atoms/button';
-import { Input } from '@components/atoms/input';
-import { Textarea } from '@components/atoms/textarea';
-import { Label } from '@components/atoms/label';
-import { Switch } from '@components/atoms/switch';
-import { Spinner } from '@components/atoms/spinner';
-import { Badge } from '@components/atoms/badge';
-import { Alert, AlertTitle, AlertDescription } from '@components/atoms/alert';
+} from '@components/ui/dialog';
+import { Input } from '@components/ui/input';
+import { Label } from '@components/ui/label';
+import { Spinner } from '@components/ui/spinner';
+import { Switch } from '@components/ui/switch';
+import { Textarea } from '@components/ui/textarea';
+
+import type { Holiday, HolidayGreeting } from '@types';
 
 interface HolidayGreetingModalProps {
   holiday: Holiday;
@@ -47,38 +48,40 @@ const HolidayGreetingModal: React.FC<HolidayGreetingModalProps> = ({
   existingGreeting,
   onGenerateMessage,
 }) => {
-  const [message, setMessage] = useState(existingGreeting?.message || '');
-  const [enabled, setEnabled] = useState(existingGreeting?.enabled ?? true);
-  const [sendTime, setSendTime] = useState(
-    existingGreeting?.sendTime || `${holiday.date}T09:00:00Z`
-  );
+  const [message, setMessage] = useState<string>('');
+  const [enabled, setEnabled] = useState(false);
+  const [sendTime, setSendTime] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (existingGreeting) {
+      setMessage(existingGreeting.message || '');
+      setEnabled(existingGreeting.enabled || false);
+      setSendTime(existingGreeting.sendTime || null);
+    }
+  }, [existingGreeting]);
+
   const handleSave = async () => {
     try {
-      setError(null);
       setIsSaving(true);
-
+      setError(null);
+      
       if (!message.trim()) {
         throw new Error('Message cannot be empty');
       }
 
       await onSave({
-        id: holiday.date,
-        holiday: holiday.name,
-        date: holiday.date,
+        ...holiday,
         message: message.trim(),
         enabled,
-        sendTime,
+        sendTime
       });
 
-      toast.success('Holiday greeting saved successfully');
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save greeting');
-      toast.error('Failed to save greeting');
     } finally {
       setIsSaving(false);
     }
@@ -153,7 +156,7 @@ const HolidayGreetingModal: React.FC<HolidayGreetingModalProps> = ({
             />
             <div className="flex justify-end">
               <Badge variant="secondary">
-                {message.length} characters
+                {message?.length || 0} characters
               </Badge>
             </div>
           </div>
@@ -166,9 +169,9 @@ const HolidayGreetingModal: React.FC<HolidayGreetingModalProps> = ({
                 <Input
                   id="sendTime"
                   type="time"
-                  value={sendTime.split('T')[1].slice(0, 5)}
+                  value={sendTime?.split('T')[1].slice(0, 5) || ''}
                   onChange={(e) => {
-                    const [date] = sendTime.split('T');
+                    const [date] = sendTime?.split('T') || [];
                     setSendTime(`${date}T${e.target.value}:00Z`);
                   }}
                   className="pl-10"
@@ -205,14 +208,9 @@ const HolidayGreetingModal: React.FC<HolidayGreetingModalProps> = ({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !(message?.trim())}
           >
-            {isSaving ? (
-              <Spinner size="sm" className="mr-2" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            Save Changes
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>

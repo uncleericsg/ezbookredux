@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FiX, FiPhone } from 'react-icons/fi';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { setIsAdmin } from '../store/slices/adminSlice';
 import { setAuthenticated, setToken } from '../store/slices/authSlice';
 import { setUser } from '../store/slices/userSlice';
-import { setIsAdmin } from '../store/slices/adminSlice';
+
 import { OTPInput } from './common/OTPInput';
-import { FiX, FiPhone } from 'react-icons/fi';
+
+
 import type { MembershipTier } from '../types/user';
 
 interface LoginModalProps {
@@ -101,6 +105,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
         >
           <motion.div
+            role="dialog"
+            aria-labelledby="login-heading"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -121,7 +127,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-semibold bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] bg-clip-text text-transparent">
+                <h2 id="login-heading" className="text-2xl font-semibold bg-gradient-to-r from-[#FFD700] via-[#FFDF00] to-[#FFD700] bg-clip-text text-transparent">
                   Sign In
                 </h2>
                 <div className="space-y-4">

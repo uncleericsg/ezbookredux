@@ -1,0 +1,13 @@
+{
+  "*.{js,jsx,ts,tsx}": [
+    "prettier --write --cache",
+    "eslint --fix --cache",
+    "vitest related --run"
+  ],
+  "*.{json,md,css,scss,html}": [
+    "prettier --write --cache"
+  ],
+  "*.{ts,tsx}": [
+    "tsc-files --noEmit"
+  ]
+} 

@@ -16,14 +16,28 @@
     "lint:types": "tsc --noEmit",
     "lint:all": "npm run lint:types && npm run lint",
     "lint:strict": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\" --cache",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\" --cache",
+    "format:staged": "prettier --write --cache",
+    "format:fix": "npm run format && npm run lint:fix",
     "analyze-migration": "tsx scripts/migration/analyze.ts",
     "preview": "vite preview",
     "server": "tsx watch src/server.ts",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged",
+    "test:analysis": "vitest run scripts/analysis/__tests__/*.test.ts",
+    "test:analysis:single": "vitest run scripts/analysis/__tests__/analysis.test.ts",
+    "test:analysis:watch": "vitest watch scripts/analysis/__tests__/*.test.ts",
+    "analyze-types": "tsx scripts/analysis/test.ts",
+    "test:coverage": "vitest run --coverage && node scripts/generate-coverage-report.js",
+    "test:perf": "vitest run --reporter=json --outputFile=tests/reports/performance/raw.json && node scripts/generate-perf-report.js",
+    "test:analyze": "node scripts/generate-analysis-report.js",
+    "test:report": "npm run test:coverage && npm run test:perf && npm run test:analyze",
+    "test:status": "node scripts/generate-status-report.js"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.2",
@@ -89,8 +103,9 @@
     "@testing-library/user-event": "^14.5.1",
     "@types/cors": "^2.8.17",
     "@types/dompurify": "^3.0.5",
+    "@types/jest": "^29.5.14",
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^20.17.10",
+    "@types/node": "^20.17.16",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/react-virtualized": "^9.22.0",
@@ -100,6 +115,7 @@
     "@vitest/coverage-v8": "^1.6.0",
     "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.16",
+    "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "dompurify": "^3.2.3",
     "eslint": "^8.57.1",
@@ -111,17 +127,24 @@
     "eslint-plugin-react-refresh": "^0.4.5",
     "globals": "^15.14.0",
     "happy-dom": "^15.11.7",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
     "jsdom": "^23.2.0",
+    "lint-staged": "^15.4.2",
+    "msw": "^2.7.0",
     "postcss": "^8.4.31",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.5.7",
     "prisma": "^6.1.0",
     "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.2.5",
+    "ts-morph": "^25.0.0",
     "ts-node": "^10.9.2",
+    "tsc-files": "^1.1.4",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.6.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.7.3",
     "vite": "^5.4.11",
     "vite-plugin-dts": "^4.4.0",
     "vite-plugin-pwa": "^0.21.1",
@@ -134,5 +157,18 @@
   "directories": {
     "doc": "docs"
   },
-  "description": ""
+  "description": "",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write --cache",
+      "eslint --fix --cache",
+      "vitest related --run"
+    ],
+    "*.{json,md,css,scss,html}": [
+      "prettier --write --cache"
+    ],
+    "*.{ts,tsx}": [
+      "tsc-files --noEmit"
+    ]
+  }
 }

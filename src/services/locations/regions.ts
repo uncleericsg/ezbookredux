@@ -29,6 +29,9 @@
  * @END_AI_INSTRUCTION
  */
 
+import { TimeSlot } from '../../types';
+import { calculateDistanceWeight } from '../../utils/locationUtils';
+
 export const REGION_CENTERS = {
   west: { latitude: 1.3329, longitude: 103.7436 },    // Jurong East
   north: { latitude: 1.4291, longitude: 103.8354 },   // Yishun
@@ -54,7 +57,7 @@ interface Coordinates {
   longitude: number;
 }
 
-function getDistanceFromLatLonInKm(coord1: Coordinates, coord2: Coordinates): number {
+export function getDistanceFromLatLonInKm(coord1: Coordinates, coord2: Coordinates): number {
   const R = 6371; // Radius of the earth in km
   const dLat = deg2rad(coord2.latitude - coord1.latitude);
   const dLon = deg2rad(coord2.longitude - coord1.longitude);
@@ -81,7 +84,7 @@ export function getDistanceWeight(distance: number): number {
     return 0; // Not available beyond max distance
   } else {
     // Linear scaling between 5-8km
-    return 1 - ((distance - MIN_DISTANCE_KM) / (MAX_DISTANCE_KM - MIN_DISTANCE_KM) * 0.9);
+    return 0.9 - ((distance - MIN_DISTANCE_KM) / (MAX_DISTANCE_KM - MIN_DISTANCE_KM) * 0.45);
   }
 }
 
@@ -155,7 +158,7 @@ export async function determineRegion(address: string): Promise<RegionResult> {
 }
 
 export function filterSlotsByDistance(slots: TimeSlot[], distance: number): TimeSlot[] {
-  const weight = getDistanceWeight(distance);
+  const weight = calculateDistanceWeight(distance, MIN_DISTANCE_KM, MAX_DISTANCE_KM);
   if (weight === 0) {
     return slots.map(slot => ({
       ...slot,

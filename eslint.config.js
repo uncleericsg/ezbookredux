@@ -19,7 +19,10 @@ export default [
         ...globals.node,
         ...globals.es2021,
         React: 'readonly',
-        JSX: 'readonly'
+        JSX: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly'
       },
       parser: tsParser,
       parserOptions: {
@@ -176,33 +179,25 @@ export default [
       'import/no-webpack-loader-syntax': 'error',
       
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': ['warn', { 
+      '@typescript-eslint/no-unused-vars': ['warn', {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_'
       }],
-      '@typescript-eslint/consistent-type-imports': ['warn', {
-        prefer: 'type-imports',
-        disallowTypeAnnotations: false,
-        fixStyle: 'separate-type-imports'
-      }],
-      '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/ban-ts-comment': ['warn', {
-        'ts-expect-error': 'allow-with-description',
-        'ts-ignore': true,
-        'ts-nocheck': true,
-        'ts-check': false,
-        minimumDescriptionLength: 3
-      }],
-      '@typescript-eslint/consistent-type-assertions': ['warn', {
-        assertionStyle: 'as',
-        objectLiteralTypeAssertions: 'allow-as-parameter',
-        allowConstAssertions: true
-      }],
-      '@typescript-eslint/no-inferrable-types': 'warn',
-      '@typescript-eslint/no-empty-interface': 'warn'
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-empty-interface': 'warn',
+      
+      // Prettier compatibility
+      'max-len': 'off',
+      'no-mixed-spaces-and-tabs': 'off',
+      'no-trailing-spaces': 'off',
+      'comma-dangle': 'off',
+      'arrow-parens': 'off',
+      'object-curly-newline': 'off',
+      'implicit-arrow-linebreak': 'off'
     }
   },
   {

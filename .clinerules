@@ -19,13 +19,7 @@ ORM=prisma
 SCHEMA_PATH="prisma/schema.prisma"
 
 # Command Execution
-# On Windows, use separate commands instead of &&
-# Example:
-# command1
-# command2
-# Instead of:
-# command1 && command2
-
+# On Windows, chain commands with ; instead of &&
 or use ; semi-colon
 example:
 git add docs/login-code-split.md; git commit -m "docs: update login code-split plan with simplified approach"
@@ -94,3 +88,9 @@ TAILWIND_CONFIG="tailwind.config.ts"
 
 # Script Module
 Scripts must use ES module syntax
+
+3 Documentations
+- Use docs/ folder for documentation
+- Use markdown format for documentation
+- Use mermaid for diagrams
+- Use markdown tables for tables

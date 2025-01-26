@@ -103,42 +103,58 @@
 
 ### Core Components
 - `src/components/`
-  - Layout components
-  - Common UI elements
-  - Loading states
+  - Layout components (`Layout.tsx`, `Navbar.tsx`, `Footer.tsx`)
+  - Common UI elements:
+    - `Toast.tsx`
+    - `TimeSlotPicker.tsx`
+    - `LoadingScreen.tsx`
+    - `NotificationBadge.tsx`
+    - `ScrollToTop.tsx`
+    - `ColorPicker.tsx`
+  - Service-related components:
+    - `ServiceCategorySelection.tsx`
+    - `ServicePricingSelection.tsx`
+    - `ServiceScheduling.tsx`
+    - `ServiceHistory.tsx`
+    - `ServiceRating.tsx`
+  - PWA components:
+    - `AppInstallPrompt.tsx`
+    - `PWAInstallPrompt.tsx`
   - Error Boundary System:
     - `error-boundary/`
-      - `ErrorBoundary.tsx`: Core error boundary component
-      - `ErrorFallback.tsx`: Default error UI
-      - `index.ts`: Public API exports
-      - `fallbacks/`: Specialized error UIs
-        - `SectionErrorFallback.tsx`: Section-specific errors
-      - `LocationOptimizerError.tsx`: Location service errors
+      - `ErrorBoundary.tsx`
+      - `ErrorFallback.tsx`
+      - `index.ts`
+      - `fallbacks/`
 
 ### Feature Components
 - Organized by domain/feature
-  - Booking flow components:
-    - Protected by error boundaries with location-specific error handling
-    - Optimized location provider with dedicated error UI
-  - Home page components:
-    - Section-based error boundaries for isolated error handling
-    - Lazy-loaded sections with fallback UI
-  - User profile components:
-    - Form-specific error handling
-    - Data validation error displays
-  - Notification system:
-    - Template editor with error protection
-    - Real-time update error handling
-  - Admin management components:
-    - Protected routes with error boundaries
-    - Data management error handling
-  - AMC management components:
-    - AMCManagement.tsx
-    - AMCPackageCard.tsx
-    - AMCRenewal.tsx
-    - AMCRenewalModal.tsx
-    - AMCSignup.tsx
-    - AMCStatusCard.tsx
+  - `admin/`: Admin dashboard and management
+  - `auth/`: Authentication components
+  - `booking/`: Booking flow components
+  - `common/`: Shared components
+  - `dev/`: Development utilities
+  - `error-boundary/`: Error handling
+  - `home/`: Home page components
+  - `icons/`: Icon components
+  - `modals/`: Modal components
+  - `notifications/`: Notification system
+  - `payment/`: Payment components
+  - `profile/`: User profile
+  - `tech/`: Technician components
+  - `test/`: Test components
+  - `ui/`: UI components library
+
+### AMC Components
+- AMC (Annual Maintenance Contract) management:
+  - `AMCManagement.tsx`
+  - `AMCPackageCard.tsx`
+  - `AMCRenewal.tsx`
+  - `AMCRenewalModal.tsx`
+  - `AMCSignup.tsx`
+  - `AMCStatusCard.tsx`
+  - `AMCSubscriptionFlow.tsx`
+  - `AMCRenewalWrapper.tsx`
 
 ## Server Structure
 
@@ -152,20 +168,27 @@
 ## Configuration Files
 
 ### Build Configuration
-- `vite.config.ts`: Vite build configuration
-- `tsconfig.*.json`: TypeScript configurations
-  - Base configuration
-  - App-specific config
-  - Test config
-  - Node config
+- `vite.config.ts`: Vite configuration with plugins
+- TypeScript configurations:
+  - `tsconfig.json`: Base configuration
+  - `tsconfig.app.json`: Application config
+  - `tsconfig.node.json`: Node.js config
+  - `tsconfig.test.json`: Test config
+  - `tsconfig.eslint.json`: ESLint TypeScript config
 - `tailwind.config.ts`: Tailwind CSS configuration
 - `postcss.config.js`: PostCSS configuration
 - `eslint.config.js`: ESLint configuration
+- `.prettierrc`: Prettier configuration
+- `.lintstagedrc`: Lint-staged configuration
 
-### Environment Configuration
+### Project Configuration
 - `.env`: Environment variables
-- `.env.example`: Environment variable template
-- `.cascade-config.json`: Project-specific configurations
+- `.env.example`: Environment template
+- `.cascade-config.json`: Project settings
+- `.cursorrules`: Cursor IDE rules
+- `.clinerules`: CLI rules
+- `.windsurfrules`: Windsurf rules
+- `.husky/`: Git hooks
 
 ## Development Tools
 
@@ -173,6 +196,11 @@
 - `vitest.config.ts`: Test configuration
 - Type tests in `src/store/types/__tests__/`
 - Integration tests for components
+- Comprehensive test reporting system:
+  - Performance metrics
+  - Coverage analysis
+  - Status tracking
+  - Trend visualization
 
 ### Scripts
 - Various utility scripts in `scripts/` directory
@@ -252,3 +280,52 @@
 - `tools/`: Contains utility executables
   - Stripe CLI tool
   - Search utilities
+
+## Testing Infrastructure
+
+### Test Organization
+- `tests/`: Main test directory
+  - `analysis/`: Analysis tools and utilities
+    - `core/`: Core analysis functionality
+    - `utils/`: Analysis utility functions
+    - `types/`: Analysis type definitions
+    - `performance/`: Performance analysis tools
+  - `reports/`: Test reporting infrastructure
+    - `generators/`: Report generation tools
+      - `generate-perf-report.ts`
+      - `generate-coverage-report.ts`
+      - `generate-status-report.ts`
+      - `__tests__/`
+    - `coverage/`
+    - `performance/`
+  - `setup/`: Test configuration and utilities
+  - `types/`: Test type definitions
+  - `frontend/`: Component tests
+  - `integration/`: Integration tests
+  - `backend/`: API and service tests
+
+### Test Configuration
+- `vitest.config.ts`: Vitest configuration
+- Path aliases for test organization
+- Specialized test utilities and matchers
+
+### Test Utilities
+- Test setup helpers in `tests/setup/`
+- Mock data generators
+- Test type definitions
+- Custom test matchers
+
+### Report Generation
+- Performance analysis
+  - Test execution metrics
+  - Slow test identification
+  - Performance recommendations
+- Coverage reporting
+  - Statement coverage
+  - Branch coverage
+  - Function coverage
+  - Uncovered line tracking
+- Status reporting
+  - Combined metrics
+  - Trend analysis
+  - Action item generation

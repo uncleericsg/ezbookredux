@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import path from 'path'
+
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   resolve: {
@@ -8,6 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@store': path.resolve(__dirname, './src/store'),
       '@components': path.resolve(__dirname, './src/components'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
       '@admin/*': path.resolve(__dirname, './src/components/admin/*'),
       '@api/*': path.resolve(__dirname, './src/api/*'),
       '@auth/*': path.resolve(__dirname, './src/components/auth/*'),
@@ -52,7 +55,37 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: path.resolve(__dirname, 'src/setupTests.ts'),
+    environment: 'node',
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './tests/reports/coverage',
+      include: [
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/**/*.test.{ts,tsx}',
+        '!src/types/**',
+        '!src/mocks/**'
+      ],
+      exclude: [
+        'tests/**',
+        'node_modules/**',
+        'dist/**',
+        'coverage/**',
+        '*.config.{js,ts}',
+        'src/vite-env.d.ts'
+      ],
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80
+      }
+    },
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: './tests/reports/test-results.json'
+    }
   },
-});
+})

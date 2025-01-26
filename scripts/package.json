@@ -2,6 +2,10 @@
   "name": "import-fix-scripts",
   "type": "module",
   "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "eslint": "^8.0.0",
     "prettier": "^3.0.0"

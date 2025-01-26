@@ -11,18 +11,19 @@ interface UseGreetingFormProps {
 
 const formSchema = z.object({
   message: z.string()
-    .min(1, 'Message is required')
+    .min(5, 'Message must be at least 5 characters')
     .max(500, 'Message must be less than 500 characters'),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export function useGreetingForm({ onSave, onGenerateAI }: UseGreetingFormProps) {
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [undoStack, setUndoStack] = useState<string[]>([]);
-  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDirty, setIsDirty] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -33,124 +34,106 @@ export function useGreetingForm({ onSave, onGenerateAI }: UseGreetingFormProps) 
   });
 
   const { watch, setValue, formState } = form;
-  const message = watch('message') || '';
+  const messageFromForm = watch('message') || '';
 
   useEffect(() => {
-    const formErrors = formState.errors;
-    const validationErrors: string[] = [];
-    
-    if (formErrors.message) {
-      validationErrors.push(formErrors.message.message || 'Message is required');
-    } else if (message.length === 0) {
-      validationErrors.push('Message is required');
-    } else if (message.length > 500) {
-      validationErrors.push('Message must be less than 500 characters');
+    const savedDraft = localStorage.getItem('greetingDraft');
+    if (savedDraft) {
+      setMessage(savedDraft);
+      setIsDirty(true);
     }
-    
-    setErrors(validationErrors);
-  }, [formState.errors, message]);
+  }, []);
 
-  const setMessage = useCallback((newMessage: string) => {
-    setValue('message', newMessage);
-    setUndoStack(prev => [...prev, message]);
-    setRedoStack([]);
-  }, [setValue, message]);
-
-  // Auto-save draft
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    if (message) {
       localStorage.setItem('greetingDraft', message);
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
+    }
   }, [message]);
 
-  // Load draft on mount
-  useEffect(() => {
-    const draft = localStorage.getItem('greetingDraft');
-    if (draft) {
-      setValue('message', draft);
+  const validate = useCallback((data: FormData) => {
+    try {
+      formSchema.parse(data);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const formattedErrors: Record<string, string> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            formattedErrors[error.path[0].toString()] = error.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
+      return false;
     }
-  }, [setValue]);
+  }, []);
 
-  const handleSave = useCallback(async (data: FormData) => {
+  useEffect(() => {
+    if (isDirty) {
+      validate({ message });
+    }
+  }, [message, validate, isDirty]);
+
+  const handleMessageChange = useCallback((newMessage: string) => {
+    setMessage(newMessage);
+    setIsDirty(true);
+  }, []);
+
+  const handleSave = async () => {
+    setError(null);
+    const isValid = validate({ message });
+    if (!isValid) return;
+
     try {
       setIsLoading(true);
-      setErrors([]);
-      await form.trigger('message');
-      
-      if (form.formState.errors.message) {
-        setErrors([form.formState.errors.message.message || 'Invalid message']);
-        return;
-      }
-      
-      await onSave(data.message);
+      await onSave(message);
       localStorage.removeItem('greetingDraft');
-    } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to save message']);
+    } catch (err) {
+      setError('Failed to save greeting');
     } finally {
       setIsLoading(false);
     }
-  }, [onSave, form]);
+  };
 
-  const handleGenerateAI = useCallback(async () => {
+  const handleGenerateAI = async () => {
     if (!onGenerateAI) return;
 
     try {
       setIsGenerating(true);
-      setErrors([]);
-      if (message) {
-        setUndoStack(prev => [...prev, message]);
-      }
-      
       const generatedMessage = await onGenerateAI();
-      setValue('message', generatedMessage);
-    } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to generate AI message']);
+      setMessage(generatedMessage);
+      setIsDirty(true);
+    } catch (err) {
+      setError('Failed to generate message');
     } finally {
       setIsGenerating(false);
     }
-  }, [onGenerateAI, setValue, message]);
+  };
 
-  const handleUndo = useCallback(() => {
-    const lastMessage = undoStack[undoStack.length - 1];
-    
-    if (lastMessage) {
-      setRedoStack(prev => [...prev, message]);
-      setUndoStack(prev => prev.slice(0, -1));
-      setValue('message', lastMessage);
+  const isValid = useCallback(() => {
+    try {
+      formSchema.parse({ message });
+      return true;
+    } catch {
+      return false;
     }
-  }, [setValue, message, undoStack]);
+  }, [message]);
 
-  const handleRedo = useCallback(() => {
-    const lastMessage = redoStack[redoStack.length - 1];
-    
-    if (lastMessage) {
-      setUndoStack(prev => [...prev, message]);
-      setRedoStack(prev => prev.slice(0, -1));
-      setValue('message', lastMessage);
-    }
-  }, [setValue, message, redoStack]);
-
-  const isValid = !formState.errors.message && message.length > 0;
-  const isDirty = formState.isDirty;
   const characterCount = message?.length || 0;
 
   return {
     message,
-    setMessage,
-    isValid,
-    isDirty,
-    characterCount,
-    errors,
+    setMessage: handleMessageChange,
     isLoading,
     isGenerating,
-    canUndo: undoStack.length > 0,
-    canRedo: redoStack.length > 0,
+    error,
+    errors,
+    isValid: isValid(),
+    isDirty,
+    characterCount,
     handleSave,
     handleGenerateAI,
-    handleUndo,
-    handleRedo,
     form,
   };
 }

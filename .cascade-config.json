@@ -197,7 +197,10 @@
           "example": "import { ComponentName } from './ComponentName';"
         },
         "components": {
-          "file_naming": "PascalCase",
+          "file_naming": {
+            "default": "PascalCase",
+            "ui": "lowercase"
+          },
           "function_style": "arrow_function",
           "prop_types": "typescript_interfaces"
         }

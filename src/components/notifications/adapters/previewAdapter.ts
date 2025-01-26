@@ -84,3 +84,43 @@ export class PreviewAdapter {
     return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`;
   }
 }
+
+export function processTemplate(template: string, data: Record<string, any> = {}) {
+  let processedTemplate = template;
+
+  // Replace variables in the format {{variableName}}
+  const variableRegex = /\{\{([^}]+)\}\}/g;
+  processedTemplate = processedTemplate.replace(variableRegex, (match, variable) => {
+    const value = data[variable.trim()];
+    return value !== undefined ? value : match;
+  });
+
+  return processedTemplate;
+}
+
+export function validateTemplate(template: string): string[] {
+  const errors: string[] = [];
+  const variableRegex = /\{\{([^}]+)\}\}/g;
+  const matches = template.match(variableRegex) || [];
+
+  // Check for duplicate variables
+  const variables = matches.map(match => match.slice(2, -2).trim());
+  const duplicates = variables.filter((item, index) => variables.indexOf(item) !== index);
+  if (duplicates.length > 0) {
+    errors.push(`Duplicate variables found: ${[...new Set(duplicates)].join(', ')}`);
+  }
+
+  // Check for empty variables
+  const emptyVariables = variables.filter(variable => !variable);
+  if (emptyVariables.length > 0) {
+    errors.push('Empty variable placeholders found');
+  }
+
+  // Check for malformed variables (unclosed braces)
+  const unclosedBraces = (template.match(/\{\{/g) || []).length !== (template.match(/\}\}/g) || []).length;
+  if (unclosedBraces) {
+    errors.push('Unclosed variable placeholders found');
+  }
+
+  return errors;
+}

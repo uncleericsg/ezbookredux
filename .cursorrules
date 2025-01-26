@@ -1,0 +1,98 @@
+#Greeting
+Always greet on every time we chat: "Dear Master Eric, I'm ready to serve you"
+
+# Project Configuration
+DEV_PORT=5173
+API_PORT=3000
+PROJECT_NAME="iAircon EasyBooking"
+PROJECT_PATH="c:/Users/djxpi/CascadeProjects/project-redux"
+
+# Framework Configuration
+FRAMEWORK=react
+BUNDLER=vite
+NODE_VERSION=">=18"
+PACKAGE_MANAGER=npm
+
+# Database Configuration
+DATABASE_TYPE=supabase
+ORM=prisma
+SCHEMA_PATH="prisma/schema.prisma"
+
+# Command Execution
+# On Windows, chain commands with ; instead of &&
+or use ; semi-colon
+example:
+git add docs/login-code-split.md; git commit -m "docs: update login code-split plan with simplified approach"
+Always use Windows PowerShell syntax for folders, files functions
+
+
+# Path Aliases
+COMPONENTS_BASE="@"
+COMPONENTS_PATHS=(
+  "@admin:src/components/admin"
+  "@auth:src/components/auth"
+  "@booking:src/components/booking"
+  "@common:src/components/common"
+  "@dev:src/components/dev"
+  "@error-boundary:src/components/error-boundary"
+  "@icons:src/components/icons"
+  "@modals:src/components/modals"
+  "@notifications:src/components/notifications"
+  "@payment:src/components/payment"
+  "@profile:src/components/profile"
+  "@tech:src/components/tech"
+  "@test:src/components/test"
+  "@ui:src/components/ui"
+)
+
+# Core Dependencies
+CORE_DEPENDENCIES=(
+  "tailwindcss"
+  "@headlessui/react"
+  "lucide-react"
+  "@radix-ui/react-dialog"
+  "@radix-ui/react-label"
+  "@radix-ui/react-scroll-area"
+  "@radix-ui/react-toast"
+  "@radix-ui/react-tooltip"
+)
+
+# Development Tools
+TOOLS=(
+  "eslint"
+  "typescript"
+  "vitest"
+  "prettier"
+)
+
+# Project Structure
+MAIN_DIRECTORIES=(
+  "src/"
+  "public/"
+  "prisma/"
+  "migrations/"
+  "scripts/"
+  "docs/"
+  "server/"
+  "supabase/"
+  "tools/"
+)
+
+# Testing Configuration
+TEST_FRAMEWORK=vitest
+TEST_CONFIG_FILE="vitest.config.ts"
+
+# Build Configuration
+TYPESCRIPT_CONFIG="tsconfig.json"
+VITE_CONFIG="vite.config.ts"
+POSTCSS_CONFIG="postcss.config.js"
+TAILWIND_CONFIG="tailwind.config.ts"
+
+# Script Module
+Scripts must use ES module syntax
+
+3 Documentations
+- Use docs/ folder for documentation
+- Use markdown format for documentation
+- Use mermaid for diagrams
+- Use markdown tables for tables

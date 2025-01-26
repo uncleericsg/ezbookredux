@@ -5,6 +5,7 @@ export interface TimeSlot {
   datetime: string;
   available: boolean;
   duration?: number;
+  weight?: number;
 }
 
 export interface FetchError extends Error {
